@@ -14,6 +14,9 @@ from .daily import create_daily_status
 from .dashboard import run_dashboard
 from .doctor import run_doctor
 from .end_session import EndSessionError, run_end_session_codex, run_end_session_skip_codex
+from .feature import run_feature_create, run_feature_list, run_feature_status
+from .feature_archive import run_feature_archive
+from .feature_status_updater import run_feature_summary, run_feature_update_status
 from .git_hooks import install_git_hooks
 from .help_text import get_help_text
 from .hooks import plan_post_command_hook, run_post_command_hook
@@ -26,10 +29,17 @@ from .onboarding import (
     read_session_template,
 )
 from .root import RootResolutionError, resolve_ph_root
+from .sprint_archive import run_sprint_archive
+from .sprint_burndown import run_sprint_burndown
+from .sprint_capacity import run_sprint_capacity
+from .sprint_close import run_sprint_close
 from .sprint_commands import sprint_open, sprint_plan
 from .sprint_status import run_sprint_status
 from .sprint_tasks import run_sprint_tasks
 from .status import run_status
+from .task_create import run_task_create
+from .task_status import run_task_status
+from .task_view import run_task_list, run_task_show
 from .validate_docs import run_validate
 
 
@@ -158,6 +168,70 @@ def build_parser() -> argparse.ArgumentParser:
     sprint_status_parser.add_argument("--sprint", help="Sprint ID (default: current)")
     sprint_tasks_parser = sprint_subparsers.add_parser("tasks", help="List sprint tasks", parents=[sub_common])
     sprint_tasks_parser.add_argument("--sprint", help="Sprint ID (default: current)")
+    sprint_burndown_parser = sprint_subparsers.add_parser(
+        "burndown", help="Generate sprint burndown", parents=[sub_common]
+    )
+    sprint_burndown_parser.add_argument("--sprint", help="Sprint ID (default: current)")
+    sprint_capacity_parser = sprint_subparsers.add_parser(
+        "capacity", help="Show sprint capacity allocation", parents=[sub_common]
+    )
+    sprint_capacity_parser.add_argument("--sprint", help="Sprint ID (default: current)")
+    sprint_archive_parser = sprint_subparsers.add_parser(
+        "archive", help="Archive sprint into sprints/archive", parents=[sub_common]
+    )
+    sprint_archive_parser.add_argument("--sprint", help="Sprint ID (default: current)")
+    sprint_close_parser = sprint_subparsers.add_parser(
+        "close", help="Close sprint and archive it", parents=[sub_common]
+    )
+    sprint_close_parser.add_argument("--sprint", help="Sprint ID (default: current)")
+
+    task_parser = subparsers.add_parser("task", help="Manage sprint tasks", parents=[sub_common])
+    task_subparsers = task_parser.add_subparsers(dest="task_command")
+    task_create_parser = task_subparsers.add_parser(
+        "create", help="Create a new task in current sprint", parents=[sub_common]
+    )
+    task_create_parser.add_argument("--title", required=True, help="Task title")
+    task_create_parser.add_argument("--feature", required=True, help="Feature name")
+    task_create_parser.add_argument("--decision", required=True, help="Decision id (ADR-XXX, FDR-XXX, DR-XXX)")
+    task_create_parser.add_argument("--points", type=int, help="Story points (default: 5)")
+    task_create_parser.add_argument("--owner", default="@owner", help="Task owner (default: @owner)")
+    task_create_parser.add_argument("--prio", default="P2", help="Priority (default: P2)")
+    task_create_parser.add_argument("--lane", help="Optional lane/workstream label")
+    task_create_parser.add_argument("--session", default="task-execution", help="Recommended session template")
+    task_subparsers.add_parser("list", help="List tasks in current sprint", parents=[sub_common])
+    task_show_parser = task_subparsers.add_parser("show", help="Show a task", parents=[sub_common])
+    task_show_parser.add_argument("--id", required=True, help="Task id (e.g. TASK-001)")
+    task_status_parser = task_subparsers.add_parser("status", help="Update task status", parents=[sub_common])
+    task_status_parser.add_argument("--id", required=True, help="Task id (e.g. TASK-001)")
+    task_status_parser.add_argument("--status", required=True, help="New status (e.g. doing)")
+    task_status_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force update despite unresolved dependencies (requires explicit user approval)",
+    )
+
+    feature_parser = subparsers.add_parser("feature", help="Manage features", parents=[sub_common])
+    feature_subparsers = feature_parser.add_subparsers(dest="feature_command")
+    feature_subparsers.add_parser("list", help="List features", parents=[sub_common])
+    feature_create_parser = feature_subparsers.add_parser("create", help="Create a new feature", parents=[sub_common])
+    feature_create_parser.add_argument("--name", required=True, help="Feature name (kebab-case)")
+    feature_create_parser.add_argument("--epic", action="store_true", help="Mark feature as an epic")
+    feature_create_parser.add_argument("--owner", default="@owner", help="Owner (default: @owner)")
+    feature_create_parser.add_argument("--stage", default="proposed", help="Initial stage (default: proposed)")
+    feature_status_parser = feature_subparsers.add_parser("status", help="Update feature stage", parents=[sub_common])
+    feature_status_parser.add_argument("--name", required=True, help="Feature name (kebab-case)")
+    feature_status_parser.add_argument("--stage", required=True, help="New stage")
+    feature_subparsers.add_parser(
+        "update-status", help="Update status.md files from sprint tasks", parents=[sub_common]
+    )
+    feature_subparsers.add_parser("summary", help="Show feature summary with sprint data", parents=[sub_common])
+    feature_archive_parser = feature_subparsers.add_parser(
+        "archive", help="Archive a feature into features/implemented", parents=[sub_common]
+    )
+    feature_archive_parser.add_argument("--name", required=True, help="Feature name (kebab-case)")
+    feature_archive_parser.add_argument(
+        "--force", action="store_true", help="Force archive despite warnings (requires explicit approval)"
+    )
 
     daily_parser = subparsers.add_parser("daily", help="Manage daily status cadence", parents=[sub_common])
     daily_subparsers = daily_parser.add_subparsers(dest="daily_command")
@@ -305,7 +379,11 @@ def main(argv: list[str] | None = None) -> int:
                 exit_code = run_dashboard(ph_root=ph_root, ctx=ctx)
             elif args.command == "sprint":
                 if args.sprint_command is None:
-                    print("Usage: ph sprint <plan|open|status|tasks>\n", file=sys.stderr, end="")
+                    print(
+                        "Usage: ph sprint <plan|open|status|tasks|burndown|capacity|archive|close>\n",
+                        file=sys.stderr,
+                        end="",
+                    )
                     exit_code = 2
                 elif args.sprint_command == "plan":
                     exit_code = sprint_plan(
@@ -321,8 +399,116 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = run_sprint_status(ph_root=ph_root, ctx=ctx, sprint=getattr(args, "sprint", None))
                 elif args.sprint_command == "tasks":
                     exit_code = run_sprint_tasks(ctx=ctx, sprint=getattr(args, "sprint", None))
+                elif args.sprint_command == "burndown":
+                    exit_code = run_sprint_burndown(
+                        ph_root=ph_root,
+                        ctx=ctx,
+                        sprint=getattr(args, "sprint", None),
+                        env=os.environ,
+                    )
+                elif args.sprint_command == "capacity":
+                    exit_code = run_sprint_capacity(
+                        ph_root=ph_root,
+                        ctx=ctx,
+                        sprint=getattr(args, "sprint", None),
+                        env=os.environ,
+                    )
+                elif args.sprint_command == "archive":
+                    exit_code = run_sprint_archive(
+                        ph_root=ph_root,
+                        ctx=ctx,
+                        sprint=getattr(args, "sprint", None),
+                        env=os.environ,
+                    )
+                elif args.sprint_command == "close":
+                    exit_code = run_sprint_close(
+                        ph_root=ph_root,
+                        ctx=ctx,
+                        sprint=getattr(args, "sprint", None),
+                        env=os.environ,
+                    )
                 else:
-                    print("Usage: ph sprint <plan|open|status|tasks>\n", file=sys.stderr, end="")
+                    print(
+                        "Usage: ph sprint <plan|open|status|tasks|burndown|capacity|archive|close>\n",
+                        file=sys.stderr,
+                        end="",
+                    )
+                    exit_code = 2
+            elif args.command == "task":
+                if args.task_command is None:
+                    print("Usage: ph task <create|list|show|status>\n", file=sys.stderr, end="")
+                    exit_code = 2
+                elif args.task_command == "create":
+                    exit_code = run_task_create(
+                        ph_root=ph_root,
+                        ctx=ctx,
+                        title=str(args.title),
+                        feature=str(args.feature),
+                        decision=str(args.decision),
+                        points=getattr(args, "points", None),
+                        owner=str(args.owner),
+                        prio=str(args.prio),
+                        lane=getattr(args, "lane", None),
+                        session=str(args.session),
+                        env=os.environ,
+                    )
+                elif args.task_command == "list":
+                    exit_code = run_task_list(ctx=ctx)
+                elif args.task_command == "show":
+                    exit_code = run_task_show(ctx=ctx, task_id=str(args.id))
+                elif args.task_command == "status":
+                    exit_code = run_task_status(
+                        ctx=ctx,
+                        task_id=str(args.id),
+                        new_status=str(args.status),
+                        force=bool(getattr(args, "force", False)),
+                    )
+                else:
+                    print("Usage: ph task <create|list|show|status>\n", file=sys.stderr, end="")
+                    exit_code = 2
+            elif args.command == "feature":
+                if args.feature_command is None:
+                    print(
+                        "Usage: ph feature <create|list|status|update-status|summary|archive>\n",
+                        file=sys.stderr,
+                        end="",
+                    )
+                    exit_code = 2
+                elif args.feature_command == "create":
+                    exit_code = run_feature_create(
+                        ph_root=ph_root,
+                        ctx=ctx,
+                        name=str(args.name),
+                        epic=bool(getattr(args, "epic", False)),
+                        owner=str(args.owner),
+                        stage=str(args.stage),
+                        env=os.environ,
+                    )
+                elif args.feature_command == "list":
+                    exit_code = run_feature_list(ctx=ctx)
+                elif args.feature_command == "status":
+                    exit_code = run_feature_status(
+                        ctx=ctx,
+                        name=str(args.name),
+                        stage=str(args.stage),
+                        env=os.environ,
+                    )
+                elif args.feature_command == "update-status":
+                    exit_code = run_feature_update_status(ctx=ctx, env=os.environ)
+                elif args.feature_command == "summary":
+                    exit_code = run_feature_summary(ctx=ctx, env=os.environ)
+                elif args.feature_command == "archive":
+                    exit_code = run_feature_archive(
+                        ctx=ctx,
+                        name=str(args.name),
+                        force=bool(getattr(args, "force", False)),
+                    )
+                else:
+                    print(
+                        "Usage: ph feature <create|list|status|update-status|summary|archive>\n",
+                        file=sys.stderr,
+                        end="",
+                    )
                     exit_code = 2
             elif args.command == "validate":
                 exit_code, _out_path, message = run_validate(
