@@ -9,6 +9,7 @@ from .context import ScopeError, build_context, resolve_scope
 from .doctor import run_doctor
 from .history import append_history, format_history_entry
 from .root import RootResolutionError, resolve_ph_root
+from .validate_docs import run_validate
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -30,6 +31,12 @@ def build_parser() -> argparse.ArgumentParser:
         parents=[common],
     )
     doctor_parser.set_defaults(_handler=_handle_doctor)
+
+    validate_parser = subparsers.add_parser("validate", help="Validate handbook content", parents=[common])
+    validate_parser.add_argument("--quick", action="store_true", help="Skip heavyweight checks")
+    validate_parser.add_argument(
+        "--silent-success", action="store_true", help="Suppress output when there are no issues"
+    )
     return parser
 
 
@@ -78,6 +85,16 @@ def main(argv: list[str] | None = None) -> int:
         if args.command is None:
             parser.print_help()
             exit_code = 0
+        elif args.command == "validate":
+            exit_code, _out_path, message = run_validate(
+                ph_root=ph_root,
+                ph_data_root=_ctx.ph_data_root,
+                scope=_ctx.scope,
+                quick=bool(args.quick),
+                silent_success=bool(args.silent_success),
+            )
+            if message:
+                print(message, end="")
         else:
             print(f"Unknown command: {args.command}\n", file=sys.stderr, end="")
             exit_code = 2
