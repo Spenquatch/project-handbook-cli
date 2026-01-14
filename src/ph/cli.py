@@ -6,6 +6,14 @@ import sys
 from pathlib import Path
 
 from . import __version__
+from .backlog import (
+    run_backlog_add,
+    run_backlog_assign,
+    run_backlog_list,
+    run_backlog_rubric,
+    run_backlog_stats,
+    run_backlog_triage,
+)
 from .clean import clean_python_caches
 from .config import ConfigError, load_handbook_config, validate_handbook_config
 from .context import ScopeError, build_context, resolve_scope
@@ -232,6 +240,39 @@ def build_parser() -> argparse.ArgumentParser:
     feature_archive_parser.add_argument(
         "--force", action="store_true", help="Force archive despite warnings (requires explicit approval)"
     )
+
+    backlog_parser = subparsers.add_parser("backlog", help="Manage issue backlog", parents=[sub_common])
+    backlog_subparsers = backlog_parser.add_subparsers(dest="backlog_command")
+    backlog_add_parser = backlog_subparsers.add_parser("add", help="Create a backlog entry", parents=[sub_common])
+    backlog_add_parser.add_argument(
+        "--type",
+        dest="issue_type",
+        required=True,
+        help="bug|wildcards|work-items (accepts v0 synonyms)",
+    )
+    backlog_add_parser.add_argument("--title", required=True, help="Issue title")
+    backlog_add_parser.add_argument("--severity", required=True, help="P0|P1|P2|P3|P4")
+    backlog_add_parser.add_argument("--desc", default="", help="Description")
+    backlog_add_parser.add_argument("--owner", default="", help="Owner handle (e.g. @alice)")
+    backlog_add_parser.add_argument("--impact", default="", help="Impact summary")
+    backlog_add_parser.add_argument("--workaround", default="", help="Workaround summary")
+    backlog_list_parser = backlog_subparsers.add_parser("list", help="List backlog entries", parents=[sub_common])
+    backlog_list_parser.add_argument("--severity", help="Filter by severity (P0..P4)")
+    backlog_list_parser.add_argument("--category", help="Filter by category (bugs|wildcards|work-items)")
+    backlog_list_parser.add_argument(
+        "--format", choices=["table", "json"], default="table", help="Output format (default: table)"
+    )
+    backlog_triage_parser = backlog_subparsers.add_parser(
+        "triage", help="Show or create triage analysis", parents=[sub_common]
+    )
+    backlog_triage_parser.add_argument("--issue", dest="issue_id", required=True, help="Issue id (e.g. BUG-P1-...)")
+    backlog_assign_parser = backlog_subparsers.add_parser(
+        "assign", help="Assign a backlog issue to a sprint", parents=[sub_common]
+    )
+    backlog_assign_parser.add_argument("--issue", dest="issue_id", required=True, help="Issue id (e.g. BUG-P1-...)")
+    backlog_assign_parser.add_argument("--sprint", default="current", help="current|next|SPRINT-... (default: current)")
+    backlog_subparsers.add_parser("rubric", help="Show severity rubric", parents=[sub_common])
+    backlog_subparsers.add_parser("stats", help="Show backlog statistics", parents=[sub_common])
 
     daily_parser = subparsers.add_parser("daily", help="Manage daily status cadence", parents=[sub_common])
     daily_subparsers = daily_parser.add_subparsers(dest="daily_command")
@@ -509,6 +550,46 @@ def main(argv: list[str] | None = None) -> int:
                         file=sys.stderr,
                         end="",
                     )
+                    exit_code = 2
+            elif args.command == "backlog":
+                if args.backlog_command is None:
+                    print("Usage: ph backlog <add|list|triage|assign|rubric|stats>\n", file=sys.stderr, end="")
+                    exit_code = 2
+                elif args.backlog_command == "add":
+                    exit_code = run_backlog_add(
+                        ctx=ctx,
+                        issue_type=str(args.issue_type),
+                        title=str(args.title),
+                        severity=str(args.severity),
+                        desc=str(args.desc),
+                        owner=str(args.owner),
+                        impact=str(args.impact),
+                        workaround=str(args.workaround),
+                        env=os.environ,
+                    )
+                elif args.backlog_command == "list":
+                    exit_code = run_backlog_list(
+                        ctx=ctx,
+                        severity=getattr(args, "severity", None),
+                        category=getattr(args, "category", None),
+                        format=str(args.format),
+                        env=os.environ,
+                    )
+                elif args.backlog_command == "triage":
+                    exit_code = run_backlog_triage(ctx=ctx, issue_id=str(args.issue_id), env=os.environ)
+                elif args.backlog_command == "assign":
+                    exit_code = run_backlog_assign(
+                        ctx=ctx,
+                        issue_id=str(args.issue_id),
+                        sprint=str(getattr(args, "sprint", "current") or "current"),
+                        env=os.environ,
+                    )
+                elif args.backlog_command == "rubric":
+                    exit_code = run_backlog_rubric(ctx=ctx, env=os.environ)
+                elif args.backlog_command == "stats":
+                    exit_code = run_backlog_stats(ctx=ctx, env=os.environ)
+                else:
+                    print("Usage: ph backlog <add|list|triage|assign|rubric|stats>\n", file=sys.stderr, end="")
                     exit_code = 2
             elif args.command == "validate":
                 exit_code, _out_path, message = run_validate(
