@@ -5,22 +5,45 @@ import sys
 
 from . import __version__
 from .config import ConfigError, load_handbook_config, validate_handbook_config
+from .doctor import run_doctor
 from .root import RootResolutionError, resolve_ph_root
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="ph", description="Project Handbook CLI")
-    parser.add_argument("--root", help="Path to the handbook instance repo root")
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--root", help="Path to the handbook instance repo root")
+
+    parser = argparse.ArgumentParser(prog="ph", description="Project Handbook CLI", parents=[common])
     subparsers = parser.add_subparsers(dest="command")
 
-    version_parser = subparsers.add_parser("version", help="Print installed ph version")
+    version_parser = subparsers.add_parser("version", help="Print installed ph version", parents=[common])
     version_parser.set_defaults(_handler=_handle_version)
+
+    doctor_parser = subparsers.add_parser(
+        "doctor",
+        help="Check repo compatibility and required assets",
+        parents=[common],
+    )
+    doctor_parser.set_defaults(_handler=_handle_doctor)
     return parser
 
 
 def _handle_version(_args: argparse.Namespace) -> int:
     print(__version__)
     return 0
+
+
+def _handle_doctor(args: argparse.Namespace) -> int:
+    try:
+        ph_root = resolve_ph_root(override=args.root)
+    except RootResolutionError as exc:
+        print(str(exc), file=sys.stderr, end="")
+        return 2
+
+    result = run_doctor(ph_root)
+    stream = sys.stdout if result.exit_code == 0 else sys.stderr
+    print(result.output, file=stream, end="")
+    return result.exit_code
 
 
 def main(argv: list[str] | None = None) -> int:

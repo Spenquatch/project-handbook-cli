@@ -16,6 +16,12 @@ class HandbookConfig:
     repo_root: str
 
 
+@dataclass(frozen=True)
+class ConfigCheckResult:
+    config: HandbookConfig | None
+    errors: list[str]
+
+
 class ConfigError(RuntimeError):
     pass
 
@@ -70,6 +76,21 @@ def validate_handbook_config(config: HandbookConfig) -> None:
                 f"Required: {config.requires_ph_version}"
             )
         )
+
+
+def check_handbook_config(ph_root: Path) -> ConfigCheckResult:
+    try:
+        config = load_handbook_config(ph_root)
+    except ConfigError as exc:
+        return ConfigCheckResult(config=None, errors=[str(exc).rstrip("\n")])
+
+    errors: list[str] = []
+    try:
+        validate_handbook_config(config)
+    except ConfigError as exc:
+        errors.append(str(exc).rstrip("\n"))
+
+    return ConfigCheckResult(config=config, errors=errors)
 
 
 def _config_error_message(message: str) -> str:
