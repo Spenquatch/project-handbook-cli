@@ -1,0 +1,16 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "project-handbook-cli"
+version = "0.1.0"
+description = "Installed ph CLI for Project Handbook"
+readme = "README.md"
+requires-python = ">=3.10"
+
+[project.scripts]
+ph = "ph.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ph"]
