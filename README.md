@@ -23,3 +23,11 @@ If `ph` is not found, activate the venv first: `. .venv/bin/activate`.
 - `uv run ruff format .`
 - `uv run ruff check .`
 - `uv run pytest -q`
+
+## Release (exact steps)
+
+1) update `src/ph/__init__.py` `__version__`
+2) run `uv run ruff format .` then `uv run ruff check .` then `uv run pytest -q`
+3) create git tag `v<__version__>`
+4) build with `python -m build`
+5) verify artifacts exist in `dist/`.
