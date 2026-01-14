@@ -36,6 +36,8 @@ from .onboarding import (
     read_onboarding_markdown,
     read_session_template,
 )
+from .parking import run_parking_add, run_parking_list, run_parking_promote, run_parking_review
+from .roadmap import run_roadmap_create, run_roadmap_show, run_roadmap_validate
 from .root import RootResolutionError, resolve_ph_root
 from .sprint_archive import run_sprint_archive
 from .sprint_burndown import run_sprint_burndown
@@ -273,6 +275,50 @@ def build_parser() -> argparse.ArgumentParser:
     backlog_assign_parser.add_argument("--sprint", default="current", help="current|next|SPRINT-... (default: current)")
     backlog_subparsers.add_parser("rubric", help="Show severity rubric", parents=[sub_common])
     backlog_subparsers.add_parser("stats", help="Show backlog statistics", parents=[sub_common])
+
+    parking_parser = subparsers.add_parser("parking", help="Manage parking lot items", parents=[sub_common])
+    parking_subparsers = parking_parser.add_subparsers(dest="parking_command")
+    parking_add_parser = parking_subparsers.add_parser("add", help="Create a parking lot item", parents=[sub_common])
+    parking_add_parser.add_argument(
+        "--type",
+        dest="parking_type",
+        required=True,
+        choices=["features", "technical-debt", "research", "external-requests"],
+        help="features|technical-debt|research|external-requests",
+    )
+    parking_add_parser.add_argument("--title", required=True, help="Item title")
+    parking_add_parser.add_argument("--desc", default="", help="Description")
+    parking_add_parser.add_argument("--owner", default="", help="Owner handle (e.g. @alice)")
+    parking_add_parser.add_argument("--tags", default="", help="Comma-separated tags")
+
+    parking_list_parser = parking_subparsers.add_parser("list", help="List parking lot items", parents=[sub_common])
+    parking_list_parser.add_argument(
+        "--category",
+        choices=["features", "technical-debt", "research", "external-requests"],
+        help="Filter by category",
+    )
+    parking_list_parser.add_argument(
+        "--format", choices=["table", "json"], default="table", help="Output format (default: table)"
+    )
+
+    parking_subparsers.add_parser("review", help="Review parking lot items", parents=[sub_common])
+
+    parking_promote_parser = parking_subparsers.add_parser(
+        "promote", help="Promote item to roadmap", parents=[sub_common]
+    )
+    parking_promote_parser.add_argument("--item", required=True, help="Item id (e.g. FEAT-...)")
+    parking_promote_parser.add_argument(
+        "--target",
+        choices=["now", "next", "later"],
+        default="later",
+        help="now|next|later (default: later)",
+    )
+
+    roadmap_parser = subparsers.add_parser("roadmap", help="Manage the project roadmap", parents=[sub_common])
+    roadmap_subparsers = roadmap_parser.add_subparsers(dest="roadmap_command")
+    roadmap_subparsers.add_parser("show", help="Show roadmap now/next/later", parents=[sub_common])
+    roadmap_subparsers.add_parser("create", help="Create roadmap template", parents=[sub_common])
+    roadmap_subparsers.add_parser("validate", help="Validate roadmap links", parents=[sub_common])
 
     daily_parser = subparsers.add_parser("daily", help="Manage daily status cadence", parents=[sub_common])
     daily_subparsers = daily_parser.add_subparsers(dest="daily_command")
@@ -590,6 +636,51 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = run_backlog_stats(ctx=ctx, env=os.environ)
                 else:
                     print("Usage: ph backlog <add|list|triage|assign|rubric|stats>\n", file=sys.stderr, end="")
+                    exit_code = 2
+            elif args.command == "parking":
+                if args.parking_command is None:
+                    print("Usage: ph parking <add|list|review|promote>\n", file=sys.stderr, end="")
+                    exit_code = 2
+                elif args.parking_command == "add":
+                    exit_code = run_parking_add(
+                        ctx=ctx,
+                        item_type=str(args.parking_type),
+                        title=str(args.title),
+                        desc=str(args.desc),
+                        owner=str(args.owner),
+                        tags=str(getattr(args, "tags", "")),
+                        env=os.environ,
+                    )
+                elif args.parking_command == "list":
+                    exit_code = run_parking_list(
+                        ctx=ctx,
+                        category=getattr(args, "category", None),
+                        format=str(args.format),
+                        env=os.environ,
+                    )
+                elif args.parking_command == "review":
+                    exit_code = run_parking_review(ctx=ctx, env=os.environ)
+                elif args.parking_command == "promote":
+                    exit_code = run_parking_promote(
+                        ctx=ctx,
+                        item_id=str(args.item),
+                        target=str(args.target),
+                        env=os.environ,
+                    )
+                else:
+                    print("Usage: ph parking <add|list|review|promote>\n", file=sys.stderr, end="")
+                    exit_code = 2
+            elif args.command == "roadmap":
+                if args.roadmap_command is None:
+                    exit_code = run_roadmap_show(ctx=ctx)
+                elif args.roadmap_command == "show":
+                    exit_code = run_roadmap_show(ctx=ctx)
+                elif args.roadmap_command == "create":
+                    exit_code = run_roadmap_create(ctx=ctx)
+                elif args.roadmap_command == "validate":
+                    exit_code = run_roadmap_validate(ctx=ctx)
+                else:
+                    print("Usage: ph roadmap <show|create|validate>\n", file=sys.stderr, end="")
                     exit_code = 2
             elif args.command == "validate":
                 exit_code, _out_path, message = run_validate(
