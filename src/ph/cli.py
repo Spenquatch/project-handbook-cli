@@ -28,6 +28,7 @@ from .feature_status_updater import run_feature_summary, run_feature_update_stat
 from .git_hooks import install_git_hooks
 from .help_text import get_help_text
 from .hooks import plan_post_command_hook, run_post_command_hook
+from .migrate_system_scope import run_migrate_system_scope
 from .onboarding import (
     OnboardingError,
     SessionList,
@@ -46,6 +47,8 @@ from .release import (
     run_release_status,
     run_release_suggest,
 )
+from .reset import ResetError, run_reset
+from .reset_smoke import run_reset_smoke
 from .roadmap import run_roadmap_create, run_roadmap_show, run_roadmap_validate
 from .root import RootResolutionError, resolve_ph_root
 from .sprint_archive import run_sprint_archive
@@ -170,6 +173,39 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     subparsers.add_parser("clean", help="Remove Python cache files under PH_ROOT", parents=[sub_common])
+
+    reset_parser = subparsers.add_parser(
+        "reset",
+        help="Reset project scope (dry-run by default)",
+        parents=[sub_common],
+    )
+    reset_parser.add_argument(
+        "--spec",
+        default="process/automation/reset_spec.json",
+        help="Repo-relative path to reset spec JSON",
+    )
+    reset_parser.add_argument("--confirm", default="", help="Must be exactly RESET to execute")
+    reset_parser.add_argument("--force", default="", help="Must be exactly true to execute")
+
+    subparsers.add_parser(
+        "reset-smoke",
+        help="Run reset smoke verification (destructive to project scope)",
+        parents=[sub_common],
+    )
+
+    migrate_parser = subparsers.add_parser(
+        "migrate",
+        help="Migrate artifacts between scopes",
+        parents=[sub_common],
+    )
+    migrate_subparsers = migrate_parser.add_subparsers(dest="migrate_command")
+    migrate_system = migrate_subparsers.add_parser(
+        "system-scope",
+        help="Migrate system-scoped artifacts out of project scope",
+        parents=[sub_common],
+    )
+    migrate_system.add_argument("--confirm", default="", help="Must be exactly RESET to run")
+    migrate_system.add_argument("--force", default="", help="Must be exactly true to run")
 
     subparsers.add_parser("dashboard", help="Show sprint + validation snapshot", parents=[sub_common])
     subparsers.add_parser("status", help="Generate status rollup", parents=[sub_common])
@@ -448,6 +484,28 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = 0
                 else:
                     print("Unknown hooks command.\nUse: ph hooks install\n", file=sys.stderr, end="")
+                    exit_code = 2
+            elif args.command == "reset":
+                exit_code = run_reset(
+                    ctx=ctx,
+                    spec=str(getattr(args, "spec")),
+                    confirm=str(getattr(args, "confirm")),
+                    force=str(getattr(args, "force")),
+                )
+            elif args.command == "reset-smoke":
+                exit_code = run_reset_smoke(ph_root=ph_root, ctx=ctx)
+            elif args.command == "migrate":
+                if getattr(args, "migrate_command", None) is None:
+                    print("Usage: ph migrate <system-scope>\n", file=sys.stderr, end="")
+                    exit_code = 2
+                elif args.migrate_command == "system-scope":
+                    exit_code = run_migrate_system_scope(
+                        ph_root=ph_root,
+                        confirm=str(getattr(args, "confirm")),
+                        force=str(getattr(args, "force")),
+                    )
+                else:
+                    print("Usage: ph migrate <system-scope>\n", file=sys.stderr, end="")
                     exit_code = 2
             elif args.command == "end-session":
                 _ = args.force  # parsed for parity; skip-codex mode does not enforce cwd matching
@@ -799,7 +857,7 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 print(f"Unknown command: {args.command}\n", file=sys.stderr, end="")
                 exit_code = 2
-        except (ConfigError, ScopeError, OnboardingError, EndSessionError) as exc:
+        except (ConfigError, ScopeError, OnboardingError, EndSessionError, ResetError) as exc:
             print(str(exc), file=sys.stderr, end="")
             exit_code = 2
 

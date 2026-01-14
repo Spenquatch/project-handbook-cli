@@ -85,7 +85,7 @@ def run_post_command_hook(
         quick=True,
         silent_success=True,
     )
-    if message:
+    if message and command != "migrate":
         print(message, end="")
 
     return validate_exit
