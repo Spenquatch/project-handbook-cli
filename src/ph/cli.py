@@ -5,6 +5,7 @@ import sys
 
 from . import __version__
 from .config import ConfigError, load_handbook_config, validate_handbook_config
+from .context import ScopeError, build_context, resolve_scope
 from .doctor import run_doctor
 from .root import RootResolutionError, resolve_ph_root
 
@@ -12,6 +13,7 @@ from .root import RootResolutionError, resolve_ph_root
 def build_parser() -> argparse.ArgumentParser:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--root", help="Path to the handbook instance repo root")
+    common.add_argument("--scope", choices=["project", "system"], help="Select data scope (default: project)")
 
     parser = argparse.ArgumentParser(prog="ph", description="Project Handbook CLI", parents=[common])
     subparsers = parser.add_subparsers(dest="command")
@@ -64,6 +66,13 @@ def main(argv: list[str] | None = None) -> int:
         config = load_handbook_config(ph_root)
         validate_handbook_config(config)
     except ConfigError as exc:
+        print(str(exc), file=sys.stderr, end="")
+        return 2
+
+    try:
+        scope = resolve_scope(cli_scope=args.scope)
+        _ctx = build_context(ph_root=ph_root, scope=scope)
+    except ScopeError as exc:
         print(str(exc), file=sys.stderr, end="")
         return 2
 
