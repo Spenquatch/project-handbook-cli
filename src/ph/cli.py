@@ -4,6 +4,7 @@ import argparse
 import sys
 
 from . import __version__
+from .config import ConfigError, load_handbook_config, validate_handbook_config
 from .root import RootResolutionError, resolve_ph_root
 
 
@@ -31,8 +32,15 @@ def main(argv: list[str] | None = None) -> int:
         return handler(args)
 
     try:
-        _ = resolve_ph_root(override=args.root)
+        ph_root = resolve_ph_root(override=args.root)
     except RootResolutionError as exc:
+        print(str(exc), file=sys.stderr, end="")
+        return 2
+
+    try:
+        config = load_handbook_config(ph_root)
+        validate_handbook_config(config)
+    except ConfigError as exc:
         print(str(exc), file=sys.stderr, end="")
         return 2
 

@@ -7,7 +7,10 @@ from pathlib import Path
 def _write_marker(ph_root: Path) -> None:
     marker = ph_root / "cli_plan" / "project_handbook.config.json"
     marker.parent.mkdir(parents=True, exist_ok=True)
-    marker.write_text("{}", encoding="utf-8")
+    marker.write_text(
+        '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.1.0,<0.2.0",\n  "repo_root": "."\n}\n',
+        encoding="utf-8",
+    )
 
 
 def test_ph_runs_in_repo_root(tmp_path: Path) -> None:
