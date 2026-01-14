@@ -16,3 +16,10 @@ Rule: `ph` MUST NOT execute repo-local Python scripts at runtime.
 3) `ph --help`
 
 If `ph` is not found, activate the venv first: `. .venv/bin/activate`.
+
+## Dev verification (exact commands)
+
+- `uv pip install -e ".[dev]"`
+- `uv run ruff format .`
+- `uv run ruff check .`
+- `uv run pytest -q`

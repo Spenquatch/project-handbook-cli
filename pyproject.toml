@@ -9,8 +9,18 @@ description = "Installed ph CLI for Project Handbook"
 readme = "README.md"
 requires-python = ">=3.10"
 
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
 [project.scripts]
 ph = "ph.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ph"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
