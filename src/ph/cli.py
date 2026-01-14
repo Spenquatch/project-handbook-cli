@@ -36,7 +36,16 @@ from .onboarding import (
     read_onboarding_markdown,
     read_session_template,
 )
+from .orchestration import run_check_all, run_test_system
 from .parking import run_parking_add, run_parking_list, run_parking_promote, run_parking_review
+from .release import (
+    run_release_add_feature,
+    run_release_close,
+    run_release_list,
+    run_release_plan,
+    run_release_status,
+    run_release_suggest,
+)
 from .roadmap import run_roadmap_create, run_roadmap_show, run_roadmap_validate
 from .root import RootResolutionError, resolve_ph_root
 from .sprint_archive import run_sprint_archive
@@ -164,6 +173,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("dashboard", help="Show sprint + validation snapshot", parents=[sub_common])
     subparsers.add_parser("status", help="Generate status rollup", parents=[sub_common])
+    subparsers.add_parser("check-all", help="Run validate + status", parents=[sub_common])
+
+    test_parser = subparsers.add_parser("test", help="Run automation smoke suites", parents=[sub_common])
+    test_subparsers = test_parser.add_subparsers(dest="test_command")
+    test_subparsers.add_parser("system", help="Run handbook system smoke suite", parents=[sub_common])
 
     sprint_parser = subparsers.add_parser("sprint", help="Manage sprint lifecycle", parents=[sub_common])
     sprint_subparsers = sprint_parser.add_subparsers(dest="sprint_command")
@@ -320,6 +334,30 @@ def build_parser() -> argparse.ArgumentParser:
     roadmap_subparsers.add_parser("create", help="Create roadmap template", parents=[sub_common])
     roadmap_subparsers.add_parser("validate", help="Validate roadmap links", parents=[sub_common])
 
+    release_parser = subparsers.add_parser("release", help="Manage project releases", parents=[sub_common])
+    release_subparsers = release_parser.add_subparsers(dest="release_command")
+    release_plan_parser = release_subparsers.add_parser("plan", help="Create a release plan", parents=[sub_common])
+    release_plan_parser.add_argument("--version", help="Release version (vX.Y.Z or 'next')")
+    release_plan_parser.add_argument("--bump", choices=["patch", "minor", "major"], default="patch")
+    release_plan_parser.add_argument("--sprints", type=int, default=3, help="Number of sprints (default: 3)")
+    release_plan_parser.add_argument("--start-sprint", help="Starting sprint id (SPRINT-...)")
+    release_plan_parser.add_argument("--sprint-ids", help="Comma-separated sprint ids (overrides --sprints)")
+    release_subparsers.add_parser("list", help="List release folders", parents=[sub_common])
+    release_subparsers.add_parser("status", help="Show current release status", parents=[sub_common])
+    release_add_feature = release_subparsers.add_parser(
+        "add-feature", help="Assign a feature to a release", parents=[sub_common]
+    )
+    release_add_feature.add_argument("--release", required=True, help="Release version (vX.Y.Z)")
+    release_add_feature.add_argument("--feature", required=True, help="Feature name")
+    release_add_feature.add_argument("--epic", action="store_true", help="Mark feature as epic")
+    release_add_feature.add_argument("--critical", action="store_true", help="Mark as critical path")
+    release_suggest = release_subparsers.add_parser(
+        "suggest", help="Suggest features for a release", parents=[sub_common]
+    )
+    release_suggest.add_argument("--version", required=True, help="Release version (vX.Y.Z)")
+    release_close = release_subparsers.add_parser("close", help="Close a release", parents=[sub_common])
+    release_close.add_argument("--version", required=True, help="Release version (vX.Y.Z)")
+
     daily_parser = subparsers.add_parser("daily", help="Manage daily status cadence", parents=[sub_common])
     daily_subparsers = daily_parser.add_subparsers(dest="daily_command")
     daily_generate = daily_subparsers.add_parser("generate", help="Generate daily status", parents=[sub_common])
@@ -464,6 +502,17 @@ def main(argv: list[str] | None = None) -> int:
                     print()
             elif args.command == "dashboard":
                 exit_code = run_dashboard(ph_root=ph_root, ctx=ctx)
+            elif args.command == "check-all":
+                exit_code = run_check_all(ph_root=ph_root, ctx=ctx, env=os.environ)
+            elif args.command == "test":
+                if getattr(args, "test_command", None) is None:
+                    print("Usage: ph test <system>\n", file=sys.stderr, end="")
+                    exit_code = 2
+                elif args.test_command == "system":
+                    exit_code = run_test_system(ph_root=ph_root, ctx=ctx, env=os.environ)
+                else:
+                    print("Usage: ph test <system>\n", file=sys.stderr, end="")
+                    exit_code = 2
             elif args.command == "sprint":
                 if args.sprint_command is None:
                     print(
@@ -681,6 +730,39 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = run_roadmap_validate(ctx=ctx)
                 else:
                     print("Usage: ph roadmap <show|create|validate>\n", file=sys.stderr, end="")
+                    exit_code = 2
+            elif args.command == "release":
+                if args.release_command is None:
+                    print("Usage: ph release <plan|list|status|add-feature|suggest|close>\n", file=sys.stderr, end="")
+                    exit_code = 2
+                elif args.release_command == "plan":
+                    exit_code = run_release_plan(
+                        ctx=ctx,
+                        version=getattr(args, "version", None),
+                        bump=str(getattr(args, "bump", "patch")),
+                        sprints=int(getattr(args, "sprints", 3)),
+                        start_sprint=getattr(args, "start_sprint", None),
+                        sprint_ids=getattr(args, "sprint_ids", None),
+                        env=os.environ,
+                    )
+                elif args.release_command == "list":
+                    exit_code = run_release_list(ctx=ctx)
+                elif args.release_command == "status":
+                    exit_code = run_release_status(ctx=ctx, env=os.environ)
+                elif args.release_command == "add-feature":
+                    exit_code = run_release_add_feature(
+                        ctx=ctx,
+                        release=str(getattr(args, "release")),
+                        feature=str(getattr(args, "feature")),
+                        epic=bool(getattr(args, "epic", False)),
+                        critical=bool(getattr(args, "critical", False)),
+                    )
+                elif args.release_command == "suggest":
+                    exit_code = run_release_suggest(ctx=ctx, version=str(getattr(args, "version")))
+                elif args.release_command == "close":
+                    exit_code = run_release_close(ctx=ctx, version=str(getattr(args, "version")), env=os.environ)
+                else:
+                    print("Usage: ph release <plan|list|status|add-feature|suggest|close>\n", file=sys.stderr, end="")
                     exit_code = 2
             elif args.command == "validate":
                 exit_code, _out_path, message = run_validate(
