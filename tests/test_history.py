@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 
 
-def _write_config(ph_root: Path, *, schema: int = 1) -> None:
+def _write_minimal_ph_root(ph_root: Path, *, schema: int = 1) -> None:
     config = ph_root / "cli_plan" / "project_handbook.config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
@@ -17,13 +17,27 @@ def _write_config(ph_root: Path, *, schema: int = 1) -> None:
         encoding="utf-8",
     )
 
+    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+
+    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+        '{"routing_rules": {}}', encoding="utf-8"
+    )
+    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+
 
 def _history_path(ph_root: Path) -> Path:
     return ph_root / ".project-handbook" / "history.log"
 
 
+def _validation_path(ph_root: Path) -> Path:
+    return ph_root / "status" / "validation.json"
+
+
 def test_history_appends_default_entry(tmp_path: Path) -> None:
-    _write_config(tmp_path)
+    _write_minimal_ph_root(tmp_path)
     result = subprocess.run(["ph", "--root", str(tmp_path)], capture_output=True, text=True)
     assert result.returncode == 0
 
@@ -34,29 +48,35 @@ def test_history_appends_default_entry(tmp_path: Path) -> None:
 
 
 def test_no_history_flag_skips_logging(tmp_path: Path) -> None:
-    _write_config(tmp_path)
+    _write_minimal_ph_root(tmp_path)
     result = subprocess.run(["ph", "--root", str(tmp_path), "--no-history"], capture_output=True, text=True)
     assert result.returncode == 0
     assert not _history_path(tmp_path).exists()
+    assert _validation_path(tmp_path).exists()
 
 
 def test_no_post_hook_flag_skips_history_logging(tmp_path: Path) -> None:
-    _write_config(tmp_path)
+    _write_minimal_ph_root(tmp_path)
     result = subprocess.run(["ph", "--root", str(tmp_path), "--no-post-hook"], capture_output=True, text=True)
     assert result.returncode == 0
     assert not _history_path(tmp_path).exists()
+    assert not _validation_path(tmp_path).exists()
 
 
 def test_history_logs_on_failure(tmp_path: Path) -> None:
-    _write_config(tmp_path, schema=999)
+    _write_minimal_ph_root(tmp_path, schema=999)
     result = subprocess.run(["ph", "--root", str(tmp_path)], capture_output=True, text=True)
     assert result.returncode != 0
     assert _history_path(tmp_path).exists()
+    assert not _validation_path(tmp_path).exists()
 
 
 def test_history_logs_doctor_failure(tmp_path: Path) -> None:
-    _write_config(tmp_path)
+    _write_minimal_ph_root(tmp_path)
+    # remove a required asset so doctor fails
+    (tmp_path / "process" / "automation" / "reset_spec.json").unlink()
     result = subprocess.run(["ph", "doctor", "--root", str(tmp_path)], capture_output=True, text=True)
     assert result.returncode == 3
     history_text = _history_path(tmp_path).read_text(encoding="utf-8")
     assert "ph doctor --root" in history_text
+    assert not _validation_path(tmp_path).exists()

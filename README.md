@@ -24,6 +24,13 @@ If `ph` is not found, activate the venv first: `. .venv/bin/activate`.
 - `uv run ruff check .`
 - `uv run pytest -q`
 
+## End-session (manual verification)
+
+Non-`--skip-codex` mode requires the `codex` CLI on your `PATH` (e.g. `npm i -g @openai/codex`).
+
+Example:
+- `ph end-session --log ~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl --root /path/to/project-handbook`
+
 ## Release (exact steps)
 
 1) update `src/ph/__init__.py` `__version__`

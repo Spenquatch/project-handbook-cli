@@ -1,0 +1,113 @@
+from __future__ import annotations
+
+DEFAULT_HELP = """Project Handbook quick help
+System scope: use --scope system to operate under .project-handbook/system.
+
+Most-used flows:
+  • Daily briefing          : ph daily generate | ph onboarding session continue-session
+  • Sprint lifecycle        : ph sprint plan / ph sprint status / ph sprint close
+  • Task execution          : ph task create / ph task status
+  • Feature + release work  : ph feature create / ph release plan
+  • Validation & status     : ph validate --quick | ph status
+
+Need the full command list for a workflow?
+  ph help sprint      # sprint planning & health
+  ph help task        # sprint tasks
+  ph help feature     # feature lifecycle
+  ph help release     # release coordination
+  ph help backlog     # issue backlog & triage
+  ph help parking     # parking lot ideas
+  ph help validation  # validation / status / test
+  ph help utilities   # daily tools, onboarding, cleanup
+
+Tip: most workflows print next-step guidance after they run.
+"""
+
+
+TOPICS: dict[str, str] = {
+    "sprint": """Sprint workflow commands
+  ph sprint plan      - Create a new sprint skeleton (auto-updates sprints/current)
+  ph sprint open      - Switch sprints/current to an existing sprint
+  ph sprint status    - Show day-of-sprint, health, and next suggested task
+  ph sprint tasks     - List every task under the active sprint
+  ph sprint burndown  - Generate an ASCII burndown chart and save to sprint dir
+  ph sprint close     - Produce retrospective, archive sprint, summarize velocity
+  ph sprint capacity  - Display sprint telemetry (points + lanes; not a scope cap)
+  ph sprint archive   - Manually archive a specific sprint (reruns only)
+""",
+    "task": """Task workflow commands
+  ph task create --title 'X' --feature foo --decision ADR-001 [--points 5] [--owner @alice] [--lane handbook/automation]
+                        - Scaffold a new sprint task directory with docs/checklists
+  ph task list        - Show all tasks in the current sprint
+  ph task show --id TASK-### - Print task metadata + file locations
+  ph task status --id TASK-### --status doing [--force]
+                        - Update status with dependency validation
+""",
+    "feature": """Feature management commands
+  ph feature list             - List features with owner, stage, and links
+  ph feature create --name foo [--epic] [--owner @alice]
+                                - Scaffold architecture/implementation/testing docs
+  ph feature status --name foo --stage in_progress
+  ph feature update-status    - Sync status.md files from sprint/task data
+  ph feature summary          - Aggregate progress for reporting
+  ph feature archive --name foo [--force]
+                                - Completeness check + move to features/implemented/
+""",
+    "release": (
+        "Release coordination commands\n"
+        "  ph release plan [--version v1.2.0|next] [--bump patch|minor|major] [--sprints 3] "
+        '[--sprint-ids "SPRINT-...,SPRINT-..."]\n'
+        "                                - Generate plan.md with selected sprints/features\n"
+        "  ph release status           - Summaries + health for current release\n"
+        "  ph release add-feature --release v1.2.0 --feature auth [--epic] [--critical]\n"
+        "  ph release suggest --version v1.2.0 - Recommend features based on status data\n"
+        "  ph release list             - List every release folder + status\n"
+        "  ph release close --version v1.2.0 - Close and document retro notes\n"
+    ),
+    "backlog": """Issue backlog + triage commands
+  ph backlog add --type bug|wildcards|work-items --title 'X' --severity P1 --desc 'Y' [--owner @alice]
+  ph backlog list [--severity P1] [--category ops] [--format table]
+  ph backlog triage --issue BUG-001 - AI-assisted rubric + action items
+  ph backlog assign --issue BUG-001 --sprint current
+  ph backlog rubric            - Print P0-P4 criteria
+  ph backlog stats             - Metrics grouped by severity/category
+""",
+    "parking": """Parking lot workflow commands
+  ph parking add --type features --title 'Idea' --desc 'Y' [--owner @alice] [--tags 'foo,bar']
+  ph parking list [--category labs] [--format table]
+  ph parking review            - Guided quarterly review session
+  ph parking promote --item FEAT-001 --target later
+""",
+    "validation": """Validation, status, and test commands
+  ph validate --quick            - Fast lint (runs automatically after every ph)
+  ph validate                  - Full validation suite
+  ph status                    - Regenerate status/current_summary.md
+  ph check-all                 - Convenience alias for validate + status
+  ph test system               - Run validation + status + daily smoke checks
+""",
+    "utilities": """Utility + daily-use commands
+  ph daily generate / daily generate --force / daily check --verbose - Manage daily status cadence
+  ph onboarding                 - Root onboarding guide
+  ph onboarding session <template> - Facilitated prompts (e.g., sprint-planning)
+  ph onboarding session continue-session - Show latest Codex + command history summary
+  ph end-session                - Generate session summary via headless Codex
+  ph dashboard                  - Quick sprint + validation snapshot
+  ph --scope system <command>   - System scope commands under .project-handbook/system (roadmap/releases excluded)
+  ph reset                      - Dry-run project reset (execute requires --confirm RESET --force true)
+  ph reset-smoke                - Prove reset preserves system scope
+  ph clean                      - Remove Python caches
+  ph hooks install              - Install repo git hooks
+  ph test system                - Automation smoke test suite
+""",
+    "roadmap": """Roadmap workflow commands
+  ph roadmap show     - Show roadmap now/next/later
+  ph roadmap create   - Create roadmap/now-next-later.md template
+  ph roadmap validate - Validate roadmap links
+""",
+}
+
+
+def get_help_text(topic: str | None) -> str | None:
+    if topic is None:
+        return DEFAULT_HELP
+    return TOPICS.get(topic)
