@@ -5,7 +5,7 @@ Installed Python CLI distribution: `project-handbook-cli`
 Console script: `ph`
 
 Handbook root marker (v1):
-- `cli_plan/project_handbook.config.json`
+- `project_handbook.config.json`
 
 Rule: `ph` MUST NOT execute repo-local Python scripts at runtime.
 
@@ -23,6 +23,11 @@ If `ph` is not found, activate the venv first: `. .venv/bin/activate`.
 - `uv run ruff format .`
 - `uv run ruff check .`
 - `uv run pytest -q`
+
+## Docs (MkDocs)
+
+- `uv pip install -e ".[dev]"`
+- `uv run mkdocs serve`
 
 ## End-session (manual verification)
 

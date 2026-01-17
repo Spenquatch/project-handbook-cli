@@ -1,0 +1,6 @@
+v2/infra/vault/templates/next.env.tpl
+v2/infra/vault/templates/.gitkeep
+v2/infra/vault/templates/context.env.tpl
+v2/infra/vault/templates/anythingllm.env.tpl
+v2/infra/vault/templates/router.env.tpl
+v2/infra/vault/templates/agent.hcl

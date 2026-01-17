@@ -1,0 +1,45 @@
+# Vault Agent configuration for Tribuence Mini v2 dev overlay
+vault {
+  address = "http://vault:8200"
+}
+
+exit_after_auth = false
+pid_file        = "/var/run/vault-agent.pid"
+
+auto_auth {
+  method "token_file" {
+    config = {
+      token_file_path = "/tmp/vault-dev-token"
+    }
+  }
+
+  sink "file" {
+    config = {
+      path = "/secrets/.token"
+    }
+  }
+}
+
+template {
+  source      = "/templates/next.env.tpl"
+  destination = "/secrets/next.env"
+  command     = "chmod 644 /secrets/next.env"
+}
+
+template {
+  source      = "/templates/router.env.tpl"
+  destination = "/secrets/router.env"
+  command     = "chmod 644 /secrets/router.env"
+}
+
+template {
+  source      = "/templates/context.env.tpl"
+  destination = "/secrets/context.env"
+  command     = "chmod 644 /secrets/context.env"
+}
+
+template {
+  source      = "/templates/anythingllm.env.tpl"
+  destination = "/secrets/anythingllm.env"
+  command     = "chmod 644 /secrets/anythingllm.env"
+}

@@ -1,0 +1,18 @@
+id: TASK-005
+title: Kickoff: v0.5.0 registry pipeline discovery (evidence dirs + next-up ordering)
+feature: v2_registry-cosmo-minio-required
+lane: registry/kickoff
+decision: ADR-0015
+session: task-execution
+owner: @spenser
+status: done
+story_points: 1
+depends_on: [FIRST_TASK]
+prio: P2
+due: 2026-01-16
+acceptance:
+  - Task dependency graph is valid and sprint-status selects TASK-005 as “Next up”.
+  - Evidence directory conventions recorded under `project-handbook/status/evidence/TASK-005/` (what artefacts each DR task must capture, and naming conventions).
+links:
+  - ../../../../../sprints/current/plan.md
+  - ../../../../../releases/current/plan.md

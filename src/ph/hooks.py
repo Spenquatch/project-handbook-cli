@@ -31,6 +31,9 @@ def plan_post_command_hook(
     if no_post_hook or env.get("PH_SKIP_POST_HOOK") == "1":
         return PostCommandHookPlan(append_history=False, run_validation=False)
 
+    if command == "init" and exit_code == 0:
+        return PostCommandHookPlan(append_history=False, run_validation=False)
+
     if exit_code == 0 and command in {"reset", "reset-smoke"}:
         return PostCommandHookPlan(append_history=False, run_validation=False)
 

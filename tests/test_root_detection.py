@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / "cli_plan" / "project_handbook.config.json"
+    config = ph_root / "project_handbook.config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.1.0,<0.2.0",\n  "repo_root": "."\n}\n',
@@ -27,6 +27,14 @@ def test_ph_runs_in_repo_root(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     result = subprocess.run(["ph"], cwd=tmp_path, capture_output=True, text=True)
     assert result.returncode == 0
+
+
+def test_ph_version_flag_works_outside_repo(tmp_path: Path) -> None:
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    result = subprocess.run(["ph", "--version"], cwd=outside, capture_output=True, text=True)
+    assert result.returncode == 0
+    assert result.stdout.strip()
 
 
 def test_ph_runs_from_nested_subdir(tmp_path: Path) -> None:

@@ -1,0 +1,25 @@
+id: TASK-009
+title: Implement: v2 schema harvester publish/check + mirrors + report hardening (Option A)
+feature: v2_schema-harvester-service
+lane: registry/publish
+decision: ADR-0032
+session: task-execution
+owner: @spenser
+status: done
+story_points: 3
+depends_on: [TASK-006]
+prio: P2
+due: 2026-01-17
+acceptance:
+  - Harvester entrypoint exists in `v2/` and implements ADR-0032 Option A: introspect `_service.sdl` first, with per-subgraph fallback to contract SDL only when introspection is unavailable/disabled.
+  - Publish/check is a hard gate (no mirror updates on any failure); CI ordering supports `publish/check → codegen → typecheck`.
+  - SDL mirror updates are atomic and safe: temp file → rename; no partial writes; never delete last-known-good mirrors on failure.
+  - Publish report artifact is deterministic and sanitized (stable JSON shape, stable ordering, no secrets/tokens/JWTs, bounded error strings).
+  - Legacy reference code (`modular-oss-saas/services/schema-harvester/`) may be reused for patterns, but v2 must implement the additional hardening/enhancements above; “port as-is” is not acceptable.
+  - Evidence captured under `project-handbook/status/evidence/TASK-009/` proving: publish/check gate behavior, no secret leakage, and atomic mirror update behavior.
+links:
+  - ../../../../../adr/0032-v2-harvester-publish-and-codegen-workflow.md
+  - ../../../../../decision-register/DR-0006-harvester-publish-and-codegen-workflow.md
+  - ../../../../../decision-register/DR-0004-vault-secrets-contract-cosmo-minio.md
+  - ../../../../../features/v2_schema-harvester-service/implementation/IMPLEMENTATION.md
+  - ../../../../../features/v2_schema-harvester-service/overview.md

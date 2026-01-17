@@ -1,0 +1,36 @@
+# Feature assignments for v0.5.1
+# Auto-managed by release commands
+
+version: v0.5.1
+start_sprint: SPRINT-2026-01-16
+end_sprint: SPRINT-2026-01-30
+planned_sprints: 3
+
+features:
+  v2.1_ui-module-registry-discovery:
+    type: regular
+    priority: P1
+    status: planned
+    completion: 0
+    critical_path: True
+
+  v2_context-control-plane-schema:
+    type: regular
+    priority: P1
+    status: planned
+    completion: 0
+    critical_path: True
+
+  v2.1_ui-module-registry-execution:
+    type: regular
+    priority: P1
+    status: planned
+    completion: 0
+    critical_path: False
+
+  v2_context-knowledge-network:
+    type: regular
+    priority: P1
+    status: planned
+    completion: 0
+    critical_path: False

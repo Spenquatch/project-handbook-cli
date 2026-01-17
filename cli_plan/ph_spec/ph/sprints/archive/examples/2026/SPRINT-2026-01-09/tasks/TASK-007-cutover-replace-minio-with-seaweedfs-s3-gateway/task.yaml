@@ -1,0 +1,22 @@
+id: TASK-007
+title: Cutover: Replace MinIO with SeaweedFS S3 gateway
+feature: v2_registry-cosmo-minio-required
+lane: registry/discovery
+decision: ADR-0030
+session: task-execution
+owner: @spenser
+status: done
+story_points: 3
+depends_on: [TASK-006]
+prio: P1
+due: 2026-01-16
+acceptance:
+  - SeaweedFS S3 gateway runs on the v2 network (internal-only; no Traefik exposure) and `COSMO_S3_BUCKET` is present.
+  - Cosmo artifact write/read probe passes against SeaweedFS.
+  - MinIO removed from the default v2 compose after successful cutover.
+  - Relevant v2 + handbook docs updated (including any ADR superseding/adjusting ADR-0015 wording).
+links:
+  - ../../../../../adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md
+  - ../../../../../adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md
+  - ../../../../../decision-register/DR-0003-cosmo-minio-baseline-topology.md
+  - ../../../../../features/v2_registry-cosmo-minio-required/fdr/0001-vault-secrets-contract-cosmo-minio.md

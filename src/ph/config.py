@@ -27,13 +27,24 @@ class ConfigError(RuntimeError):
 
 
 def load_handbook_config(ph_root: Path) -> HandbookConfig:
-    config_path = ph_root / "cli_plan" / "project_handbook.config.json"
-    try:
-        raw = json.loads(config_path.read_text(encoding="utf-8"))
-    except FileNotFoundError as exc:
-        raise ConfigError(_config_error_message(f"Missing config: {config_path}")) from exc
-    except json.JSONDecodeError as exc:
-        raise ConfigError(_config_error_message(f"Invalid JSON in {config_path}: {exc}")) from exc
+    config_paths = (
+        ph_root / "project_handbook.config.json",
+        ph_root / "cli_plan" / "project_handbook.config.json",  # legacy
+    )
+    raw = None
+    config_path = None
+    for candidate in config_paths:
+        try:
+            raw = json.loads(candidate.read_text(encoding="utf-8"))
+            config_path = candidate
+            break
+        except FileNotFoundError:
+            continue
+        except json.JSONDecodeError as exc:
+            raise ConfigError(_config_error_message(f"Invalid JSON in {candidate}: {exc}")) from exc
+
+    if raw is None or config_path is None:
+        raise ConfigError(_config_error_message(f"Missing config: {config_paths[0]}"))
 
     handbook_schema_version = raw.get("handbook_schema_version")
     requires_ph_version = raw.get("requires_ph_version")

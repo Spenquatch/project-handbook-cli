@@ -1,0 +1,26 @@
+id: TASK-010
+title: Implement: v2 registry-backed codegen wiring (Cosmo fetch + drift gate + CI ordering)
+feature: v2_codegen-from-registry
+lane: registry/publish
+decision: ADR-0032
+session: task-execution
+owner: @spenser
+status: done
+story_points: 3
+depends_on: [TASK-009, TASK-006]
+prio: P2
+due: 2026-01-17
+acceptance:
+  - Canonical local codegen command exists and fetches schema inputs from Cosmo (not local mirrors) before running GraphQL Codegen.
+  - CI enforces: publish/check (TASK-009) → codegen → typecheck, and fails on generated output drift.
+  - Codegen wiring is deterministic and documented (paths, commands, expected outputs) with no ambiguity.
+  - No secret leakage: Cosmo auth env is Vault-rendered and not printed; evidence includes explicit leakage checks.
+  - Legacy code and docs can be used as reference, but v2 must meet ADR-0032 hardening requirements (Cosmo-backed authority, drift gate, and explicit ordering).
+  - Evidence captured under `project-handbook/status/evidence/TASK-010/` proving: Cosmo fetch occurs, drift gate works, and ordering is enforced.
+links:
+  - ../../../../../adr/0032-v2-harvester-publish-and-codegen-workflow.md
+  - ../../../../../adr/0019-v2-codegen-from-registry.md
+  - ../../../../../decision-register/DR-0006-harvester-publish-and-codegen-workflow.md
+  - ../../../../../decision-register/DR-0004-vault-secrets-contract-cosmo-minio.md
+  - ../../../../../features/v2_codegen-from-registry/implementation/IMPLEMENTATION.md
+  - ../../../../../features/v2_codegen-from-registry/overview.md

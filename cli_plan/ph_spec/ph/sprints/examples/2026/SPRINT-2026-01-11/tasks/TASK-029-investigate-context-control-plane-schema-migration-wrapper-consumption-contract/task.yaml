@@ -1,0 +1,21 @@
+id: TASK-029
+title: Investigate: Context control plane schema migration + wrapper consumption contract
+feature: v2_context-control-plane-schema
+lane: context/control-plane
+decision: DR-0001
+session: research-discovery
+owner: @spenser
+status: done
+story_points: 3
+depends_on: []
+prio: P2
+due: 2026-01-18
+acceptance:
+  - Create and complete `project-handbook/features/v2_context-control-plane-schema/decision-register/DR-0001-context-control-plane-migration-and-consumption-contract.md` (Option A/B + evidence + explicit operator approval request; keep DR as `Proposed` until approved).
+  - `project-handbook/features/v2_context-control-plane-schema/architecture/ARCHITECTURE.md` updated with the selected snapshot query shape, federation approach, and consumer contract.
+  - `project-handbook/features/v2_context-control-plane-schema/implementation/IMPLEMENTATION.md` updated with an execution-ready migration plan (DB schema deltas, rollout sequencing, invariants, validation approach).
+  - Evidence captured under `project-handbook/status/evidence/TASK-029/` and referenced from DR-0001.
+links:
+  - ../../../../../sprints/current/plan.md
+  - ../../../../../features/v2_context-control-plane-schema/overview.md
+  - ../../../../../adr/0027-v2-context-control-plane-schema.md

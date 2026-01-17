@@ -1,0 +1,6 @@
+anythingllm-subgraph-1  | ⏳ Waiting for env file: /secrets/anythingllm.env
+anythingllm-subgraph-1  | {"level":30,"time":1767926638289,"pid":1,"hostname":"a68ce8f92035","msg":"Server listening at http://0.0.0.0:4020"}
+anythingllm-subgraph-1  | {"level":30,"time":1767926642937,"pid":1,"hostname":"a68ce8f92035","reqId":"req-1","req":{"method":"GET","url":"/health","hostname":"127.0.0.1:4020","remoteAddress":"127.0.0.1","remotePort":45140},"msg":"incoming request"}
+anythingllm-subgraph-1  | {"level":30,"time":1767926642988,"pid":1,"hostname":"a68ce8f92035","reqId":"req-1","res":{"statusCode":200},"responseTime":50.57312500476837,"msg":"request completed"}
+anythingllm-subgraph-1  | {"level":30,"time":1767926647682,"pid":1,"hostname":"a68ce8f92035","reqId":"req-2","req":{"method":"GET","url":"/health","hostname":"127.0.0.1:4020","remoteAddress":"127.0.0.1","remotePort":33898},"msg":"incoming request"}
+anythingllm-subgraph-1  | {"level":30,"time":1767926647686,"pid":1,"hostname":"a68ce8f92035","reqId":"req-2","res":{"statusCode":200},"responseTime":4.223207950592041,"msg":"request completed"}

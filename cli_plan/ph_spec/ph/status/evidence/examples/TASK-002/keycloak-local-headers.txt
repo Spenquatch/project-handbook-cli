@@ -1,0 +1,9 @@
+HTTP/1.1 302 Found
+Content-Length: 0
+Location: http://keycloak.local/admin/
+Referrer-Policy: no-referrer
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Xss-Protection: 1; mode=block
+Date: Mon, 05 Jan 2026 13:50:17 GMT
+

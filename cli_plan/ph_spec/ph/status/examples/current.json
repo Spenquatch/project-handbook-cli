@@ -1,0 +1,382 @@
+{
+  "generated_at": "2026-01-13T17:11:26Z",
+  "phases": [
+    {
+      "name": "SPRINT-2026-01-11",
+      "phase": "SPRINT-2026-01-11",
+      "title": "Sprint SPRINT-2026-01-11",
+      "features": [
+        "v2_context-control-plane-schema",
+        "v2.1_ui-module-registry-discovery"
+      ],
+      "decisions": [
+        "FDR-v2_1_ui-module-registry-discovery-0001",
+        "DR-0002",
+        "FDR-v2_1_ui-module-registry-discovery-0002",
+        "DR-0001",
+        "FDR-v2_context-control-plane-schema-0001",
+        "ADR-0033",
+        "DR-0007"
+      ],
+      "tasks": [
+        "TASK-029",
+        "TASK-039",
+        "TASK-041",
+        "TASK-031",
+        "TASK-032",
+        "TASK-033",
+        "TASK-027",
+        "TASK-030",
+        "TASK-034",
+        "TASK-035",
+        "TASK-038",
+        "TASK-026",
+        "TASK-036",
+        "TASK-037",
+        "TASK-040",
+        "TASK-028"
+      ]
+    }
+  ],
+  "totals": {
+    "backlog": 0,
+    "planned": 12,
+    "in_progress": 0,
+    "review": 0,
+    "blocked": 0,
+    "done": 4
+  },
+  "features": {
+    "v2_context-control-plane-schema": {
+      "open": [
+        {
+          "id": "TASK-041",
+          "title": "Contract: v3 overlay descriptors + precedence in Context snapshot (v1)",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "todo",
+          "story_points": 2,
+          "prio": "P2",
+          "decision": "ADR-0033"
+        },
+        {
+          "id": "TASK-032",
+          "title": "Contract: Context control-plane snapshot GraphQL contract (v1)",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "todo",
+          "story_points": 2,
+          "prio": "P2",
+          "decision": "FDR-v2_context-control-plane-schema-0001"
+        },
+        {
+          "id": "TASK-033",
+          "title": "Contract: Context control-plane DB schema (v1 tables + constraints)",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "todo",
+          "story_points": 2,
+          "prio": "P2",
+          "decision": "FDR-v2_context-control-plane-schema-0001"
+        },
+        {
+          "id": "TASK-034",
+          "title": "Implement: Context DB migrations for control-plane tables (v1)",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "todo",
+          "story_points": 3,
+          "prio": "P2",
+          "decision": "FDR-v2_context-control-plane-schema-0001"
+        },
+        {
+          "id": "TASK-035",
+          "title": "Implement: Context snapshot query + types (empty-safe)",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "todo",
+          "story_points": 3,
+          "prio": "P2",
+          "decision": "FDR-v2_context-control-plane-schema-0001"
+        },
+        {
+          "id": "TASK-036",
+          "title": "Validate: v2 smoke probe for control-plane snapshot query",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "todo",
+          "story_points": 2,
+          "prio": "P2",
+          "decision": "FDR-v2_context-control-plane-schema-0001"
+        },
+        {
+          "id": "TASK-040",
+          "title": "Contract: v3-ready UI module manifest metadata fields (v1)",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "todo",
+          "story_points": 2,
+          "prio": "P2",
+          "decision": "ADR-0033"
+        }
+      ],
+      "done": [
+        {
+          "id": "TASK-029",
+          "title": "Investigate: Context control plane schema migration + wrapper consumption contract",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "done",
+          "story_points": 3,
+          "prio": "P2",
+          "decision": "DR-0001"
+        }
+      ]
+    },
+    "v2.1_ui-module-registry-discovery": {
+      "open": [
+        {
+          "id": "TASK-039",
+          "title": "Validate: Playwright E2E for module load + failure modes",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "todo",
+          "story_points": 2,
+          "prio": "P2",
+          "decision": "FDR-v2_1_ui-module-registry-discovery-0002"
+        },
+        {
+          "id": "TASK-031",
+          "title": "Implement: UI module publish pipeline (S3 upload + smoke check)",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "todo",
+          "story_points": 3,
+          "prio": "P2",
+          "decision": "FDR-v2_1_ui-module-registry-discovery-0001"
+        },
+        {
+          "id": "TASK-030",
+          "title": "Implement: UI module origin proxy route (Option A)",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "todo",
+          "story_points": 3,
+          "prio": "P2",
+          "decision": "FDR-v2_1_ui-module-registry-discovery-0001"
+        },
+        {
+          "id": "TASK-038",
+          "title": "Implement: UI module panel integration + deterministic fallback states",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "todo",
+          "story_points": 3,
+          "prio": "P2",
+          "decision": "FDR-v2_1_ui-module-registry-discovery-0002"
+        },
+        {
+          "id": "TASK-037",
+          "title": "Implement: UI module runtime loader (Option A browser verify + mode flag)",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "todo",
+          "story_points": 3,
+          "prio": "P2",
+          "decision": "FDR-v2_1_ui-module-registry-discovery-0002"
+        }
+      ],
+      "done": [
+        {
+          "id": "TASK-027",
+          "title": "Investigate: Next.js runtime module loading (allowlist + sha256)",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "done",
+          "story_points": 3,
+          "prio": "P2",
+          "decision": "DR-0002"
+        },
+        {
+          "id": "TASK-026",
+          "title": "Investigate: UI module artifact origin + publish pipeline (S3 + integrity)",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "done",
+          "story_points": 3,
+          "prio": "P2",
+          "decision": "DR-0001"
+        },
+        {
+          "id": "TASK-028",
+          "title": "Investigate: Module registry alignment with v3 roadmap",
+          "sprint": "SPRINT-2026-01-11",
+          "status": "done",
+          "story_points": 2,
+          "prio": "P2",
+          "decision": "DR-0007"
+        }
+      ]
+    }
+  },
+  "features_summary": [
+    {
+      "key": "tribuence-mini-v2",
+      "stage": "developing",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2.1_ui-module-registry-discovery",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2.1_ui-module-registry-execution",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_capability-contracts-and-stubs",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_capability-detection-surface",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_capability-manifests-and-toggles",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_codegen-from-registry",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_context-control-plane-schema",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_context-glue-integrations",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_context-knowledge-network",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_launch",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_observability-and-runbooks",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_registry-cosmo-minio-required",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_rest-wrapper-context-integration-ops",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_rest-wrapper-facade-subgraphs",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_schema-harvester-service",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_schema-publishing-and-composition",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_ui-dev-harness-and-module-boundaries",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v2_workspace-signup-onboarding",
+      "stage": "approved",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v3_backstage-operator-surface",
+      "stage": "proposed",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v3_capability-control-service-billing",
+      "stage": "proposed",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v3_client-customization-overlays",
+      "stage": "proposed",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v3_license-compliance-automation",
+      "stage": "proposed",
+      "now": [],
+      "next": [],
+      "risks": []
+    },
+    {
+      "key": "v3_provisioning-adapters-and-workflows",
+      "stage": "proposed",
+      "now": [],
+      "next": [],
+      "risks": []
+    }
+  ],
+  "project": {
+    "now": [],
+    "next": [],
+    "risks": []
+  }
+}

@@ -1,0 +1,35 @@
+→ Checking Vault availability at http://127.0.0.1:8200...
+   ✅ Vault reachable
+→ Ensuring kv (v2) secret engine mounted at /kv...
+   ⚠️  kv mount already exists
+   ⚠️  TWENTY_API_KEY is not set and not present in Vault. Provide it via env or seed Vault at kv/data/tribuence/v2/router to enable authenticated Twenty probes.
+→ Phase A: seeding Vault KV entries (boot-safe + defaults)
+→ Writing Next secrets to kv/data/tribuence/v2/next...
+   ✅ Next secrets written
+→ Writing Router secrets to kv/data/tribuence/v2/router...
+   ✅ Router secrets written
+→ Writing Context secrets to kv/data/tribuence/v2/context...
+   ✅ Context secrets written
+→ Writing AnythingLLM secrets to kv/data/tribuence/v2/anythingllm...
+   ✅ AnythingLLM secrets written
+→ Phase B: minting service-derived keys (AnythingLLM API key)
+   ✅ Compose service 'anythingllm' available for exec
+→ Requesting AnythingLLM container to mint API key...
+→ Writing AnythingLLM (minted API key) secrets to kv/data/tribuence/v2/anythingllm...
+   ✅ AnythingLLM (minted API key) secrets written
+   ✅ Minted AnythingLLM API key into Vault (value not printed)
+
+🚀 Vault v2 bootstrap complete. Summary:
+  - Vault address: http://127.0.0.1:8200
+  - Mount: kv (version 2)
+  - Secrets paths:
+      - kv/data/tribuence/v2/next
+      - kv/data/tribuence/v2/router
+      - kv/data/tribuence/v2/context
+      - kv/data/tribuence/v2/anythingllm
+
+Override defaults by exporting env vars before running this script, e.g.:
+  export TWENTY_API_KEY=your-token
+  export OPENAI_API_KEY=sk-...
+  export KEYCLOAK_CLIENT_SECRET=your-secret
+  V2_VAULT_MINT_ANYLLM_API_KEY=true bash v2/scripts/vault/bootstrap-v2.sh

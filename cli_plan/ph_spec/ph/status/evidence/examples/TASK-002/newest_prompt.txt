@@ -1,0 +1,4 @@
+Workstream 'codex-cli-rs' session recap (continue-task).
+Review process/sessions/session_end/codex-cli-rs/20260103T165111_019b84c5-2527-7c30-b2bf-777a6c403f8a_continue_task_continue-task.md for context.
+Key focus: ---
+Resume the same task using the latest context block.

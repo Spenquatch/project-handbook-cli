@@ -28,6 +28,7 @@ from .feature_status_updater import run_feature_summary, run_feature_update_stat
 from .git_hooks import install_git_hooks
 from .help_text import get_help_text
 from .hooks import plan_post_command_hook, run_post_command_hook
+from .init_repo import InitError, run_init
 from .migrate_system_scope import run_migrate_system_scope
 from .onboarding import (
     OnboardingError,
@@ -104,6 +105,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     version_parser = subparsers.add_parser("version", help="Print installed ph version", parents=[sub_common])
     version_parser.set_defaults(_handler=_handle_version)
+
+    subparsers.add_parser("init", help="Initialize a new handbook instance repo", parents=[sub_common])
 
     doctor_parser = subparsers.add_parser(
         "doctor",
@@ -419,12 +422,36 @@ def _handle_doctor(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
     invocation_args = list(argv) if argv is not None else sys.argv[1:]
+    if invocation_args in (["--version"], ["-V"]):
+        print(__version__)
+        return 0
+
+    parser = build_parser()
     args = parser.parse_args(argv)
 
     if args.command == "version":
         return _handle_version(args)
+
+    if args.command == "init":
+        target_root = Path(getattr(args, "root", None) or Path.cwd()).resolve()
+        try:
+            exit_code = run_init(target_root=target_root)
+        except InitError as exc:
+            print(str(exc), file=sys.stderr, end="")
+            return 2
+
+        return run_post_command_hook(
+            ph_root=target_root,
+            ctx=None,
+            command="init",
+            invocation_args=invocation_args,
+            exit_code=exit_code,
+            no_post_hook=bool(getattr(args, "no_post_hook", False)),
+            no_history=bool(getattr(args, "no_history", False)),
+            no_validate=bool(getattr(args, "no_validate", False)),
+            env=os.environ,
+        )
 
     try:
         ph_root = resolve_ph_root(override=getattr(args, "root", None))

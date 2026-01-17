@@ -1,0 +1,37 @@
+bash v2/scripts/v2-smoke.sh
+[INFO] v2 smoke harness
+[INFO] mode: router
+[INFO] router url: http://router.local/
+[INFO] tenant: tribuence
+[INFO] authorization: 
+[INFO] require graphs: <none>
+[INFO] require AnythingLLM upload: false
+[INFO] require AnythingLLM chat: false
+[INFO] require Twenty auth probe: false
+[INFO] Isolation checks (forbidden hosts must be 404)
+[PASS] forbidden host: twenty.local (http 404)
+[PASS] forbidden host: anythingllm.local (http 404)
+[INFO] Router GraphQL liveness
+[PASS] router liveness (__typename)
+[INFO] Graph detection (ADR-0011: prefer supergraph snapshot; no Router introspection required)
+[PASS] join__Graph detection via file: /Users/spensermcconnell/__Active_Code/oss-saas/v2/infra/compose/graphql/supergraph-local.graphql
+[INFO] Detected graphs: ANYTHINGLLM TRIBUENCE_CONTEXT TWENTY
+[INFO] join__Graph snapshot entries:
+13173:  ANYTHINGLLM @join__graph(name: "anythingllm", url: "http://anythingllm-subgraph:4020/graphql")
+13174:  TRIBUENCE_CONTEXT @join__graph(name: "tribuence_context", url: "http://context:4010/graphql")
+13175:  TWENTY @join__graph(name: "twenty", url: "http://twenty-server:3150/graphql")
+[INFO] Twenty probe (conditional)
+[SKIP] TWENTY present but no V2_SMOKE_AUTHORIZATION; skipping Twenty auth probe
+[INFO] Context probes (conditional)
+[WARN] context workspaceCreate failed; attempting to locate existing workspace by slug=demo
+[PASS] context workspace exists (slug=demo)
+[PASS] context workspaces list
+[PASS] context referenceCreate
+[INFO] AnythingLLM probes (conditional)
+[PASS] anythingWorkspaces list
+[PASS] anythingWorkspaceEnsure
+[PASS] anythingDocuments list
+[SKIP] anythingDocumentUpload not required (set V2_SMOKE_REQUIRE_ANYTHINGLLM_UPLOAD=true to enforce)
+[SKIP] anythingChat not required (set V2_SMOKE_REQUIRE_ANYTHINGLLM_CHAT=true to enforce)
+
+Summary: pass=10 fail=0 skip=3

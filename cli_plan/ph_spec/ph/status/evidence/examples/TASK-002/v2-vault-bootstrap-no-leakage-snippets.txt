@@ -1,0 +1,68 @@
+24:warn() { echo "   ⚠️  $*"; }
+34:sanitize() {
+38:is_keycloak_client_secret_placeholder() {
+45:is_anyllm_placeholder_key() {
+70:  candidate=$(sanitize "$candidate")
+76:  if is_anyllm_placeholder_key "$candidate"; then
+89:is_twenty_placeholder_key() {
+165:  client_uuid=$(sanitize "$client_uuid")
+184:  secret=$(sanitize "$secret")
+185:  if is_keycloak_client_secret_placeholder "$secret"; then
+186:    fail "Keycloak returned an empty/placeholder client secret; refusing to persist it."
+189:  sanitize "$secret"
+249:  sanitize "$generated"
+331:    sanitize "$value"
+338:      sanitize "$value"
+343:  sanitize "$default"
+351:    sanitize "$value"
+358:      sanitize "$value"
+409:    sanitize "$value"
+470:  warn "kv mount already exists"
+484:if is_keycloak_client_secret_placeholder "$EXISTING_KEYCLOAK_CLIENT_SECRET"; then
+492:EXISTING_ANYLLM_API_KEY=$(sanitize "$EXISTING_ANYLLM_API_KEY_RAW")
+493:if is_anyllm_placeholder_key "$EXISTING_ANYLLM_API_KEY"; then
+498:    warn "ANYLLM_API_KEY in Vault contains extra output; rewriting clean token (value not printed)."
+501:    warn "ANYLLM_API_KEY in Vault has an unexpected format; ignoring it."
+510:  NEXT_PUBLIC_APP_URL=$(sanitize "$REQUESTED_NEXT_PUBLIC_APP_URL")
+512:  NEXT_PUBLIC_APP_URL=$(sanitize "$EXISTING_NEXT_PUBLIC_APP_URL")
+528:  NEXTAUTH_URL=$(sanitize "$REQUESTED_NEXTAUTH_URL")
+530:  NEXTAUTH_URL=$(sanitize "$EXISTING_NEXTAUTH_URL")
+532:  NEXTAUTH_URL=$(sanitize "$NEXT_PUBLIC_APP_URL")
+537:  V2_GRAPHQL_URL=$(sanitize "$REQUESTED_V2_GRAPHQL_URL")
+539:  V2_GRAPHQL_URL=$(sanitize "$EXISTING_V2_GRAPHQL_URL")
+546:  KEYCLOAK_ISSUER=$(sanitize "$REQUESTED_KEYCLOAK_ISSUER")
+548:  KEYCLOAK_ISSUER=$(sanitize "$EXISTING_KEYCLOAK_ISSUER")
+555:  KEYCLOAK_PUBLIC_ISSUER=$(sanitize "$REQUESTED_KEYCLOAK_PUBLIC_ISSUER")
+557:  KEYCLOAK_PUBLIC_ISSUER=$(sanitize "$EXISTING_KEYCLOAK_PUBLIC_ISSUER")
+559:  KEYCLOAK_PUBLIC_ISSUER=$(sanitize "$KEYCLOAK_ISSUER")
+564:  KEYCLOAK_CLIENT_ID=$(sanitize "$REQUESTED_KEYCLOAK_CLIENT_ID")
+566:  KEYCLOAK_CLIENT_ID=$(sanitize "$EXISTING_KEYCLOAK_CLIENT_ID")
+573:if [[ -n "$REQUESTED_KEYCLOAK_CLIENT_SECRET" ]] && ! is_keycloak_client_secret_placeholder "$REQUESTED_KEYCLOAK_CLIENT_SECRET"; then
+574:  KEYCLOAK_CLIENT_SECRET=$(sanitize "$REQUESTED_KEYCLOAK_CLIENT_SECRET")
+576:  KEYCLOAK_CLIENT_SECRET=$(sanitize "$EXISTING_KEYCLOAK_CLIENT_SECRET")
+580:  info "Fetching Keycloak client secret (value not printed)..."
+591:  ok "Fetched Keycloak client secret (value not printed)"
+599:  JWT_SECRET=$(sanitize "$JWT_SECRET")
+601:  JWT_SECRET=$(sanitize "$EXISTING_JWT_SECRET")
+608:  JWT_SECRET=$(sanitize "$JWT_SECRET")
+612:  NEXTAUTH_SECRET=$(sanitize "$NEXTAUTH_SECRET")
+614:  NEXTAUTH_SECRET=$(sanitize "$EXISTING_NEXTAUTH_SECRET")
+628:if is_twenty_placeholder_key "$REQUESTED_TWENTY_API_KEY"; then
+629:  warn "TWENTY_API_KEY is set to a placeholder value; ignoring it to avoid overwriting a real Vault value."
+634:  TWENTY_API_KEY=$(sanitize "$REQUESTED_TWENTY_API_KEY")
+636:  TWENTY_API_KEY=$(sanitize "$EXISTING_TWENTY_API_KEY")
+642:  warn "TWENTY_API_KEY is not set and not present in Vault. Provide it via env or seed Vault at kv/data/tribuence/v2/router to enable authenticated Twenty probes."
+643:elif is_twenty_placeholder_key "$TWENTY_API_KEY"; then
+644:  warn "TWENTY_API_KEY in Vault appears to be a placeholder. Provide a real token via env to replace it (value not printed)."
+655:  CONTEXT_JWT_SECRET=$(sanitize "$CONTEXT_JWT_SECRET")
+657:  CONTEXT_JWT_SECRET=$(sanitize "$EXISTING_CONTEXT_JWT_SECRET")
+670:ANYLLM_API_KEY=$(sanitize "$REQUESTED_ANYLLM_API_KEY_RAW")
+671:if is_anyllm_placeholder_key "$ANYLLM_API_KEY"; then
+672:  warn "ANYLLM_API_KEY is set to the known placeholder; ignoring it."
+679:    warn "ANYLLM_API_KEY contains extra output; extracting candidate token (value not printed)."
+682:    warn "ANYLLM_API_KEY is set but has an unexpected format; ignoring it."
+688:  ANYLLM_API_KEY=$(sanitize "$EXISTING_ANYLLM_API_KEY")
+761:  if [[ -n "$EXISTING_ANYLLM_API_KEY_AFTER" ]] && ! is_anyllm_placeholder_key "$EXISTING_ANYLLM_API_KEY_AFTER" && is_anyllm_api_key_value_valid "$EXISTING_ANYLLM_API_KEY_AFTER"; then
+765:      warn "ANYLLM_API_KEY in Vault is format-valid but rejected by AnythingLLM; minting a fresh API key (value not printed)."
+786:    ok "Minted AnythingLLM API key into Vault (value not printed)"
+791:  warn "ANYLLM_API_KEY is not set. To mint one after v2 is up: V2_VAULT_MINT_ANYLLM_API_KEY=true bash v2/scripts/vault/bootstrap-v2.sh"

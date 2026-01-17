@@ -1,0 +1,4 @@
+total 32
+drwxr-xr-x@ 3 spensermcconnell  staff     96 Nov 24 17:04 .
+drwxr-xr-x@ 5 spensermcconnell  staff    160 Nov 24 17:04 ..
+-rw-r--r--@ 1 spensermcconnell  staff  15713 Nov 24 17:04 session_end_index.json

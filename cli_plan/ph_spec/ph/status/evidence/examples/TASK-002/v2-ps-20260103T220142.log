@@ -1,0 +1,15 @@
+NAME                                  IMAGE                                  COMMAND                  SERVICE                CREATED          STATUS                                     PORTS
+tribuence-v2-anythingllm-1            mintplexlabs/anythingllm:latest        "/opt/healthcheck/wi…"   anythingllm            8 seconds ago    Up Less than a second (health: starting)   3001/tcp
+tribuence-v2-anythingllm-subgraph-1   tribuence-v2-anythingllm-subgraph      "/opt/healthcheck/wi…"   anythingllm-subgraph   9 seconds ago    Up 1 second (health: starting)             4020/tcp
+tribuence-v2-apollo-router-1          ghcr.io/apollographql/router:v1.39.0   "/opt/healthcheck/wi…"   apollo-router          8 seconds ago    Up 1 second (health: starting)             
+tribuence-v2-context-1                tribuence-v2-context                   "/opt/healthcheck/wi…"   context                9 seconds ago    Up 1 second (health: starting)             4010/tcp
+tribuence-v2-keycloak-1               quay.io/keycloak/keycloak:26.1.1       "/opt/keycloak/bin/k…"   keycloak               10 seconds ago   Up 7 seconds (health: starting)            8080/tcp, 8443/tcp, 9000/tcp
+tribuence-v2-postgres-1               pgvector/pgvector:pg15                 "docker-entrypoint.s…"   postgres               9 seconds ago    Up 7 seconds (healthy)                     5432/tcp
+tribuence-v2-traefik-1                traefik:v3.0                           "/entrypoint.sh --pr…"   traefik                10 seconds ago   Up 7 seconds (healthy)                     0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp
+tribuence-v2-twenty-db-1              postgres:16                            "docker-entrypoint.s…"   twenty-db              9 seconds ago    Up 7 seconds (healthy)                     5432/tcp
+tribuence-v2-twenty-redis-1           redis:7-alpine                         "docker-entrypoint.s…"   twenty-redis           9 seconds ago    Up 7 seconds                               6379/tcp
+tribuence-v2-twenty-server-1          twentycrm/twenty:latest                "/app/entrypoint.sh …"   twenty-server          9 seconds ago    Up 1 second                                
+tribuence-v2-twenty-worker-1          twentycrm/twenty:latest                "/app/entrypoint.sh …"   twenty-worker          8 seconds ago    Up Less than a second                      
+tribuence-v2-v2-ui-1                  tribuence-v2-v2-ui                     "/opt/healthcheck/wi…"   v2-ui                  8 seconds ago    Up Less than a second (health: starting)   3000/tcp
+tribuence-v2-vault-1                  hashicorp/vault:1.16.1                 "docker-entrypoint.s…"   vault                  10 seconds ago   Up 7 seconds (healthy)                     127.0.0.1:8200->8200/tcp
+tribuence-v2-vault-agent-1            hashicorp/vault:1.16.1                 "docker-entrypoint.s…"   vault-agent            9 seconds ago    Up 1 second                                8200/tcp

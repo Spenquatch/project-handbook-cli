@@ -1,0 +1,211 @@
+---
+id: ADR-CLI-0001
+title: Replace Makefile Targets with `ph` CLI
+type: adr
+status: superseded
+date: 2026-01-13
+tags: [handbook, cli, automation, ergonomics, reliability]
+links:
+  - ./ADR-CLI-0003-ph-project-layout.md
+  - ./CLI_CONTRACT.md
+  - ../v0_make/MAKE_CONTRACT.md
+  - ../../Makefile
+  - ../../process/automation/post_make_hook.py
+---
+
+# Context
+
+The handbook currently exposes workflows via `make` targets that shell out to Python scripts under `process/automation/*` and `process/checks/*`.
+
+## Update (2026-01-15)
+
+This ADR’s **packaging** motivations still hold, but its original assumptions about:
+
+- the root marker location (`project_handbook.config.json` at repo root), and
+- the existence of “system scope” (`--scope system`)
+
+are superseded by `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md` (marker: `.ph/config.json`, no system scope).
+
+This works well, but reliability issues repeatedly show up around:
+
+- **Directory sensitivity**: running commands from different working directories can change relative-path behavior, especially when scripts spawn subprocesses and assume a `cwd`.
+- **Hook duplication**: behavior like “append history” and “auto-run validate-quick unless skipped” is currently implemented as a `make`-level post hook (`process/automation/post_make_hook.py`) with additional exceptions encoded in the `Makefile`.
+- **Scope split**: we now maintain two operational scopes:
+  - `project` (default): data under repo root (`sprints/`, `features/`, `status/`, …)
+  - `system` (internal): data under `.project-handbook/system/**`
+  This is currently expressed via duplicated Make targets (`hb-*`) that set `PH_SCOPE=system`.
+
+We want a single CLI entrypoint that:
+
+- runs from anywhere (stable repo root detection),
+- uses one consistent flag for scope selection,
+- runs hooks deterministically (history logging + validation) without Make,
+- preserves the current “hints + next steps” UX because it is a major productivity multiplier.
+
+Additionally, we want the CLI to be a **first-class installed tool**:
+- installable via `uv` / `pip` / `poetry`,
+- not dependent on repo-local Python files living inside the handbook instance.
+
+Important constraints from the existing system:
+
+- **System scope excludes `roadmap/` and `releases/`** (project-scope-only).
+- **Reset** is destructive and must be safe:
+  - default: dry-run
+  - execute: requires `confirm=RESET` and `force=true` (exact match)
+- Validation rules currently live in `process/checks/validation_rules.json` (project-scope), and system scope reuses the same rules file.
+
+# Decision
+
+Implement a first-class `ph` CLI (Python-based) that becomes the primary interface for all handbook operations.
+
+## CLI principles (non-negotiable)
+
+1. **Root-stable**: `ph` MUST resolve the handbook repo root regardless of `cwd`.
+2. **Scope-stable**: `ph --scope {project|system}` MUST be the only way to select data root; `PH_SCOPE` remains supported for backwards compatibility but is treated as an implementation detail.
+3. **Hook-stable**: `ph` MUST run pre/post behaviors centrally (no duplicated hook logic in wrappers).
+4. **Hint-preserving**: `ph` MUST preserve the existing style of “Next steps” guidance after commands.
+5. **No system roadmap/releases**: `ph --scope system` MUST NOT create or operate on roadmap or releases.
+6. **Installed tool**: `ph` MUST be installable as a Python package and MUST NOT require executing repo-local Python scripts.
+
+## Packaging and distribution (required)
+
+`ph` MUST be distributed as an installable Python package:
+
+- Distribution name (PyPI): `project-handbook-cli`
+- Console script: `ph`
+- Supported installation mechanisms:
+  - `uv tool install project-handbook-cli`
+  - `pipx install project-handbook-cli`
+  - `pip install project-handbook-cli`
+  - `poetry add project-handbook-cli`
+
+The Project Handbook repository remains viewable and editable (Markdown/JSON/etc) and becomes a “data + templates + planning” instance that the installed `ph` tool operates against.
+
+## Repository marker + schema versioning (required)
+
+The handbook root MUST contain `project_handbook.config.json` and `ph` MUST treat its presence as the canonical root marker (independent of any repo-local Python scripts).
+
+`project_handbook.config.json` MUST contain:
+
+- `handbook_schema_version`: integer, MUST be `1` for v1 CLI
+- `requires_ph_version`: string, PEP 440 compatible specifier, MUST be `>=0.1.0,<0.2.0`
+- `repo_root`: string, MUST be `"."` (legacy compatibility for v0 scripts that still read this file)
+
+On every invocation, `ph` MUST:
+- read `project_handbook.config.json`,
+- refuse to run if `handbook_schema_version` is not supported,
+- refuse to run if the installed `ph` version does not satisfy `requires_ph_version`,
+- print a remediation message that includes the exact `uv tool install ...` command to resolve it.
+
+## Implementation isolation (required)
+
+The v1 CLI implementation MUST be developed in a **separate repository** (not inside the handbook instance repo):
+
+- Repo: `project-handbook-cli` (source for the `project-handbook-cli` distribution)
+
+Rationale:
+- the handbook instance repo remains “data only” (no executed Python required),
+- the CLI can be versioned, released, and installed independently,
+- parity can be validated by running `ph` against the handbook instance while Make remains authoritative.
+
+## Root detection
+
+`ph` resolves the handbook root using a deterministic search strategy:
+
+1. If `--root <path>` is provided, use it (must contain `project_handbook.config.json`).
+2. Else, walk up from `cwd` looking for a directory that contains:
+   - `project_handbook.config.json`
+3. If none found, exit with a fatal error that instructs how to run with `--root`.
+
+This makes command behavior independent of the directory you run from.
+
+## Command model
+
+The `ph` CLI command tree mirrors the current Make targets and is defined in `cli_plan/v1_cli/CLI_CONTRACT.md`.
+
+The `hb-*` commands are replaced by:
+
+`ph --scope system <command>`
+
+Examples:
+
+- `make task-create ...` → `ph task create ...`
+- `make hb-task-create ...` → `ph --scope system task create ...`
+
+## Hook model
+
+`ph` implements centralized hooks:
+
+### Post-command hook (default enabled)
+
+After a successful command:
+
+1. Append history entry to `.project-handbook/history.log` (repo root)
+2. Run `ph validate --quick --silent-success` unless:
+   - the command is `validate` itself, or
+   - the command is `reset` / `reset-smoke`, or
+   - user passed `--no-validate`.
+
+### Pre-command hook (required for destructive commands)
+
+For destructive commands (reset/migration):
+
+- Enforce confirmation semantics exactly as the existing reset/migration scripts do.
+
+## Implementation strategy
+
+Phase 1: implement `ph` as a standalone engine that reads/writes the handbook instance files directly (no subprocess calls to repo-local Python scripts).
+
+Phase 2: remove the Make interface (or keep it as a thin compatibility layer that shells out to `ph`), once parity is proven.
+
+# Options considered
+
+## Option A — Keep Make as primary interface
+
+Pros:
+- No migration effort.
+
+Cons:
+- `cwd` / subprocess reliability issues remain.
+- Hook logic stays split between Makefile and scripts.
+- Scope split remains duplicated (`hb-*`).
+
+## Option B — Add CLI and keep Make as compatibility layer (chosen)
+
+Pros:
+- CLI becomes the authoritative execution environment (root/scoping/hooks).
+- Make can remain as stable aliases during migration (e.g., `make sprint-plan` shells to `ph sprint plan`).
+- Reduces friction for existing users while we validate the CLI.
+
+Cons:
+- Requires a careful contract and parity work.
+
+## Option C — Replace automation scripts entirely
+
+Pros:
+- Clean architecture.
+
+Cons:
+- Too high-risk; unnecessary to get reliability improvements.
+
+# Consequences
+
+## Positive
+
+- Commands become stable regardless of working directory.
+- Hook behavior is unified and testable.
+- Scope selection becomes uniform (`--scope`) and easier to reason about.
+
+## Negative / tradeoffs
+
+- Requires maintaining CLI parity with Make targets during transition.
+- Requires a clear contract for hints/outputs to avoid UX regression.
+
+# Acceptance criteria
+
+This ADR is complete and accepted when:
+
+- The CLI contract exists and fully enumerates commands, flags, hooks, outputs, and scope behavior (`cli_plan/v1_cli/CLI_CONTRACT.md`).
+- A `ph` CLI implementation can run from any subdirectory and produce the same results as running from repo root.
+- The post-command hook behavior is centralized in the CLI, with the same semantics as the existing Make + post_make_hook system.
+- System scope remains isolated under `.project-handbook/system/**` and never creates `roadmap/` or `releases/`.

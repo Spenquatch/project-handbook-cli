@@ -1,0 +1,2 @@
+index: /Users/spensermcconnell/__Active_Code/oss-saas/process/sessions/session_end/session_end_index.json
+OK: all index paths exist

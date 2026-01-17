@@ -1,0 +1,74 @@
+{
+  "sprints": [
+    {
+      "sprint": "SPRINT-2025-12-22",
+      "archived_at": "2026-01-02T14:02:52.113473Z",
+      "path": "sprints/archive/2025/SPRINT-2025-12-22",
+      "start": "2025-12-22",
+      "end": "2025-12-26"
+    },
+    {
+      "sprint": "SPRINT-2026-01-02",
+      "archived_at": "2026-01-02T22:45:15.880568Z",
+      "path": "sprints/archive/2026/SPRINT-2026-01-02",
+      "start": "2026-01-02",
+      "end": "2026-01-06"
+    },
+    {
+      "sprint": "SPRINT-2026-01-05",
+      "archived_at": "2026-01-03T14:38:45.628888Z",
+      "path": "sprints/archive/2026/SPRINT-2026-01-05",
+      "start": "2026-01-05",
+      "end": "2026-01-09"
+    },
+    {
+      "sprint": "SPRINT-2026-01-12",
+      "archived_at": "2026-01-03T23:01:40.529986Z",
+      "path": "sprints/archive/2026/SPRINT-2026-01-12",
+      "start": "2026-01-12",
+      "end": "2026-01-16"
+    },
+    {
+      "sprint": "SPRINT-2026-01-19",
+      "archived_at": "2026-01-04T17:02:17.801059Z",
+      "path": "sprints/archive/2026/SPRINT-2026-01-19",
+      "start": "2026-01-19",
+      "end": "2026-01-23"
+    },
+    {
+      "sprint": "SPRINT-2026-01-04",
+      "archived_at": "2026-01-04T22:51:24.374121Z",
+      "path": "sprints/archive/2026/SPRINT-2026-01-04",
+      "start": "2026-01-04",
+      "end": "2026-01-04"
+    },
+    {
+      "sprint": "SPRINT-2026-01-26",
+      "archived_at": "2026-01-05T00:48:22.569009Z",
+      "path": "sprints/archive/2026/SPRINT-2026-01-26",
+      "start": "2026-01-26",
+      "end": "2026-01-30"
+    },
+    {
+      "sprint": "SPRINT-2026-01-04-19",
+      "archived_at": "2026-01-08T02:47:12.747757Z",
+      "path": "sprints/archive/2026/SPRINT-2026-01-04-19",
+      "start": "2026-01-04",
+      "end": "2026-01-07"
+    },
+    {
+      "sprint": "SPRINT-2026-01-07",
+      "archived_at": "2026-01-09T18:50:49.846411Z",
+      "path": "sprints/archive/2026/SPRINT-2026-01-07",
+      "start": "2026-01-07",
+      "end": "2026-01-09"
+    },
+    {
+      "sprint": "SPRINT-2026-01-09",
+      "archived_at": "2026-01-11T15:16:23.188353Z",
+      "path": "sprints/archive/2026/SPRINT-2026-01-09",
+      "start": "2026-01-09",
+      "end": "2026-01-11"
+    }
+  ]
+}

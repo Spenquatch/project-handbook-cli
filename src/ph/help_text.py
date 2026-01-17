@@ -95,6 +95,7 @@ TOPICS: dict[str, str] = {
   ph --scope system <command>   - System scope commands under .project-handbook/system (roadmap/releases excluded)
   ph reset                      - Dry-run project reset (execute requires --confirm RESET --force true)
   ph reset-smoke                - Prove reset preserves system scope
+  ph init                       - Initialize a new handbook instance repo (root marker)
   ph clean                      - Remove Python caches
   ph hooks install              - Install repo git hooks
   ph test system                - Automation smoke test suite

@@ -1,0 +1,6 @@
+context-1  | ⏳ Waiting for env file: /secrets/context.env
+context-1  | {"level":30,"time":1767926638339,"pid":1,"hostname":"29ecdf63c8ef","msg":"Server listening at http://0.0.0.0:4010"}
+context-1  | {"level":30,"time":1767926642937,"pid":1,"hostname":"29ecdf63c8ef","reqId":"req-1","req":{"method":"GET","url":"/health","hostname":"127.0.0.1:4010","remoteAddress":"127.0.0.1","remotePort":50008},"msg":"incoming request"}
+context-1  | {"level":30,"time":1767926642941,"pid":1,"hostname":"29ecdf63c8ef","reqId":"req-1","res":{"statusCode":200},"responseTime":3.5628750324249268,"msg":"request completed"}
+context-1  | {"level":30,"time":1767926645606,"pid":1,"hostname":"29ecdf63c8ef","reqId":"req-2","req":{"method":"GET","url":"/health","hostname":"127.0.0.1:4010","remoteAddress":"127.0.0.1","remotePort":50018},"msg":"incoming request"}
+context-1  | {"level":30,"time":1767926645607,"pid":1,"hostname":"29ecdf63c8ef","reqId":"req-2","res":{"statusCode":200},"responseTime":0.8157079219818115,"msg":"request completed"}

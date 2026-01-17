@@ -1,0 +1,29 @@
+→ Checking Vault availability at http://127.0.0.1:8200...
+   ✅ Vault reachable
+→ Ensuring kv (v2) secret engine mounted at /kv...
+   ✅ Mounted kv secret engine
+   ⚠️  TWENTY_API_KEY is not set and not present in Vault. Provide it via env or seed Vault at kv/data/tribuence/v2/router to enable authenticated Twenty probes.
+→ Phase A: seeding Vault KV entries (boot-safe + defaults)
+→ Writing Next secrets to kv/data/tribuence/v2/next...
+   ✅ Next secrets written
+→ Writing Router secrets to kv/data/tribuence/v2/router...
+   ✅ Router secrets written
+→ Writing Context secrets to kv/data/tribuence/v2/context...
+   ✅ Context secrets written
+→ Writing AnythingLLM secrets to kv/data/tribuence/v2/anythingllm...
+   ✅ AnythingLLM secrets written
+→ Phase B: minting service-derived keys (AnythingLLM API key)
+   ✅ Compose service 'anythingllm' available for exec
+→ Requesting AnythingLLM container to mint API key...
+FAILED TO CREATE API KEY. 
+Invalid `prisma.api_keys.create()` invocation:
+
+
+The table `main.api_keys` does not exist in the current database.
+
+Invalid `prisma.api_keys.create()` invocation:
+
+
+The table `main.api_keys` does not exist in the current database.
+
+❌ Failed to execute API key generation inside AnythingLLM container.

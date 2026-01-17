@@ -1,0 +1,41 @@
+{
+  "updated_at": "2026-01-11",
+  "contracts": [
+    {
+      "id": "v2-context-health",
+      "service": "context",
+      "audience": "internal",
+      "method": "GET",
+      "path": "/health",
+      "owner": "@spenser",
+      "status": "active",
+      "doc": "v2-context-service.md",
+      "source_contract": "../tribuence-mini-v2/context-subgraph.md",
+      "source_task": "../../sprints/archive/2025/SPRINT-2025-12-22/tasks/TASK-014-v2-context:-service-skeleton-+-health-graphql/README.md"
+    },
+    {
+      "id": "v2-context-graphql",
+      "service": "context",
+      "audience": "internal",
+      "method": "POST",
+      "path": "/graphql",
+      "owner": "@spenser",
+      "status": "active",
+      "doc": "v2-context-service.md",
+      "source_contract": "../tribuence-mini-v2/context-subgraph.md",
+      "source_task": "../../sprints/archive/2025/SPRINT-2025-12-22/tasks/TASK-014-v2-context:-service-skeleton-+-health-graphql/README.md"
+    },
+    {
+      "id": "v2-ui-healthz",
+      "service": "tribuence-mini-ui",
+      "audience": "operator",
+      "method": "GET",
+      "path": "/api/healthz",
+      "owner": "@spenser",
+      "status": "active",
+      "doc": "v2-ui-healthz.md",
+      "source_contract": "../../sprints/archive/2026/SPRINT-2026-01-04-19/tasks/TASK-010-v2-ui-get-api-healthz-aggregate/steps.md",
+      "source_task": "../../sprints/archive/2026/SPRINT-2026-01-04-19/tasks/TASK-010-v2-ui-get-api-healthz-aggregate/README.md"
+    }
+  ]
+}

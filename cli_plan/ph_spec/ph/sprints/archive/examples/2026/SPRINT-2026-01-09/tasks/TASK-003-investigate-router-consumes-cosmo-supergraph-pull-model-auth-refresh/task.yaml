@@ -1,0 +1,21 @@
+id: TASK-003
+title: Investigate: Router consumes Cosmo supergraph (pull model + auth + refresh)
+feature: v2_schema-publishing-and-composition
+lane: registry/router
+decision: DR-0005
+session: research-discovery
+owner: @spenser
+status: done
+story_points: 3
+depends_on: [TASK-005]
+prio: P2
+due: 2026-01-16
+acceptance:
+  - `project-handbook/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md` completed (Option A/B + evidence + recommendation) and ends with an explicit operator/user approval request; keep DR as `Proposed` until approval.
+  - `project-handbook/features/v2_schema-publishing-and-composition/implementation/IMPLEMENTATION.md` updated with an execution-ready Router consumption plan (auth material, refresh/polling model, and the exact v2 config files that will change).
+  - Evidence captured under `project-handbook/status/evidence/TASK-003/` (repo inspection outputs referenced by DR-0005 and the execution-ready plan).
+links:
+  - ../../../../../releases/current/plan.md
+  - ../../../../../features/v2_schema-publishing-and-composition/overview.md
+  - ../../../../../adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md
+  - ../../../../../adr/0021-v2-schema-harvester-service.md

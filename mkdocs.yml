@@ -1,0 +1,12 @@
+site_name: project-handbook-cli
+repo_url: https://github.com/Spenquatch/project-handbook-cli
+repo_name: Spenquatch/project-handbook-cli
+
+theme:
+  name: mkdocs
+
+nav:
+  - Home: index.md
+  - Quick Start: quickstart.md
+  - Commands: commands.md
+

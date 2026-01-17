@@ -1,0 +1,5 @@
+total 8
+drwxr-xr-x@ 4 spensermcconnell  staff  128 Jan  3 12:01 .
+drwxr-xr-x@ 4 spensermcconnell  staff  128 Dec 31 09:48 ..
+drwxr-xr-x@ 4 spensermcconnell  staff  128 Jan  3 12:01 codex-cli-rs
+-rw-r--r--@ 1 spensermcconnell  staff  908 Jan  3 12:01 session_end_index.json

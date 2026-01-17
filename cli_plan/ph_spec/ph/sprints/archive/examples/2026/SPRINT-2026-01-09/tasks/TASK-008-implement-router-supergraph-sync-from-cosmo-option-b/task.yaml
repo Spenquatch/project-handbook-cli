@@ -1,0 +1,25 @@
+id: TASK-008
+title: Implement: Router supergraph sync from Cosmo (Option B)
+feature: v2_schema-publishing-and-composition
+lane: registry/router
+decision: ADR-0031
+session: task-execution
+owner: @spenser
+status: done
+story_points: 3
+depends_on: [TASK-006, TASK-004]
+prio: P1
+due: 2026-01-17
+acceptance:
+  - Router runtime supergraph comes from Cosmo (Option B) per ADR-0031 and DR-0005 (no local-only composition).
+  - A `supergraph-sync` helper/service fetches Cosmo federated-graph artifacts and produces an Apollo Router-compatible federation supergraph SDL, writing a runtime supergraph file using atomic updates (temp + rename) and last-known-good preservation.
+  - Apollo Router consumes the runtime supergraph file (read-only) and hot-reloads on changes.
+  - Cosmo credentials are Vault-rendered and mounted only into `supergraph-sync` (Router never mounts Cosmo creds); no secret values printed in logs/evidence.
+  - Smoke probes prove: (1) runtime supergraph file exists and is non-empty, (2) Router remains healthy across a supergraph refresh.
+  - Evidence captured under `project-handbook/status/evidence/TASK-008/<run-id>/` and handbook validation passes.
+links:
+  - ../../../../../adr/0031-v2-router-supergraph-delivery-cosmo-sync-artifact.md
+  - ../../../../../decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md
+  - ../../../../../decision-register/DR-0004-vault-secrets-contract-cosmo-minio.md
+  - ../../../../../decision-register/DR-0006-harvester-publish-and-codegen-workflow.md
+  - ../../../../../features/v2_schema-publishing-and-composition/implementation/IMPLEMENTATION.md

@@ -1,0 +1,21 @@
+id: TASK-001
+title: Investigate: Cosmo+MinIO baseline wiring strategy (topology, versions, posture)
+feature: v2_registry-cosmo-minio-required
+lane: registry/discovery
+decision: DR-0003
+session: research-discovery
+owner: @spenser
+status: done
+story_points: 3
+depends_on: [TASK-005]
+prio: P2
+due: 2026-01-16
+acceptance:
+  - `project-handbook/decision-register/DR-0003-cosmo-minio-baseline-topology.md` completed (Option A/B + evidence + recommendation) and ends with an explicit operator/user approval request; keep DR as `Proposed` until approval.
+  - `project-handbook/features/v2_registry-cosmo-minio-required/architecture/ARCHITECTURE.md` updated with the selected Cosmo stack inventory (services, image tags, databases) and internal-only exposure posture.
+  - `project-handbook/features/v2_registry-cosmo-minio-required/implementation/IMPLEMENTATION.md` updated with an execution-ready plan (exact v2 wiring points, required env/secrets, bucket init approach, smoke probes).
+  - Evidence captured under `project-handbook/status/evidence/TASK-001/` (repo inspection outputs referenced by DR-0003 and the execution-ready plan).
+links:
+  - ../../../../../releases/current/plan.md
+  - ../../../../../features/v2_registry-cosmo-minio-required/overview.md
+  - ../../../../../adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md

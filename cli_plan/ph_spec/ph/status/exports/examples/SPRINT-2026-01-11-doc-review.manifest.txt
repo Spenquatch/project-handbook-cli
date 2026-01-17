@@ -1,0 +1,15 @@
+# Paths included in SPRINT-2026-01-11 doc review tarball (repo-relative)
+# (Use *.paths.txt for tar input.)
+project-handbook/sprints/current
+project-handbook/sprints/2026/SPRINT-2026-01-11
+project-handbook/features/tribuence-mini-v2
+project-handbook/features/v2_context-control-plane-schema
+project-handbook/features/v2_registry-cosmo-minio-required
+project-handbook/features/v2_ui-dev-harness-and-module-boundaries
+project-handbook/features/v2_workspace-signup-onboarding
+project-handbook/features/v2.1_ui-module-registry-discovery
+project-handbook/adr
+project-handbook/decision-register
+project-handbook/contracts
+project-handbook/releases
+project-handbook/status/validation.json

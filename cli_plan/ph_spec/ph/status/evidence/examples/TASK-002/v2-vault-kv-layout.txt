@@ -1,0 +1,37 @@
+v2/scripts/vault/bootstrap-v2.sh:476:EXISTING_NEXTAUTH_URL=$(read_kv_v2_field "kv/data/tribuence/v2/next" "NEXTAUTH_URL")
+v2/scripts/vault/bootstrap-v2.sh:477:EXISTING_NEXT_PUBLIC_APP_URL=$(read_kv_v2_field "kv/data/tribuence/v2/next" "NEXT_PUBLIC_APP_URL")
+v2/scripts/vault/bootstrap-v2.sh:478:EXISTING_NEXT_PUBLIC_REQUIRE_AUTH=$(read_kv_v2_field "kv/data/tribuence/v2/next" "NEXT_PUBLIC_REQUIRE_AUTH")
+v2/scripts/vault/bootstrap-v2.sh:479:EXISTING_V2_GRAPHQL_URL=$(read_kv_v2_field "kv/data/tribuence/v2/next" "V2_GRAPHQL_URL")
+v2/scripts/vault/bootstrap-v2.sh:480:EXISTING_KEYCLOAK_ISSUER=$(read_kv_v2_field "kv/data/tribuence/v2/next" "KEYCLOAK_ISSUER")
+v2/scripts/vault/bootstrap-v2.sh:481:EXISTING_KEYCLOAK_PUBLIC_ISSUER=$(read_kv_v2_field "kv/data/tribuence/v2/next" "KEYCLOAK_PUBLIC_ISSUER")
+v2/scripts/vault/bootstrap-v2.sh:482:EXISTING_KEYCLOAK_CLIENT_ID=$(read_kv_v2_field "kv/data/tribuence/v2/next" "KEYCLOAK_CLIENT_ID")
+v2/scripts/vault/bootstrap-v2.sh:483:EXISTING_KEYCLOAK_CLIENT_SECRET=$(read_kv_v2_field "kv/data/tribuence/v2/next" "KEYCLOAK_CLIENT_SECRET")
+v2/scripts/vault/bootstrap-v2.sh:488:EXISTING_JWT_SECRET=$(read_kv_v2_field "kv/data/tribuence/v2/next" "JWT_SECRET")
+v2/scripts/vault/bootstrap-v2.sh:489:EXISTING_NEXTAUTH_SECRET=$(read_kv_v2_field "kv/data/tribuence/v2/next" "NEXTAUTH_SECRET")
+v2/scripts/vault/bootstrap-v2.sh:490:EXISTING_CONTEXT_JWT_SECRET=$(read_kv_v2_field "kv/data/tribuence/v2/context" "CONTEXT_JWT_SECRET")
+v2/scripts/vault/bootstrap-v2.sh:491:EXISTING_ANYLLM_API_KEY_RAW=$(read_kv_v2_field "kv/data/tribuence/v2/anythingllm" "ANYLLM_API_KEY")
+v2/scripts/vault/bootstrap-v2.sh:505:EXISTING_TWENTY_API_KEY=$(read_kv_v2_field "kv/data/tribuence/v2/router" "TWENTY_API_KEY")
+v2/scripts/vault/bootstrap-v2.sh:507:# Next.js / auth (kv/data/tribuence/v2/next)
+v2/scripts/vault/bootstrap-v2.sh:619:# Apollo Router (kv/data/tribuence/v2/router)
+v2/scripts/vault/bootstrap-v2.sh:642:  warn "TWENTY_API_KEY is not set and not present in Vault. Provide it via env or seed Vault at kv/data/tribuence/v2/router to enable authenticated Twenty probes."
+v2/scripts/vault/bootstrap-v2.sh:647:# Context service (kv/data/tribuence/v2/context)
+v2/scripts/vault/bootstrap-v2.sh:667:# AnythingLLM (kv/data/tribuence/v2/anythingllm)
+v2/scripts/vault/bootstrap-v2.sh:753:write_kv_v2 "kv/data/tribuence/v2/next" "$PAYLOAD_NEXT" "Next"
+v2/scripts/vault/bootstrap-v2.sh:754:write_kv_v2 "kv/data/tribuence/v2/router" "$PAYLOAD_ROUTER" "Router"
+v2/scripts/vault/bootstrap-v2.sh:755:write_kv_v2 "kv/data/tribuence/v2/context" "$PAYLOAD_CONTEXT" "Context"
+v2/scripts/vault/bootstrap-v2.sh:756:write_kv_v2 "kv/data/tribuence/v2/anythingllm" "$PAYLOAD_ANYTHINGLLM" "AnythingLLM"
+v2/scripts/vault/bootstrap-v2.sh:760:  EXISTING_ANYLLM_API_KEY_AFTER=$(read_kv_v2_field "kv/data/tribuence/v2/anythingllm" "ANYLLM_API_KEY")
+v2/scripts/vault/bootstrap-v2.sh:785:    write_kv_v2 "kv/data/tribuence/v2/anythingllm" "$PAYLOAD_ANYTHINGLLM_MINTED" "AnythingLLM (minted API key)"
+v2/scripts/vault/bootstrap-v2.sh:800:      - kv/data/tribuence/v2/next
+v2/scripts/vault/bootstrap-v2.sh:801:      - kv/data/tribuence/v2/router
+v2/scripts/vault/bootstrap-v2.sh:802:      - kv/data/tribuence/v2/context
+v2/scripts/vault/bootstrap-v2.sh:803:      - kv/data/tribuence/v2/anythingllm
+v2/infra/vault/templates/router.env.tpl:3: Renders secrets from kv/data/tribuence/v2/router into environment variables
+v2/infra/vault/templates/router.env.tpl:5:{{- with secret "kv/data/tribuence/v2/router" -}}
+v2/infra/vault/templates/anythingllm.env.tpl:3: Renders secrets from kv/data/tribuence/v2/anythingllm into environment variables
+v2/infra/vault/templates/anythingllm.env.tpl:5:{{- with secret "kv/data/tribuence/v2/anythingllm" -}}
+v2/infra/vault/templates/context.env.tpl:3: Renders secrets from kv/data/tribuence/v2/context into environment variables
+v2/infra/vault/templates/context.env.tpl:5:{{- with secret "kv/data/tribuence/v2/context" -}}
+v2/infra/vault/templates/next.env.tpl:3: Renders secrets from kv/data/tribuence/v2/next into environment variables
+v2/infra/vault/templates/next.env.tpl:5:{{- with secret "kv/data/tribuence/v2/next" -}}
+v2/infra/vault/templates/next.env.tpl:21:{{- with secret "kv/data/tribuence/v2/router" -}}

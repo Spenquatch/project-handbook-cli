@@ -1,0 +1,1735 @@
+{
+  "version": 3,
+  "owner": "project-handbook",
+  "status_values": ["todo", "in_progress", "done", "blocked"],
+  "root_marker": ".ph/config.json",
+  "session_log": "cli_plan/session_logs.md",
+  "sources_of_truth": [
+    "cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md",
+    "cli_plan/v1_cli/ADR-CLI-0001-ph-cli-migration.md",
+    "cli_plan/v1_cli/CLI_CONTRACT.md",
+    "cli_plan/v0_make/MAKE_CONTRACT.md"
+  ],
+  "global_rules": [
+    "All v1 execution planning lives under cli_plan/ only.",
+    "Every task execution MUST append exactly one session log entry to cli_plan/session_logs.md and MUST reference exactly one task ID.",
+    "The installed `ph` tool MUST NOT execute repo-local Python scripts at runtime.",
+    "PH_ROOT is the directory that contains .ph/config.json.",
+    "All command semantics, hints, and hooks MUST match cli_plan/v1_cli/CLI_CONTRACT.md."
+  ],
+  "implementation_strategy": {
+    "primary_goal": "Minimize ambiguity and maximize parity by porting the existing v0 Python logic into the installed CLI package (the code moves; the behavior stays).",
+    "mandatory_toolchain": {
+      "python": ">=3.10",
+      "package_manager": "uv",
+      "lint_format": "ruff",
+      "tests": "pytest"
+    },
+    "mandatory_package_layout": {
+      "distribution_name": "project-handbook-cli",
+      "console_script": "ph",
+      "import_package": "ph",
+      "src_layout": "src/ph/**",
+      "required_modules": [
+        "src/ph/__init__.py",
+        "src/ph/__main__.py",
+        "src/ph/cli.py",
+        "src/ph/root.py",
+        "src/ph/config.py",
+        "src/ph/context.py",
+        "src/ph/hooks.py",
+        "src/ph/history.py",
+        "src/ph/doctor.py",
+        "src/ph/commands/**"
+      ]
+    },
+    "mandatory_porting_rule": {
+      "rule": "For each command family, port the corresponding v0 script(s) into the CLI repo and adapt them to accept PH_ROOT + scope context; do not re-design algorithms.",
+      "handbook_instance_reference_paths": {
+        "validate": "process/checks/validate_docs.py",
+        "daily": "process/automation/daily_status_check.py",
+        "status": "process/automation/generate_project_status.py",
+        "sprint": "process/automation/sprint_manager.py",
+        "task": "process/automation/task_manager.py",
+        "feature": "process/automation/feature_manager.py + process/automation/feature_status_updater.py",
+        "backlog": "process/automation/backlog_manager.py",
+        "parking": "process/automation/parking_lot_manager.py",
+        "roadmap": "process/automation/roadmap_manager.py",
+        "release": "process/automation/release_manager.py",
+        "reset": "process/automation/reset_manager.py",
+        "migrate_system_scope": "process/automation/migrate_system_scope.py",
+        "end_session": "process/automation/session_summary.py + process/automation/rollout_parser.py + process/automation/project_config.py"
+      }
+    },
+    "test_fixture_rule": {
+      "rule": "All integration tests must use a temporary PH_ROOT fixture directory created by copying required repo assets from the handbook instance repo; tests must not mutate the real repo working tree."
+    }
+  },
+  "task_tracking_fields": {
+    "allowed_optional_fields": [
+      "started_at",
+      "completed_at",
+      "blocked_at",
+      "blockers",
+      "unblock_steps",
+      "last_session_log_ref",
+      "next_task_id"
+    ],
+    "timestamps_format": "RFC3339 UTC, e.g. 2026-01-14T03:21:00Z",
+    "blockers_format": "blockers is a non-empty array of concrete strings when status=blocked",
+    "unblock_steps_format": "unblock_steps is a non-empty array of exact steps when status=blocked"
+  },
+  "phases": [
+    {
+      "id": "PHASE-00",
+      "order": 0,
+      "title": "External CLI Repo Bootstrap",
+      "goals": [
+        "Create a separate `project-handbook-cli` repository for the installed `ph` tool.",
+        "Establish packaging, versioning, and a deterministic local dev workflow."
+      ],
+      "acceptance_criteria": [
+        "A repo named `project-handbook-cli` exists and is separate from the handbook instance repo.",
+        "The repo builds an installable distribution named `project-handbook-cli` and provides a `ph` console script.",
+        "Local install works and `ph --help` exits 0."
+      ]
+    },
+    {
+      "id": "PHASE-01",
+      "order": 1,
+      "title": "Root Detection + Compatibility + Diagnostics",
+      "goals": [
+        "Implement deterministic PH_ROOT detection using cli_plan/project_handbook.config.json.",
+        "Implement schema/version enforcement for safe upgrades.",
+        "Provide `ph doctor` for fast diagnosis."
+      ],
+      "acceptance_criteria": [
+        "PH_ROOT detection matches the contract and is fully tested.",
+        "Schema/version mismatches fail fast with remediation.",
+        "`ph doctor` exits with the correct exit codes and reports missing assets."
+      ]
+    },
+    {
+      "id": "PHASE-02",
+      "order": 2,
+      "title": "Core Runtime (Scope, Hooks, Validation)",
+      "goals": [
+        "Implement scope selection and data root resolution.",
+        "Implement history logging and post-command hook pipeline.",
+        "Implement a validation engine that reads process/checks/validation_rules.json."
+      ],
+      "acceptance_criteria": [
+        "Project/system scopes work and system scope enforces roadmap/releases exclusions.",
+        "Hook behavior matches the CLI contract (success/failure + skip rules).",
+        "`ph validate` produces correct validation reports for both scopes."
+      ]
+    },
+    {
+      "id": "PHASE-03",
+      "order": 3,
+      "title": "Foundation Commands (Help, Onboarding, Utilities)",
+      "goals": [
+        "Implement help and onboarding flows.",
+        "Implement utilities required by the contract (clean, hooks install, check-all, test system).",
+        "Implement end-session behavior inside `ph` (no repo-local Python)."
+      ],
+      "acceptance_criteria": [
+        "Help topics exist and match the contract.",
+        "Onboarding session templates are discoverable and render correctly.",
+        "Utilities commands match contract behavior and do not trigger recursive hooks."
+      ]
+    },
+    {
+      "id": "PHASE-04",
+      "order": 4,
+      "title": "Planning Commands (Daily, Status, Dashboard, Sprint/Task/Feature/Backlog/Parking/Roadmap/Release)",
+      "goals": [
+        "Implement all planning commands described in the CLI contract.",
+        "Preserve guardrails and Make-era hint blocks where required."
+      ],
+      "acceptance_criteria": [
+        "Every command in cli_plan/v1_cli/CLI_CONTRACT.md exists and behaves as specified.",
+        "Guardrails prevent system-scope artifacts from being created in project scope.",
+        "Hint blocks match the contract exactly where marked as MUST."
+      ]
+    },
+    {
+      "id": "PHASE-05",
+      "order": 5,
+      "title": "Destructive Commands + Parity Verification",
+      "goals": [
+        "Implement reset, reset-smoke, and migrate system-scope with exact safety semantics.",
+        "Create deterministic parity verification artifacts (checklists + reproducible steps)."
+      ],
+      "acceptance_criteria": [
+        "Reset defaults to dry-run and requires exact confirmations to execute.",
+        "Reset preserves `.project-handbook/system/**` exactly.",
+        "Parity checklist is complete and spot checks pass."
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "CLI-0001",
+      "phase_id": "PHASE-00",
+      "order": 1,
+      "title": "Create `project-handbook-cli` repository",
+      "status": "done",
+      "started_at": "2026-01-14T14:31:12Z",
+      "completed_at": "2026-01-14T14:34:04Z",
+      "depends_on": [],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 14:31 UTC — CLI-0001 — Create project-handbook-cli repository",
+      "next_task_id": "CLI-0002",
+      "kickoff_prompt": "Create a new repository named `project-handbook-cli` (separate from the handbook instance repo). Add a README that states: distribution name `project-handbook-cli`, console script `ph`, root marker `cli_plan/project_handbook.config.json`, and the rule that `ph` MUST NOT execute repo-local Python scripts. Add exactly one session log entry referencing CLI-0001 and then set CLI-0001 status to done.",
+      "steps": [
+        "Create a new git repository named `project-handbook-cli`.",
+        "Add README with the required statements (distribution name, console script, root marker path, no repo-local Python execution).",
+        "Push initial commit to the canonical remote."
+      ],
+      "deliverables": ["External repo `project-handbook-cli` exists with README."],
+      "acceptance_criteria": [
+        "Repository exists and is separate.",
+        "README includes the exact root marker path and the no repo-local Python execution rule."
+      ]
+    },
+    {
+      "id": "CLI-0002",
+      "phase_id": "PHASE-00",
+      "order": 2,
+      "title": "Add packaging skeleton and `ph` console script",
+      "status": "done",
+      "started_at": "2026-01-14T14:54:18Z",
+      "completed_at": "2026-01-14T14:57:34Z",
+      "depends_on": ["CLI-0001"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 14:54 UTC — CLI-0002 — Add packaging skeleton and ph console script",
+      "next_task_id": "CLI-0003",
+      "kickoff_prompt": "In `project-handbook-cli`, create an installable Python package with a src-layout and a `ph` console script.\n\nHard requirements:\n- Build backend: `hatchling`\n- Python requirement: `>=3.10`\n- Import package name: `ph`\n- Console script name: `ph`\n- CLI parser: `argparse` (subcommands)\n\nRepo structure (must exist after this task):\n- `pyproject.toml`\n- `src/ph/__init__.py`\n- `src/ph/__main__.py`\n- `src/ph/cli.py`\n\nLocal install verification (exact commands):\n1) `uv venv`\n2) `uv pip install -e .`\n3) `ph --help`\n\nDocument these exact commands in the CLI repo README.",
+      "steps": [
+        "Create `pyproject.toml` (PEP 621) with: name `project-handbook-cli`, build backend hatchling, requires-python `>=3.10`, and `[project.scripts] ph = \"ph.cli:main\"`.",
+        "Create `src/ph/__main__.py` that calls `ph.cli.main()` so `python -m ph --help` works.",
+        "Create `src/ph/cli.py` implementing argparse and a working `main()` that returns exit code 0 for `--help`.",
+        "Run the exact local install verification commands from the kickoff prompt and record them in README."
+      ],
+      "deliverables": ["Installable package providing `ph`."],
+      "acceptance_criteria": [
+        "Local install provides a working `ph` command.",
+        "`ph --help` exits 0."
+      ]
+    },
+    {
+      "id": "CLI-0003",
+      "phase_id": "PHASE-00",
+      "order": 3,
+      "title": "Add required dev tooling: ruff + pytest",
+      "status": "done",
+      "started_at": "2026-01-14T14:58:44Z",
+      "completed_at": "2026-01-14T15:01:01Z",
+      "depends_on": ["CLI-0002"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 14:58 UTC — CLI-0003 — Add required dev tooling: ruff + pytest",
+      "next_task_id": "CLI-0004",
+      "kickoff_prompt": "In `project-handbook-cli`, configure `ruff` and `pytest` with a deterministic configuration.\n\nHard requirements:\n- Add `ruff` and `pytest` as dev dependencies under `[project.optional-dependencies] dev`.\n- Add `pyproject.toml` ruff config:\n  - `line-length = 120`\n  - `target-version = \"py310\"`\n  - `lint.select = [\"E\", \"F\", \"I\", \"UP\"]`\n- Add a pytest smoke test file `tests/test_cli_help.py` that executes `ph --help` and asserts exit code 0.\n\nVerification commands (exact):\n- `uv pip install -e \".[dev]\"`\n- `uv run ruff format .`\n- `uv run ruff check .`\n- `uv run pytest -q`\n\nDocument these exact commands in README.",
+      "steps": [
+        "Add `[project.optional-dependencies] dev = [\"ruff\", \"pytest\"]` to `pyproject.toml`.",
+        "Add ruff configuration to `pyproject.toml` matching the kickoff prompt.",
+        "Add `tests/test_cli_help.py` that runs `ph --help` via subprocess and asserts exit code 0.",
+        "Run the exact verification commands from the kickoff prompt and ensure they pass.",
+        "Document the exact verification commands in README."
+      ],
+      "deliverables": ["ruff config, pytest config, and a smoke test."],
+      "acceptance_criteria": [
+        "`ruff` passes.",
+        "`pytest` passes.",
+        "README documents exact format/lint/test commands."
+      ]
+    },
+    {
+      "id": "CLI-0004",
+      "phase_id": "PHASE-00",
+      "order": 4,
+      "title": "Add release/versioning workflow (PEP 440 + tags)",
+      "status": "done",
+      "started_at": "2026-01-14T15:02:00Z",
+      "completed_at": "2026-01-14T15:03:31Z",
+      "depends_on": ["CLI-0003"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 15:02 UTC — CLI-0004 — Add release/versioning workflow (PEP 440 + tags)",
+      "next_task_id": "CLI-0101",
+      "kickoff_prompt": "Define the versioning mechanism for `project-handbook-cli` and document it. The installed `ph` version must be discoverable by the code (for requires_ph_version enforcement). Add a `__version__` source of truth and document release steps in README.",
+      "steps": [
+        "Add `src/ph/__init__.py` containing exactly one version constant: `__version__ = \"0.1.0\"`.",
+        "Add a `ph version` command that prints the exact `__version__` string and exits 0.",
+        "Document exact release steps in the CLI repo README:\n1) update `src/ph/__init__.py` `__version__`\n2) run `uv run ruff format .` then `uv run ruff check .` then `uv run pytest -q`\n3) create git tag `v<__version__>`\n4) build with `python -m build`\n5) verify artifacts exist in `dist/`."
+      ],
+      "deliverables": ["Version source of truth and documented release steps."],
+      "acceptance_criteria": [
+        "`ph version` prints the version string from `src/ph/__init__.py` and exits 0.",
+        "README contains the exact release procedure steps listed in this task."
+      ]
+    },
+
+    {
+      "id": "CLI-0101",
+      "phase_id": "PHASE-01",
+      "order": 1,
+      "title": "Implement PH_ROOT detection using the root marker",
+      "status": "done",
+      "started_at": "2026-01-14T15:04:55Z",
+      "completed_at": "2026-01-14T15:06:37Z",
+      "depends_on": ["CLI-0002"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 15:04 UTC — CLI-0101 — Implement PH_ROOT detection using the root marker",
+      "next_task_id": "CLI-0102",
+      "kickoff_prompt": "Implement PH_ROOT detection per cli_plan/v1_cli/CLI_CONTRACT.md. Root marker is `cli_plan/project_handbook.config.json`. Implement `--root <path>` override and upward directory walk from cwd. Add unit tests for: in-repo, nested subdir, outside repo failure with remediation containing an example `--root` invocation.",
+      "steps": [
+        "Add root discovery module that resolves PH_ROOT via marker detection.",
+        "Integrate root discovery into the CLI entrypoint before dispatch.",
+        "Add unit tests for success/failure modes."
+      ],
+      "deliverables": ["Root discovery module + tests."],
+      "acceptance_criteria": [
+        "Root detection works from nested directories.",
+        "Outside-repo usage fails non-zero with `--root` example in message.",
+        "Tests cover in-repo, subdir, outside-repo."
+      ]
+    },
+    {
+      "id": "CLI-0102",
+      "phase_id": "PHASE-01",
+      "order": 2,
+      "title": "Load and validate `cli_plan/project_handbook.config.json`",
+      "status": "done",
+      "started_at": "2026-01-14T15:15:53Z",
+      "completed_at": "2026-01-14T15:17:33Z",
+      "depends_on": ["CLI-0101", "CLI-0004"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 15:15 UTC — CLI-0102 — Load and validate cli_plan/project_handbook.config.json",
+      "next_task_id": "CLI-0103",
+      "kickoff_prompt": "Implement config loading from `<PH_ROOT>/cli_plan/project_handbook.config.json` and enforce: handbook_schema_version == 1 and installed ph version satisfies requires_ph_version. On mismatch: exit non-zero and include `uv tool install project-handbook-cli` in remediation. Add unit tests for schema mismatch and version mismatch.",
+      "steps": [
+        "Implement config loader and schema checks.",
+        "Implement requires_ph_version evaluation.",
+        "Implement remediation messages and exit codes.",
+        "Add unit tests for mismatch cases."
+      ],
+      "deliverables": ["Config loader + compatibility checks + tests."],
+      "acceptance_criteria": [
+        "Schema mismatch fails fast with clear remediation.",
+        "Version mismatch fails fast and includes `uv tool install project-handbook-cli`.",
+        "Tests cover both mismatch cases."
+      ]
+    },
+    {
+      "id": "CLI-0103",
+      "phase_id": "PHASE-01",
+      "order": 3,
+      "title": "Implement `ph doctor`",
+      "status": "done",
+      "started_at": "2026-01-14T15:18:22Z",
+      "completed_at": "2026-01-14T15:20:55Z",
+      "depends_on": ["CLI-0102"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 15:18 UTC — CLI-0103 — Implement ph doctor",
+      "next_task_id": "CLI-0201",
+      "kickoff_prompt": "Implement `ph doctor` per cli_plan/v1_cli/CLI_CONTRACT.md. It must print PH_ROOT, config schema/version, installed ph version, and check required asset paths. Exit codes: 0 ok, 2 schema/version mismatch, 3 missing assets. Add tests for each exit path.",
+      "steps": [
+        "Implement required asset checks using PH_ROOT-relative paths.",
+        "Implement doctor output and exit codes.",
+        "Add tests for ok/mismatch/missing-assets."
+      ],
+      "deliverables": ["Doctor command + tests."],
+      "acceptance_criteria": [
+        "`ph doctor` exit codes match contract (0/2/3).",
+        "Output includes PH_ROOT and missing paths when applicable.",
+        "Unit tests pass."
+      ]
+    },
+
+    {
+      "id": "CLI-0201",
+      "phase_id": "PHASE-02",
+      "order": 1,
+      "title": "Implement scope selection and PH_DATA_ROOT",
+      "status": "done",
+      "started_at": "2026-01-14T15:22:12Z",
+      "completed_at": "2026-01-14T15:23:59Z",
+      "depends_on": ["CLI-0103"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 15:22 UTC — CLI-0201 — Implement scope selection and PH_DATA_ROOT",
+      "next_task_id": "CLI-0202",
+      "kickoff_prompt": "Implement global flag `--scope project|system` (default project). Derive PH_DATA_ROOT (project=PH_ROOT, system=PH_ROOT/.project-handbook/system). Enforce system exclusions: no roadmap/releases under system data root. Add unit tests for both scopes and exclusion enforcement.",
+      "steps": [
+        "Add scope flag and context object (PH_ROOT, scope, PH_DATA_ROOT).",
+        "Implement system exclusion guards for roadmap/releases operations.",
+        "Add unit tests for path selection and guardrails."
+      ],
+      "deliverables": ["Scope/context module + tests."],
+      "acceptance_criteria": [
+        "Scope defaults to project.",
+        "System scope uses `.project-handbook/system` as data root.",
+        "System scope rejects roadmap/releases operations.",
+        "Unit tests pass."
+      ]
+    },
+    {
+      "id": "CLI-0202",
+      "phase_id": "PHASE-02",
+      "order": 2,
+      "title": "Implement history logging to `.project-handbook/history.log`",
+      "status": "done",
+      "started_at": "2026-01-14T15:24:44Z",
+      "completed_at": "2026-01-14T15:27:29Z",
+      "depends_on": ["CLI-0201"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 15:24 UTC — CLI-0202 — Implement history logging to .project-handbook/history.log",
+      "next_task_id": "CLI-0203",
+      "kickoff_prompt": "Implement history logging per cli_plan/v1_cli/CLI_CONTRACT.md. Append to `PH_ROOT/.project-handbook/history.log` on success and failure unless disabled. Timestamp format `%Y-%m-%d %H:%M:%S`. Entry is `(default)` when `ph` is invoked with no subcommand. Implement `--no-history` and `--no-post-hook`. Add unit tests.",
+      "steps": [
+        "Implement history append function with exact timestamp and format.",
+        "Integrate with CLI execution pipeline (success + failure).",
+        "Honor skip flags (`--no-history`, `--no-post-hook`).",
+        "Add unit tests."
+      ],
+      "deliverables": ["History logger + tests."],
+      "acceptance_criteria": [
+        "History entries match exact contract format.",
+        "Skip flags work.",
+        "Unit tests pass."
+      ]
+    },
+    {
+      "id": "CLI-0203",
+      "phase_id": "PHASE-02",
+      "order": 3,
+      "title": "Implement validation engine (`ph validate`)",
+      "status": "done",
+      "started_at": "2026-01-14T15:28:17Z",
+      "completed_at": "2026-01-14T15:33:31Z",
+      "depends_on": ["CLI-0201"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 15:28 UTC — CLI-0203 — Implement validation engine (ph validate)",
+      "next_task_id": "CLI-0204",
+      "kickoff_prompt": "Implement `ph validate` by porting the existing validator logic from the handbook instance repo into the installed CLI package.\n\nAuthoritative behavior to port:\n- process/checks/validate_docs.py\n- process/checks/validation_rules.json (rules input format)\n\nHard requirements:\n- The installed CLI must not import or execute the repo-local script at runtime; the logic must be vendored into the CLI repo.\n- Inputs: `<PH_ROOT>/process/checks/validation_rules.json`.\n- Outputs:\n  - project scope: `<PH_ROOT>/status/validation.json`\n  - system scope: `<PH_ROOT>/.project-handbook/system/status/validation.json`\n- Flags:\n  - `--quick`\n  - `--silent-success`\n\nTests:\n- Add pytest tests that run `ph validate --quick --silent-success` against a temporary PH_ROOT fixture and assert:\n  - exit code 0\n  - output report exists at the correct path\n  - stdout is empty when `--silent-success` is set.",
+      "steps": [
+        "Vendor `process/checks/validate_docs.py` into the CLI repo and adapt it to accept PH_ROOT + scope context instead of computing REPO_ROOT internally.",
+        "Replace any hard-coded repo-root paths with PH_ROOT-relative paths and scope-derived data roots.",
+        "Expose the validator as `ph validate` with the required flags.",
+        "Add pytest tests for project scope and system scope output paths and `--silent-success` behavior."
+      ],
+      "deliverables": ["Validation engine + tests."],
+      "acceptance_criteria": [
+        "`ph validate --quick` writes the report to the correct scope path.",
+        "`ph validate --silent-success` prints no stdout on success.",
+        "Pytest tests cover project scope and system scope and pass."
+      ]
+    },
+    {
+      "id": "CLI-0204",
+      "phase_id": "PHASE-02",
+      "order": 4,
+      "title": "Implement post-command hook pipeline",
+      "status": "done",
+      "started_at": "2026-01-14T15:42:27Z",
+      "completed_at": "2026-01-14T15:48:34Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 15:42 UTC — CLI-0204 — Implement post-command hook pipeline",
+      "next_task_id": "CLI-0301",
+      "depends_on": ["CLI-0202", "CLI-0203"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement centralized post-command hook pipeline per cli_plan/v1_cli/CLI_CONTRACT.md. Success: append history (unless disabled) and run validate-quick (unless disabled or command is validate/reset/reset-smoke). Failure: append history (unless disabled) and do not run validation. Implement flags `--no-post-hook`, `--no-history`, `--no-validate`. Ensure reset/reset-smoke skip hook entirely on success. Add unit tests for success, failure, validate skip, reset skip, and each flag.",
+      "steps": [
+        "Implement hook runner and skip evaluation logic.",
+        "Integrate with command dispatch to know command identity and exit code.",
+        "Add unit tests for skip matrix."
+      ],
+      "deliverables": ["Hook pipeline + tests."],
+      "acceptance_criteria": [
+        "Hook behavior matches contract for all skip cases.",
+        "Unit tests pass."
+      ]
+    },
+
+    {
+      "id": "CLI-0301",
+      "phase_id": "PHASE-03",
+      "order": 1,
+      "title": "Implement `ph help` + help topics",
+      "status": "done",
+      "started_at": "2026-01-14T15:49:58Z",
+      "completed_at": "2026-01-14T15:57:02Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 15:49 UTC — CLI-0301 — Implement `ph help` + help topics",
+      "next_task_id": "CLI-0302",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement `ph help` and `ph help <topic>` with output text defined by the v0 Makefile help targets.\n\nAuthoritative text source (handbook instance repo):\n- Makefile help targets: `help`, `help-sprint`, `help-task`, `help-feature`, `help-release`, `help-backlog`, `help-parking`, `help-validation`, `help-utilities`\n\nTransformation rules (exact):\n1) Replace every occurrence of `make ` at the start of a command example with `ph `.\n2) Replace every occurrence of `make hb-<x>` with `ph --scope system <x>` where `<x>` is the equivalent CLI subcommand from cli_plan/v1_cli/CLI_CONTRACT.md.\n3) Replace references to `pnpm make --` with `ph`.\n4) Do not add additional lines beyond the transformed v0 help text, except to add a single line explaining `--scope system` at the top-level help output.\n\nTopics that MUST exist: sprint, task, feature, release, backlog, parking, validation, utilities, roadmap.\n\nTests:\n- Add pytest tests that assert:\n  - each required topic exits 0\n  - unknown topic exits non-zero\n  - `ph help` output contains the literal string `--scope system`.",
+      "steps": [
+        "Extract v0 help text from the Makefile help targets and implement the transformation rules in this task.",
+        "Implement `ph help` and `ph help <topic>` routing for the required topics.",
+        "Add tests for topic coverage and unknown-topic failure."
+      ],
+      "deliverables": ["Help command group + tests."],
+      "acceptance_criteria": [
+        "All required topics exit 0 and unknown topic exits non-zero.",
+        "`ph help` output includes `--scope system`.",
+        "Pytest tests pass."
+      ]
+    },
+    {
+      "id": "CLI-0302",
+      "phase_id": "PHASE-03",
+      "order": 2,
+      "title": "Implement onboarding commands",
+      "status": "done",
+      "started_at": "2026-01-14T15:58:17Z",
+      "completed_at": "2026-01-14T16:02:15Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 15:58 UTC — CLI-0302 — Implement onboarding commands",
+      "next_task_id": "CLI-0303",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement onboarding commands exactly as file renderers over the handbook instance repo.\n\nHard requirements:\n- `ph onboarding` prints the contents of `<PH_ROOT>/ONBOARDING.md` to stdout and exits 0.\n- `ph onboarding session list` prints:\n  - `Available onboarding topics:`\n  - then each topic (template filename without `.md`) in lexicographic order as `  - <topic>`\n  - then `Special topics:`\n  - then `  - continue-session (print the latest session summary)`\n- `ph onboarding session <topic>` prints the contents of `<PH_ROOT>/process/sessions/templates/<topic>.md` and exits 0.\n- `ph onboarding session continue-session` prints the contents of `<PH_ROOT>/process/sessions/logs/latest_summary.md` and exits 0; if missing, exit non-zero and print remediation instructing to run `ph end-session`.\n- Unknown session topic exits non-zero and prints remediation listing `ph onboarding session list`.\n\nTests:\n- Add pytest tests that create a temporary PH_ROOT fixture with a small set of templates and assert list ordering and rendering behavior.",
+      "steps": [
+        "Implement onboarding command group and template discovery from `<PH_ROOT>/process/sessions/templates/*.md`.",
+        "Implement deterministic list output formatting and lexicographic sorting.",
+        "Implement template rendering and continue-session rendering with missing-file remediation.",
+        "Add pytest tests for list, known topic, unknown topic, and missing latest_summary.md."
+      ],
+      "deliverables": ["Onboarding command group + tests."],
+      "acceptance_criteria": [
+        "`ph onboarding` prints ONBOARDING.md and exits 0.",
+        "`ph onboarding session list` prints topics in lexicographic order and exits 0.",
+        "`ph onboarding session <topic>` prints the correct template contents and exits 0.",
+        "Unknown topic exits non-zero and includes `ph onboarding session list` remediation.",
+        "`continue-session` exits non-zero with `ph end-session` remediation when latest_summary.md is missing.",
+        "Pytest tests pass."
+      ]
+    },
+    {
+      "id": "CLI-0303",
+      "phase_id": "PHASE-03",
+      "order": 3,
+      "title": "Implement utilities: `ph clean`",
+      "status": "done",
+      "started_at": "2026-01-14T16:03:18Z",
+      "completed_at": "2026-01-14T16:05:27Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 16:03 UTC — CLI-0303 — Implement utilities: `ph clean`",
+      "next_task_id": "CLI-0304",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement `ph clean` per contract: remove `*.pyc` and `__pycache__/` under PH_ROOT. Add unit test that creates a temp tree with caches and asserts they are removed.",
+      "steps": [
+        "Implement filesystem traversal to remove caches under PH_ROOT.",
+        "Add unit test verifying removal."
+      ],
+      "deliverables": ["Clean command + test."],
+      "acceptance_criteria": ["Clean removes caches and test passes."]
+    },
+    {
+      "id": "CLI-0304",
+      "phase_id": "PHASE-03",
+      "order": 4,
+      "title": "Implement utilities: `ph hooks install`",
+      "status": "done",
+      "started_at": "2026-01-14T16:07:01Z",
+      "completed_at": "2026-01-14T16:08:33Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 16:07 UTC — CLI-0304 — Implement utilities: `ph hooks install`",
+      "next_task_id": "CLI-0306",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement `ph hooks install` per contract: write `.git/hooks/post-commit` to run `ph --no-post-hook daily check` and `.git/hooks/pre-push` to run `ph --no-post-hook validate`. Mark both executable. Add unit test using a temp directory with `.git/hooks/` and assert files exist with exact contents.",
+      "steps": [
+        "Implement hook file writer under `.git/hooks/`.",
+        "Write exact hook contents per contract.",
+        "Mark executable.",
+        "Add unit test for file contents."
+      ],
+      "deliverables": ["hooks install command + test."],
+      "acceptance_criteria": ["Hook files are written with exact content and marked executable; test passes."]
+    },
+    {
+      "id": "CLI-0305",
+      "phase_id": "PHASE-04",
+      "order": 90,
+      "title": "Implement `ph check-all` and `ph test system` orchestration",
+      "status": "done",
+      "started_at": "2026-01-14T21:20:02Z",
+      "completed_at": "2026-01-14T21:22:21Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 21:20 UTC — CLI-0305 — Implement ph check-all and ph test system orchestration",
+      "next_task_id": "CLI-0501",
+      "depends_on": ["CLI-0203", "CLI-0401", "CLI-0402", "CLI-0412", "CLI-0431", "CLI-0461"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement `ph check-all` and `ph test system` per cli_plan/v1_cli/CLI_CONTRACT.md.\n\nRules:\n- The orchestration must invoke the underlying command implementations in the exact order defined by the contract.\n- The post-command hook pipeline must run exactly once for the top-level orchestration command and must not be executed for internal sub-steps.\n\nTests:\n- Add pytest tests that use a fake command runner to assert the exact invocation sequence for each orchestration command.",
+      "steps": [
+        "Implement `ph check-all` to run, in order: `ph validate` then `ph status` (project scope only).",
+        "Implement `ph test system` to run, in order: `ph validate`, `ph status`, `ph daily check --verbose`, `ph sprint status`, `ph feature list`, `ph roadmap show` (project scope only).",
+        "Implement a command runner abstraction used by both orchestration commands that supports disabling hooks for internal sub-steps.",
+        "Add pytest tests that assert the exact sequence for both commands and assert hooks are invoked exactly once."
+      ],
+      "deliverables": ["check-all + test system commands + tests."],
+      "acceptance_criteria": [
+        "Sequence ordering matches contract.",
+        "Hooks do not double-run for sub-steps.",
+        "Tests pass."
+      ]
+    },
+    {
+      "id": "CLI-0306",
+      "phase_id": "PHASE-03",
+      "order": 6,
+      "title": "Implement `ph end-session` (skip-codex mode) by porting v0 summarizer",
+      "status": "done",
+      "started_at": "2026-01-14T16:09:47Z",
+      "completed_at": "2026-01-14T16:15:16Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 16:09 UTC — CLI-0306 — Implement `ph end-session` (skip-codex mode) by porting v0 summarizer",
+      "next_task_id": "CLI-0307",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement `ph end-session` in `--skip-codex` mode by porting the existing v0 logic into the CLI repo (do not execute repo-local Python).\n\nAuthoritative behavior to port (from the handbook instance repo):\n- process/automation/session_summary.py\n- process/automation/rollout_parser.py\n- process/automation/project_config.py\n\nRequirements (skip-codex mode):\n- Parse `--log <path>` using the vendored rollout parser.\n- Generate a summary markdown file under: `<PH_ROOT>/process/sessions/logs/YYYY-MM-DD_HHMM_summary.md`.\n- Write/overwrite `<PH_ROOT>/process/sessions/logs/latest_summary.md` with the same content.\n- Update `<PH_ROOT>/process/sessions/logs/manifest.json` (same schema as v0).\n\nTest fixture (must be generated inside the test, not stored on disk in the repo):\n- In the integration test, write a temporary rollout file containing exactly these JSON objects (concatenated, not JSON array):\n  1) a `session_meta` object with payload fields: `id`, `timestamp`, `cli_version`, `cwd`, `git` (use empty object for git)\n  2) a `response_item` object whose payload is a user `message` with exactly one `input_text` content item\n\nTests:\n- Add an integration test that writes the fixture rollout file to a temp directory, runs `ph end-session --skip-codex --force --log <fixture>`, and asserts: dated summary file exists, `latest_summary.md` exists, and `manifest.json` exists and contains the generated summary entry.",
+      "steps": [
+        "Vendor `process/automation/rollout_parser.py` into the CLI repo and use it for parsing rollout files.",
+        "Vendor the relevant portions of `process/automation/session_summary.py` needed for: log discovery, parsing, summary rendering, summary file writing, and manifest update.",
+        "Implement `ph end-session` flags: `--log`, `--force`, `--session-id`, `--session-end-mode`, `--session-end-codex`, `--session-end-codex-model`, `--skip-codex` (flags must parse even if not all are exercised in this task).",
+        "Implement `--skip-codex` to bypass any codex calls while still producing a complete summary using the non-codex fallback rendering path from v0.",
+        "Add an integration test that generates the fixture rollout file content described in this task and asserts outputs and manifest update."
+      ],
+      "deliverables": ["end-session (skip-codex) command + integration test."],
+      "acceptance_criteria": [
+        "`ph end-session --skip-codex` writes `<PH_ROOT>/process/sessions/logs/latest_summary.md`.",
+        "`ph end-session --skip-codex` writes a dated summary file under `<PH_ROOT>/process/sessions/logs/`.",
+        "`ph end-session --skip-codex` updates `<PH_ROOT>/process/sessions/logs/manifest.json`.",
+        "Integration test passes and does not mutate the real repo working tree."
+      ]
+    },
+    {
+      "id": "CLI-0307",
+      "phase_id": "PHASE-03",
+      "order": 7,
+      "title": "Implement `ph end-session` codex integration + session-end artifacts",
+      "status": "done",
+      "started_at": "2026-01-14T16:18:40Z",
+      "completed_at": "2026-01-14T16:23:55Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 16:18 UTC — CLI-0307 — Implement `ph end-session` codex integration + session-end artifacts",
+      "next_task_id": "CLI-0401",
+      "depends_on": ["CLI-0306"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Complete `ph end-session` by porting the codex integration and session-end artifact generation from v0.\n\nAuthoritative behavior to port (from the handbook instance repo):\n- process/automation/session_summary.py\n\nRequirements:\n- When `--skip-codex` is NOT set, implement the codex summarization path exactly as v0 does (subprocess invocation + prompt formatting + response parsing).\n- Implement session-end artifact generation under `<PH_ROOT>/process/sessions/session_end/**` when `--session-end-mode` is not `none`, matching v0 naming and index update behavior.\n\nTests (must not call codex):\n- Add an integration test that generates the same minimal rollout fixture file described in CLI-0306, runs `ph end-session --skip-codex --session-end-mode continue-task --force --log <fixture>`, and asserts:\n  - `<PH_ROOT>/process/sessions/session_end/session_end_index.json` exists and is updated\n  - a session_end summary markdown file exists under `<PH_ROOT>/process/sessions/session_end/<workstream>/`\n  - a session_end prompt markdown file exists alongside it",
+      "steps": [
+        "Port the codex invocation logic from v0 and implement it behind the `--skip-codex` flag gate.",
+        "Port the session_end document generation logic from v0 for `--session-end-mode` values and output paths.",
+        "Add an integration test that generates the fixture rollout file and asserts session_end artifacts are created correctly."
+      ],
+      "deliverables": ["end-session codex integration + session_end artifacts + tests."],
+      "acceptance_criteria": [
+        "`ph end-session --skip-codex --session-end-mode continue-task` writes session_end artifacts under `<PH_ROOT>/process/sessions/session_end/`.",
+        "`ph end-session` supports non-skip codex mode (manual verification step documented in CLI repo README).",
+        "Integration tests pass without calling codex."
+      ]
+    },
+
+    {
+      "id": "CLI-0401",
+      "phase_id": "PHASE-04",
+      "order": 1,
+      "title": "Implement `ph daily`",
+      "status": "done",
+      "started_at": "2026-01-14T17:29:10Z",
+      "completed_at": "2026-01-14T17:37:49Z",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 17:29 UTC — CLI-0401 — Implement `ph daily`",
+      "next_task_id": "CLI-0402",
+      "kickoff_prompt": "Implement `ph daily` by porting the behavior of `process/automation/daily_status_check.py` into the installed CLI package.\n\nHard requirements:\n- Commands:\n  - `ph daily generate`\n  - `ph daily generate --force`\n  - `ph daily check --verbose`\n- Outputs must be written under the selected scope root, matching v0 directory layout:\n  - project scope: `<PH_ROOT>/status/daily/...`\n  - system scope: `<PH_ROOT>/.project-handbook/system/status/daily/...`\n\nTests:\n- Add tests that patch the clock to a known Saturday and assert `ph daily generate` does not write a file unless `--force` is set.\n- Add tests that patch the clock to a known weekday and assert a daily file is written under the correct scope path.",
+      "steps": [
+        "Vendor and adapt the logic of `process/automation/daily_status_check.py` so it runs inside the installed CLI using PH_ROOT and scope context.",
+        "Implement the three CLI commands and flags listed in this task.",
+        "Add pytest tests that patch the clock to deterministic dates and assert weekend and weekday behavior for both scopes."
+      ],
+      "deliverables": ["daily commands + tests."],
+      "acceptance_criteria": [
+        "`ph daily generate` writes a daily markdown file under `<PH_DATA_ROOT>/status/daily/` for weekdays and does not write a file on weekends unless `--force` is provided.",
+        "`ph daily check --verbose` exits 0 and reports weekend/weekday status using the v0 script semantics for the selected scope.",
+        "Pytest tests freeze the clock and assert output paths for both project and system scopes."
+      ]
+    },
+    {
+      "id": "CLI-0402",
+      "phase_id": "PHASE-04",
+      "order": 2,
+      "title": "Implement `ph status`",
+      "status": "done",
+      "started_at": "2026-01-14T17:38:33Z",
+      "completed_at": "2026-01-14T17:40:51Z",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 17:38 UTC — CLI-0402 — Implement `ph status`",
+      "next_task_id": "CLI-0403",
+      "kickoff_prompt": "Implement `ph status` by porting the behavior of `process/automation/generate_project_status.py` into the installed CLI package.\n\nExact output requirements (stdout):\n- Print `Generated: <path>` where `<path>` is the absolute path to `<scope>/status/current.json`.\n- Print `Updated: <path>` where `<path>` is the absolute path to `<scope>/status/current_summary.md`.\n- If `current_summary.md` is non-empty, print exactly:\n  - a blank line\n  - `===== status/current_summary.md =====`\n  - a blank line\n  - the file contents\n  - a blank line\n  - `====================================`\n  - a blank line\n\nFilesystem outputs:\n- Write `<scope>/status/current.json` and `<scope>/status/current_summary.md` for the selected scope.\n\nTests:\n- Add integration tests that run `ph status` in project scope and system scope against a temporary PH_ROOT fixture and assert both files exist at the expected paths.",
+      "steps": [
+        "Vendor and adapt the logic of `process/automation/generate_project_status.py` so it runs inside the installed CLI using PH_ROOT and scope context (no repo-local python execution).",
+        "Ensure it writes `current.json` and `current_summary.md` under the selected scope root.",
+        "Ensure stdout formatting matches the exact output requirements in this task.",
+        "Add integration tests for both scopes using a temporary PH_ROOT fixture."
+      ],
+      "deliverables": ["status command + tests."],
+      "acceptance_criteria": [
+        "`ph status` writes `<PH_DATA_ROOT>/status/current.json` and `<PH_DATA_ROOT>/status/current_summary.md` for the selected scope.",
+        "`ph status` stdout matches the exact format specified in this task (Generated/Updated lines and summary framing).",
+        "Integration tests run `ph status` for both scopes in a temp PH_ROOT fixture and assert both files exist at the expected paths."
+      ]
+    },
+    {
+      "id": "CLI-0403",
+      "phase_id": "PHASE-04",
+      "order": 3,
+      "title": "Implement `ph dashboard`",
+      "status": "done",
+      "started_at": "2026-01-14T17:43:52Z",
+      "completed_at": "2026-01-14T17:46:52Z",
+      "depends_on": ["CLI-0401", "CLI-0402"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 17:43 UTC — CLI-0403 — Implement `ph dashboard`",
+      "next_task_id": "CLI-0411",
+      "kickoff_prompt": "Implement `ph dashboard` per cli_plan/v1_cli/CLI_CONTRACT.md with exact banner output.\n\nExact banner (project scope):\n- Print exactly:\n  - `════════════════════════════════════════════════`\n  - `           PROJECT HANDBOOK DASHBOARD           `\n  - `════════════════════════════════════════════════`\n  - a blank line\n\nExact banner (system scope):\n- Print exactly:\n  - `════════════════════════════════════════════════`\n  - `        PROJECT HANDBOOK DASHBOARD (HB)         `\n  - `════════════════════════════════════════════════`\n  - a blank line\n\nThen:\n1) Print sprint status for the selected scope by invoking the internal `ph sprint status` command implementation.\n2) Print a blank line.\n3) Print `Recent Daily Status:` then:\n   - list files matching `<scope>/status/daily/*.md` (non-recursive)\n   - sort lexicographically by filename\n   - print the last 3 paths, one per line\n   - if there are zero matches, print exactly: `  No daily status files yet`\n4) Print a blank line.\n5) Print `Validation:` then invoke the internal `ph validate` implementation for the selected scope.\n6) Print a blank line.\n7) Print exactly: `════════════════════════════════════════════════`\n\nTests:\n- Add an integration test that creates 4 daily files and asserts only the last 3 are printed.\n- Add an integration test that asserts the empty-daily message is printed when no files exist.\n- Add an integration test that asserts the banner lines match exactly for both scopes.",
+      "steps": [
+        "Implement a dashboard command that calls the internal sprint status and validate implementations (do not shell out).",
+        "Implement the exact daily listing rules described in this task.",
+        "Add three integration tests: banner (project/system), daily list (3-of-4), daily list (empty)."
+      ],
+      "deliverables": ["dashboard command + test."],
+      "acceptance_criteria": [
+        "Project-scope banner matches the exact 3 banner lines and spacing defined in this task.",
+        "System-scope banner matches the exact 3 banner lines and spacing defined in this task.",
+        "Daily listing prints only the last 3 lexicographically-sorted matches when 4 files exist.",
+        "Daily listing prints `  No daily status files yet` when no files exist.",
+        "Integration tests pass."
+      ]
+    },
+
+    {
+      "id": "CLI-0411",
+      "phase_id": "PHASE-04",
+      "order": 4,
+      "title": "Implement `ph sprint plan` and `ph sprint open`",
+      "status": "done",
+      "started_at": "2026-01-14T17:47:41Z",
+      "completed_at": "2026-01-14T17:51:53Z",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 17:47 UTC — CLI-0411 — Implement `ph sprint plan` and `ph sprint open`",
+      "next_task_id": "CLI-0412",
+      "kickoff_prompt": "Implement `ph sprint plan` and `ph sprint open` by porting the behavior of `process/automation/sprint_manager.py` (flags `--plan` and `--open`) into the installed CLI.\n\nRequirements:\n- Support both scopes.\n- Create sprint skeleton and update `<scope>/sprints/current` symlink.\n- Print the exact hint blocks for sprint plan (project + system variants) as specified in cli_plan/v1_cli/CLI_CONTRACT.md.\n- In system scope, sprint plan templates MUST NOT include release context.\n\nTests:\n- Add integration tests for plan/open in both scopes using a temporary PH_ROOT fixture.",
+      "steps": [
+        "Implement scope-aware sprint directory creation and `sprints/current` symlink update.",
+        "Implement `ph sprint plan [--sprint <id>] [--force]` and print the required hint block exactly (project and system variants).",
+        "Implement `ph sprint open --sprint <id>` and ensure the current symlink updates.",
+        "Add integration tests for plan/open in both scopes."
+      ],
+      "deliverables": ["sprint plan/open commands + integration tests."],
+      "acceptance_criteria": [
+        "`ph sprint plan` creates the sprint directory skeleton under `<PH_DATA_ROOT>/sprints/<year>/<SPRINT-...>/`, creates/updates `<PH_DATA_ROOT>/sprints/current` symlink, and prints the exact scope-correct hint block from `CLI_CONTRACT.md`.",
+        "In system scope, the sprint plan template sets `release: null` and contains no release context.",
+        "`ph sprint open --sprint <id>` updates `<PH_DATA_ROOT>/sprints/current` to the existing sprint and prints `✅ Current sprint set to: <id>`.",
+        "Integration tests pass for plan/open in both scopes."
+      ]
+    },
+    {
+      "id": "CLI-0412",
+      "phase_id": "PHASE-04",
+      "order": 5,
+      "title": "Implement `ph sprint status` and `ph sprint tasks`",
+      "status": "done",
+      "started_at": "2026-01-14T17:52:46Z",
+      "completed_at": "2026-01-14T18:00:04Z",
+      "depends_on": ["CLI-0411"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 17:52 UTC — CLI-0412 — Implement `ph sprint status` and `ph sprint tasks`",
+      "next_task_id": "CLI-0413",
+      "kickoff_prompt": "Implement `ph sprint status` and `ph sprint tasks` by porting v0 behaviors:\n- Sprint status: `process/automation/sprint_manager.py --status`\n- Sprint tasks: `process/automation/task_manager.py --list`\n\nRequirements:\n- Support both scopes.\n- Output formatting and ordering must match the v0 scripts for the same repo state.\n\nTests:\n- Add integration tests that create a sprint with at least one task in a temporary PH_ROOT fixture and assert both commands exit 0 and produce non-empty stdout.",
+      "steps": [
+        "Implement `ph sprint status [--sprint <id|current>]` for both scopes.",
+        "Implement `ph sprint tasks [--sprint <id|current>]` for both scopes.",
+        "Add integration tests using a temp repo fixture that includes a current sprint and task dirs."
+      ],
+      "deliverables": ["sprint status/tasks commands + integration tests."],
+      "acceptance_criteria": [
+        "`ph sprint status` and `ph sprint tasks` operate under the selected scope and emit non-empty stdout for a fixture sprint with tasks.",
+        "`ph sprint status` preserves v0 output ordering/formatting for the same fixture, with any Make-era command references rewritten to `ph` equivalents.",
+        "Integration tests pass for both scopes."
+      ]
+    },
+    {
+      "id": "CLI-0413",
+      "phase_id": "PHASE-04",
+      "order": 6,
+      "title": "Implement `ph sprint burndown` and `ph sprint capacity`",
+      "status": "done",
+      "started_at": "2026-01-14T18:10:27Z",
+      "completed_at": "2026-01-14T18:16:13Z",
+      "depends_on": ["CLI-0412"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 18:10 UTC — CLI-0413 — Implement `ph sprint burndown` and `ph sprint capacity`",
+      "next_task_id": "CLI-0414",
+      "kickoff_prompt": "Implement `ph sprint burndown` and `ph sprint capacity` by porting the behavior of `process/automation/sprint_manager.py` (flags `--burndown` and `--capacity`) into the installed CLI.\n\nRequirements:\n- Support both scopes.\n- Burndown must write its markdown output under the active sprint directory (scope-local).\n\nTests:\n- Add integration tests that run burndown in a temporary PH_ROOT fixture and assert the burndown output file exists under the sprint directory.",
+      "steps": [
+        "Implement `ph sprint burndown [--sprint <id|current>]` and ensure it writes output under the sprint directory.",
+        "Implement `ph sprint capacity [--sprint <id|current>]`.",
+        "Add integration tests that assert burndown output file exists."
+      ],
+      "deliverables": ["sprint burndown/capacity commands + integration tests."],
+      "acceptance_criteria": [
+        "`ph sprint burndown` writes a markdown burndown file under the selected sprint directory within the selected scope.",
+        "`ph sprint capacity` prints the v0 capacity/telemetry view for the selected scope.",
+        "Integration tests pass and assert the burndown output file exists at the expected scope-local path."
+      ]
+    },
+    {
+      "id": "CLI-0414",
+      "phase_id": "PHASE-04",
+      "order": 7,
+      "title": "Implement `ph sprint archive`",
+      "status": "done",
+      "started_at": "2026-01-14T18:18:36Z",
+      "completed_at": "2026-01-14T18:20:53Z",
+      "depends_on": ["CLI-0411"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 18:18 UTC — CLI-0414 — Implement `ph sprint archive`",
+      "next_task_id": "CLI-0415",
+      "kickoff_prompt": "Implement `ph sprint archive` by porting the behavior of `process/automation/sprint_manager.py --archive` into the installed CLI.\n\nRequirements:\n- Support both scopes.\n- Archive into `sprints/archive/...` within the same scope.\n\nTests:\n- Add an integration test that archives a sprint in a temporary PH_ROOT fixture and asserts the archive path exists.",
+      "steps": [
+        "Implement archive logic for current or specified sprint.",
+        "Ensure archive paths are scope-local and deterministic.",
+        "Add integration test that archives a sprint and asserts archive path exists."
+      ],
+      "deliverables": ["sprint archive command + integration test."],
+      "acceptance_criteria": [
+        "`ph sprint archive` moves the specified sprint directory into `<PH_DATA_ROOT>/sprints/archive/<year>/<SPRINT-...>/` within the selected scope.",
+        "Integration test archives a sprint in a temp PH_ROOT fixture and asserts the archive path exists."
+      ]
+    },
+    {
+      "id": "CLI-0415",
+      "phase_id": "PHASE-04",
+      "order": 8,
+      "title": "Implement `ph sprint close`",
+      "status": "done",
+      "started_at": "2026-01-14T18:22:19Z",
+      "completed_at": "2026-01-14T18:25:47Z",
+      "depends_on": ["CLI-0412", "CLI-0414"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 18:22 UTC — CLI-0415 — Implement `ph sprint close`",
+      "next_task_id": "CLI-0421",
+      "kickoff_prompt": "Implement `ph sprint close` by porting the behavior of `process/automation/sprint_manager.py --close` into the installed CLI.\n\nRequirements:\n- Support both scopes.\n- Project scope MUST print the exact Make-era close hint block specified by cli_plan/v1_cli/CLI_CONTRACT.md.\n- System scope MUST NOT print any additional Make-era close hint block.\n\nTests:\n- Add an integration test for project scope that runs close and asserts the exact hint block is printed.",
+      "steps": [
+        "Implement close logic: retrospective creation + archive behavior.",
+        "Print exact project-scope close hint block lines.",
+        "Do not print additional Make-style guidance in system scope.",
+        "Add integration test asserting hint output in project scope."
+      ],
+      "deliverables": ["sprint close command + integration test."],
+      "acceptance_criteria": [
+        "`ph sprint close` creates the v0 retrospective artifacts, archives the sprint into `<PH_DATA_ROOT>/sprints/archive/...`, and rewrites any sprint-local links within the same scope.",
+        "Project scope prints the exact `Sprint closed! Next steps:` hint block from `CLI_CONTRACT.md`; system scope does not print this Make-era hint block.",
+        "Integration tests pass."
+      ]
+    },
+
+    {
+      "id": "CLI-0421",
+      "phase_id": "PHASE-04",
+      "order": 9,
+      "title": "Implement `ph task create` scaffolding + hints + guardrails",
+      "status": "done",
+      "started_at": "2026-01-14T18:27:05Z",
+      "completed_at": "2026-01-14T18:36:55Z",
+      "depends_on": ["CLI-0411"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 18:27 UTC — CLI-0421 — Implement `ph task create` scaffolding + hints + guardrails",
+      "next_task_id": "CLI-0422",
+      "kickoff_prompt": "Implement `ph task create` by porting v0 task scaffolding into the installed CLI.\n\nAuthoritative v0 behavior to port:\n- `process/automation/task_manager.py`:\n  - `create_task_directory(...)` (directory + file templates)\n  - `get_next_task_id(...)` (TASK-### allocation)\n  - `slugify(...)`\n  - decision linking helpers (`resolve_decision_doc(...)`, link resolution rules)\n- `process/automation/data_root.py`: `is_system_scoped_lane(...)` (routing rules read from `process/automation/system_scope_config.json`).\n- Make-era hints: `Makefile` targets `task-create` and `hb-task-create`.\n- CLI contract: `cli_plan/v1_cli/CLI_CONTRACT.md` section `ph task` → `ph task create` (guardrail + hint block).\n\nHard requirements:\n1) Preconditions:\n- Require an active sprint symlink at `<PH_DATA_ROOT>/sprints/current` pointing to an existing sprint directory.\n- If missing, exit code `1` and print exactly: `❌ No current sprint found. Run 'ph sprint plan' first.`\n2) Directory naming:\n- Allocate the next `TASK-###` by scanning `<PH_DATA_ROOT>/sprints/current/tasks/` for directories whose name starts with `TASK-` and taking `max + 1`, zero-padded to 3 digits (same as v0).\n- Task directory name MUST be `{TASK_ID}-{slug}` where `slug` is produced by v0 `slugify(...)` rules (lowercase; non-alnum→`-`; collapse repeats; trim; default `task`; max len 80).\n3) Files created (exact set):\n- `<task_dir>/source/` (directory)\n- `<task_dir>/task.yaml`\n- `<task_dir>/README.md`\n- `<task_dir>/steps.md`\n- `<task_dir>/commands.md`\n- `<task_dir>/checklist.md`\n- `<task_dir>/validation.md`\n- `<task_dir>/references.md`\nTemplates MUST be ported from v0 `create_task_directory(...)` with only these allowed edits:\n- Replace Make-era command examples inside templates:\n  - `make ...` and `pnpm -C project-handbook make -- ...` → `ph ...` equivalents.\n  - In system scope templates, use `ph --scope system ...`.\n- Do not change front matter keys, required headings, or file names.\n4) Guardrail (system lane):\n- If `--scope project` and `--lane` matches `is_system_scoped_lane(lane)` from the routing config, exit code `1` and print exactly: `Use: ph --scope system task create ...`.\n5) Stdout:\n- Preserve the v0 create output lines (`✅ Created task directory: ...`, `📁 Location: ...`, `📝 Next steps:` plus the numbered list) with Make-era command references rewritten to `ph`.\n- Append the contract hint block exactly (project/system variants).\n\nTests (integration, deterministic):\n- Integration tests MUST invoke `ph` via subprocess with `--root <tmp_ph_root>` and MUST NOT rely on `cwd`.\n- Freeze the clock by monkeypatching `datetime.date.today()` inside the ported task module(s) to `2099-01-01` so front matter dates and due dates are deterministic.\n- Fixture setup (project scope):\n  - Create required repo assets listed in `CLI_CONTRACT.md` (marker config + rules + system_scope_config + reset_spec + templates dir).\n  - Create sprint dir: `<PH_ROOT>/sprints/2099/SPRINT-2099-01-01/` with `tasks/`.\n  - Create symlink `<PH_ROOT>/sprints/current` → `2099/SPRINT-2099-01-01`.\n  - Run `ph --root <PH_ROOT> task create --title \"T\" --feature \"f\" --decision \"ADR-0000\" --points 5 --owner @a --prio P1 --lane ops --session task-execution`.\n  - Assert: exit `0`; exactly one task dir exists; all required files exist; `task.yaml` contains `id: TASK-001` and `status: todo`; stdout contains the exact contract hint block lines.\n- Fixture setup (system scope): mirror the same under `<PH_ROOT>/.project-handbook/system/...` and run with `--scope system`; assert the task dir is created under the system tree and system hint block is printed.\n- Guardrail test: run in project scope with `--lane handbook/automation`; assert exit `1`, stdout contains the exact remediation line, and no task dirs are created.",
+      "steps": [
+        "Port v0 task creation logic (`task_manager.py:create_task_directory`) into the installed CLI and adapt it to use PH_ROOT + PH_DATA_ROOT + scope context.",
+        "Implement the system-lane guardrail using the routing config (`system_scope_config.json`) and the exact remediation string.",
+        "Append the exact Make-era/contract hint blocks (project/system variants) after successful creation.",
+        "Add deterministic integration tests for project create, system create, and the guardrail failure."
+      ],
+      "deliverables": ["task create + integration tests."],
+      "acceptance_criteria": [
+        "`ph task create` creates the exact v0 task directory/file set under `<PH_DATA_ROOT>/sprints/current/tasks/` and writes templates with Make-era commands rewritten to `ph` equivalents.",
+        "`ph task create` prints v0 create output (with `ph` substitutions) and appends the exact contract hint block for the selected scope.",
+        "Project scope rejects system-scoped lanes using the routing config and prints exactly `Use: ph --scope system task create ...` (exit code 1).",
+        "Deterministic integration tests pass (clock frozen; uses `--root`; asserts file creation + stdout hints)."
+      ]
+    },
+    {
+      "id": "CLI-0422",
+      "phase_id": "PHASE-04",
+      "order": 10,
+      "title": "Implement `ph task list` and `ph task show`",
+      "status": "done",
+      "started_at": "2026-01-14T18:38:28Z",
+      "completed_at": "2026-01-14T18:42:52Z",
+      "depends_on": ["CLI-0421"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 18:38 UTC — CLI-0422 — Implement `ph task list` and `ph task show`",
+      "next_task_id": "CLI-0423",
+      "kickoff_prompt": "Implement `ph task list` and `ph task show` by porting v0 listing/printing behavior into the installed CLI.\n\nAuthoritative v0 behavior to port:\n- `process/automation/task_manager.py`:\n  - `list_sprint_tasks(...)`\n  - `show_task_details(...)`\n  - stdout formatting under the `--list` and `--show` branches\n- Make-era empty-state copy comes from `process/automation/task_manager.py` (rewrite `make ...` to `ph ...`).\n- CLI contract: `cli_plan/v1_cli/CLI_CONTRACT.md` section `ph task` → `ph task list` and `ph task show`.\n\nHard requirements:\n1) Sprint selection:\n- Commands operate on the active sprint symlink `<PH_DATA_ROOT>/sprints/current`.\n- If the active sprint is missing OR has no tasks, emit the v0 empty-state output with Make-era commands rewritten to `ph` equivalents.\n2) `ph task list` stdout (match v0 formatting rules):\n- Empty state (exact lines):\n  - `📋 No tasks in current sprint`\n  - `💡 Create one with: ph task create`\n- Non-empty state:\n  - First line: `📋 SPRINT TASKS: <SPRINT_ID>`\n  - Second line: 60 `=` characters\n  - One line per task, sorted lexicographically by task directory name.\n  - Emoji mapping is identical to v0:\n    - todo ⭕, doing 🔄, review 👀, done ✅, blocked 🚫, otherwise ❓\n  - Optional segments:\n    - include ` [<lane>]` only if `lane:` exists\n    - include ` (<session>)` only if `session:` exists\n    - include ` (depends: A, B)` only if `depends_on` list is non-empty\n3) `ph task show --id <TASK-###>` stdout (match v0 field ordering):\n- Not found: print exactly `❌ Task <TASK-###> not found` and exit code `1`.\n- Found: print exactly the heading lines and field order from v0:\n  - `📋 TASK DETAILS: <TASK-###>`\n  - 50 `=` characters\n  - Title, Feature, Lane (optional), Session (optional), Owner, Status, Story Points, Priority, Due, Dependencies (or `Dependencies: None`), blank line, Location, Files.\n\nTests (integration, deterministic):\n- Create a temp PH_ROOT fixture with a sprint + current symlink and two tasks:\n  - `TASK-001-first/` with a `task.yaml` that includes `lane: ops`, `session: task-execution`, and `depends_on: [FIRST_TASK]`.\n  - `TASK-002-second/` with a `task.yaml` that omits lane/session and uses `depends_on: []`.\n- Run `ph --root <PH_ROOT> task list` and assert:\n  - exit `0`\n  - exact heading lines\n  - both tasks printed with correct emoji and optional segment rules\n- Run `ph --root <PH_ROOT> task show --id TASK-001` and assert:\n  - exit `0`\n  - exact heading lines\n  - the Location line includes `sprints/current/tasks/TASK-001-first`.\n- Run `ph --root <PH_ROOT> task show --id TASK-999` and assert exit `1` and the exact not-found line.\n- Repeat the same test set for `--scope system` using the same structure under `.project-handbook/system`.",
+      "steps": [
+        "Port v0 `list_sprint_tasks(...)` and implement `ph task list` stdout formatting rules exactly.",
+        "Port v0 `show_task_details(...)` and implement `ph task show --id ...` output exactly.",
+        "Add deterministic integration tests for project and system scopes (uses `--root`, asserts headings and optional-field behavior)."
+      ],
+      "deliverables": ["task list/show + integration tests."],
+      "acceptance_criteria": [
+        "`ph task list` matches v0 headings, emoji mapping, optional segment rules, and deterministic ordering for a fixed fixture (project and system scopes).",
+        "`ph task show` matches v0 headings, field ordering, and error behavior (exit 1 + exact not-found line) for a fixed fixture (project and system scopes).",
+        "Deterministic integration tests pass and do not execute repo-local Python at runtime."
+      ]
+    },
+    {
+      "id": "CLI-0423",
+      "phase_id": "PHASE-04",
+      "order": 11,
+      "title": "Implement `ph task status` updates",
+      "status": "done",
+      "started_at": "2026-01-14T18:52:39Z",
+      "completed_at": "2026-01-14T18:57:54Z",
+      "depends_on": ["CLI-0422"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 18:52 UTC — CLI-0423 — Implement `ph task status` updates",
+      "next_task_id": "CLI-0431",
+      "kickoff_prompt": "Implement `ph task status` by porting v0 task status transitions, dependency enforcement, and work-item archiving behavior.\n\nAuthoritative v0 behavior to port:\n- `process/automation/task_manager.py`: `update_task_status(...)` (status updates + dependency enforcement + messages)\n- `process/automation/work_item_archiver.py`:\n  - `archive_work_items_for_task(...)`\n  - `refresh_indexes()`\n- `process/automation/data_root.py` routing rules (scope-local roots).\n\nCLI contract:\n- `cli_plan/v1_cli/CLI_CONTRACT.md` section `ph task` → `ph task status`.\n\nHard requirements:\n1) Command shape:\n- `ph task status --id <TASK-###> --status <todo|doing|review|done|blocked> [--force]`\n- Exit codes: `0` on success, `1` on any validation failure.\n2) Allowed statuses:\n- Allowed statuses MUST come from `<PH_ROOT>/process/checks/validation_rules.json` key `task_status.allowed_statuses` (fallback: `[\"todo\",\"doing\",\"review\",\"done\",\"blocked\"]`).\n3) Dependency enforcement:\n- When moving to `doing|review|done`, read `depends_on` from the target task's `task.yaml`.\n- Ignore sentinel `FIRST_TASK`.\n- If any dependency task exists in the current sprint and is not `done`, block the transition unless `--force` is set.\n- Failure output MUST be exactly (with `--force` wording):\n  - `❌ Cannot move <TASK-###> to '<status>' because dependencies are still open: <CSV>`\n  - `   Finish the prerequisite tasks or rerun with --force after explicit user approval.`\n- If `--force` is set and deps are unresolved, print:\n  - `⚠️  Forcing status update despite unresolved dependencies: <CSV>`\n4) Success output:\n- Always print: `✅ Updated <TASK-###> status: <status>`.\n- For `doing`: print `📋 Next: Read <task_dir>/steps.md for implementation details`.\n- For `review`: print `📋 Next: Ensure <task_dir>/checklist.md is complete`.\n- For `done`: print the v0 completion line but with `ph` substitution:\n  - `🎉 Task complete! Run 'ph sprint status' to see updated progress`\n5) Work-item archiving on `done`:\n- Run the v0 archiver behavior within the selected scope root:\n  - Detect referenced backlog and parking-lot items by scanning the task dir and task.yaml `links:`.\n  - Move referenced items to `<PH_DATA_ROOT>/backlog/archive/<category>/<ID>/` and `<PH_DATA_ROOT>/parking-lot/archive/<category>/<ID>/`.\n  - Update moved README front matter keys exactly as v0 (`status`, `archived_at`, `archived_by_task`, `archived_by_sprint`).\n  - Refresh `<PH_DATA_ROOT>/backlog/index.json` and `<PH_DATA_ROOT>/parking-lot/index.json` by invoking the ported managers.\n\nTests (integration, deterministic):\n- Fixture: temp PH_ROOT with a sprint + current symlink and two tasks:\n  - `TASK-001-first` has `depends_on: [FIRST_TASK]`.\n  - `TASK-002-second` has `depends_on: [TASK-001]`.\n- Case A (dependency failure): run `ph --root <PH_ROOT> task status --id TASK-002 --status doing` and assert exit `1` and both exact dependency failure lines.\n- Case B (force): run the same with `--force` and assert exit `0` and the exact force warning line.\n- Case C (archiving on done):\n  - Create one backlog item and one parking item under the same scope.\n  - Add references to both in `TASK-001-first/task.yaml` under `links:`.\n  - Run `ph task status --id TASK-001 --status done` and assert:\n    - both items moved to their respective `archive/` trees\n    - README front matter includes `archived_by_task: TASK-001` and `archived_by_sprint: SPRINT-2099-01-01`.\n- Repeat Case A/B for `--scope system` using the same structure under `.project-handbook/system`.",
+      "steps": [
+        "Port v0 `update_task_status(...)` and expose it as `ph task status --id ... --status ...`.",
+        "Implement dependency enforcement + exact force messaging with `--force` substitution.",
+        "Port v0 work-item archiving triggered by status `done` (includes index refresh).",
+        "Add deterministic integration tests for dependency failure, forced transition, and archiving behavior (project and system scopes)."
+      ],
+      "deliverables": ["task status + integration tests."],
+      "acceptance_criteria": [
+        "`ph task status` enforces allowed statuses from `process/checks/validation_rules.json` and prints the exact v0 success/failure messages (with `ph`/`--force` substitutions).",
+        "`ph task status` blocks transitions with unresolved dependencies unless `--force` is provided, matching v0 behavior for FIRST_TASK and dependency resolution.",
+        "Marking a task `done` archives referenced backlog/parking items and refreshes indexes within the selected scope, matching v0 `work_item_archiver.py` behavior.",
+        "Deterministic integration tests pass for both scopes."
+      ]
+    },
+
+    {
+      "id": "CLI-0431",
+      "phase_id": "PHASE-04",
+      "order": 12,
+      "title": "Implement `ph feature create` + `ph feature list` + guardrails + hints",
+      "status": "done",
+      "started_at": "2026-01-14T19:00:31Z",
+      "completed_at": "2026-01-14T19:04:32Z",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 19:00 UTC — CLI-0431 — Implement `ph feature create` + `ph feature list` + guardrails + hints",
+      "next_task_id": "CLI-0432",
+      "kickoff_prompt": "Implement `ph feature create` and `ph feature list` by porting v0 feature scaffolding into the installed CLI.\n\nAuthoritative v0 behavior to port:\n- `process/automation/feature_manager.py`:\n  - `create_feature(...)` (directory structure + templates)\n  - `list_features()` (stdout formatting)\n- `process/automation/data_root.py`: `is_system_scoped_feature(...)` (routing rules read from `process/automation/system_scope_config.json`).\n- Make-era hint blocks: `Makefile` targets `feature-create` and `hb-feature-create`.\n- CLI contract: `cli_plan/v1_cli/CLI_CONTRACT.md` section `ph feature` → `ph feature create` and `ph feature list`.\n\nHard requirements:\n1) Feature root:\n- Create/list features under `<PH_DATA_ROOT>/features/`.\n- Ensure `<PH_DATA_ROOT>/features/implemented/` exists.\n2) Guardrail (system-scoped feature names):\n- If `--scope project` and `is_system_scoped_feature(name)` is true, exit code `1` and print exactly: `Use: ph --scope system feature create --name <name>`.\n3) `ph feature create --name <name> [--epic] [--owner @x] [--stage <stage>]`:\n- Create `<PH_DATA_ROOT>/features/<name>/` with the exact v0 directory structure:\n  - `architecture/`, `implementation/`, `testing/`, `fdr/`, `decision-register/`\n- Create the exact v0 file set with templates (front matter + headings):\n  - `overview.md`, `architecture/ARCHITECTURE.md`, `implementation/IMPLEMENTATION.md`, `testing/TESTING.md`, `status.md`, `changelog.md`, `risks.md`\n- Allowed edits to the v0 templates:\n  - Rewrite any Make-era command examples inside templates to `ph` equivalents.\n  - Do not change front matter keys, required headings, or file names.\n- Stdout:\n  - Preserve v0 script output lines (✅ Created feature…, 📁 Location…, 📝 Next steps…) with `ph` substitutions.\n  - Append the exact Make-era/contract hint block for the selected scope (project/system variants).\n4) `ph feature list` stdout:\n- Preserve v0 formatting:\n  - Empty state prints exactly:\n    - `📁 No features found`\n    - `💡 Create one with: ph feature create --name my-feature`\n  - Non-empty state prints:\n    - `📋 FEATURES OVERVIEW`\n    - a line of 60 `=` characters\n    - one line per feature (excluding `implemented/`), sorted lexicographically, with the v0 epic indicator rules:\n      - epic `🎯`, non-epic `📦`\n      - stage extracted from `status.md` line `Stage:` (fallback `unknown`).\n\nTests (integration, deterministic):\n- Use `--root <PH_ROOT>` for subprocess invocation.\n- Freeze `datetime.date.today()` inside ported modules to `2099-01-01` so front matter dates are deterministic.\n- Project scope:\n  - Assert list empty-state output is exactly the two lines above.\n  - Run create for `--name feat-a` and assert the directory structure and exact file set exists.\n  - Run list and assert it contains the overview heading and a `📦 feat-a` line.\n- Guardrail:\n  - Create a routing config where a prefix matches `handbook-` or `ph-`.\n  - Run `ph feature create --name handbook-test` in project scope and assert exit `1` and the exact remediation line.\n- Repeat create/list assertions for `--scope system` under `.project-handbook/system` (including system hint block).",
+      "steps": [
+        "Port v0 feature scaffolding (`feature_manager.py:create_feature`) into the installed CLI and adapt it to PH_ROOT + PH_DATA_ROOT + scope context.",
+        "Port v0 feature listing (`feature_manager.py:list_features`) including empty-state copy with `ph` substitutions.",
+        "Implement project-scope guardrail using routing rules (`is_system_scoped_feature`) and the exact remediation line.",
+        "Append the exact Make-era/contract create hint block (project/system variants) after successful create.",
+        "Add deterministic integration tests for create/list and the guardrail (project and system scopes)."
+      ],
+      "deliverables": ["feature create/list + integration tests."],
+      "acceptance_criteria": [
+        "`ph feature create` creates the exact v0 directory structure and file set under `<PH_DATA_ROOT>/features/<name>/` and prints v0 create output plus the exact scope-correct hint block.",
+        "`ph feature list` matches v0 headings, ordering, and epic indicator rules (with `ph` substitutions for help text).",
+        "Project scope rejects system-scoped feature names using routing rules and prints exactly `Use: ph --scope system feature create --name <name>` (exit code 1).",
+        "Deterministic integration tests pass for project and system scopes."
+      ]
+    },
+    {
+      "id": "CLI-0432",
+      "phase_id": "PHASE-04",
+      "order": 13,
+      "title": "Implement `ph feature status`",
+      "status": "done",
+      "started_at": "2026-01-14T19:05:38Z",
+      "completed_at": "2026-01-14T19:08:15Z",
+      "depends_on": ["CLI-0431"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 19:05 UTC — CLI-0432 — Implement `ph feature status`",
+      "next_task_id": "CLI-0433",
+      "kickoff_prompt": "Implement `ph feature status` by porting v0 feature stage updates.\n\nAuthoritative v0 behavior to port:\n- `process/automation/feature_manager.py`: `update_feature_status(name, stage)`.\n\nHard requirements:\n- Command: `ph feature status --name <name> --stage <stage>`.\n- Operate under `<PH_DATA_ROOT>/features/<name>/status.md`.\n- Not-found behavior: if `status.md` is missing, print exactly `❌ Feature '<name>' not found` and exit code `1`.\n- Update rules (match v0):\n  - Replace the first line starting with `Stage:` with `Stage: <stage>`.\n  - Replace the first front matter line starting with `date:` with `date: <YYYY-MM-DD>`.\n- Success output: print exactly `✅ Updated '<name>' stage to '<stage>'`.\n\nTests (integration, deterministic):\n- Freeze `datetime.date.today()` to `2099-01-01`.\n- Create a feature using `ph feature create` (or create the minimal file set directly), then run `ph feature status --name <name> --stage developing`.\n- Assert exit `0`, the `Stage:` line changed, and the front matter `date:` changed to `2099-01-01`.\n- Add a not-found test for a missing feature (exit `1` + exact message).\n- Repeat for `--scope system`.",
+      "steps": [
+        "Port v0 `update_feature_status(...)` into the CLI and adapt it to scope-local paths under PH_DATA_ROOT.",
+        "Add deterministic integration tests for success and not-found behavior (project and system scopes)."
+      ],
+      "deliverables": ["feature status + integration test."],
+      "acceptance_criteria": [
+        "`ph feature status` updates both the `Stage:` line and the front matter `date:` line exactly as v0 does, within the selected scope.",
+        "Not-found behavior matches v0 (exit 1 + exact message).",
+        "Deterministic integration tests pass for both scopes."
+      ]
+    },
+    {
+      "id": "CLI-0433",
+      "phase_id": "PHASE-04",
+      "order": 14,
+      "title": "Implement `ph feature update-status` and `ph feature summary`",
+      "status": "done",
+      "started_at": "2026-01-14T19:10:07Z",
+      "completed_at": "2026-01-14T19:14:44Z",
+      "depends_on": ["CLI-0431", "CLI-0423"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 19:10 UTC — CLI-0433 — Implement `ph feature update-status` and `ph feature summary`",
+      "next_task_id": "CLI-0434",
+      "kickoff_prompt": "Implement `ph feature update-status` and `ph feature summary` by porting v0 feature auto-status computation.\n\nAuthoritative v0 behavior to port:\n- `process/automation/feature_status_updater.py`:\n  - `collect_all_sprint_tasks()` (task scanning across active + archived sprints)\n  - `calculate_feature_metrics(...)` (metrics)\n  - `format_active_work_section(...)` (auto-generated status section)\n  - `update_feature_status_file(...)` and `update_all_feature_status()` (file writes + stdout)\n  - `show_feature_summary()` (stdout formatting)\n\nHard requirements:\n1) Scope locality:\n- All scanning/writes are under `<PH_DATA_ROOT>` only.\n- Task scanning must include both active sprints (`sprints/<year>/SPRINT-*`) and archived sprints (`sprints/archive/<year>/SPRINT-*`).\n2) `ph feature update-status`:\n- Update `status.md` for every feature that has tasks (excluding feature name `unknown`).\n- Preserve v0 semantics:\n  - Keep manual content above the auto section.\n  - Replace the auto section starting at the first heading matching either:\n    - `## Active Work (auto-generated)`\n    - `Active Work (generated)`\n  - Append a fresh auto section rendered by v0 `format_active_work_section(...)`.\n- Stdout must match v0:\n  - print per-feature update lines (`✅ Updated ... status with ...`)\n  - print the final summary lines:\n    - `🎯 Updated <N> feature status files`\n    - `📊 Features with active work: <N>`\n3) `ph feature summary`:\n- Print the exact v0 summary header:\n  - `🎯 FEATURE SUMMARY WITH SPRINT DATA`\n  - a line of 60 `=` characters\n- Print one summary line per feature (sorted lexicographically) using v0 status emoji selection + metrics formatting.\n4) Determinism in tests:\n- Freeze `datetime.date.today()` to a fixed date so estimated completion calculations are stable.\n\nTests (integration, deterministic):\n- Create a temp PH_ROOT fixture with:\n  - a feature `feat-a` with an initial `status.md` containing manual content (including a pre-existing auto section marker).\n  - one sprint under `<PH_DATA_ROOT>/sprints/2099/SPRINT-2099-01-01/tasks/` with two tasks for `feat-a` (one done, one doing).\n- Run `ph feature update-status` and assert:\n  - exit `0`\n  - `feat-a/status.md` now contains `## Active Work (auto-generated)` and includes the current sprint id and both task ids.\n- Run `ph feature summary` and assert it prints the header and a line containing `feat-a` and the expected `<completed>/<total> pts` string.\n- Repeat a reduced version of the test for `--scope system` under `.project-handbook/system`.",
+      "steps": [
+        "Port v0 feature auto-status updater (`feature_status_updater.py`) and adapt it to PH_ROOT + PH_DATA_ROOT + scope context.",
+        "Expose the v0 updater as `ph feature update-status` and the v0 summary as `ph feature summary` with the required stdout formats.",
+        "Add deterministic integration tests that assert `status.md` auto section rewriting and summary output for a fixed fixture (project and system scopes)."
+      ],
+      "deliverables": ["feature update-status/summary + integration tests."],
+      "acceptance_criteria": [
+        "`ph feature update-status` rewrites feature `status.md` auto sections and prints the v0 updater output for a fixed fixture (scope-local).",
+        "`ph feature summary` prints the exact v0 summary header and stable per-feature summary lines for a fixed fixture.",
+        "Deterministic integration tests pass for both scopes."
+      ]
+    },
+    {
+      "id": "CLI-0434",
+      "phase_id": "PHASE-04",
+      "order": 15,
+      "title": "Implement `ph feature archive`",
+      "status": "done",
+      "started_at": "2026-01-14T19:16:52Z",
+      "completed_at": "2026-01-14T19:21:15Z",
+      "depends_on": ["CLI-0431"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 19:16 UTC — CLI-0434 — Implement `ph feature archive`",
+      "next_task_id": "CLI-0441",
+      "kickoff_prompt": "Implement `ph feature archive` by porting v0 archive eligibility checks and move behavior.\n\nAuthoritative v0 behavior to port:\n- `process/automation/feature_manager.py`: `archive_feature(name, force)` and its helper checks:\n  - required file presence (`REQUIRED_FILES`)\n  - placeholder detection (`PLACEHOLDER_STRINGS`)\n  - stage gate (must be in completed stage unless forced)\n\nHard requirements:\n- Command: `ph feature archive --name <name> [--force]`.\n- Scope-local move:\n  - From `<PH_DATA_ROOT>/features/<name>/` → `<PH_DATA_ROOT>/features/implemented/<name>/`.\n- Stage gate:\n  - If feature stage is not in a completed stage set (as defined by v0), refuse archive unless `--force` is provided.\n  - The refusal message MUST be ported from v0 but with `--force` wording substitution.\n- Completeness checks:\n  - Run v0 completeness checks (missing files, placeholder text, empty/unreadable files).\n  - If completeness issues exist and `--force` is not set, block and print the v0 summary with the same headings.\n  - If `--force` is set, print the v0 warning line and proceed.\n\nTests (integration, deterministic):\n- Create a feature `feat-archive` with stage set to a completed stage and with all required files containing non-placeholder content; run archive and assert the feature moved under `features/implemented/`.\n- Create a feature `feat-blocked` with a non-completed stage and assert archive fails (exit 1 + refusal message).\n- Create a feature with placeholders/missing files and assert:\n  - without `--force` it fails and prints the v0 completeness issue headings\n  - with `--force` it succeeds.\n- Repeat one success-path test for `--scope system`.",
+      "steps": [
+        "Port v0 archive logic (`feature_manager.py --archive`) into the CLI and adapt to PH_ROOT + PH_DATA_ROOT + scope context.",
+        "Preserve v0 refusal/force/completeness messaging with `--force` wording substitution.",
+        "Add deterministic integration tests for success, blocked, and forced archive behaviors."
+      ],
+      "deliverables": ["feature archive + integration tests."],
+      "acceptance_criteria": [
+        "`ph feature archive` moves the feature directory into `features/implemented/` within the selected scope and preserves v0 eligibility checks and messaging (with `--force` substitution).",
+        "Archive blocks on missing/placeholder docs unless forced, matching v0 checks and headings.",
+        "Deterministic integration tests pass."
+      ]
+    },
+
+    {
+      "id": "CLI-0441",
+      "phase_id": "PHASE-04",
+      "order": 16,
+      "title": "Implement `ph backlog add` + index maintenance + hints",
+      "status": "done",
+      "started_at": "2026-01-14T19:43:02Z",
+      "completed_at": "2026-01-14T19:48:31Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 19:43 UTC — CLI-0441 — Implement `ph backlog add` + index maintenance + hints",
+      "next_task_id": "CLI-0442",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement `ph backlog add` by porting v0 backlog creation + indexing behavior into the installed CLI.\n\nAuthoritative v0 behavior to port:\n- `process/automation/backlog_manager.py`:\n  - `BacklogManager.add_issue(...)` (dir layout + README front matter + P0 triage.md)\n  - `BacklogManager.update_index()` (index.json schema + sorting)\n  - `_generate_issue_id(...)` (ID format)\n- Make-era add hints: `Makefile` targets `backlog-add` and `hb-backlog-add`.\n- CLI contract: `cli_plan/v1_cli/CLI_CONTRACT.md` section `ph backlog` (project-only hint block requirement).\n\nHard requirements:\n1) Scope locality:\n- Operate under `<PH_DATA_ROOT>/backlog/`.\n- Index file path is `<PH_DATA_ROOT>/backlog/index.json`.\n2) Command shape:\n- `ph backlog add --type <bug|wildcards|work-items> --title <t> --severity <P0..P4> [--desc <d>] [--owner <o>] [--impact <i>] [--workaround <w>]`\n- Normalize `--type` exactly as v0 `_normalize_issue_type(...)` (accept `bug`/`bugs`, `wildcard`/`wildcards`, and work-item synonyms).\n3) Issue ID format (match v0 exactly):\n- Prefix is `BUG` for bugs, `WILD` for wildcards, `WORK` for work-items.\n- ID is `<PREFIX>-<SEVERITY>-<YYYYMMDD-HHMMSS>` using the local clock.\n4) Directory + file creation:\n- Create directory: `<PH_DATA_ROOT>/backlog/<type>/<ISSUE_ID>/`.\n- Create `<issue_dir>/README.md` with the exact v0 front matter keys and headings.\n- If severity is `P0`, also create `<issue_dir>/triage.md` with the exact v0 template.\n- Always run `update_index()` after creation.\n5) Stdout:\n- Preserve v0 script output (✅ Created backlog issue…, 📊 Updated backlog index…; and the P0 alert banner) with Make-era command examples rewritten to `ph` equivalents.\n- After successful `add`, append the exact Make-era/contract hint block ONLY in project scope:\n  - `Backlog entry created.`\n  - `  - Run 'ph backlog triage --issue <ID>' for P0 analysis`\n  - `  - Assign it into a sprint via 'ph backlog assign --issue <ID> --sprint current'`\n  - `  - Re-run 'ph validate --quick' if files were edited manually`\n- In system scope, DO NOT print the Make-era hint block.\n\nTests (integration, deterministic):\n- Freeze `datetime.datetime.now()` inside the ported backlog module to `2099-01-01 09:00:00` so the issue id is deterministic (`...-20990101-090000`).\n- Run `ph --root <PH_ROOT> backlog add --type bug --title \"T\" --severity P1 --desc \"D\"` and assert:\n  - exit `0`\n  - issue dir exists at `backlog/bugs/BUG-P1-20990101-090000/`\n  - README.md exists and begins with `---`\n  - index.json exists and includes the new id under both `by_category` and `items`\n  - project scope stdout includes the exact hint block lines.\n- Run the same command under `--scope system` and assert:\n  - issue dir exists under `.project-handbook/system/backlog/...`\n  - stdout does NOT include `Backlog entry created.`\n- Add a P0 test that asserts `triage.md` is created.",
+      "steps": [
+        "Port v0 backlog add + indexing (`backlog_manager.py`) into the installed CLI and adapt it to PH_ROOT + PH_DATA_ROOT + scope context.",
+        "Append the exact project-scope add hint block; suppress the hint block in system scope.",
+        "Add deterministic integration tests for add/id generation/index updates (project + system) and P0 triage creation."
+      ],
+      "deliverables": ["backlog add + integration tests."],
+      "acceptance_criteria": [
+        "`ph backlog add` creates the issue directory/README (and P0 triage.md) with v0 templates and updates `<PH_DATA_ROOT>/backlog/index.json` using the v0 schema and sorting rules.",
+        "Project scope prints the exact add hint block; system scope does not print it.",
+        "Deterministic integration tests pass (clock frozen; uses `--root`)."
+      ]
+    },
+    {
+      "id": "CLI-0442",
+      "phase_id": "PHASE-04",
+      "order": 17,
+      "title": "Implement `ph backlog list`",
+      "status": "done",
+      "started_at": "2026-01-14T19:49:34Z",
+      "completed_at": "2026-01-14T19:53:09Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 19:49 UTC — CLI-0442 — Implement `ph backlog list`",
+      "next_task_id": "CLI-0443",
+      "depends_on": ["CLI-0441"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement `ph backlog list` by porting v0 backlog listing and filtering.\n\nAuthoritative v0 behavior to port:\n- `process/automation/backlog_manager.py`: `BacklogManager.list_issues(severity=None, category=None, format=\"table\")`.\n\nHard requirements:\n- Command: `ph backlog list [--severity <P0..P4>] [--category <bugs|wildcards|work-items>] [--format table|json]`.\n- If `index.json` is missing, auto-generate it via the v0 `update_index()` scan.\n- `--format json` MUST print the full index.json object (pretty-printed in v0) to stdout.\n- `--format table` MUST print the exact v0 headings and grouping:\n  - `📝 ISSUE BACKLOG`\n  - 80 `=` characters\n  - optional warning lines for P0/P1 counts\n  - then per-severity sections with the same heading lines and per-item formatting.\n- Filtering MUST match v0 semantics:\n  - severity filter includes only that severity bucket\n  - category filter includes only that category.\n\nTests (integration, deterministic):\n- Use the deterministic issue ids from CLI-0441 (clock frozen).\n- Create one BUG-P1 and one WORK-P3.\n- Assert:\n  - `ph backlog list --format json` exits `0` and stdout parses as JSON with `total_items: 2`.\n  - `ph backlog list --severity P1` includes only the BUG id.\n  - `ph backlog list --category work-items` includes only the WORK id.\n- Repeat one filter test for `--scope system`.",
+      "steps": [
+        "Port v0 backlog listing (`BacklogManager.list_issues`) including filtering and `table|json` formatting into the CLI.",
+        "Add deterministic integration tests for filter behavior and json/table output selection."
+      ],
+      "deliverables": ["backlog list + integration tests."],
+      "acceptance_criteria": [
+        "`ph backlog list` matches v0 headings/grouping/filters for `table` output and matches v0 JSON output shape for `json` output (scope-local).",
+        "Deterministic integration tests pass."
+      ]
+    },
+    {
+      "id": "CLI-0443",
+      "phase_id": "PHASE-04",
+      "order": 18,
+      "title": "Implement `ph backlog triage`",
+      "status": "done",
+      "started_at": "2026-01-14T19:54:02Z",
+      "completed_at": "2026-01-14T19:56:50Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 19:54 UTC — CLI-0443 — Implement `ph backlog triage`",
+      "next_task_id": "CLI-0444",
+      "depends_on": ["CLI-0441"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement `ph backlog triage` by porting v0 triage behavior.\n\nAuthoritative v0 behavior to port:\n- `process/automation/backlog_manager.py`: `BacklogManager.triage_issue(issue_id)`.\n\nHard requirements:\n- Command: `ph backlog triage --issue <ID>`.\n- Not-found: print exactly `Error: Issue '<ID>' not found` and exit code `1`.\n- If `<issue_dir>/triage.md` exists, print:\n  - blank line\n  - `🎯 TRIAGE ANALYSIS: <ID>`\n  - 80 `=` characters\n  - then the contents of `triage.md`.\n- If `triage.md` does not exist:\n  - print `No triage analysis found for <ID>`.\n  - if the issue is severity P0, generate the v0 triage template and write `triage.md`, then print:\n    - `Generating triage template...`\n    - `✅ Generated triage template: <relative path>`\n    - blank line and `Edit the template to complete the analysis.`\n- Rewrite any Make-era command references in printed guidance to `ph` equivalents.\n\nTests (integration, deterministic):\n- Create a P0 issue with `ph backlog add ... --severity P0`.\n- Delete `triage.md` if it exists, then run triage and assert it creates `triage.md` and prints the `✅ Generated triage template:` line.\n- Run triage again and assert it prints the analysis header and the file contents.\n- Repeat one not-found test for `--scope system`.",
+      "steps": [
+        "Port v0 triage behavior (`BacklogManager.triage_issue`) into the CLI and adapt it to PH_DATA_ROOT + scope-local paths.",
+        "Add deterministic integration tests for P0 template generation and triage display."
+      ],
+      "deliverables": ["backlog triage + integration test."],
+      "acceptance_criteria": [
+        "`ph backlog triage` generates and displays triage.md exactly as v0 (with `ph` substitutions for any printed guidance).",
+        "Deterministic integration tests pass."
+      ]
+    },
+    {
+      "id": "CLI-0444",
+      "phase_id": "PHASE-04",
+      "order": 19,
+      "title": "Implement `ph backlog assign` (default sprint=current)",
+      "status": "done",
+      "started_at": "2026-01-14T19:57:28Z",
+      "completed_at": "2026-01-14T20:02:09Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 19:57 UTC — CLI-0444 — Implement `ph backlog assign` (default sprint=current)",
+      "next_task_id": "CLI-0445",
+      "depends_on": ["CLI-0441", "CLI-0411"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement `ph backlog assign` by porting v0 sprint assignment behavior.\n\nAuthoritative v0 behavior to port:\n- `process/automation/backlog_manager.py`: `BacklogManager.assign_to_sprint(issue_id, sprint=\"current\")`.\n\nHard requirements:\n- Command: `ph backlog assign --issue <ID> [--sprint current|next|<SPRINT-...>]`.\n- Default: if `--sprint` is omitted, treat as `current`.\n- Sprint resolution rules MUST match v0:\n  - `current` resolves via `<PH_DATA_ROOT>/sprints/current` symlink.\n  - `next` resolves via v0 `BacklogManager._compute_next_sprint_id(...)` logic.\n  - explicit ids are accepted as-is.\n- Assignment write:\n  - Update the issue README front matter by inserting/updating `sprint: <resolved>` (preserve key order as v0 `_update_issue_front_matter(...)`).\n  - Rebuild index.json after assignment.\n- Stdout MUST match v0 (with `ph` substitutions for printed next-steps guidance).\n\nTests (integration, deterministic):\n- Create a sprint + current symlink and one issue.\n- Run `ph backlog assign --issue <ID>` with no `--sprint` and assert the README front matter contains `sprint: SPRINT-2099-01-01`.\n- Assert stdout contains `✅ Recorded assignment: <ID> → SPRINT-2099-01-01`.\n- Add a failure test where current sprint symlink is missing and assert it prints the v0 resolution tip and exits `1`.\n- Repeat one success-path test for `--scope system`.",
+      "steps": [
+        "Port v0 assign behavior (`BacklogManager.assign_to_sprint`) including sprint resolution and front matter update ordering.",
+        "Add deterministic integration tests for default sprint=current and missing-sprint failure behavior."
+      ],
+      "deliverables": ["backlog assign + integration test."],
+      "acceptance_criteria": [
+        "`ph backlog assign` defaults `--sprint` to `current`, resolves sprint ids per v0 rules, and updates README front matter + index.json per v0 behavior (scope-local).",
+        "Deterministic integration tests pass."
+      ]
+    },
+    {
+      "id": "CLI-0445",
+      "phase_id": "PHASE-04",
+      "order": 20,
+      "title": "Implement `ph backlog rubric` and `ph backlog stats`",
+      "status": "done",
+      "started_at": "2026-01-14T20:02:58Z",
+      "completed_at": "2026-01-14T20:06:34Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 20:02 UTC — CLI-0445 — Implement `ph backlog rubric` and `ph backlog stats`",
+      "next_task_id": "CLI-0451",
+      "depends_on": ["CLI-0441"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement `ph backlog rubric` and `ph backlog stats` by porting v0 rubric + stats views.\n\nAuthoritative v0 behavior to port:\n- `process/automation/backlog_manager.py`:\n  - `BacklogManager.show_rubric()` (`rubric` subcommand)\n  - `BacklogManager.show_stats()` (`stats` subcommand)\n\nHard requirements:\n- Commands:\n  - `ph backlog rubric`\n  - `ph backlog stats`\n- Both commands MUST operate within the selected scope.\n- Stdout MUST match v0 headings and section ordering.\n\nTests (integration, deterministic):\n- Create at least 2 issues (different severities).\n- Run `ph backlog rubric` and assert it prints the exact header line `📏 ISSUE SEVERITY RUBRIC`.\n- Run `ph backlog stats` and assert it prints the exact header line `📊 BACKLOG STATISTICS` and includes `Total Issues: 2`.\n- Repeat one rubric test for `--scope system`.",
+      "steps": [
+        "Port v0 `rubric` and `stats` outputs (`BacklogManager.show_rubric/show_stats`) into the CLI.",
+        "Add deterministic integration tests that assert exact headings and a stable total count for a fixed fixture."
+      ],
+      "deliverables": ["backlog rubric/stats + tests."],
+      "acceptance_criteria": [
+        "`ph backlog rubric` and `ph backlog stats` match v0 headings/section ordering for a fixed fixture (scope-local).",
+        "Deterministic integration tests pass."
+      ]
+    },
+
+    {
+      "id": "CLI-0451",
+      "phase_id": "PHASE-04",
+      "order": 21,
+      "title": "Implement `ph parking add` + index maintenance + hints",
+      "status": "done",
+      "started_at": "2026-01-14T20:34:00Z",
+      "completed_at": "2026-01-14T20:38:34Z",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 20:34 UTC — CLI-0451 — Implement ph parking add + index maintenance + hints",
+      "next_task_id": "CLI-0452",
+      "kickoff_prompt": "Implement `ph parking add` by porting v0 parking-lot creation + indexing behavior into the installed CLI.\n\nAuthoritative v0 behavior to port:\n- `process/automation/parking_lot_manager.py`:\n  - `ParkingLotManager.add_item(...)` (dir layout + README front matter)\n  - `ParkingLotManager.update_index()` (index.json schema + sorting)\n  - `_generate_item_id(...)` (ID format)\n- Make-era add hints: `Makefile` targets `parking-add` and `hb-parking-add`.\n- CLI contract: `cli_plan/v1_cli/CLI_CONTRACT.md` section `ph parking` (project-only hint block requirement).\n\nHard requirements:\n1) Scope locality:\n- Operate under `<PH_DATA_ROOT>/parking-lot/`.\n- Index file path is `<PH_DATA_ROOT>/parking-lot/index.json`.\n2) Command shape:\n- `ph parking add --type <features|technical-debt|research|external-requests> --title <t> [--desc <d>] [--owner <o>] [--tags <csv>]`\n- Tags parsing: split CSV by `,`, trim whitespace, drop empty.\n3) Item ID format (match v0 exactly):\n- Prefix mapping: `features→FEAT`, `technical-debt→DEBT`, `research→RES`, `external-requests→EXT`.\n- ID is `<PREFIX>-<YYYYMMDD>-<clean_title>` where:\n  - `<YYYYMMDD>` is local date from `datetime.now()`\n  - `<clean_title>` is v0-cleaned: lowercase, non `[a-zA-Z0-9-]`→`-`, collapse repeats, trim `-`, max 30.\n4) Directory + file creation:\n- Create directory: `<PH_DATA_ROOT>/parking-lot/<type>/<ITEM_ID>/`.\n- Create `<item_dir>/README.md` with the exact v0 front matter keys and headings.\n- Always run `update_index()` after creation.\n5) Stdout:\n- Preserve v0 script output (✅ Created parking lot item…, 📊 Updated parking lot index…) with any Make-era command examples rewritten to `ph` equivalents.\n- After successful `add`, append the exact Make-era/contract hint block ONLY in project scope:\n  - `Parking lot updated → review via 'ph parking list' or 'ph parking review'`\n  - `  - Capture owner/priority inside parking-lot/<type>/ entries if missing`\n  - `  - Promote items with 'ph parking promote' once they graduate to roadmap`\n- In system scope, DO NOT print the Make-era hint block.\n\nTests (integration, deterministic):\n- Freeze `datetime.datetime.now()` inside the ported parking module to `2099-01-01 09:00:00` so the item id is deterministic (`FEAT-20990101-...`).\n- Run `ph --root <PH_ROOT> parking add --type features --title \"My Idea\" --desc \"D\" --owner @a --tags \"foo,bar\"` and assert:\n  - exit `0`\n  - item dir exists under `parking-lot/features/FEAT-20990101-my-idea/`\n  - README.md exists and begins with `---`\n  - index.json exists and includes the new id\n  - project scope stdout includes the exact hint block lines.\n- Run the same under `--scope system` and assert:\n  - item dir exists under `.project-handbook/system/parking-lot/...`\n  - stdout does NOT include `Parking lot updated → review via`.",
+      "steps": [
+        "Port v0 parking add + indexing (`parking_lot_manager.py`) into the installed CLI and adapt it to PH_ROOT + PH_DATA_ROOT + scope context.",
+        "Append the exact project-scope add hint block; suppress the hint block in system scope.",
+        "Add deterministic integration tests for add/id generation/index updates (project + system)."
+      ],
+      "deliverables": ["parking add + integration tests."],
+      "acceptance_criteria": [
+        "`ph parking add` creates the item directory/README with v0 templates and updates `<PH_DATA_ROOT>/parking-lot/index.json` using the v0 schema and sorting rules.",
+        "Project scope prints the exact add hint block; system scope does not print it.",
+        "Deterministic integration tests pass (clock frozen; uses `--root`)."
+      ]
+    },
+    {
+      "id": "CLI-0452",
+      "phase_id": "PHASE-04",
+      "order": 22,
+      "title": "Implement `ph parking list` and `ph parking review`",
+      "status": "done",
+      "started_at": "2026-01-14T20:39:22Z",
+      "completed_at": "2026-01-14T20:41:27Z",
+      "depends_on": ["CLI-0451"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 20:39 UTC — CLI-0452 — Implement ph parking list and ph parking review",
+      "next_task_id": "CLI-0453",
+      "kickoff_prompt": "Implement `ph parking list` and `ph parking review` by porting v0 parking-lot listing and review behavior.\n\nAuthoritative v0 behavior to port:\n- `process/automation/parking_lot_manager.py`:\n  - `ParkingLotManager.list_items(category=None, format=\"table\")`\n  - `ParkingLotManager.review_items()` (stdout flow)\n\nHard requirements:\n- Commands:\n  - `ph parking list [--category <...>] [--format table|json]`\n  - `ph parking review`\n- If index.json is missing, auto-generate it via the v0 `update_index()` scan.\n- `ph parking list --format json` MUST print the full index.json object to stdout.\n- `ph parking list --format table` MUST print the exact v0 headings and per-category grouping.\n- `ph parking review` MUST print the exact v0 heading lines and the instruction block that enumerates `[p]romote/[d]elete/[s]kip`.\n\nTests (integration, deterministic):\n- Create one parking item via `ph parking add`.\n- Assert:\n  - `ph parking list --format json` exits 0 and stdout parses as JSON with `total_items: 1`.\n  - `ph parking list` table output includes `📦 PARKING LOT ITEMS` and the created item id.\n  - `ph parking review` prints `🔍 PARKING LOT QUARTERLY REVIEW`.\n- Repeat one list test for `--scope system`.",
+      "steps": [
+        "Port v0 parking list + review behavior (`ParkingLotManager.list_items/review_items`) into the CLI and adapt it to scope-local roots.",
+        "Add deterministic integration tests that assert exact headings and that list output includes created items."
+      ],
+      "deliverables": ["parking list/review + tests."],
+      "acceptance_criteria": [
+        "`ph parking list` matches v0 headings/grouping/filters for `table` output and matches v0 JSON output shape for `json` output (scope-local).",
+        "`ph parking review` matches v0 heading + instruction copy (scope-local).",
+        "Deterministic integration tests pass."
+      ]
+    },
+    {
+      "id": "CLI-0453",
+      "phase_id": "PHASE-04",
+      "order": 23,
+      "title": "Implement `ph parking promote` (default target=later)",
+      "status": "done",
+      "started_at": "2026-01-14T20:42:02Z",
+      "completed_at": "2026-01-14T20:43:10Z",
+      "depends_on": ["CLI-0451"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 20:42 UTC — CLI-0453 — Implement ph parking promote default target later",
+      "next_task_id": "CLI-0461",
+      "kickoff_prompt": "Implement `ph parking promote` by porting v0 roadmap promotion behavior.\n\nAuthoritative v0 behavior to port:\n- `process/automation/parking_lot_manager.py`: `ParkingLotManager.promote_to_roadmap(item_id, target=\"later\")`.\n\nHard requirements:\n- Command: `ph parking promote --item <ID> [--target now|next|later]`.\n- Default target: if `--target` omitted, use `later`.\n- System-scope rule (required by global exclusions + v0 behavior):\n  - If `--scope system`, promotion MUST fail with exit code 1 and print exactly:\n    - `Error: Roadmap is project-scope-only and MUST NOT be created or written in system scope`\n- In project scope:\n  - Copy the item directory from `parking-lot/<type>/<ID>/` to `roadmap/<target>/<ID>/` under PH_DATA_ROOT.\n  - Update the copied README content using the same string replacements as v0 (even if imperfect).\n  - Delete the original parking-lot item directory.\n  - Update index.json.\n  - Print exactly `✅ Promoted <ID> to roadmap/<target>/`.\n\nTests (integration, deterministic):\n- Create a parking item, then run `ph parking promote --item <ID>` with no target and assert:\n  - exit 0\n  - new dir exists at `roadmap/later/<ID>/`\n  - original `parking-lot/.../<ID>/` dir no longer exists\n  - stdout includes `✅ Promoted <ID> to roadmap/later/`.\n- Run `ph --scope system parking promote ...` and assert exit 1 and the exact system-scope error line.",
+      "steps": [
+        "Port v0 promotion behavior (`ParkingLotManager.promote_to_roadmap`) into the CLI and adapt it to PH_ROOT + PH_DATA_ROOT + scope context.",
+        "Enforce system-scope rejection with the exact v0 error line.",
+        "Add deterministic integration tests for default target=later and system-scope rejection."
+      ],
+      "deliverables": ["parking promote + integration test."],
+      "acceptance_criteria": [
+        "`ph parking promote` defaults to `later`, performs the v0 copy/remove/index update behavior in project scope, and rejects system scope with the exact error line.",
+        "Deterministic integration tests pass."
+      ]
+    },
+
+    {
+      "id": "CLI-0461",
+      "phase_id": "PHASE-04",
+      "order": 24,
+      "title": "Implement `ph roadmap create` and `ph roadmap show` (project-only)",
+      "status": "done",
+      "started_at": "2026-01-14T20:43:45Z",
+      "completed_at": "2026-01-14T20:46:08Z",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 20:43 UTC — CLI-0461 — Implement ph roadmap create and show",
+      "next_task_id": "CLI-0462",
+      "kickoff_prompt": "Implement `ph roadmap create` and `ph roadmap show` exactly per `cli_plan/v1_cli/CLI_CONTRACT.md` section `ph roadmap`.\n\nHard requirements:\n1) Scope rules:\n- If `--scope system`, command MUST fail (exit 1) and print exactly:\n  - `Roadmap is project-scope only. Use: ph --scope project roadmap ...`\n2) Files:\n- Roadmap file path is exactly: `<PH_ROOT>/roadmap/now-next-later.md`.\n3) `ph roadmap create`:\n- If the roadmap file already exists, do nothing and exit 0.\n- If missing, create it with the exact template used by the v0 reset templates (port from `process/automation/reset_manager.py` template key `roadmap/now-next-later.md`).\n- The created file MUST include valid front matter and the empty sections (`## Now`, `## Next`, `## Later`).\n4) `ph roadmap show`:\n- If the roadmap file does not exist, exit 1 and print exactly:\n  - `❌ No roadmap found. Run 'ph roadmap create' to create one.`\n- If it exists, print a deterministic extracted view:\n  - Print header lines exactly as v0 `roadmap_manager.py --show`:\n    - `🗺️  PROJECT ROADMAP`\n    - 50 `=` characters\n  - For each section heading in the file:\n    - `## Now` prints the group heading `\\n🎯 NOW (Current Sprint)`\n    - `## Next` prints the group heading `\\n⏭️  NEXT (1-2 Sprints)`\n    - `## Later` prints the group heading `\\n🔮 LATER (3+ Sprints)`\n  - Under each group, print each markdown bullet line from that section exactly as `  <line>` (two leading spaces), matching v0 behavior.\n\nTests (integration):\n- Create a temp PH_ROOT fixture and run:\n  - `ph --root <PH_ROOT> roadmap show` and assert exit 1 and the exact missing-roadmap message.\n  - `ph --root <PH_ROOT> roadmap create` and assert the file exists and begins with `---`.\n  - Add one bullet under each section and run `ph roadmap show`; assert it prints the header and the three group headings.\n- Add a system-scope rejection test (exit 1 + exact remediation line).",
+      "steps": [
+        "Implement roadmap project-only scope guard and error remediation line.",
+        "Implement `ph roadmap create` using the reset_manager roadmap template as the exact file content source.",
+        "Implement `ph roadmap show` extracted view with deterministic grouping and v0-style headings.",
+        "Add integration tests for missing/create/show and system-scope rejection."
+      ],
+      "deliverables": ["roadmap create/show + tests."],
+      "acceptance_criteria": [
+        "`ph roadmap create` writes the exact reset_manager roadmap template when missing and leaves existing files unchanged (exit 0).",
+        "`ph roadmap show` prints deterministic extracted output with the exact headings and group mapping defined in this task.",
+        "System scope is rejected with the exact remediation line (exit 1).",
+        "Integration tests pass."
+      ]
+    },
+    {
+      "id": "CLI-0462",
+      "phase_id": "PHASE-04",
+      "order": 25,
+      "title": "Implement `ph roadmap validate` (project-only)",
+      "status": "done",
+      "started_at": "2026-01-14T20:46:47Z",
+      "completed_at": "2026-01-14T20:48:44Z",
+      "depends_on": ["CLI-0461"],
+      "work_location": "external_repo",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 20:46 UTC — CLI-0462 — Implement ph roadmap validate",
+      "next_task_id": "CLI-0471",
+      "kickoff_prompt": "Implement `ph roadmap validate` exactly per `cli_plan/v1_cli/CLI_CONTRACT.md` section `ph roadmap`.\n\nHard requirements:\n1) Scope rules:\n- If `--scope system`, fail with the same remediation as other roadmap commands (exit 1).\n2) Roadmap file requirement:\n- If `<PH_ROOT>/roadmap/now-next-later.md` is missing, print exactly `❌ No roadmap found` and exit code 1.\n3) Link validation rules (deterministic):\n- Extract markdown inline link targets matching `[...] (target)`.\n- Ignore external targets (case-insensitive prefixes): `http://`, `https://`, `mailto:`, `tel:`.\n- Ignore pure fragments that begin with `#`.\n- For other targets:\n  - Strip surrounding `<...>` if present.\n  - Split off `#fragment` if present (validate the file path portion only).\n  - Resolve the target path relative to the roadmap file directory.\n  - If the resolved path is outside PH_ROOT, treat it as invalid and report it as a failure.\n  - If the resolved path is within PH_ROOT, require the path exists on disk.\n- Exit codes:\n  - `0` if all checked links are valid\n  - `1` if any link is invalid\n\nError output rules:\n- On failure, print `❌ Roadmap validation failed:` followed by one `  - Broken link: <text> -> <target>` line per invalid link (match v0 wording, but with the exact `Broken link:` prefix).\n- On success, print exactly `✅ Roadmap validation passed`.\n\nTests (integration):\n- Create a roadmap with two links:\n  - one valid link to an existing file under PH_ROOT\n  - one broken link to a missing file under PH_ROOT\n- Run validate and assert exit 1 and that it prints `❌ Roadmap validation failed:`.\n- Create the missing file and rerun validate; assert exit 0 and exact success line.\n- Add a system-scope rejection test (exit 1 + remediation line).",
+      "steps": [
+        "Implement roadmap validator with the exact link parsing and filesystem rules defined in this task.",
+        "Add integration tests for broken-link failure, pass case, and system-scope rejection."
+      ],
+      "deliverables": ["roadmap validate + tests."],
+      "acceptance_criteria": [
+        "`ph roadmap validate` enforces existence of the roadmap file and validates relative links under PH_ROOT exactly as defined (exit 0/1 rules).",
+        "Failure output includes `❌ Roadmap validation failed:` and at least one `Broken link:` line; success output is exactly `✅ Roadmap validation passed`.",
+        "Integration tests pass."
+      ]
+    },
+
+    {
+      "id": "CLI-0471",
+      "phase_id": "PHASE-04",
+      "order": 26,
+      "title": "Implement `ph release plan` (default version=next) + symlink + hints",
+      "status": "done",
+      "started_at": "2026-01-14T20:57:01Z",
+      "completed_at": "2026-01-14T21:02:17Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 20:57 UTC — CLI-0471 — Implement ph release plan (default version=next) + symlink + hints",
+      "next_task_id": "CLI-0472",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement `ph release plan` by porting v0 release planning behavior and the Make-era hint block.\n\nAuthoritative v0 behavior to port:\n- `process/automation/release_manager.py`:\n  - `create_release_plan(...)` (version resolution for `next` + bump)\n  - `create_release_structure(...)` (plan.md/progress.md/features.yaml templates)\n  - `calculate_sprint_range(...)` + `parse_version(...)` helpers\n  - symlink behavior for `releases/current`\n- Make-era plan hint block: `Makefile` target `release-plan`.\n- CLI contract: `cli_plan/v1_cli/CLI_CONTRACT.md` section `ph release` → `ph release plan`.\n\nHard requirements:\n1) Scope rule:\n- If `--scope system`, exit `1` and print exactly: `Releases are project-scope only. Use: ph --scope project release ...`.\n2) Command shape:\n- `ph release plan [--version <vX.Y.Z|next>] [--bump patch|minor|major] [--sprints N] [--start-sprint <SPRINT-...>] [--sprint-ids <csv>]`\n- Defaulting: if `--version` omitted, treat as `next`.\n3) Files + symlink:\n- Ensure directory exists: `<PH_ROOT>/releases/<version>/` (version MUST be normalized to start with `v`).\n- Ensure these files exist (create if missing) using the v0 templates:\n  - `<PH_ROOT>/releases/<version>/plan.md`\n  - `<PH_ROOT>/releases/<version>/progress.md`\n  - `<PH_ROOT>/releases/<version>/features.yaml`\n- Ensure `<PH_ROOT>/releases/current` is a symlink pointing to `<version>` (unlink and recreate if it already exists).\n4) Stdout:\n- Preserve v0 release plan script output (✅ Created release plan…, 📁 Location…, etc) with Make-era command examples rewritten to `ph` equivalents.\n- Append the exact Make-era/contract plan hint block (4 lines) with `ph` substitutions:\n  - `Release plan saved under releases/current/plan.md`\n  - `  - Review lanes/dependencies + feature priorities in releases/current/plan.md`\n  - `  - Confirm sprint alignment via 'ph release status'`\n  - `  - Run 'ph validate --quick' before sharing externally`\n\nTests (integration, deterministic):\n- Freeze `datetime.date.today()` to `2099-01-01` so created files have deterministic dates.\n- In a temp PH_ROOT fixture, run `ph --root <PH_ROOT> release plan --version v1.2.3 --sprints 2 --start-sprint SPRINT-2099-01-01` and assert:\n  - exit 0\n  - `releases/v1.2.3/plan.md`, `progress.md`, `features.yaml` exist\n  - `releases/current` is a symlink to `v1.2.3`\n  - stdout contains all 4 exact hint lines.\n- Add a system-scope rejection test (exit 1 + exact remediation line).",
+      "steps": [
+        "Port v0 release planning (`release_manager.py --plan`) into the installed CLI and adapt it to PH_ROOT paths (no repo-local execution).",
+        "Implement `releases/current` symlink management and ensure the required files exist using v0 templates.",
+        "Append the exact Make-era/contract hint block and enforce system-scope rejection.",
+        "Add deterministic integration tests for file creation, symlink target, and hint lines."
+      ],
+      "deliverables": ["release plan + integration test."],
+      "acceptance_criteria": [
+        "`ph release plan` creates/ensures the required release files, maintains `releases/current` symlink, prints v0 output plus the exact 4-line hint block, and rejects system scope with the exact remediation line.",
+        "Deterministic integration tests pass."
+      ]
+    },
+    {
+      "id": "CLI-0472",
+      "phase_id": "PHASE-04",
+      "order": 27,
+      "title": "Implement `ph release list` and `ph release status`",
+      "status": "done",
+      "started_at": "2026-01-14T21:05:25Z",
+      "completed_at": "2026-01-14T21:09:50Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 21:05 UTC — CLI-0472 — Implement ph release list and status",
+      "next_task_id": "CLI-0473",
+      "depends_on": ["CLI-0471"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement `ph release list` and `ph release status` by porting v0 release listing/status behavior with Make-era remediation rewritten to `ph`.\n\nAuthoritative v0 behavior to port:\n- `process/automation/release_manager.py`:\n  - `list_release_versions()` + `parse_version(...)` (semantic sorting)\n  - `show_release_status(version=\"current\"|<v...>)`\n  - `get_current_release()` (symlink resolution)\n\nHard requirements:\n1) Scope rule:\n- If `--scope system`, exit 1 and print exactly: `Releases are project-scope only. Use: ph --scope project release ...`.\n2) `ph release list`:\n- Print the v0 list header `📦 RELEASES`.\n- List each `v*` directory under `<PH_ROOT>/releases/` sorted by semantic version (use v0 `parse_version`).\n- Mark the active one by comparing to the `releases/current` symlink target and appending ` (current)`.\n3) `ph release status`:\n- Read the active release from `releases/current`.\n- Failure mode when no current release:\n  - Print the v0 header line `❌ No current release found`.\n  - Rewrite any v0 Make-era remediation lines to `ph` equivalents:\n    - `make release-plan ...` → `ph release plan ...`\n    - `re-run make release-plan` → `re-run ph release plan`\n  - Exit code 1.\n- Success mode:\n  - Preserve v0 report formatting and section ordering from `show_release_status()`.\n\nTests (integration, deterministic):\n- Create release dirs `v1.0.0` and `v1.2.0` and set `releases/current` to `v1.2.0`.\n- Run list and assert semantic ordering and that only `v1.2.0` is marked `(current)`.\n- Remove the symlink and run status; assert exit 1 and that stdout contains `❌ No current release found` and a remediation line containing `ph release plan`.\n- Add a system-scope rejection test.",
+      "steps": [
+        "Port v0 release list/status (`release_manager.py`) into the CLI and adapt it to PH_ROOT paths (semantic ordering + current indicator).",
+        "Rewrite Make-era remediation text in v0 output to `ph` equivalents.",
+        "Add deterministic integration tests for list ordering, current marker, missing-current failure, and system-scope rejection."
+      ],
+      "deliverables": ["release list/status + tests."],
+      "acceptance_criteria": [
+        "`ph release list` sorts releases by semantic version and marks the active one based on `releases/current` (project scope only).",
+        "`ph release status` matches v0 report output and failure messaging, with Make-era remediation rewritten to `ph` equivalents.",
+        "Deterministic integration tests pass."
+      ]
+    },
+    {
+      "id": "CLI-0473",
+      "phase_id": "PHASE-04",
+      "order": 28,
+      "title": "Implement `ph release add-feature` and `ph release suggest`",
+      "status": "done",
+      "started_at": "2026-01-14T21:10:39Z",
+      "completed_at": "2026-01-14T21:13:16Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 21:10 UTC — CLI-0473 — Implement ph release add-feature and suggest",
+      "next_task_id": "CLI-0474",
+      "depends_on": ["CLI-0471", "CLI-0431"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement `ph release add-feature` and `ph release suggest` by porting v0 feature assignment and recommendation behavior.\n\nAuthoritative v0 behavior to port:\n- `process/automation/release_manager.py`:\n  - `add_feature_to_release(version, feature, feature_type, priority, critical_path)`\n  - `load_release_features(version)` (simple YAML parsing)\n  - `suggest_release_features(version)` (stdout formatting)\n\nHard requirements:\n1) Scope rule:\n- If `--scope system`, reject with the exact remediation line used by other release commands.\n2) Command shapes:\n- `ph release add-feature --release <vX.Y.Z> --feature <name> [--epic] [--critical]`\n- `ph release suggest --version <vX.Y.Z>`\n3) `add-feature` behavior:\n- Update `<PH_ROOT>/releases/<version>/features.yaml`.\n- Preserve existing entries (do not delete or reorder existing blocks).\n- Add/update the specified feature with v0 key set and defaults:\n  - `type: epic|regular`\n  - `priority: P1`\n  - `status: planned`\n  - `completion: 0`\n  - `critical_path: true|false`\n- Stdout: preserve v0 add-feature messaging, rewriting any Make-era command references to `ph` equivalents.\n4) `suggest` behavior:\n- Preserve v0 output format exactly:\n  - header: `💡 SUGGESTED FEATURES FOR <version>`\n  - line of 50 `=` characters\n  - per-feature recommendation lines based on `features/<name>/status.md` `Stage:` values.\n\nTests (integration, deterministic):\n- Create a release plan for `v1.2.3`.\n- Create a feature `feat-a` with `status.md` containing `Stage: developing`.\n- Run `ph release add-feature --release v1.2.3 --feature feat-a` and assert:\n  - exit 0\n  - `releases/v1.2.3/features.yaml` contains a `feat-a:` block with at least `type:` and `critical_path:` keys.\n- Run `ph release suggest --version v1.2.3` and assert:\n  - exit 0\n  - stdout contains the exact header line and a line mentioning `feat-a`.\n- Add a system-scope rejection test.",
+      "steps": [
+        "Port v0 add-feature and suggest logic (`release_manager.py`) into the CLI and adapt it to PH_ROOT paths.",
+        "Ensure YAML updates preserve existing entries and use v0 key defaults.",
+        "Add deterministic integration tests for add-feature YAML update and suggest output header."
+      ],
+      "deliverables": ["release add-feature/suggest + tests."],
+      "acceptance_criteria": [
+        "`ph release add-feature` updates `features.yaml` using the v0 schema while preserving existing entries, and `ph release suggest` prints the exact v0 suggestion header and per-feature recommendation lines.",
+        "Deterministic integration tests pass."
+      ]
+    },
+    {
+      "id": "CLI-0474",
+      "phase_id": "PHASE-04",
+      "order": 29,
+      "title": "Implement `ph release close` (delivered metadata + changelog)",
+      "status": "done",
+      "started_at": "2026-01-14T21:14:22Z",
+      "completed_at": "2026-01-14T21:17:43Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 21:14 UTC — CLI-0474 — Implement ph release close",
+      "next_task_id": "CLI-0305",
+      "depends_on": ["CLI-0471", "CLI-0412"],
+      "work_location": "external_repo",
+      "kickoff_prompt": "Implement `ph release close` by porting v0 close behavior and delivered metadata updates.\n\nAuthoritative v0 behavior to port:\n- `process/automation/release_manager.py`: `close_release(version)`.\n\nHard requirements:\n1) Scope rule:\n- If `--scope system`, reject with the exact remediation line used by other release commands.\n2) Command:\n- `ph release close --version <vX.Y.Z>`.\n3) File behavior:\n- Ensure `<PH_ROOT>/releases/<version>/changelog.md` exists (create/update) using the v0 changelog template.\n- Update `<PH_ROOT>/releases/<version>/plan.md`:\n  - Update/insert front matter keys exactly as v0 does:\n    - `status: delivered`\n    - `delivered_sprint: <current sprint id>` (resolve current sprint via `<PH_ROOT>/sprints/current`)\n    - `delivered_date: <YYYY-MM-DD>`\n  - Under the H1 `# Release <version>`, insert or replace the v0 \"Release status\" blockquote line:\n    - `> Release status: **delivered** (marked delivered in `<delivered_sprint>`, on <delivered_date>).`\n4) Stdout:\n- Preserve v0 close output lines (✅ Release ... closed, etc) with Make-era remediation rewritten to `ph` equivalents if present.\n\nTests (integration, deterministic):\n- Freeze `datetime.date.today()` to `2099-01-01`.\n- Create a sprint + current symlink `SPRINT-2099-01-01`.\n- Create a release `v1.2.3` (via `ph release plan`) and ensure `plan.md` contains the H1 `# Release v1.2.3`.\n- Run `ph release close --version v1.2.3` and assert:\n  - exit 0\n  - `changelog.md` exists\n  - `plan.md` front matter contains `status: delivered`, `delivered_sprint: SPRINT-2099-01-01`, `delivered_date: 2099-01-01`\n  - the `> Release status:` line exists under the H1.\n- Add a system-scope rejection test.",
+      "steps": [
+        "Port v0 release close (`release_manager.py:close_release`) into the CLI and adapt it to PH_ROOT paths.",
+        "Ensure `plan.md` and `changelog.md` mutations match v0 (front matter upserts + blockquote insertion/replacement).",
+        "Add deterministic integration tests for delivered metadata and changelog creation."
+      ],
+      "deliverables": ["release close + integration test."],
+      "acceptance_criteria": [
+        "`ph release close` creates/updates `changelog.md` and updates `plan.md` delivered metadata and the `> Release status:` block exactly as v0 does (project scope only).",
+        "Deterministic integration tests pass."
+      ]
+    },
+
+    {
+      "id": "CLI-0501",
+      "phase_id": "PHASE-05",
+      "order": 1,
+      "title": "Create `cli_plan/PARITY_CHECKLIST.md` and link it",
+      "status": "done",
+      "depends_on": [],
+      "work_location": "handbook_instance_repo",
+      "started_at": "2026-01-14T21:47:30Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 21:47 UTC — CLI-0501 — Create cli_plan/PARITY_CHECKLIST.md and link it",
+      "completed_at": "2026-01-14T21:51:25Z",
+      "next_task_id": "CLI-0502",
+      "kickoff_prompt": "Create `cli_plan/PARITY_CHECKLIST.md` with front matter. The checklist must be deterministic and cover every Make target mapping to CLI (reference the mapping section in CLI_CONTRACT). For each mapping, include: preconditions, exact command, and exact output paths to verify. Update `cli_plan/AI_AGENT_START_HERE.md` links list to include PARITY_CHECKLIST.md.",
+      "steps": [
+        "Add `cli_plan/PARITY_CHECKLIST.md` with required front matter.",
+        "Add sections for each command group and include mapping verification steps.",
+        "Update `cli_plan/AI_AGENT_START_HERE.md` links to include the new checklist."
+      ],
+      "deliverables": ["cli_plan/PARITY_CHECKLIST.md", "Updated cli_plan/AI_AGENT_START_HERE.md link list."],
+      "acceptance_criteria": [
+        "Checklist covers every Make target mapping and specifies concrete verification paths.",
+        "AI_AGENT_START_HERE links to the checklist."
+      ]
+    },
+    {
+      "id": "CLI-0502",
+      "phase_id": "PHASE-05",
+      "order": 2,
+      "title": "Implement `ph reset` (dry-run by default, execute requires confirmations)",
+      "status": "done",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "started_at": "2026-01-14T21:52:03Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 21:52 UTC — CLI-0502 — Implement ph reset",
+      "completed_at": "2026-01-14T21:57:05Z",
+      "next_task_id": "CLI-0503",
+      "kickoff_prompt": "Implement `ph reset` by porting the v0 reset manager behavior and adapting confirmations and templates to the CLI.\n\nAuthoritative v0 behavior to port:\n- `process/automation/reset_manager.py` (delete-set computation, safety checks, and template rewrites)\n- `process/automation/reset_spec.json` (spec input)\n- CLI contract: `cli_plan/v1_cli/CLI_CONTRACT.md` section `ph reset` (dry-run default, confirmations, hook skip on success)\n\nHard requirements:\n1) Command modes:\n- Dry-run (default): `ph reset`\n- Execute: `ph reset --confirm RESET --force true`\n- Support `--spec <repo-relative-path>` (parity with v0) to point at an alternate reset spec.\n2) Safety invariants (must match v0):\n- Absolute paths are forbidden in the spec.\n- Paths must not escape PH_ROOT.\n- `.project-handbook/system/**` MUST NEVER be deleted and MUST NEVER appear in delete lists.\n3) Reset spec interpretation (exact fields):\n- Enforce `schema_version == 1`.\n- Compute delete set from:\n  - `delete_contents_roots` (delete minimal set of entries under each root, deleting entire subtrees when they do not contain protected paths)\n  - `delete_paths`\n- Treat `preserve_paths` and `rewrite_paths` as protected.\n- Execute mode must:\n  - delete computed delete set (deepest-first)\n  - create directories listed in `recreate_dirs`\n  - create empty files listed in `recreate_files` if missing\n  - rewrite every path in `rewrite_paths` using the embedded templates\n4) Template rewrites:\n- Port the exact template contents embedded in `reset_manager.py:_rewrite_templates(...)` with one required adjustment:\n  - Replace Make-era command examples inside rewritten templates:\n    - `pnpm make -- end-session ...` → `ph end-session ...`\n    - any `make ...` reference in rewritten templates → `ph ...`\n5) Stdout (match v0 structure and be explicit for CLI):\n- Always print the header block:\n  - `project-handbook reset report`\n  - `spec: <spec-relative-path>`\n  - `mode: DRY-RUN|EXECUTE`\n  - blank line\n  - `delete_set:` and one `  - <path>` line per entry\n- Dry-run additionally prints:\n  - `No filesystem changes made.`\n  - `To execute: ph reset --confirm RESET --force true`\n- Execute additionally prints:\n  - `✅ Reset complete.`\n6) Hook behavior:\n- On success (dry-run or execute), the post-command hook MUST be skipped entirely (no history and no auto-validation).\n\nTests (integration, deterministic):\n- Create a temp PH_ROOT fixture that includes all required repo assets from `CLI_CONTRACT.md`.\n- Create sample project artifacts under PH_ROOT (e.g., `features/x/`, `sprints/2099/SPRINT-2099-01-01/`, `backlog/bugs/...`).\n- Create sample system artifacts under `.project-handbook/system/...`.\n- Dry-run test:\n  - Run `ph --root <PH_ROOT> reset`.\n  - Assert project artifacts still exist.\n  - Assert stdout contains `mode: DRY-RUN` and `To execute: ph reset --confirm RESET --force true`.\n- Execute test:\n  - Run `ph --root <PH_ROOT> reset --confirm RESET --force true`.\n  - Assert project artifacts are removed according to `reset_spec.json`.\n  - Assert system artifacts still exist.\n  - Assert `roadmap/now-next-later.md`, `backlog/index.json`, and `parking-lot/index.json` exist (rewritten templates).\n  - Assert no history entry was appended (hook skip).",
+      "steps": [
+        "Port v0 reset spec loader + delete-set computation (`reset_manager.py`) into the CLI and adapt it to PH_ROOT + scope context.",
+        "Implement dry-run and execute modes with exact `--confirm`/`--force` enforcement and v0-style report output.",
+        "Port v0 template rewrites and update rewritten templates to use `ph` instead of Make-era commands.",
+        "Add deterministic integration tests for dry-run safety, execute deletion/preservation, and hook skip behavior."
+      ],
+      "deliverables": ["reset command + integration tests."],
+      "acceptance_criteria": [
+        "`ph reset` dry-run prints the reset report and makes no filesystem changes; it prints exactly `To execute: ph reset --confirm RESET --force true`.",
+        "`ph reset` execute deletes project artifacts per `reset_spec.json`, rewrites required templates, preserves `.project-handbook/system/**`, and prints exactly `✅ Reset complete.`.",
+        "Successful reset skips the post-command hook entirely (no history entry and no auto-validation).",
+        "Deterministic integration tests pass."
+      ]
+    },
+    {
+      "id": "CLI-0503",
+      "phase_id": "PHASE-05",
+      "order": 3,
+      "title": "Implement `ph reset-smoke`",
+      "status": "done",
+      "depends_on": ["CLI-0502"],
+      "work_location": "external_repo",
+      "started_at": "2026-01-14T21:57:52Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 21:57 UTC — CLI-0503 — Implement ph reset-smoke",
+      "completed_at": "2026-01-14T22:03:19Z",
+      "next_task_id": "CLI-0504",
+      "kickoff_prompt": "Implement `ph reset-smoke` as an exact, deterministic end-to-end proof that reset preserves system scope and wipes project scope.\n\nAuthoritative source of truth for procedure:\n- `docs/RESET_SMOKE.md` (copy/paste steps)\n- `Makefile` target `reset-smoke` (one-shot automation)\n- CLI contract: `cli_plan/v1_cli/CLI_CONTRACT.md` section `ph reset-smoke`.\n\nHard requirements:\n1) Command:\n- `ph reset-smoke` (no args).\n2) Procedure (must be implemented exactly in this order):\n- Step 1: Create system-scope artifacts:\n  - `ph --scope system feature create --name handbook-reset-smoke`\n  - `ph --scope system sprint plan --sprint SPRINT-2099-01-01`\n  - `ph --scope system task create --title \"Smoke: system artifacts survive reset\" --feature handbook-reset-smoke --decision ADR-0000 --points 1 --lane handbook/automation --session task-execution`\n- Step 2: Create project-scope artifacts:\n  - `ph feature create --name reset-smoke-project`\n  - `ph sprint plan --sprint SPRINT-2099-01-02`\n  - `ph task create --title \"Smoke: project artifacts are wiped\" --feature reset-smoke-project --decision ADR-0000 --points 1 --lane ops --session task-execution`\n- Step 3: Execute reset:\n  - `ph reset --confirm RESET --force true`\n- Step 4: Verify separation (filesystem asserts):\n  - Project removed:\n    - `features/reset-smoke-project` does not exist\n    - `sprints/2099/SPRINT-2099-01-02` does not exist\n    - `sprints/current` does not exist\n  - System remains:\n    - `.project-handbook/system/features/handbook-reset-smoke` exists\n    - `.project-handbook/system/sprints/2099/SPRINT-2099-01-01` exists\n- Step 5: Confirm repo health:\n  - Run `ph validate --quick` (project scope) and require exit 0.\n  - Run `ph sprint plan --sprint SPRINT-2099-01-03` and require exit 0.\n3) Hook behavior:\n- On success, MUST skip the post-command hook entirely (no history, no auto-validation), matching reset skip rules.\n\nTests (integration):\n- Create a temporary PH_ROOT fixture and run `ph --root <PH_ROOT> reset-smoke`.\n- Assert all filesystem outcomes above and assert `status/validation.json` exists after explicit `ph validate --quick` within the smoke flow.\n- Assert `.project-handbook/history.log` is not created/modified by reset/reset-smoke (hook skip).",
+      "steps": [
+        "Implement the exact reset smoke procedure defined in `docs/RESET_SMOKE.md` using `ph` commands (both scopes).",
+        "Ensure the smoke flow performs explicit filesystem assertions, then runs `ph validate --quick` and `ph sprint plan` post-reset.",
+        "Ensure successful reset-smoke skips the post-command hook entirely (no history, no auto-validation).",
+        "Add an integration test that runs reset-smoke in a temp PH_ROOT fixture and asserts all outcomes."
+      ],
+      "deliverables": ["reset-smoke command + integration test."],
+      "acceptance_criteria": [
+        "`ph reset-smoke` performs the exact 5-step procedure above and fails non-zero if any assertion fails.",
+        "On success, project artifacts are wiped, system artifacts remain, `ph validate --quick` passes, and `ph sprint plan` succeeds post-reset.",
+        "Post-command hook is skipped entirely on success (history not appended).",
+        "Integration test passes."
+      ]
+    },
+    {
+      "id": "CLI-0504",
+      "phase_id": "PHASE-05",
+      "order": 4,
+      "title": "Implement `ph migrate system-scope` with JSON output contract",
+      "status": "done",
+      "depends_on": ["CLI-0204"],
+      "work_location": "external_repo",
+      "started_at": "2026-01-14T22:04:04Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 22:04 UTC — CLI-0504 — Implement ph migrate system-scope",
+      "completed_at": "2026-01-14T22:12:33Z",
+      "next_task_id": "NONE",
+      "kickoff_prompt": "Implement `ph migrate system-scope` by porting the deterministic migration behavior from v0 and enforcing a stable JSON output contract.\n\nAuthoritative v0 behavior to port:\n- `process/automation/migrate_system_scope.py` (moves + link rewrite)\n- `process/automation/system_scope_config.json` (routing rules)\n- CLI contract: `cli_plan/v1_cli/CLI_CONTRACT.md` section `ph migrate system-scope`.\n\nHard requirements:\n1) Command + confirmations:\n- Command: `ph migrate system-scope --confirm RESET --force true`\n- If `--confirm` is not exactly `RESET` OR `--force` is not exactly `true`, exit code MUST be `2` and stdout MUST be empty.\n2) Routing config:\n- Read routing rules from `<PH_ROOT>/process/automation/system_scope_config.json` keys:\n  - `feature_name_prefixes_for_system_scope`\n  - `task_lane_prefixes_for_system_scope`\n  - `adr_tags_triggering_system_scope`\n3) Migrations (project → system):\n- Features: move `<PH_ROOT>/features/<name>` where `<name>` starts with any configured system feature prefix → `<PH_ROOT>/.project-handbook/system/features/<name>`.\n- ADRs: move `<PH_ROOT>/adr/<file>.md` where front matter tags contain any configured system ADR tag → `<PH_ROOT>/.project-handbook/system/adr/<file>.md`.\n- Sprint tasks: for any `<PH_ROOT>/sprints/**/tasks/**/task.yaml` where `lane:` starts with a configured system lane prefix, move the *task directory* to the mirrored destination under `<PH_ROOT>/.project-handbook/system/sprints/**/tasks/**` (support both active and archived layouts as in v0 `_project_task_dest`).\n- Moves MUST be atomic renames (v0 `_atomic_move`).\n- If destination exists, do not overwrite; append a skipped record with reason `dest_exists:<dest>`.\n4) Link rewrite (system scope only):\n- After moves, rewrite markdown links under `<PH_ROOT>/.project-handbook/system/**` using the v0 rewriting rules (front matter `links:` + inline body links; skip fenced code blocks).\n- The rewrite step MUST be idempotent.\n5) JSON output contract (deterministic, stable):\n- Print exactly one JSON object to stdout (pretty-printed with indent=2):\n  - `{ \"moved\": [...], \"skipped\": [...], \"errors\": [...] }`\n- Every path in the JSON MUST be PH_ROOT-relative, POSIX style (forward slashes).\n  - moved entries: `{ \"from\": \"features/x\", \"to\": \".project-handbook/system/features/x\" }`\n  - skipped entries: `{ \"path\": \"...\", \"reason\": \"...\" }`\n  - errors entries: `{ \"path\": \"...\", \"message\": \"...\" }`\n\nTests (integration, deterministic):\n- Create a temp PH_ROOT fixture with routing config prefixes that match `handbook-` for features and `handbook/` for lanes, and one system ADR tag.\n- Create:\n  - project feature dir `features/handbook-a/`\n  - project ADR `adr/ADR-2099-system.md` with tags including the system ADR tag\n  - project sprint task dir `sprints/2099/SPRINT-2099-01-01/tasks/TASK-001-x/` with `task.yaml` lane set to `handbook/automation`\n- Run `ph --root <PH_ROOT> migrate system-scope --confirm RESET --force true` and assert:\n  - exit 0\n  - the feature/adr/task dirs were moved to `.project-handbook/system/...`\n  - stdout parses as JSON and every `from/to/path` value is PH_ROOT-relative\n- Run without confirmations and assert exit code 2 and empty stdout.",
+      "steps": [
+        "Port v0 migration logic (`migrate_system_scope.py`) into the CLI and adapt it to PH_ROOT + scope context (no repo-local execution).",
+        "Enforce exact `--confirm`/`--force` confirmation behavior (exit 2 with empty stdout on failure).",
+        "Implement deterministic JSON output with PH_ROOT-relative POSIX paths and v0 link rewrite behavior.",
+        "Add deterministic integration tests for moves, JSON output shape, and confirmation failure."
+      ],
+      "deliverables": ["migrate system-scope command + integration test."],
+      "acceptance_criteria": [
+        "Missing/mismatched confirmations exit with code 2 and print no output.",
+        "With confirmations, the command moves the correct artifacts to `.project-handbook/system/**`, rewrites system-scope links, and prints exactly one JSON object with PH_ROOT-relative POSIX paths.",
+        "Deterministic integration tests pass."
+      ]
+    }
+    ,
+    {
+      "id": "CLI-0505",
+      "phase_id": "PHASE-05",
+      "order": 5,
+      "title": "Implement `ph init` and update CLI contract",
+      "status": "done",
+      "depends_on": ["CLI-0102"],
+      "work_location": "external_repo",
+      "started_at": "2026-01-14T23:28:56Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 23:28 UTC — CLI-0505 — Implement ph init and update CLI contract",
+      "completed_at": "2026-01-14T23:32:35Z",
+      "next_task_id": "NONE",
+      "kickoff_prompt": "Add an explicit initializer command to create the root marker config for a new handbook instance repo, and update the CLI contract accordingly.\n\nAuthoritative constraints:\n- Root marker: `cli_plan/project_handbook.config.json` (directory containing it is PH_ROOT).\n- Schema: `handbook_schema_version == 1`, `repo_root == \".\"`.\n- Version gate: `requires_ph_version` must match v1 range (currently `>=0.1.0,<0.2.0`).\n\nHard requirements:\n1) Contract update:\n- Update `cli_plan/v1_cli/CLI_CONTRACT.md` to define `ph init` (command, behavior, outputs, exit codes).\n- Explicitly document root resolution exception for `ph init` (it can run outside an existing PH_ROOT).\n2) CLI behavior:\n- Command: `ph init`.\n- Root selection:\n  - If `--root <path>` is provided, write to that directory.\n  - Else write to `cwd`.\n- Create `cli_plan/project_handbook.config.json` if missing; create `cli_plan/` directory if needed.\n- If config already exists, do not overwrite; exit 0.\n- On success, MUST skip post-command hooks entirely (no history, no auto-validation).\n3) Stdout:\n- On create, print: `Created: cli_plan/project_handbook.config.json`.\n- If already exists, print: `Already exists: cli_plan/project_handbook.config.json`.\n4) Tests (integration, deterministic):\n- In a temp dir with no marker, run `ph init` and assert exit 0 and the config file exists with correct JSON fields.\n- Run `ph init` again and assert exit 0 and stdout matches the \"Already exists\" line.\n- Ensure the command works without an existing handbook repo and does not attempt root-marker-based resolution.\n\nDocs:\n- Update the CLI repo MkDocs quickstart to include `ph init` as the first step for new handbook instance repos.",
+      "steps": [
+        "Update `cli_plan/v1_cli/CLI_CONTRACT.md` to add `ph init` and document root resolution exception.",
+        "Implement `ph init` in the CLI entrypoint so it runs without an existing marker and writes the marker JSON file.",
+        "Add deterministic integration tests for create and idempotency behavior.",
+        "Update MkDocs quickstart to document `ph init`."
+      ],
+      "deliverables": [
+        "CLI_CONTRACT update + init command + integration tests + quickstart docs update."
+      ],
+      "acceptance_criteria": [
+        "`ph init` creates `cli_plan/project_handbook.config.json` when missing and is idempotent when present.",
+        "`ph init` uses `--root` when provided and otherwise uses `cwd`.",
+        "Successful `ph init` skips post-command hooks entirely.",
+        "Integration tests pass and contract/docs are updated."
+      ]
+    }
+    ,
+    {
+      "id": "CLI-0506",
+      "phase_id": "PHASE-05",
+      "order": 6,
+      "title": "Enhance `ph init` to scaffold required repo assets",
+      "status": "done",
+      "depends_on": ["CLI-0505"],
+      "work_location": "external_repo",
+      "started_at": "2026-01-15T00:52:22Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-15 00:52 UTC — CLI-0506 — Enhance ph init to scaffold required repo assets",
+      "completed_at": "2026-01-15T00:54:23Z",
+      "next_task_id": "NONE",
+      "kickoff_prompt": "Update `ph init` so a brand-new directory becomes a minimally valid handbook instance repo that passes `ph doctor`.\n\nHard requirements:\n1) `ph init` must create (if missing) under the target root:\n- `project_handbook.config.json`\n- `process/checks/validation_rules.json`\n- `process/automation/system_scope_config.json`\n- `process/automation/reset_spec.json`\n- `process/sessions/templates/` (directory)\n\n2) Do not overwrite existing files.\n\n3) Update `cli_plan/v1_cli/CLI_CONTRACT.md` to reflect the new init scaffolding behavior and stdout.\n\n4) Add/adjust integration tests so:\n- `ph init` followed by `ph doctor` exits 0 in a fresh temp directory.\n\nNotes:\n- Keep file contents minimal but valid for v1 CLI behavior.\n- `system_scope_config.json` should include sensible default routing prefixes (handbook-/ph- and handbook/).\n- `reset_spec.json` must be schema-valid and safe-by-default.",
+      "steps": [
+        "Update CLI contract `ph init` behavior/output to include scaffolding of required assets.",
+        "Implement scaffolding in `ph init` (create missing dirs/files with safe default JSON).",
+        "Update integration tests to validate `ph init` + `ph doctor` success in a fresh directory."
+      ],
+      "deliverables": [
+        "Contract update + init scaffolding + tests."
+      ],
+      "acceptance_criteria": [
+        "A fresh directory becomes a valid PH_ROOT after `ph init` and `ph doctor` exits 0.",
+        "`ph init` is idempotent and never overwrites existing files."
+      ]
+    }
+    ,
+    {
+      "id": "CLI-0507",
+      "phase_id": "PHASE-05",
+      "order": 7,
+      "title": "ADR: Scaffold a full handbook instance filesystem",
+      "status": "done",
+      "depends_on": ["CLI-0506"],
+      "work_location": "handbook_instance_repo",
+      "started_at": "2026-01-15T02:21:54Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-15 02:21 UTC — CLI-0507 — ADR: Scaffold a full handbook instance filesystem",
+      "completed_at": "2026-01-15T02:26:18Z",
+      "next_task_id": "NONE",
+      "kickoff_prompt": "Create a new ADR under `cli_plan/v1_cli/` that defines how `ph` should scaffold/generate the entire handbook instance repo filesystem from scratch.\n\nThe ADR must:\n- Define goals, non-goals, and constraints (deterministic, offline-capable, no overwrites).\n- Propose a concrete command surface (e.g. `ph init --full`, `ph scaffold`, etc.) and lifecycle (create vs upgrade).\n- Address where CLI-owned config/state should live (e.g. `.project-handbook/` vs `.ph/`) and why.\n- Address documentation placement conventions (what belongs in the handbook instance vs in the CLI repo docs).\n- Include a migration plan from current layout.\n\nUpdate `cli_plan/AI_AGENT_START_HERE.md` links to include the new ADR.",
+      "steps": [
+        "Author ADR with options and a recommended approach.",
+        "Update `cli_plan/AI_AGENT_START_HERE.md` links to include the ADR."
+      ],
+      "deliverables": [
+        "New ADR file in cli_plan/v1_cli and updated AI_AGENT_START_HERE links."
+      ],
+      "acceptance_criteria": [
+        "ADR clearly defines an implementable scaffolding approach and records the decision rationale.",
+        "AI_AGENT_START_HERE links to the ADR."
+      ]
+    }
+    ,
+    {
+      "id": "CLI-0508",
+      "phase_id": "PHASE-05",
+      "order": 8,
+      "title": "ADR + contract: adopt `.ph/` internals + `ph/` content; remove system scope",
+      "status": "done",
+      "depends_on": ["CLI-0507"],
+      "work_location": "handbook_instance_repo",
+      "started_at": "2026-01-15T03:18:04Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-15 03:18 UTC — CLI-0508 — ADR + contract: adopt .ph internals and ph content layout; remove system scope",
+      "completed_at": "2026-01-15T03:30:28Z",
+      "next_task_id": "NONE",
+      "kickoff_prompt": "Decide and document the v1 filesystem layout for using `ph` inside an arbitrary project repo.\n\nRequirements:\n- The project root (where you run `ph`) stays the user repo root.\n- All CLI-owned config/state lives under `.ph/**`.\n- All handbook content lives under `ph/**`.\n- Root marker becomes `.ph/config.json`.\n- Remove `--scope system` and all “system scope” behavior from the contract.\n\nDeliverables:\n- New ADR under `cli_plan/v1_cli/` describing the new layout and rationale (including why `.ph/config.json` is preferred over `ph/.internals/...`).\n- Update `cli_plan/v1_cli/CLI_CONTRACT.md` and `cli_plan/AI_AGENT_START_HERE.md` to match.\n- Update `cli_plan/tasks.json` global rules/root marker if referenced.",
+      "steps": [
+        "Write ADR for `.ph/` + `ph/` layout.",
+        "Update `CLI_CONTRACT.md` root detection and paths.",
+        "Update AI_AGENT_START_HERE marker section/links."
+      ],
+      "deliverables": [
+        "New ADR file and contract updates."
+      ],
+      "acceptance_criteria": [
+        "ADR clearly defines the new on-project layout and marker location.",
+        "`CLI_CONTRACT.md` consistently reflects the new marker, path roots, and removal of system scope."
+      ]
+    }
+    ,
+    {
+      "id": "CLI-0509",
+      "phase_id": "PHASE-05",
+      "order": 9,
+      "title": "Specify full `ph/**` content scaffold + seed files for `ph init`",
+      "status": "done",
+      "depends_on": ["CLI-0508"],
+      "work_location": "handbook_instance_repo",
+      "started_at": "2026-01-15T03:50:47Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-15 03:50 UTC — CLI-0509 — Specify full ph/** content scaffold + seed files for ph init",
+      "completed_at": "2026-01-15T03:53:10Z",
+      "next_task_id": "NONE",
+      "kickoff_prompt": "Update the v1 layout ADR and CLI contract so `ph init` scaffolds the full `ph/**` directory structure for a project repo, and includes any seed files that should be automatically generated (e.g. `ph/roadmap/now-next-later.md`).\n\nHard requirements:\n- Add an explicit, enumerated scaffold spec to the ADR (directories + seed files).\n- Update `cli_plan/v1_cli/CLI_CONTRACT.md` so `ph init` creates that structure (non-destructive; no overwrites).\n\nNotes:\n- Keep `docs/` out of `ph/**` (those are product docs for `ph`, not project handbook docs).\n- Prefer minimal seed content that enables commands to work immediately.",
+      "steps": [
+        "Inventory legacy handbook tree for mapping.",
+        "Update ADR with directory + seed file spec.",
+        "Update contract `ph init` create list."
+      ],
+      "deliverables": [
+        "ADR update + contract update."
+      ],
+      "acceptance_criteria": [
+        "ADR lists the complete `ph/**` scaffold and seed files (including roadmap).",
+        "Contract requires `ph init` to create them (without overwriting)."
+      ]
+    }
+    ,
+    {
+      "id": "CLI-0510",
+      "phase_id": "PHASE-05",
+      "order": 10,
+      "title": "Add `ph init` gitignore flags (`--gitignore` / `--no-gitignore`)",
+      "status": "done",
+      "depends_on": ["CLI-0509"],
+      "work_location": "handbook_instance_repo",
+      "started_at": "2026-01-15T15:54:41Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-15 15:54 UTC — CLI-0510 — Add ph init gitignore flags",
+      "completed_at": "2026-01-15T15:55:49Z",
+      "next_task_id": "NONE",
+      "kickoff_prompt": "Update ADR + CLI contract so `ph init` supports `--gitignore` and `--no-gitignore`.\n\nRequirements:\n- `--gitignore` enables updating/creating `.gitignore` under PH_ROOT.\n- `--no-gitignore` disables that behavior.\n- Document the default (recommended: `--gitignore` on by default) and ensure behavior is deterministic and idempotent.\n- Specify which entries are added (at minimum `.ph/`; include `ph/` only if the intended workflow is to keep handbook content out of the main repo).\n\nDeliverables:\n- ADR-CLI-0003 updated to include gitignore behavior.\n- CLI_CONTRACT `ph init` updated to include the flags and exact semantics.",
+      "steps": [
+        "Update ADR with gitignore decision.",
+        "Update contract init flags + semantics."
+      ],
+      "deliverables": [
+        "ADR update + contract update."
+      ],
+      "acceptance_criteria": [
+        "Contract defines init flags and exact .gitignore edits.",
+        "ADR captures rationale and default behavior."
+      ]
+    }
+    ,
+    {
+      "id": "CLI-0511",
+      "phase_id": "PHASE-05",
+      "order": 11,
+      "title": "Scaffold `cli_plan/ph_spec/` with examples + per-dir contracts",
+      "status": "done",
+      "depends_on": ["CLI-0510"],
+      "work_location": "handbook_instance_repo",
+      "started_at": "2026-01-16T00:36:31Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-16 00:36 UTC — CLI-0511 — Scaffold cli_plan/ph_spec with examples + per-dir contracts",
+      "completed_at": "2026-01-16T00:44:39Z",
+      "next_task_id": "NONE",
+      "kickoff_prompt": "Create `cli_plan/ph_spec/` and mirror the `ph/**` content-tree scaffold defined in `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md`.\n\nRequirements:\n- Create every directory listed under the ADR’s “Content tree (ph/**)” section (and verify against the current repo root tree so nothing is missing).\n- For each directory/sub-directory in that scaffold, add an empty `contract.md` file.\n- For each directory/sub-directory, add an example of the files/directories typically generated there, preferably copied from the current `project-handbook` repo content.\n  - If a directory typically contains multiple generated files, include all of them for the example.\n\nNotes:\n- Keep examples small/representative (one example instance per dynamic category like sprint/feature/task/backlog item).\n- Do not mix spec `contract.md` files into copied examples; keep examples under an `examples/` subdirectory.",
+      "steps": [
+        "Create ph_spec directory scaffold.",
+        "Copy representative examples from repo root.",
+        "Add per-directory contract.md files."
+      ],
+      "deliverables": [
+        "New cli_plan/ph_spec/ tree with examples + contract.md files."
+      ],
+      "acceptance_criteria": [
+        "All ADR-CLI-0003 content-tree directories exist under cli_plan/ph_spec/ph/**.",
+        "Every spec directory contains a contract.md and an examples/ folder (with real examples where possible)."
+      ]
+    }
+    ,
+    {
+      "id": "CLI-0512",
+      "phase_id": "PHASE-05",
+      "order": 12,
+      "title": "Update ph_spec for releases + parking-lot examples; remove features/implemented",
+      "status": "done",
+      "depends_on": ["CLI-0511"],
+      "work_location": "handbook_instance_repo",
+      "started_at": "2026-01-16T01:03:04Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-16 01:03 UTC — CLI-0512 — Update ph_spec for releases + parking-lot examples; remove features implemented",
+      "completed_at": "2026-01-16T01:05:57Z",
+      "next_task_id": "NONE",
+      "kickoff_prompt": "Adjust the `ph/**` spec + `cli_plan/ph_spec/` scaffold to reflect:\n\n- Releases: completed versions live under `releases/delivered/`; active work is under `releases/current/` (directory, not symlink); add a `releases/planning/` bucket.\n- Parking lot: use archived parking-lot items as examples.\n- Features: remove `features/implemented/` from the scaffold (it is not part of the system).\n\nDeliverables:\n- Update ADR-CLI-0003 scaffold spec.\n- Update CLI_CONTRACT `ph init` scaffold list and any relevant path semantics.\n- Update `cli_plan/ph_spec/` directories + examples accordingly.\n\nAt end: report any remaining example gaps that require examples from another repo.",
+      "steps": [
+        "Update ADR + contract for new layout.",
+        "Update ph_spec tree and example copies."
+      ],
+      "deliverables": [
+        "Updated spec docs and ph_spec scaffold."
+      ],
+      "acceptance_criteria": [
+        "ph_spec matches updated ADR scaffold.",
+        "Releases spec reflects current/planning/delivered and no symlink.",
+        "No features/implemented directory in ph_spec."
+      ]
+    }
+    ,
+    {
+      "id": "CLI-0513",
+      "phase_id": "PHASE-05",
+      "order": 13,
+      "title": "Add sprint-plan scaffold example + current symlink to ph_spec",
+      "status": "done",
+      "depends_on": ["CLI-0512"],
+      "work_location": "handbook_instance_repo",
+      "started_at": "2026-01-17T02:19:51Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-17 02:19 UTC — CLI-0513 — Add sprint-plan scaffold example + current symlink to ph_spec",
+      "completed_at": "2026-01-17T02:21:05Z",
+      "next_task_id": "NONE",
+      "kickoff_prompt": "Within `cli_plan/ph_spec/`, add an explicit sprint scaffold example that shows exactly what is created by `ph sprint plan`/`ph sprint open`:\n\n- `ph/sprints/<year>/<SPRINT-...>/plan.md`\n- `ph/sprints/<year>/<SPRINT-...>/tasks/` (empty at sprint creation)\n- `ph/sprints/current` symlink to the active sprint directory\n\nRequirements:\n- Keep this under `cli_plan/ph_spec/ph/sprints/examples/` (do not pollute the spec root outside examples).\n- Use a real plan.md copied from this repo for the example.\n- Ensure repo validation still passes.\n\nDeliverable:\n- Updated `cli_plan/ph_spec/ph/sprints/examples/` with a `current` symlink and an example sprint directory skeleton.",
+      "steps": [
+        "Create sprint scaffold example tree and symlink.",
+        "Validate handbook repo."
+      ],
+      "deliverables": [
+        "ph_spec sprints example scaffold."
+      ],
+      "acceptance_criteria": [
+        "ph_spec includes an example sprint skeleton and a current symlink under examples.",
+        "make validate-quick passes."
+      ]
+    }
+    ,
+    {
+      "id": "CLI-0514",
+      "phase_id": "PHASE-05",
+      "order": 14,
+      "title": "Create due-diligence.json task list for ph_spec contract completion",
+      "status": "done",
+      "depends_on": ["CLI-0513"],
+      "work_location": "handbook_instance_repo",
+      "started_at": "2026-01-17T02:55:16Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-17 02:55 UTC — CLI-0514 — Create due-diligence.json task list for ph_spec contract completion",
+      "completed_at": "2026-01-17T02:56:48Z",
+      "next_task_id": "NONE",
+      "kickoff_prompt": "Create `cli_plan/due-diligence.json` containing an exhaustive task list to complete due diligence for the `ph_spec` artifacts:\n\n- Review each `cli_plan/ph_spec/ph/**/contract.md` and write an explicit contract for documents/files/commands in that area.\n- Validate and reconcile examples in each `examples/` folder.\n- Include cross-cutting tasks (taxonomy decisions like parking-lot categories, link conventions, schema definitions, etc.).\n\nDeliverables:\n- `cli_plan/due-diligence.json` with a comprehensive checklist-style task list.",
+      "steps": [
+        "Enumerate ph_spec contract dirs and create tasks.",
+        "Write due-diligence.json with ordering and acceptance criteria."
+      ],
+      "deliverables": [
+        "New due-diligence.json file."
+      ],
+      "acceptance_criteria": [
+        "due-diligence.json covers every ph_spec contract.md directory and includes cross-cutting tasks."
+      ]
+    }
+  ]
+}

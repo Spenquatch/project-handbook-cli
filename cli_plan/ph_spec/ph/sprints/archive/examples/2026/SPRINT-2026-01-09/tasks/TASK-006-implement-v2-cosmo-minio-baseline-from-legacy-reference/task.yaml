@@ -1,0 +1,22 @@
+id: TASK-006
+title: Implement: v2 Cosmo+MinIO baseline (from legacy reference)
+feature: v2_registry-cosmo-minio-required
+lane: registry/discovery
+decision: ADR-0030
+session: task-execution
+owner: @spenser
+status: done
+story_points: 3
+depends_on: [TASK-002]
+prio: P1
+due: 2026-01-16
+acceptance:
+  - v2 brings up Cosmo + MinIO baseline (internal-only; no Traefik exposure) per ADR-0030.
+  - Vault contract for Cosmo/MinIO secrets is implemented per FDR-v2_registry-cosmo-minio-required-0001 (KV paths + `/secrets/*.env` outputs; no secrets printed).
+  - Bucket init is idempotent and store-agnostic (prefer `aws-cli`, avoid `minio/mc` coupling).
+  - Smoke probes include a “Cosmo artifact write/read” gate used for the later SeaweedFS cutover.
+  - Relevant v2 + handbook docs updated (implementation + runbooks as needed).
+links:
+  - ../../../../../adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md
+  - ../../../../../features/v2_registry-cosmo-minio-required/fdr/0001-vault-secrets-contract-cosmo-minio.md
+  - ../../../../../decision-register/DR-0003-cosmo-minio-baseline-topology.md

@@ -1,0 +1,927 @@
+{
+  "version": 1,
+  "generated_at": "2026-01-17T02:56:29Z",
+  "owner": "project-handbook",
+  "purpose": "Due diligence checklist to make `ph_spec` contracts and examples exhaustive for a flawless execution/implementation phase.",
+  "scope": {
+    "ph_spec_root": "cli_plan/ph_spec/ph",
+    "inputs": [
+      "cli_plan/ph_spec/ph/**",
+      "cli_plan/v1_cli/CLI_CONTRACT.md",
+      "cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md"
+    ]
+  },
+  "status_values": [
+    "todo",
+    "in_progress",
+    "done",
+    "blocked"
+  ],
+  "tasks": [
+    {
+      "id": "DD-0001",
+      "status": "done",
+      "started_at": "2026-01-17T03:43:39Z",
+      "completed_at": "2026-01-17T03:47:39Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-17-0343-utc--dd-0001--define-contractmd-standard-template",
+      "next_task_id": "DD-0002",
+      "title": "Define contract.md standard template",
+      "type": "meta",
+      "scope": "ph_spec",
+      "description": "Define the required sections/headings every ph_spec contract must include (directory purpose, ownership, creation commands, required files, schemas, invariants, validation rules, examples mapping).",
+      "acceptance_criteria": [
+        "A single standard outline exists and is applied consistently across ph_spec contract.md files."
+      ]
+    },
+    {
+      "id": "DD-0002",
+      "status": "done",
+      "started_at": "2026-01-17T03:48:47Z",
+      "completed_at": "2026-01-17T03:50:23Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-17-0348-utc--dd-0002--confirm-parking-lot-category-taxonomy",
+      "next_task_id": "DD-0003",
+      "title": "Confirm parking-lot category taxonomy",
+      "type": "decision",
+      "scope": "ph_spec",
+      "description": "Decide whether `external-requests` is a real category for the v1 ph layout. If not, remove it from ADR/contract/scaffold and ensure validation/automation rules match the chosen categories.",
+      "acceptance_criteria": [
+        "Allowed categories are explicitly listed and consistent across spec, contract, and validation rules."
+      ],
+      "notes": {
+        "current_source": "process/checks/validation_rules.json (parking_lot.allowed_categories)"
+      }
+    },
+    {
+      "id": "DD-0003",
+      "status": "done",
+      "started_at": "2026-01-17T03:50:54Z",
+      "completed_at": "2026-01-17T03:55:17Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-17-0350-utc--dd-0003--define-release-lifecycle-contract-planning-current-delivered",
+      "next_task_id": "DD-0004",
+      "title": "Define release lifecycle contract (planning/current/delivered)",
+      "type": "decision",
+      "scope": "ph_spec",
+      "description": "Finalize required files and transitions for releases: what lives in planning vs current vs delivered, and what `ph release close` must do (including move semantics and version derivation).",
+      "acceptance_criteria": [
+        "Release file set is fully specified (plan.md/progress.md/features.yaml/changelog.md/etc) and mapped to commands."
+      ]
+    },
+    {
+      "id": "DD-0004",
+      "status": "done",
+      "started_at": "2026-01-17T03:55:50Z",
+      "completed_at": "2026-01-17T03:58:52Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-17-0355-utc--dd-0004--define-sprint-lifecycle-contract-plan-open-close-archive",
+      "next_task_id": "DD-0005",
+      "title": "Define sprint lifecycle contract (plan/open/close/archive)",
+      "type": "decision",
+      "scope": "ph_spec",
+      "description": "Finalize required files/dirs created by sprint lifecycle commands, including `sprints/current` symlink semantics and archive index updates.",
+      "acceptance_criteria": [
+        "Sprint file set (plan.md, retrospective.md, burndown.md, archive/index.json, tasks/* structure) is fully specified and mapped to commands."
+      ]
+    },
+    {
+      "id": "DD-0005",
+      "status": "done",
+      "started_at": "2026-01-17T03:59:32Z",
+      "completed_at": "2026-01-17T04:01:27Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-17-0359-utc--dd-0005--confirm-symlink-policy-for-sprintscurrent",
+      "next_task_id": "DD-0006",
+      "title": "Confirm symlink policy for sprints/current",
+      "type": "decision",
+      "scope": "ph_spec",
+      "description": "Document how `sprints/current` behaves on platforms without symlink support (Windows) and what fallback is acceptable (text file pointer, directory copy, etc.).",
+      "acceptance_criteria": [
+        "Contract defines canonical behavior plus a fallback strategy if symlinks are unavailable."
+      ]
+    },
+    {
+      "id": "DD-0006",
+      "status": "done",
+      "started_at": "2026-01-17T04:13:00Z",
+      "completed_at": "2026-01-17T04:20:00Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-17-0413-utc--dd-0006--define-content-vs-internal-ownership-rules",
+      "next_task_id": "DD-0007",
+      "title": "Define content vs internal ownership rules",
+      "type": "meta",
+      "scope": "ph_spec",
+      "description": "Clarify which files are human-authored vs machine-authored, and which are safe to regenerate, for every subtree under `ph/**`.",
+      "acceptance_criteria": [
+        "Every directory contract identifies ownership and overwrite rules for its files."
+      ]
+    },
+    {
+      "id": "DD-0007",
+      "status": "done",
+      "started_at": "2026-01-17T04:21:00Z",
+      "completed_at": "2026-01-17T04:34:00Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-17-0421-utc--dd-0007--align-validation-rules-with-new-phph-layout",
+      "next_task_id": "DD-0100",
+      "title": "Align validation rules with new ph/.ph layout",
+      "type": "audit",
+      "scope": "ph_spec",
+      "description": "Review `process/checks/validation_rules.json` assumptions (paths, required structures) and ensure they match the intended ph/.ph layout for general projects.",
+      "acceptance_criteria": [
+        "Validation rule paths and checks align with the v1 ph layout and the ph_spec contracts."
+      ]
+    },
+    {
+      "id": "DD-0008",
+      "status": "done",
+      "started_at": "2026-01-17T14:04:00Z",
+      "completed_at": "2026-01-17T14:07:00Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-17-1404-utc--dd-0008--clarify-human-vs-agent-authorship-in-ownership-language",
+      "next_task_id": "DD-0103",
+      "title": "Clarify human vs agent authorship in ownership language",
+      "type": "meta",
+      "scope": "ph_spec",
+      "description": "Update ownership terminology so “content” is project-owned (human-directed) even when created/edited by `ph` or AI agents using `ph` inputs.",
+      "acceptance_criteria": [
+        "CONTRACT_TEMPLATE.md and all `ph_spec` contracts use clear “project-owned (human/agent-authored)” wording and overwrite rules remain unambiguous."
+      ]
+    },
+    {
+      "id": "DD-0100",
+      "status": "done",
+      "started_at": "2026-01-17T04:34:00Z",
+      "completed_at": "2026-01-17T04:37:00Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-17-0434-utc--dd-0100--complete-spec-contract-for-adr",
+      "next_task_id": "DD-0101",
+      "title": "Complete spec contract for adr/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/adr",
+      "contract_file": "cli_plan/ph_spec/ph/adr/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/adr/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0101",
+      "status": "done",
+      "started_at": "2026-01-17T04:38:00Z",
+      "completed_at": "2026-01-17T04:39:00Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-17-0438-utc--dd-0101--complete-spec-contract-for-backlogarchivebugs",
+      "next_task_id": "DD-0102",
+      "title": "Complete spec contract for backlog/archive/bugs/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/backlog/archive/bugs",
+      "contract_file": "cli_plan/ph_spec/ph/backlog/archive/bugs/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/backlog/archive/bugs/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0102",
+      "status": "done",
+      "started_at": "2026-01-17T04:40:00Z",
+      "completed_at": "2026-01-17T04:41:00Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-01-17-0440-utc--dd-0102--complete-spec-contract-for-backlogarchive",
+      "next_task_id": "DD-0103",
+      "title": "Complete spec contract for backlog/archive/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/backlog/archive",
+      "contract_file": "cli_plan/ph_spec/ph/backlog/archive/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/backlog/archive/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0103",
+      "status": "todo",
+      "title": "Complete spec contract for backlog/archive/wildcards/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/backlog/archive/wildcards",
+      "contract_file": "cli_plan/ph_spec/ph/backlog/archive/wildcards/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/backlog/archive/wildcards/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0104",
+      "status": "todo",
+      "title": "Complete spec contract for backlog/archive/work-items/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/backlog/archive/work-items",
+      "contract_file": "cli_plan/ph_spec/ph/backlog/archive/work-items/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/backlog/archive/work-items/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0105",
+      "status": "todo",
+      "title": "Complete spec contract for backlog/bugs/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/backlog/bugs",
+      "contract_file": "cli_plan/ph_spec/ph/backlog/bugs/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/backlog/bugs/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0106",
+      "status": "todo",
+      "title": "Complete spec contract for backlog/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/backlog",
+      "contract_file": "cli_plan/ph_spec/ph/backlog/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/backlog/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0107",
+      "status": "todo",
+      "title": "Complete spec contract for backlog/wildcards/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/backlog/wildcards",
+      "contract_file": "cli_plan/ph_spec/ph/backlog/wildcards/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/backlog/wildcards/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0108",
+      "status": "todo",
+      "title": "Complete spec contract for backlog/work-items/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/backlog/work-items",
+      "contract_file": "cli_plan/ph_spec/ph/backlog/work-items/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/backlog/work-items/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0109",
+      "status": "todo",
+      "title": "Complete spec contract for ./",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph",
+      "contract_file": "cli_plan/ph_spec/ph/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0110",
+      "status": "todo",
+      "title": "Complete spec contract for contracts/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/contracts",
+      "contract_file": "cli_plan/ph_spec/ph/contracts/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/contracts/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0111",
+      "status": "todo",
+      "title": "Complete spec contract for decision-register/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/decision-register",
+      "contract_file": "cli_plan/ph_spec/ph/decision-register/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/decision-register/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0112",
+      "status": "todo",
+      "title": "Complete spec contract for features/archive/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/features/archive",
+      "contract_file": "cli_plan/ph_spec/ph/features/archive/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/features/archive/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0113",
+      "status": "todo",
+      "title": "Complete spec contract for features/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/features",
+      "contract_file": "cli_plan/ph_spec/ph/features/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/features/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0114",
+      "status": "todo",
+      "title": "Complete spec contract for parking-lot/archive/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/parking-lot/archive",
+      "contract_file": "cli_plan/ph_spec/ph/parking-lot/archive/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/parking-lot/archive/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0115",
+      "status": "todo",
+      "title": "Complete spec contract for parking-lot/archive/external-requests/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/parking-lot/archive/external-requests",
+      "contract_file": "cli_plan/ph_spec/ph/parking-lot/archive/external-requests/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/parking-lot/archive/external-requests/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0116",
+      "status": "todo",
+      "title": "Complete spec contract for parking-lot/archive/features/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/parking-lot/archive/features",
+      "contract_file": "cli_plan/ph_spec/ph/parking-lot/archive/features/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/parking-lot/archive/features/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0117",
+      "status": "todo",
+      "title": "Complete spec contract for parking-lot/archive/research/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/parking-lot/archive/research",
+      "contract_file": "cli_plan/ph_spec/ph/parking-lot/archive/research/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/parking-lot/archive/research/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0118",
+      "status": "todo",
+      "title": "Complete spec contract for parking-lot/archive/technical-debt/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/parking-lot/archive/technical-debt",
+      "contract_file": "cli_plan/ph_spec/ph/parking-lot/archive/technical-debt/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/parking-lot/archive/technical-debt/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0119",
+      "status": "todo",
+      "title": "Complete spec contract for parking-lot/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/parking-lot",
+      "contract_file": "cli_plan/ph_spec/ph/parking-lot/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/parking-lot/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0120",
+      "status": "todo",
+      "title": "Complete spec contract for parking-lot/external-requests/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/parking-lot/external-requests",
+      "contract_file": "cli_plan/ph_spec/ph/parking-lot/external-requests/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/parking-lot/external-requests/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0121",
+      "status": "todo",
+      "title": "Complete spec contract for parking-lot/features/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/parking-lot/features",
+      "contract_file": "cli_plan/ph_spec/ph/parking-lot/features/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/parking-lot/features/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0122",
+      "status": "todo",
+      "title": "Complete spec contract for parking-lot/research/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/parking-lot/research",
+      "contract_file": "cli_plan/ph_spec/ph/parking-lot/research/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/parking-lot/research/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0123",
+      "status": "todo",
+      "title": "Complete spec contract for parking-lot/technical-debt/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/parking-lot/technical-debt",
+      "contract_file": "cli_plan/ph_spec/ph/parking-lot/technical-debt/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/parking-lot/technical-debt/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0124",
+      "status": "todo",
+      "title": "Complete spec contract for releases/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/releases",
+      "contract_file": "cli_plan/ph_spec/ph/releases/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/releases/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0125",
+      "status": "todo",
+      "title": "Complete spec contract for releases/current/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/releases/current",
+      "contract_file": "cli_plan/ph_spec/ph/releases/current/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/releases/current/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0126",
+      "status": "todo",
+      "title": "Complete spec contract for releases/delivered/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/releases/delivered",
+      "contract_file": "cli_plan/ph_spec/ph/releases/delivered/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/releases/delivered/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0127",
+      "status": "todo",
+      "title": "Complete spec contract for releases/planning/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/releases/planning",
+      "contract_file": "cli_plan/ph_spec/ph/releases/planning/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/releases/planning/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0128",
+      "status": "todo",
+      "title": "Complete spec contract for roadmap/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/roadmap",
+      "contract_file": "cli_plan/ph_spec/ph/roadmap/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/roadmap/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0129",
+      "status": "todo",
+      "title": "Complete spec contract for sprints/archive/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/sprints/archive",
+      "contract_file": "cli_plan/ph_spec/ph/sprints/archive/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/sprints/archive/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0130",
+      "status": "todo",
+      "title": "Complete spec contract for sprints/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/sprints",
+      "contract_file": "cli_plan/ph_spec/ph/sprints/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/sprints/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0131",
+      "status": "todo",
+      "title": "Complete spec contract for status/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/status",
+      "contract_file": "cli_plan/ph_spec/ph/status/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/status/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0132",
+      "status": "todo",
+      "title": "Complete spec contract for status/daily/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/status/daily",
+      "contract_file": "cli_plan/ph_spec/ph/status/daily/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/status/daily/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0133",
+      "status": "todo",
+      "title": "Complete spec contract for status/evidence/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/status/evidence",
+      "contract_file": "cli_plan/ph_spec/ph/status/evidence/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/status/evidence/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    },
+    {
+      "id": "DD-0134",
+      "status": "todo",
+      "title": "Complete spec contract for status/exports/",
+      "type": "directory_contract",
+      "scope": "ph_spec",
+      "spec_dir": "cli_plan/ph_spec/ph/status/exports",
+      "contract_file": "cli_plan/ph_spec/ph/status/exports/contract.md",
+      "examples_dir": "cli_plan/ph_spec/ph/status/exports/examples",
+      "description": "Validate example artifacts (if present/required) and write an explicit contract describing what lives here and what commands generate/modify it.",
+      "checklist": [
+        "Review existing examples/ contents; confirm they represent real command outputs.",
+        "If examples are missing, decide whether examples are required or optional for this directory (archives may be optional).",
+        "Document: purpose, ownership (human vs machine), allowed filenames, required files, schemas/front matter, and link conventions.",
+        "Map this directory to the relevant `ph` commands and expected side effects.",
+        "Record invariants used by validation (what must exist, what must not)."
+      ],
+      "acceptance_criteria": [
+        "contract.md contains a complete, unambiguous spec for this directory.",
+        "Examples (if used) are reconciled with the contract (no contradictions)."
+      ]
+    }
+  ]
+}
