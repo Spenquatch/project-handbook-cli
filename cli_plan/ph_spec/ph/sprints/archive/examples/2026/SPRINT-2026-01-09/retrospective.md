@@ -25,7 +25,7 @@ tags: [sprint, retrospective]
 - Publish → codegen → typecheck ordering and drift gates reduced integration risk across lanes.
 
 ## What Could Be Improved
-- `make burndown` generated a Markdown file without front matter, breaking `make validate-quick` until fixed.
+- `ph sprint burndown` generated a Markdown file without front matter, breaking `ph validate --quick` until fixed.
 - No automated guard existed to prevent a generator from emitting validation-invalid markdown.
 
 ## Action Items

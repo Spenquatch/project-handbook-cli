@@ -16,7 +16,7 @@ acceptance:
   - Codegen wiring is deterministic and documented (paths, commands, expected outputs) with no ambiguity.
   - No secret leakage: Cosmo auth env is Vault-rendered and not printed; evidence includes explicit leakage checks.
   - Legacy code and docs can be used as reference, but v2 must meet ADR-0032 hardening requirements (Cosmo-backed authority, drift gate, and explicit ordering).
-  - Evidence captured under `project-handbook/status/evidence/TASK-010/` proving: Cosmo fetch occurs, drift gate works, and ordering is enforced.
+  - Evidence captured under `ph/status/evidence/TASK-010/` proving: Cosmo fetch occurs, drift gate works, and ordering is enforced.
 links:
   - ../../../../../adr/0032-v2-harvester-publish-and-codegen-workflow.md
   - ../../../../../adr/0019-v2-codegen-from-registry.md

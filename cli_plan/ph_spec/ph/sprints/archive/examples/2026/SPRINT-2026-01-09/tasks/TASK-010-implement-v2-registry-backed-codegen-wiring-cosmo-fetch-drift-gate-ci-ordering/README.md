@@ -60,8 +60,8 @@ This task implements the [ADR-0032](../../../../../adr/0032-v2-harvester-publish
 ## Quick Start
 ```bash
 # Claim task
-pnpm -C project-handbook make -- task-status id=TASK-010 status=doing
-cd project-handbook/sprints/current/tasks/TASK-010-*/
+ph task status --id TASK-010 --status doing
+cd ph/sprints/current/tasks/TASK-010-*/
 
 # Follow implementation
 cat steps.md              # Read implementation steps

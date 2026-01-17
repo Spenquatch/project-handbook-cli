@@ -21,17 +21,17 @@ Implement the v2 schema harvester publish/check workflow (ADR-0032 Option A) wit
 - [ ] `TASK-006` is `done` (Cosmo+MinIO baseline is implemented in v2; `cosmo-controlplane` reachable in-network)
 - [ ] v2 stack can be started (`make -C v2 v2-up`) with non-default Keycloak admin creds
 - [ ] Vault contract for Cosmo auth exists (`DR-0004`), including `/secrets/cosmo-cli.env` for harvester-only Cosmo access (do not mount into Router)
-- [ ] Evidence will be captured under `project-handbook/status/evidence/TASK-009/<run-id>/` (no secrets)
+- [ ] Evidence will be captured under `ph/status/evidence/TASK-009/<run-id>/` (no secrets)
 
 ## Step 1 — Confirm the contracts (already decided)
 Read (canonical):
-- `project-handbook/adr/0032-v2-harvester-publish-and-codegen-workflow.md`
-- `project-handbook/decision-register/DR-0006-harvester-publish-and-codegen-workflow.md`
-- `project-handbook/decision-register/DR-0004-vault-secrets-contract-cosmo-minio.md` (Cosmo CLI env addendum)
-- `project-handbook/features/v2_schema-harvester-service/implementation/IMPLEMENTATION.md`
+- `ph/adr/0032-v2-harvester-publish-and-codegen-workflow.md`
+- `ph/decision-register/DR-0006-harvester-publish-and-codegen-workflow.md`
+- `ph/decision-register/DR-0004-vault-secrets-contract-cosmo-minio.md` (Cosmo CLI env addendum)
+- `ph/features/v2_schema-harvester-service/implementation/IMPLEMENTATION.md`
 - Legacy reference (read-only): `modular-oss-saas/services/schema-harvester/`
 
-Then record (verbatim) in your evidence index (`project-handbook/status/evidence/TASK-009/<run-id>/index.md`):
+Then record (verbatim) in your evidence index (`ph/status/evidence/TASK-009/<run-id>/index.md`):
 - Inventory file: `v2/infra/compose/graphql/subgraphs.yaml`
 - Mirrors: `v2/infra/compose/graphql/subgraphs/*/schema.graphql` (atomic rename after success only)
 - Canonical entrypoint: `make -C v2 v2-publish`
@@ -82,13 +82,13 @@ Run the positive and negative validation procedures in `validation.md` and captu
 - mirrors do not change on any failure mode (publish failure, check failure, composition failure),
 - mirror updates are atomic (no partial writes observed; temp file not left behind).
 
-Capture evidence under `project-handbook/status/evidence/TASK-009/` as required by `validation.md`.
+Capture evidence under `ph/status/evidence/TASK-009/` as required by `validation.md`.
 
 ## Step 5 — Update docs and wire Make targets
 Update (as needed):
 - `v2/Makefile` to include a canonical publish/check target (e.g. `v2-publish`)
-- `project-handbook/features/v2_schema-harvester-service/implementation/IMPLEMENTATION.md` if implementation details differ from the planned contract (keep it execution-ready)
+- `ph/features/v2_schema-harvester-service/implementation/IMPLEMENTATION.md` if implementation details differ from the planned contract (keep it execution-ready)
 
 ## Notes
-- Update status via `pnpm -C project-handbook make -- task-status ...`
-- Commit changes in each repo you modify (`git -C v2 ...`, `git -C project-handbook ...`)
+- Update status via `ph task status --id TASK-009 --status <status>`
+- Commit changes in each repo you modify (`git -C v2 ...`, `git -C <PH_ROOT> ...`)

@@ -12,12 +12,12 @@ archived_by_sprint: manual
 
 # Process: fix session-end index paths
 
-Continuity files are stale: process/sessions/session_end/session_end_index.json points to recap markdown files that are not present. Decide whether this repo should vendor session_end artifacts or regenerate index, and update process docs so 'latest recap' can be reliably loaded.
+Legacy (v0) continuity files were stale: `process/sessions/session_end/session_end_index.json` pointed to recap markdown files that were not present. Decide whether continuity artifacts should be vendored or regenerated, and update docs so “latest recap” can be reliably loaded.
 
 ## Context
 
-Session continuity templates require:
-- `process/sessions/session_end/session_end_index.json` to exist, and
+Legacy (v0) session continuity templates required:
+- an index file to exist, and
 - any referenced recap/prompt paths to exist on disk.
 
 In this repo, the index file was missing, causing the “continuity checkpoint” step to fail for new planning sessions.
@@ -30,9 +30,9 @@ In this repo, the index file was missing, causing the “continuity checkpoint�
 
 ## Considerations
 
-- Index validation is already implemented in `project-handbook/process/checks/validate_docs.py`.
+- Index validation existed in the legacy validator.
 - The correct default is an empty index (records list), not a missing file.
 
 ## Resolution (2026-01-04)
-- Added default empty index at `project-handbook/process/sessions/session_end/session_end_index.json`.
+- Added a default empty index file (records list) to unblock new sessions.
 - Validation continues to enforce that any populated records reference existing repo-relative files.

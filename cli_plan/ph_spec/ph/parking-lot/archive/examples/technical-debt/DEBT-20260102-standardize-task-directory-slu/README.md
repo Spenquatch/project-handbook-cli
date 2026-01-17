@@ -33,5 +33,5 @@ Task directory names are derived from the task title. Previously this allowed pu
 - Existing “bad slug” directories may remain, but new tasks should be safe by default.
 
 ## Resolution (2026-01-04)
-- Implemented `slugify()` for task directory names in `project-handbook/process/automation/task_manager.py`.
-- Added optional `lane` support to task creation (`make task-create ... lane=...`) and lane-aware listing.
+- Implemented `slugify()` for task directory names in the `ph` CLI task scaffolder.
+- Added optional `lane` support to task creation (`ph task create ... --lane ...`) and lane-aware listing.

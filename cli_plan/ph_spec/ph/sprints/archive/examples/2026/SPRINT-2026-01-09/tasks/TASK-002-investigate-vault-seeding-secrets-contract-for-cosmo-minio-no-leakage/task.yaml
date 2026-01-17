@@ -11,9 +11,9 @@ depends_on: [TASK-005]
 prio: P2
 due: 2026-01-16
 acceptance:
-  - `project-handbook/decision-register/DR-0004-vault-secrets-contract-cosmo-minio.md` completed (Option A/B + evidence + recommendation) and ends with an explicit operator/user approval request; keep DR as `Proposed` until approval.
-  - `project-handbook/features/v2_registry-cosmo-minio-required/implementation/IMPLEMENTATION.md` updated with the concrete Vault KV keys, template outputs (`/secrets/*.env`), and a “no secrets printed” posture checklist.
-  - Evidence captured under `project-handbook/status/evidence/TASK-002/` (existing v2 Vault templates/bootstrap outputs referenced by DR-0004).
+  - `ph/decision-register/DR-0004-vault-secrets-contract-cosmo-minio.md` completed (Option A/B + evidence + recommendation) and ends with an explicit operator/user approval request; keep DR as `Proposed` until approval.
+  - `ph/features/v2_registry-cosmo-minio-required/implementation/IMPLEMENTATION.md` updated with the concrete Vault KV keys, template outputs (`/secrets/*.env`), and a “no secrets printed” posture checklist.
+  - Evidence captured under `ph/status/evidence/TASK-002/` (existing v2 Vault templates/bootstrap outputs referenced by DR-0004).
 links:
   - ../../../../../releases/current/plan.md
   - ../../../../../features/v2_registry-cosmo-minio-required/overview.md

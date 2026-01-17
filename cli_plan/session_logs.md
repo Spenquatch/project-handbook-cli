@@ -3606,3 +3606,271 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-01-17 21:35 UTC — DD-0103 — backlog-archive-wildcards contract
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0103)
+- cli_plan/ph_spec/CONTRACT_TEMPLATE.md
+- cli_plan/ph_spec/ph/backlog/archive/contract.md
+- cli_plan/ph_spec/ph/backlog/archive/bugs/contract.md
+- cli_plan/ph_spec/ph/backlog/archive/wildcards/contract.md
+- cli_plan/ph_spec/ph/backlog/archive/wildcards/examples/WILD-P2-20260101-2107/README.md
+
+Goal:
+- Complete `cli_plan/ph_spec/ph/backlog/archive/wildcards/contract.md` with a full, unambiguous directory contract and reconcile it with examples.
+
+Work performed (ordered):
+1. Reviewed the existing contract stub and the archived wildcard example fixture.
+2. Updated the contract to fully specify purpose, creation/mutation rules, required files, schema requirements, invariants, and validation expectations.
+
+Commands executed (exact):
+- sed -n '1,200p' cli_plan/ph_spec/ph/backlog/archive/wildcards/contract.md
+- find cli_plan/ph_spec/ph/backlog/archive/wildcards/examples -maxdepth 3 -type f -print
+- sed -n '1,200p' cli_plan/ph_spec/ph/backlog/archive/wildcards/examples/WILD-P2-20260101-2107/README.md
+- sed -n '1,200p' cli_plan/ph_spec/CONTRACT_TEMPLATE.md
+- sed -n '1,220p' cli_plan/ph_spec/ph/backlog/archive/contract.md
+- sed -n '1,260p' cli_plan/ph_spec/ph/backlog/archive/bugs/contract.md
+- rg -n '\\(TBD\\)|TBD' cli_plan/ph_spec/ph/backlog/archive/wildcards/contract.md || true
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/backlog/archive/wildcards/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and matches the example’s front matter shape/archival fields.
+
+Outcome:
+- status: done
+- summary: Completed the archive wildcards directory contract and reconciled it against the example fixture.
+
+Next task:
+- DD-0104
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 21:37 UTC — DD-0104 — backlog-archive-work-items contract
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0104)
+- cli_plan/ph_spec/CONTRACT_TEMPLATE.md
+- cli_plan/ph_spec/ph/backlog/archive/contract.md
+- cli_plan/ph_spec/ph/backlog/archive/bugs/contract.md
+- cli_plan/ph_spec/ph/backlog/archive/work-items/contract.md
+- cli_plan/ph_spec/ph/backlog/archive/work-items/examples/WORK-P4-20260104-1919/README.md
+
+Goal:
+- Complete `cli_plan/ph_spec/ph/backlog/archive/work-items/contract.md` with a full, unambiguous directory contract and reconcile it with examples.
+
+Work performed (ordered):
+1. Reviewed the existing contract stub and the archived work-item example fixture.
+2. Updated the contract to fully specify purpose, creation/mutation rules, required files, schema requirements (including optional `input_type`), invariants, and validation expectations.
+
+Commands executed (exact):
+- sed -n '1,240p' cli_plan/ph_spec/ph/backlog/archive/work-items/contract.md
+- find cli_plan/ph_spec/ph/backlog/archive/work-items/examples -maxdepth 3 -type f -print
+- sed -n '1,220p' cli_plan/ph_spec/ph/backlog/archive/work-items/examples/WORK-P4-20260104-1919/README.md
+- sed -n '1,200p' cli_plan/ph_spec/CONTRACT_TEMPLATE.md
+- sed -n '1,220p' cli_plan/ph_spec/ph/backlog/archive/contract.md
+- sed -n '1,260p' cli_plan/ph_spec/ph/backlog/archive/bugs/contract.md
+- rg -n '\\(TBD\\)|TBD' cli_plan/ph_spec/ph/backlog/archive/work-items/contract.md || true
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/backlog/archive/work-items/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and matches the example’s front matter shape/archival fields.
+
+Outcome:
+- status: done
+- summary: Completed the archive work-items directory contract and reconciled it against the example fixture.
+
+Next task:
+- DD-0105
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 21:38 UTC — DD-0105 — backlog-bugs contract
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0105)
+- cli_plan/ph_spec/CONTRACT_TEMPLATE.md
+- cli_plan/ph_spec/ph/backlog/contract.md
+- cli_plan/ph_spec/ph/backlog/archive/bugs/contract.md
+- cli_plan/ph_spec/ph/backlog/bugs/contract.md
+- cli_plan/ph_spec/ph/backlog/bugs/examples/EXAMPLE-BUG-P0-20250922-1144/README.md
+- cli_plan/ph_spec/ph/backlog/bugs/examples/EXAMPLE-BUG-P0-20250922-1144/triage.md
+
+Goal:
+- Complete `cli_plan/ph_spec/ph/backlog/bugs/contract.md` with a full, unambiguous directory contract and reconcile it with examples.
+
+Work performed (ordered):
+1. Reviewed the existing contract stub and the bug example fixture (README + triage template).
+2. Updated the contract to define the directory purpose, creation/mutation commands, required layout, README front matter schema, and validation rules (including P0 triage guidance).
+3. Updated the bug example fixture to remove archive-only metadata fields so it matches the non-archive contract.
+
+Commands executed (exact):
+- sed -n '1,260p' cli_plan/ph_spec/ph/backlog/bugs/contract.md
+- find cli_plan/ph_spec/ph/backlog/bugs/examples -maxdepth 3 -type f -print
+- sed -n '1,200p' cli_plan/ph_spec/ph/backlog/bugs/examples/EXAMPLE-BUG-P0-20250922-1144/README.md
+- sed -n '1,160p' cli_plan/ph_spec/ph/backlog/bugs/examples/EXAMPLE-BUG-P0-20250922-1144/triage.md
+- sed -n '1,200p' cli_plan/ph_spec/CONTRACT_TEMPLATE.md
+- sed -n '1,320p' cli_plan/ph_spec/ph/backlog/contract.md
+- sed -n '1,260p' cli_plan/ph_spec/ph/backlog/archive/bugs/contract.md
+- python - <<'PY'
+  from pathlib import Path
+  text = Path('cli_plan/ph_spec/ph/backlog/bugs/examples/EXAMPLE-BUG-P0-20250922-1144/README.md').read_text()
+  front = text.split('---', 2)[1]
+  for k in ['archived_at', 'archived_by_task', 'archived_by_sprint']:
+      print(k, k in front)
+  PY
+- rg -n '\\(TBD\\)|TBD' cli_plan/ph_spec/ph/backlog/bugs/contract.md || true
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/backlog/bugs/contract.md
+- cli_plan/ph_spec/ph/backlog/bugs/examples/EXAMPLE-BUG-P0-20250922-1144/README.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the example fixture no longer includes archive-only keys.
+
+Outcome:
+- status: done
+- summary: Completed the backlog bugs directory contract and reconciled it against the examples.
+
+Next task:
+- DD-0106
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 21:40 UTC — DD-0106 — backlog-root contract
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0106)
+- cli_plan/ph_spec/CONTRACT_TEMPLATE.md
+- cli_plan/ph_spec/ph/backlog/contract.md
+- cli_plan/ph_spec/ph/backlog/archive/contract.md
+- cli_plan/ph_spec/ph/backlog/examples/bugs/EXAMPLE-BUG-P0-20250922-1144/README.md
+- cli_plan/ph_spec/ph/backlog/examples/work-items/WORK-P2-20260106-213751/README.md
+- cli_plan/ph_spec/ph/backlog/examples/wildcards/WILD-P2-20260103-2109/README.md
+
+Goal:
+- Complete `cli_plan/ph_spec/ph/backlog/contract.md` with a full, unambiguous directory contract and reconcile it with examples (including the derived `index.json` catalog).
+
+Work performed (ordered):
+1. Reviewed the existing contract stub and backlog example fixtures (bugs, wildcards, work-items).
+2. Updated the contract to fully specify the backlog directory purpose, required subdirectories, and the derived `index.json` schema/constraints.
+3. Updated the bug example fixture to remove archive-only metadata keys so it matches the non-archive backlog contracts.
+
+Commands executed (exact):
+- sed -n '1,320p' cli_plan/ph_spec/ph/backlog/contract.md
+- find cli_plan/ph_spec/ph/backlog/examples -maxdepth 3 -type f -print
+- sed -n '1,220p' cli_plan/ph_spec/ph/backlog/examples/wildcards/WILD-P2-20260103-2109/README.md
+- sed -n '1,200p' cli_plan/ph_spec/ph/backlog/examples/work-items/WORK-P2-20260106-213751/README.md
+- sed -n '1,200p' cli_plan/ph_spec/ph/backlog/examples/bugs/EXAMPLE-BUG-P0-20250922-1144/README.md
+- sed -n '1,220p' cli_plan/ph_spec/ph/backlog/archive/contract.md
+- rg -n '\\(TBD\\)|TBD' cli_plan/ph_spec/ph/backlog/contract.md || true
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/backlog/contract.md
+- cli_plan/ph_spec/ph/backlog/examples/bugs/EXAMPLE-BUG-P0-20250922-1144/README.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the example fixtures match the documented README/front matter expectations.
+
+Outcome:
+- status: done
+- summary: Completed the backlog root directory contract including an explicit `index.json` schema and reconciled the example fixtures.
+
+Next task:
+- DD-0107
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 21:43 UTC — DD-0107 — backlog-wildcards contract
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0107)
+- cli_plan/ph_spec/CONTRACT_TEMPLATE.md
+- cli_plan/ph_spec/ph/backlog/contract.md
+- cli_plan/ph_spec/ph/backlog/archive/wildcards/contract.md
+- cli_plan/ph_spec/ph/backlog/wildcards/contract.md
+- cli_plan/ph_spec/ph/backlog/wildcards/examples/WILD-P2-20260103-2109/README.md
+
+Goal:
+- Complete `cli_plan/ph_spec/ph/backlog/wildcards/contract.md` with a full, unambiguous directory contract and reconcile it with examples.
+
+Work performed (ordered):
+1. Reviewed the existing contract stub and the wildcard example fixture.
+2. Updated the contract to define purpose, creation/mutation commands, required layout, README front matter schema, and validation rules.
+
+Commands executed (exact):
+- sed -n '1,220p' cli_plan/ph_spec/ph/backlog/wildcards/contract.md
+- find cli_plan/ph_spec/ph/backlog/wildcards/examples -maxdepth 3 -type f -print
+- sed -n '1,220p' cli_plan/ph_spec/ph/backlog/wildcards/examples/WILD-P2-20260103-2109/README.md
+- sed -n '1,320p' cli_plan/ph_spec/ph/backlog/contract.md
+- sed -n '1,200p' cli_plan/ph_spec/ph/backlog/archive/wildcards/contract.md
+- rg -n '\\(TBD\\)|TBD' cli_plan/ph_spec/ph/backlog/wildcards/contract.md || true
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/backlog/wildcards/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the example fixture matches the documented README/front matter expectations.
+
+Outcome:
+- status: done
+- summary: Completed the backlog wildcards directory contract and reconciled it against the examples.
+
+Next task:
+- DD-0108
+
+Blockers (if blocked):
+- (none)

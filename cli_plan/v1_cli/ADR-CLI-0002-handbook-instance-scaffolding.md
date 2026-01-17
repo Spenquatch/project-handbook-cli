@@ -12,6 +12,15 @@ links:
   - ../AI_AGENT_START_HERE.md
 ---
 
+# Note (historical)
+
+This ADR is **superseded** and kept for context only. Do not implement new behavior from this document:
+
+- v1 root marker is `.ph/config.json` (not `project_handbook.config.json`)
+- v1 uses `.ph/**` (internals) + `ph/**` (content)
+- v1 has no system scope (`--scope system` is removed)
+- use `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md` and `cli_plan/v1_cli/CLI_CONTRACT.md` as the sources of truth
+
 # Context
 
 `ph` currently assumes a handbook instance repo already exists with a known filesystem layout (e.g. `features/`, `sprints/`, `process/`, etc). Some commands scaffold *parts* of the structure (feature/task/sprint creation), and `ph init` now creates the minimum boot assets so `ph doctor` succeeds in a fresh directory.
@@ -58,39 +67,13 @@ Embed the scaffold template inside the installed CLI package so it is:
 
 The template should include:
 
-- directory skeleton (`features/`, `sprints/`, `adr/`, `docs/`, `process/**`, etc),
+- directory skeleton (content under `ph/**`, internals under `.ph/**`),
 - minimal seed files that encode conventions (READMEs, example ADRs, `.gitkeep` where appropriate),
 - JSON/YAML defaults required by `ph`.
 
 ## Root marker and internal state location
 
-### Root marker
-
-Keep the root marker file visible and simple:
-
-- `project_handbook.config.json` at repo root
-
-Rationale:
-- discoverable (no hidden “magic”),
-- easy to inspect and edit,
-- avoids “hidden root poisoning” surprises where a directory silently becomes a PH_ROOT.
-
-### Internal CLI-owned files
-
-Prefer placing CLI-owned internal state under the existing internal directory:
-
-- `.project-handbook/**`
-
-Rationale:
-- `.project-handbook/` already exists and is semantically “internal system data” (system scope + history),
-- avoids introducing a second hidden namespace like `.ph/` that overlaps conceptually with `.project-handbook/`,
-- keeps hidden/internal concerns in one place.
-
-If a new dedicated hidden folder is desired for CLI-only configuration, prefer:
-
-- `.project-handbook/ph/**`
-
-instead of `.ph/`, to avoid adding a new top-level hidden root concept.
+Removed. v1 layout is defined by `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md` (marker `.ph/config.json`, internals `.ph/**`, content `ph/**`).
 
 ## Documentation placement
 
@@ -109,6 +92,7 @@ Keep CLI documentation in the CLI repo (MkDocs) and treat it as product docs:
 - `project-handbook-cli/docs/**` (or MkDocs-configured docs dir)
 
 Avoid relocating the handbook instance repo’s entire documentation under a new `ph/` directory unless there is a strong, user-facing reason and a migration plan, because it would be a breaking change to links and mental model.
+v1 intentionally uses `ph/**` for content to keep internals isolated under `.ph/**`.
 
 # Options considered
 
@@ -142,8 +126,7 @@ Cons:
 # Migration plan
 
 1. Add `ph scaffold full` (or `ph init --full`) as an *additive* capability.
-2. Keep existing repo layouts supported; do not move existing directories by default.
-3. If a hidden `.ph/` directory is adopted, support both `.project-handbook/**` and `.ph/**` for a transition period and add `ph doctor` guidance.
+2. Do not overwrite existing user-authored content without an explicit `--force`.
 
 # Open questions
 

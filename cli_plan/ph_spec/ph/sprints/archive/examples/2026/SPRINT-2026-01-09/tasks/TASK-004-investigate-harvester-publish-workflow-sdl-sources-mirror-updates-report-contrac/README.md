@@ -17,7 +17,7 @@ links:
 - **Feature(s)**:
   - [v2_schema-harvester-service](../../../../../features/v2_schema-harvester-service/overview.md)
   - [v2_codegen-from-registry](../../../../../features/v2_codegen-from-registry/overview.md)
-- **Decision**: `DR-0006` (`project-handbook/decision-register/DR-0006-harvester-publish-and-codegen-workflow.md`)
+- **Decision**: `DR-0006` (`ph/decision-register/DR-0006-harvester-publish-and-codegen-workflow.md`)
 - **Story Points**: 3
 - **Owner**: @spenser
 - **Lane**: `registry/publish`
@@ -31,13 +31,13 @@ Decide and document the canonical publish/check workflow (harvester) and how cod
 - codegen wiring (local + CI) that pulls from Cosmo and fails fast when publish/check is not satisfied.
 
 ## Outputs (what must exist when done)
-- `project-handbook/decision-register/DR-0006-harvester-publish-and-codegen-workflow.md` fully filled (Option A/B, evidence, recommendation, approval request).
-- `project-handbook/features/v2_schema-harvester-service/implementation/IMPLEMENTATION.md` updated with an execution-ready plan:
+- `ph/decision-register/DR-0006-harvester-publish-and-codegen-workflow.md` fully filled (Option A/B, evidence, recommendation, approval request).
+- `ph/features/v2_schema-harvester-service/implementation/IMPLEMENTATION.md` updated with an execution-ready plan:
   - publish/check sequencing,
   - mirror write points and atomicity rules,
   - report contract and sanitization posture.
-- `project-handbook/features/v2_codegen-from-registry/implementation/IMPLEMENTATION.md` updated with canonical codegen wiring (local + CI) and its dependency on publish/check.
-- Evidence captured under `project-handbook/status/evidence/TASK-004/` and referenced from `DR-0006`.
+- `ph/features/v2_codegen-from-registry/implementation/IMPLEMENTATION.md` updated with canonical codegen wiring (local + CI) and its dependency on publish/check.
+- Evidence captured under `ph/status/evidence/TASK-004/` and referenced from `DR-0006`.
 
 ## Non-goals
 - Do not implement the harvester or codegen during this task; define an execution-ready plan only.
@@ -47,8 +47,8 @@ ADR-0021 defines the harvester responsibility (publish + mirror). ADR-0019 defin
 
 ## Quick Start
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-004 status=doing
-cd project-handbook/sprints/current/tasks/TASK-004-*/
+ph task status --id TASK-004 --status doing
+cd ph/sprints/current/tasks/TASK-004-*/
 
 cat steps.md
 cat commands.md

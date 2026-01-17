@@ -11,22 +11,22 @@ links: []
 
 ## Task Status
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-001 status=doing
-pnpm -C project-handbook make -- task-status id=TASK-001 status=review
-pnpm -C project-handbook make -- task-status id=TASK-001 status=done
+ph task status --id TASK-001 --status doing
+ph task status --id TASK-001 --status review
+ph task status --id TASK-001 --status done
 ```
 
 ## Evidence Directory (required)
 ```bash
-EVID_DIR="project-handbook/status/evidence/TASK-001"
+EVID_DIR="ph/status/evidence/TASK-001"
 mkdir -p "$EVID_DIR"
 ${EDITOR:-vi} "$EVID_DIR/index.md"
 ```
 
 ## Read Context (copy/paste into evidence if helpful)
 ```bash
-sed -n '1,220p' project-handbook/adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md | tee "$EVID_DIR/adr-0015.txt"
-sed -n '1,260p' project-handbook/decision-register/DR-0003-cosmo-minio-baseline-topology.md | tee "$EVID_DIR/dr-0003-start.txt"
+sed -n '1,220p' ph/adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md | tee "$EVID_DIR/adr-0015.txt"
+sed -n '1,260p' ph/decision-register/DR-0003-cosmo-minio-baseline-topology.md | tee "$EVID_DIR/dr-0003-start.txt"
 ```
 
 ## Inventory Current v2 Patterns (compose + Vault)
@@ -39,12 +39,12 @@ rg -n "kv/data/tribuence/v2" v2/scripts/vault/bootstrap-v2.sh v2/infra/vault/tem
 
 ## Search for existing Cosmo/MinIO mentions (expected: none yet)
 ```bash
-rg -n "cosmo|minio" v2 project-handbook -S | tee "$EVID_DIR/rg-cosmo-minio.txt"
+rg -n "cosmo|minio" v2 ph -S | tee "$EVID_DIR/rg-cosmo-minio.txt"
 ```
 
 ## Handbook Validation
 ```bash
-pnpm -C project-handbook make -- validate
+ph validate
 ```
 
 ## Notes

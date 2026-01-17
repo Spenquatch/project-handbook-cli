@@ -27,9 +27,9 @@ Implement the canonical codegen wiring for v2 (ADR-0032 / ADR-0019):
 
 ## Step 1 — Ground constraints (no local SDL authority)
 Read:
-- `project-handbook/adr/0032-v2-harvester-publish-and-codegen-workflow.md`
-- `project-handbook/adr/0019-v2-codegen-from-registry.md`
-- `project-handbook/features/v2_codegen-from-registry/implementation/IMPLEMENTATION.md`
+- `ph/adr/0032-v2-harvester-publish-and-codegen-workflow.md`
+- `ph/adr/0019-v2-codegen-from-registry.md`
+- `ph/features/v2_codegen-from-registry/implementation/IMPLEMENTATION.md`
 
 Hard rule: local mirrors are for diff/debug only. If schema fetch from Cosmo fails, codegen fails.
 
@@ -55,11 +55,11 @@ Wire CI to enforce the canonical ordering gate:
 - then `pnpm -C v2/apps/tribuence-mini typecheck`
 
 ## Step 5 — Evidence + docs
-Capture evidence under `project-handbook/status/evidence/TASK-010/` proving:
+Capture evidence under `ph/status/evidence/TASK-010/` proving:
 - schema fetch comes from Cosmo,
 - drift gate fails when generated output is not committed,
 - CI ordering is enforced.
 
 ## Notes
-- Update status via `pnpm -C project-handbook make -- task-status ...`
-- Commit changes in each repo you modify (`git -C v2 ...`, `git -C project-handbook ...`)
+- Update status via `ph task status --id TASK-010 --status <status>`
+- Commit changes in each repo you modify (`git -C v2 ...`, `git -C <PH_ROOT> ...`)

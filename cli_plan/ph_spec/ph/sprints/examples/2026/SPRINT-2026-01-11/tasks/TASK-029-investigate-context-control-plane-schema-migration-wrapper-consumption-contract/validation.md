@@ -11,20 +11,20 @@ links: []
 
 ## Automated Validation
 ```bash
-pnpm -C project-handbook make -- validate
-pnpm -C project-handbook make -- sprint-status
+ph validate
+ph sprint status
 ```
 
 ## Pass/Fail Criteria
-- `project-handbook/features/v2_context-control-plane-schema/decision-register/DR-0001-context-control-plane-migration-and-consumption-contract.md` exists and ends with an explicit operator approval request (status remains `Proposed`).
+- `ph/features/v2_context-control-plane-schema/decision-register/DR-0001-context-control-plane-migration-and-consumption-contract.md` exists and ends with an explicit operator approval request (status remains `Proposed`).
 - Feature docs are updated to be execution-ready (architecture + implementation reflect the recommended option as “pending approval”).
 
 ## Evidence (required)
-- `project-handbook/status/evidence/TASK-029/index.md`
-- `project-handbook/status/evidence/TASK-029/adr-0027.txt`
-- `project-handbook/status/evidence/TASK-029/context-files.txt`
-- `project-handbook/status/evidence/TASK-029/context-schema-notes.txt`
-- `project-handbook/status/evidence/TASK-029/context-migrations-inventory.txt`
+- `ph/status/evidence/TASK-029/index.md`
+- `ph/status/evidence/TASK-029/adr-0027.txt`
+- `ph/status/evidence/TASK-029/context-files.txt`
+- `ph/status/evidence/TASK-029/context-schema-notes.txt`
+- `ph/status/evidence/TASK-029/context-migrations-inventory.txt`
 
 ## Sign-off
 - [ ] All validation steps completed

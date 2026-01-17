@@ -771,16 +771,13 @@ Behavior:
 Hook notes:
 - On success, MUST skip the post-command hook entirely (no history, no auto-validation), matching Make’s `reset` / `reset-smoke` skip behavior.
 
-# Compatibility layer (optional)
+# Compatibility layer
 
-The Makefile may remain as a thin compatibility layer:
-
-- Each `make <target>` runs `ph <mapped command>` and preserves the same UX.
-- The Makefile MUST NOT implement additional behavior beyond calling `ph`.
+Removed. v1 is the `ph` CLI only; do not keep a Make wrapper/compatibility layer.
 
 # Make-to-CLI mapping (exhaustive)
 
-This mapping is the parity source of truth for projects that still use `make` targets (as a thin wrapper over `ph`).
+This mapping exists only as a **migration reference** to translate legacy Make-era instructions into `ph` commands. v1 does not assume `make` remains present.
 
 Help:
 - `make help` → `ph help`

@@ -87,7 +87,7 @@ Define lanes to maximize parallel execution and minimize cross-lane coupling.
 
 ## Task Creation Guide
 ```bash
-make task-create title="Task Name" feature=feature-name decision=ADR-XXX points=3 lane="handbook/automation"
+ph task create --title "Task Name" --feature feature-name --decision ADR-XXX --points 3 --lane "handbook/automation"
 ```
 
 ## Telemetry (Points)
@@ -117,12 +117,12 @@ Date: 2026-01-12
 - Sessions and dependencies match `task.yaml` and the sprint execution order (`TASK-040`/`TASK-041` after `TASK-032`/`TASK-033`).
 - In-scope execution docs are unambiguous: additive-only contract changes, empty-safe surfaces, deterministic ordering semantics, and evidence paths are explicit.
 - Feature status pages document cross-task dependencies for `TASK-040` and `TASK-041`.
-- `pnpm -C project-handbook make -- validate` is clean (see `project-handbook/status/validation.json`).
+- `ph validate --quick` is clean (see `.ph/status/validation.json`).
 
 ## Pre-Execution Audit Gate (third-party feedback incorporated)
 Date: 2026-01-12
 
 - `TASK-035` updated to DB-back `uiModuleManifests` (required for `TASK-038`/`TASK-039` harness).
 - `TASK-030`/`TASK-037` updated with explicit sprint harness allowlist expectations + `version` validation rule.
-- `project-handbook/contracts/tribuence-mini-v2/vault-secrets.md` updated to include `/secrets/artifacts.env` contract.
+- `ph/contracts/tribuence-mini-v2/vault-secrets.md` updated to include `/secrets/artifacts.env` contract.
 - Stale “pending operator approval” wording removed from the executed Cosmo/MinIO registry feature docs.

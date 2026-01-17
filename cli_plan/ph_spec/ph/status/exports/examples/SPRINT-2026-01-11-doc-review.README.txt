@@ -4,10 +4,10 @@ Contents
 - Current sprint plan + all task directories
 - All feature docs for features referenced by sprint tasks
 - ADRs + decision registers + contracts + releases (handbook docs relevant to this sprint)
-- Latest handbook validation report (project-handbook/status/validation.json)
+- Latest handbook validation report (ph/status/validation.json)
 
 How to extract
 - tar -xzf "SPRINT-2026-01-11-doc-review.tar.gz"
 
 Notes
-- This bundle intentionally excludes runtime evidence outputs (e.g. project-handbook/status/evidence/) to avoid sharing logs/credentials.
+- This bundle intentionally excludes runtime evidence outputs (e.g. ph/status/evidence/) to avoid sharing logs/credentials.

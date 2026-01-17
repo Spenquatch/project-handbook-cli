@@ -25,9 +25,9 @@ links: []
 - **Daily status**: [Status by date](../../../../status/daily/)
 
 ### Prior Evidence (read-only; no values)
-- Subgraph inventory snapshot: `project-handbook/status/evidence/TASK-004/subgraphs-yaml.txt`
-- Cosmo CLI snippets: `project-handbook/status/evidence/TASK-004/cosmo-cli-subgraph-publish-snippets.txt`, `project-handbook/status/evidence/TASK-004/cosmo-cli-subgraph-check-snippets.txt`
-- Legacy harvester snippets: `project-handbook/status/evidence/TASK-004/legacy-schema-harvester-service-snippets.txt`
+- Subgraph inventory snapshot: `ph/status/evidence/TASK-004/subgraphs-yaml.txt`
+- Cosmo CLI snippets: `ph/status/evidence/TASK-004/cosmo-cli-subgraph-publish-snippets.txt`, `ph/status/evidence/TASK-004/cosmo-cli-subgraph-check-snippets.txt`
+- Legacy harvester snippets: `ph/status/evidence/TASK-004/legacy-schema-harvester-service-snippets.txt`
 
 ## Notes
 Add concrete links here only when you discover resources during the task (no placeholders).

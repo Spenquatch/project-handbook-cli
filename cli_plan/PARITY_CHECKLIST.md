@@ -6,7 +6,6 @@ tags: [cli, parity, make, checklist]
 links:
   - ./v1_cli/CLI_CONTRACT.md
   - ./v0_make/MAKE_CONTRACT.md
-  - ../Makefile
 ---
 
 # CLI Parity Checklist (Make → `ph`)
@@ -18,7 +17,7 @@ This checklist is the **exhaustive parity verification** for the Make-to-CLI map
 - Prefer running against a disposable copy of the handbook repo.
 - Use explicit root selection for determinism: `ph --root <PH_ROOT> ...`
 - Output paths are **PH_ROOT-relative** (POSIX style).
-- For system scope equivalents, replace project paths with `.project-handbook/system/**` as shown.
+- v1 has no system scope; this checklist covers project scope only.
 
 ## Checklist (exhaustive)
 
@@ -111,41 +110,6 @@ This checklist is the **exhaustive parity verification** for the Make-to-CLI map
   - Command: `ph --root <PH_ROOT> sprint close`
   - Outputs to verify: `sprints/<year>/<SPRINT-...>/retrospective.md`, `sprints/archive/**`, `sprints/archive/index.json`
 
-### Sprint (system)
-
-- [ ] `make hb-sprint-plan` → `ph --scope system sprint plan`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system sprint plan`
-  - Outputs to verify: `.project-handbook/system/sprints/<year>/<SPRINT-...>/plan.md`, `.project-handbook/system/sprints/current`
-- [ ] `make hb-sprint-open sprint=SPRINT-...` → `ph --scope system sprint open --sprint SPRINT-...`
-  - Preconditions: `.project-handbook/system/sprints/<year>/<SPRINT-...>/` exists
-  - Command: `ph --root <PH_ROOT> --scope system sprint open --sprint SPRINT-...`
-  - Outputs to verify: `.project-handbook/system/sprints/current`
-- [ ] `make hb-sprint-status` → `ph --scope system sprint status`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system sprint status`
-  - Outputs to verify: (none; stdout only)
-- [ ] `make hb-sprint-tasks` → `ph --scope system sprint tasks`
-  - Preconditions: `.project-handbook/system/sprints/current` exists
-  - Command: `ph --root <PH_ROOT> --scope system sprint tasks`
-  - Outputs to verify: (none; stdout only)
-- [ ] `make hb-burndown` → `ph --scope system sprint burndown`
-  - Preconditions: `.project-handbook/system/sprints/current` exists
-  - Command: `ph --root <PH_ROOT> --scope system sprint burndown`
-  - Outputs to verify: `.project-handbook/system/sprints/<year>/<SPRINT-...>/burndown.md`
-- [ ] `make hb-sprint-capacity` → `ph --scope system sprint capacity`
-  - Preconditions: `.project-handbook/system/sprints/current` exists
-  - Command: `ph --root <PH_ROOT> --scope system sprint capacity`
-  - Outputs to verify: (none; stdout only)
-- [ ] `make hb-sprint-archive [sprint=SPRINT-...]` → `ph --scope system sprint archive [--sprint SPRINT-...]`
-  - Preconditions: system sprint exists (`.project-handbook/system/sprints/<year>/<SPRINT-...>/`)
-  - Command: `ph --root <PH_ROOT> --scope system sprint archive [--sprint SPRINT-...]`
-  - Outputs to verify: `.project-handbook/system/sprints/archive/**`, `.project-handbook/system/sprints/archive/index.json`
-- [ ] `make hb-sprint-close` → `ph --scope system sprint close`
-  - Preconditions: `.project-handbook/system/sprints/current` exists
-  - Command: `ph --root <PH_ROOT> --scope system sprint close`
-  - Outputs to verify: `.project-handbook/system/sprints/<year>/<SPRINT-...>/retrospective.md`, `.project-handbook/system/sprints/archive/**`, `.project-handbook/system/sprints/archive/index.json`
-
 ### Task (project)
 
 - [ ] `make task-create ...` → `ph task create ...`
@@ -164,25 +128,6 @@ This checklist is the **exhaustive parity verification** for the Make-to-CLI map
   - Preconditions: `sprints/**/tasks/TASK-###-*/task.yaml` exists
   - Command: `ph --root <PH_ROOT> task status --id TASK-### --status doing [--force]`
   - Outputs to verify: `sprints/**/tasks/TASK-###-*/task.yaml`
-
-### Task (system)
-
-- [ ] `make hb-task-create ...` → `ph --scope system task create ...`
-  - Preconditions: `.project-handbook/system/sprints/current` exists
-  - Command: `ph --root <PH_ROOT> --scope system task create --title "..." --feature <name> --decision ADR-0000 --points 1 --lane handbook/automation --session task-execution`
-  - Outputs to verify: `.project-handbook/system/sprints/current/tasks/TASK-###-*/task.yaml` (and other task files under the same directory)
-- [ ] `make hb-task-list` → `ph --scope system task list`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system task list`
-  - Outputs to verify: (none; stdout only)
-- [ ] `make hb-task-show id=TASK-###` → `ph --scope system task show --id TASK-###`
-  - Preconditions: `.project-handbook/system/sprints/**/tasks/TASK-###-*/` exists
-  - Command: `ph --root <PH_ROOT> --scope system task show --id TASK-###`
-  - Outputs to verify: (none; stdout only)
-- [ ] `make hb-task-status id=TASK-### status=doing [force=true]` → `ph --scope system task status --id TASK-### --status doing [--force]`
-  - Preconditions: `.project-handbook/system/sprints/**/tasks/TASK-###-*/task.yaml` exists
-  - Command: `ph --root <PH_ROOT> --scope system task status --id TASK-### --status doing [--force]`
-  - Outputs to verify: `.project-handbook/system/sprints/**/tasks/TASK-###-*/task.yaml`
 
 ### Feature (project)
 
@@ -211,33 +156,6 @@ This checklist is the **exhaustive parity verification** for the Make-to-CLI map
   - Command: `ph --root <PH_ROOT> feature archive --name <name> [--force]`
   - Outputs to verify: `features/implemented/<name>/`
 
-### Feature (system)
-
-- [ ] `make hb-feature-list` → `ph --scope system feature list`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system feature list`
-  - Outputs to verify: (none; stdout only)
-- [ ] `make hb-feature-create name=<name>` → `ph --scope system feature create --name <name>`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system feature create --name <name>`
-  - Outputs to verify: `.project-handbook/system/features/<name>/`
-- [ ] `make hb-feature-status name=<name> stage=<stage>` → `ph --scope system feature status --name <name> --stage <stage>`
-  - Preconditions: `.project-handbook/system/features/<name>/` exists
-  - Command: `ph --root <PH_ROOT> --scope system feature status --name <name> --stage <stage>`
-  - Outputs to verify: `.project-handbook/system/features/<name>/overview.md` (front matter/status fields updated)
-- [ ] `make hb-feature-update-status` → `ph --scope system feature update-status`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system feature update-status`
-  - Outputs to verify: `.project-handbook/system/features/**/status.md` (and/or other feature status artifacts written by updater)
-- [ ] `make hb-feature-summary` → `ph --scope system feature summary`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system feature summary`
-  - Outputs to verify: (none; stdout only)
-- [ ] `make hb-feature-archive name=<name> [force=true]` → `ph --scope system feature archive --name <name> [--force]`
-  - Preconditions: `.project-handbook/system/features/<name>/` exists
-  - Command: `ph --root <PH_ROOT> --scope system feature archive --name <name> [--force]`
-  - Outputs to verify: `.project-handbook/system/features/implemented/<name>/`
-
 ### Backlog (project)
 
 - [ ] `make backlog-add ...` → `ph backlog add ...`
@@ -265,33 +183,6 @@ This checklist is the **exhaustive parity verification** for the Make-to-CLI map
   - Command: `ph --root <PH_ROOT> backlog stats`
   - Outputs to verify: (none; stdout only)
 
-### Backlog (system)
-
-- [ ] `make hb-backlog-add ...` → `ph --scope system backlog add ...`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system backlog add --type bugs --title \"...\" --severity P2`
-  - Outputs to verify: `.project-handbook/system/backlog/index.json`, `.project-handbook/system/backlog/<type>/<ID>/**`
-- [ ] `make hb-backlog-list ...` → `ph --scope system backlog list ...`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system backlog list ...`
-  - Outputs to verify: (none; stdout only)
-- [ ] `make hb-backlog-triage issue=<ID>` → `ph --scope system backlog triage --issue <ID>`
-  - Preconditions: `.project-handbook/system/backlog/<type>/<ID>/` exists
-  - Command: `ph --root <PH_ROOT> --scope system backlog triage --issue <ID>`
-  - Outputs to verify: `.project-handbook/system/backlog/index.json`, `.project-handbook/system/backlog/<type>/<ID>/**` (triage metadata updated)
-- [ ] `make hb-backlog-assign issue=<ID> [sprint=current]` → `ph --scope system backlog assign --issue <ID> [--sprint current]`
-  - Preconditions: `.project-handbook/system/backlog/<type>/<ID>/` exists
-  - Command: `ph --root <PH_ROOT> --scope system backlog assign --issue <ID> [--sprint current]`
-  - Outputs to verify: `.project-handbook/system/backlog/index.json`, `.project-handbook/system/backlog/<type>/<ID>/**` (assignment metadata updated)
-- [ ] `make hb-backlog-rubric` → `ph --scope system backlog rubric`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system backlog rubric`
-  - Outputs to verify: (none; stdout only)
-- [ ] `make hb-backlog-stats` → `ph --scope system backlog stats`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system backlog stats`
-  - Outputs to verify: (none; stdout only)
-
 ### Parking (project)
 
 - [ ] `make parking-add ...` → `ph parking add ...`
@@ -311,25 +202,6 @@ This checklist is the **exhaustive parity verification** for the Make-to-CLI map
   - Command: `ph --root <PH_ROOT> parking promote --item <ID> [--target later]`
   - Outputs to verify: `parking-lot/index.json`, `parking-lot/<category>/<ID>/**` (promotion metadata updated)
 
-### Parking (system)
-
-- [ ] `make hb-parking-add ...` → `ph --scope system parking add ...`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system parking add --type technical-debt --title \"...\"`
-  - Outputs to verify: `.project-handbook/system/parking-lot/index.json`, `.project-handbook/system/parking-lot/<category>/<ID>/**`
-- [ ] `make hb-parking-list ...` → `ph --scope system parking list ...`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system parking list ...`
-  - Outputs to verify: (none; stdout only)
-- [ ] `make hb-parking-review` → `ph --scope system parking review`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system parking review`
-  - Outputs to verify: (none; stdout only)
-- [ ] `make hb-parking-promote item=<ID> [target=later]` → `ph --scope system parking promote --item <ID> [--target later]`
-  - Preconditions: `.project-handbook/system/parking-lot/<category>/<ID>/` exists
-  - Command: `ph --root <PH_ROOT> --scope system parking promote --item <ID> [--target later]`
-  - Outputs to verify: `.project-handbook/system/parking-lot/index.json`, `.project-handbook/system/parking-lot/<category>/<ID>/**` (promotion metadata updated)
-
 ### Validation + status
 
 - [ ] `make validate` → `ph validate`
@@ -344,28 +216,12 @@ This checklist is the **exhaustive parity verification** for the Make-to-CLI map
   - Preconditions: none
   - Command: `ph --root <PH_ROOT> status`
   - Outputs to verify: `status/current.json`, `status/current_summary.md`
-- [ ] `make hb-validate` → `ph --scope system validate`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system validate`
-  - Outputs to verify: `.project-handbook/system/status/validation.json`
-- [ ] `make hb-validate-quick` → `ph --scope system validate --quick`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system validate --quick`
-  - Outputs to verify: `.project-handbook/system/status/validation.json`
-- [ ] `make hb-status` → `ph --scope system status`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system status`
-  - Outputs to verify: `.project-handbook/system/status/current.json`, `.project-handbook/system/status/current_summary.md`
 
 ### Dashboards
 
 - [ ] `make dashboard` → `ph dashboard`
   - Preconditions: none
   - Command: `ph --root <PH_ROOT> dashboard`
-  - Outputs to verify: (none; stdout only)
-- [ ] `make hb-dashboard` → `ph --scope system dashboard`
-  - Preconditions: none
-  - Command: `ph --root <PH_ROOT> --scope system dashboard`
   - Outputs to verify: (none; stdout only)
 
 ### Roadmap (project only)
@@ -478,4 +334,3 @@ This checklist is the **exhaustive parity verification** for the Make-to-CLI map
   - Preconditions: run on disposable copy of the repo (destructive to project scope)
   - Command: `ph --root <PH_ROOT> reset-smoke`
   - Outputs to verify: (procedure asserts filesystem conditions; see `docs/RESET_SMOKE.md`)
-

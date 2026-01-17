@@ -11,14 +11,14 @@ links: []
 
 ## Task Status
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-003 status=doing
-pnpm -C project-handbook make -- task-status id=TASK-003 status=review
-pnpm -C project-handbook make -- task-status id=TASK-003 status=done
+ph task status --id TASK-003 --status doing
+ph task status --id TASK-003 --status review
+ph task status --id TASK-003 --status done
 ```
 
 ## Evidence Directory (required)
 ```bash
-EVID_DIR="project-handbook/status/evidence/TASK-003"
+EVID_DIR="ph/status/evidence/TASK-003"
 mkdir -p "$EVID_DIR"
 ${EDITOR:-vi} "$EVID_DIR/index.md"
 ```
@@ -38,12 +38,12 @@ shasum -a 256 v2/infra/compose/graphql/supergraph-local.graphql | tee -a "$EVID_
 
 ## Edit the Decision Register entry
 ```bash
-${EDITOR:-vi} project-handbook/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md
+${EDITOR:-vi} ph/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md
 ```
 
 ## Handbook Validation
 ```bash
-pnpm -C project-handbook make -- validate
+ph validate
 ```
 
 ## Notes

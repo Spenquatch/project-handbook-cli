@@ -11,14 +11,14 @@ links: []
 
 ## Task Status Updates
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-007 status=doing
-pnpm -C project-handbook make -- task-status id=TASK-007 status=review
-pnpm -C project-handbook make -- task-status id=TASK-007 status=done
+ph task status --id TASK-007 --status doing
+ph task status --id TASK-007 --status review
+ph task status --id TASK-007 --status done
 ```
 
 ## Evidence Directory (required; do not overwrite existing files)
 ```bash
-EVID_ROOT="project-handbook/status/evidence/TASK-007"
+EVID_ROOT="ph/status/evidence/TASK-007"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-seaweedfs-cutover"
 EVID_DIR="$EVID_ROOT/$RUN_ID"
 mkdir -p "$EVID_DIR"
@@ -27,9 +27,9 @@ ${EDITOR:-vi} "$EVID_DIR/index.md"
 
 ## Read the controlling docs (capture copies if helpful)
 ```bash
-sed -n '1,220p' project-handbook/adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md | tee "$EVID_DIR/adr-0030.txt"
-sed -n '1,220p' project-handbook/adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md | tee "$EVID_DIR/adr-0015.txt"
-sed -n '1,260p' project-handbook/decision-register/DR-0003-cosmo-minio-baseline-topology.md | tee "$EVID_DIR/dr-0003.txt"
+sed -n '1,220p' ph/adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md | tee "$EVID_DIR/adr-0030.txt"
+sed -n '1,220p' ph/adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md | tee "$EVID_DIR/adr-0015.txt"
+sed -n '1,260p' ph/decision-register/DR-0003-cosmo-minio-baseline-topology.md | tee "$EVID_DIR/dr-0003.txt"
 ```
 
 ## Bring up v2 (service commands; required for validation)
@@ -74,8 +74,8 @@ rg -n "http://[^\\s<>]+:[^\\s<>]+@seaweedfs:8333|AWS_SECRET_ACCESS_KEY=|S3_SECRE
 
 ## Handbook validation (required)
 ```bash
-pnpm -C project-handbook make -- validate | tee "$EVID_DIR/handbook-validate.txt"
-pnpm -C project-handbook make -- sprint-status | tee "$EVID_DIR/sprint-status.txt"
+ph validate | tee "$EVID_DIR/handbook-validate.txt"
+ph sprint status | tee "$EVID_DIR/sprint-status.txt"
 ```
 
 ## Notes

@@ -11,21 +11,21 @@ links: []
 
 ## Task Status
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-005 status=doing
-pnpm -C project-handbook make -- task-status id=TASK-005 status=review
-pnpm -C project-handbook make -- task-status id=TASK-005 status=done
+ph task status --id TASK-005 --status doing
+ph task status --id TASK-005 --status review
+ph task status --id TASK-005 --status done
 ```
 
 ## Evidence Directory
 ```bash
-EVID_DIR="project-handbook/status/evidence/TASK-005"
+EVID_DIR="ph/status/evidence/TASK-005"
 mkdir -p "$EVID_DIR"
 ```
 
 ## Sprint Graph + “Next up”
 ```bash
-pnpm -C project-handbook make -- sprint-status | tee "$EVID_DIR/sprint-status.txt"
-pnpm -C project-handbook make -- task-list | tee "$EVID_DIR/task-list.txt"
+ph sprint status | tee "$EVID_DIR/sprint-status.txt"
+ph task list | tee "$EVID_DIR/task-list.txt"
 ```
 
 ## Evidence Conventions Doc
@@ -35,7 +35,7 @@ ${EDITOR:-vi} "$EVID_DIR/README.md"
 
 ## Handbook Validation
 ```bash
-pnpm -C project-handbook make -- validate | tee "$EVID_DIR/handbook-validate.txt"
+ph validate | tee "$EVID_DIR/handbook-validate.txt"
 ```
 
 ## Notes

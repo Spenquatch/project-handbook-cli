@@ -23,15 +23,15 @@ links: []
 - [ ] Cosmo publish/check is a hard gate and fails fast on any subgraph failure
 - [ ] Mirrors update only after full success and via atomic writes (temp → rename); last-known-good mirrors preserved on failure
 - [ ] Deterministic sanitized publish report exists at `v2/.tmp/harvester/publish-report.json` (no secrets/tokens/JWTs; bounded error strings)
-- [ ] Evidence captured under `project-handbook/status/evidence/TASK-009/<run-id>/` (index + logs + mirror hashes + report hashes)
+- [ ] Evidence captured under `ph/status/evidence/TASK-009/<run-id>/` (index + logs + mirror hashes + report hashes)
 
 ## Before Review
-- [ ] Run `pnpm -C project-handbook make -- validate`
+- [ ] Run `ph validate`
 - [ ] Run `make -C v2 v2-smoke` (and any harvester-specific tests added)
 - [ ] Confirm no secret leakage in logs/reports/evidence (explicit grep checks)
-- [ ] Set status to `review` via `pnpm -C project-handbook make -- task-status id=TASK-009 status=review`
+- [ ] Set status to `review` via `ph task status --id TASK-009 --status review`
 
 ## After Completion
 - [ ] Peer review approved and merged
 - [ ] Feature docs remain execution-ready (no placeholders or ambiguous steps introduced)
-- [ ] Move status to `done` with `pnpm -C project-handbook make -- task-status id=TASK-009 status=done`
+- [ ] Move status to `done` with `ph task status --id TASK-009 --status done`

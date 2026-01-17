@@ -26,7 +26,7 @@ links: []
 - **Daily Progress**: [Daily status](../../../../../status/daily/)
 
 ### Evidence / Prior Work
-- `project-handbook/status/evidence/TASK-003/` — Apollo Router `--hot-reload` behavior + Cosmo CLI `fetch-schema` evidence (no secrets).
+- `ph/status/evidence/TASK-003/` — Apollo Router `--hot-reload` behavior + Cosmo CLI `fetch-schema` evidence (no secrets).
 
 ### Reference-Only (Legacy)
 - `modular-oss-saas/infra/compose/docker-compose.yml` — legacy Cosmo controlplane port (`3001`) and baseline wiring shape.

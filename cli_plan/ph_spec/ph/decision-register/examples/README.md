@@ -4,7 +4,6 @@ type: process
 date: 2026-01-08
 tags: [decisions, decision-register]
 links:
-  - ../process/sessions/templates/research-discovery.md
   - ../adr/
   - ../features/
 ---
@@ -16,8 +15,8 @@ This folder is the **cross-cutting** Decision Register (DR) index and storage fo
 Feature-scoped DRs should live alongside the owning feature so execution work stays local and self-contained.
 
 ## Where DR entries live (routing rule)
-- **Feature-scoped (default):** `project-handbook/features/<feature>/decision-register/DR-XXXX-<slug>.md`
-- **Cross-cutting:** `project-handbook/decision-register/DR-XXXX-<slug>.md`
+- **Feature-scoped (default):** `ph/features/<feature>/decision-register/DR-XXXX-<slug>.md`
+- **Cross-cutting:** `ph/decision-register/DR-XXXX-<slug>.md`
 
 ## Numbering
 - Use a four-digit sequence (`DR-0001`, `DR-0002`, …).
@@ -37,7 +36,7 @@ Feature-scoped DRs should live alongside the owning feature so execution work st
 
 ## Required template (copy/paste)
 
-Note: all Markdown under `project-handbook/` requires front matter. Keep the decision entry body in the **exact format** below, but add YAML front matter above it in the file.
+Note: all Markdown under `ph/` requires front matter. Keep the decision entry body in the **exact format** below, but add YAML front matter above it in the file.
 
 Example file wrapper (do not change the decision entry format):
 ```md

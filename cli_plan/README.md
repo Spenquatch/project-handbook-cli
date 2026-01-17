@@ -17,15 +17,15 @@ This folder is versioned so we can always compare the **current Make-based inter
 
 ### `v0_make/`
 Authoritative snapshot/contract of the current command surface:
-- Make targets and scope variants (`hb-*`)
+- Make targets (including historical `hb-*` scope variants)
 - Hook behavior (history + auto validation)
 - Destructive safety semantics (reset/migration)
 
 ### `v1_cli/`
 Authoritative CLI design:
 - ADR for the `ph` CLI migration
-- CLI contract (command tree, hints, hooks, skip rules, scope rules)
+- CLI contract (command tree, hints, hooks, skip rules)
 
 ## Parity rule
 
-`v1_cli` MUST preserve the intent and ergonomics of `v0_make`, while eliminating Make-specific sources of nondeterminism (especially `cwd` sensitivity).
+`v1_cli` MUST preserve the intent and ergonomics of `v0_make` where applicable, while removing Make-era concepts that don’t generalize (notably system scope and any Make compatibility layer).

@@ -21,15 +21,15 @@ links: []
 - [ ] GraphQL Codegen runs deterministically and outputs are committed under `v2/apps/tribuence-mini/src/generated/`
 - [ ] Drift gate exists (`make -C v2 v2-codegen-check`) and fails on any diff under `v2/apps/tribuence-mini/src/generated/`
 - [ ] Ordering gate exists and is explicit: `make -C v2 v2-publish` → `make -C v2 v2-codegen-check` → `pnpm -C v2/apps/tribuence-mini typecheck`
-- [ ] Evidence captured under `project-handbook/status/evidence/TASK-010/<run-id>/`
+- [ ] Evidence captured under `ph/status/evidence/TASK-010/<run-id>/`
 
 ## Before Review
-- [ ] Run `pnpm -C project-handbook make -- validate`
+- [ ] Run `ph validate`
 - [ ] Run `make -C v2 v2-codegen-check` and `pnpm -C v2/apps/tribuence-mini typecheck`
 - [ ] Confirm no secret leakage in logs/evidence (explicit grep checks)
-- [ ] Set status to `review` via `pnpm -C project-handbook make -- task-status id=TASK-010 status=review`
+- [ ] Set status to `review` via `ph task status --id TASK-010 --status review`
 
 ## After Completion
 - [ ] Peer review approved and merged
 - [ ] Feature docs remain execution-ready (no placeholders or ambiguous steps introduced)
-- [ ] Move status to `done` with `pnpm -C project-handbook make -- task-status id=TASK-010 status=done`
+- [ ] Move status to `done` with `ph task status --id TASK-010 --status done`

@@ -11,29 +11,29 @@ links: []
 
 ## Automated Validation
 ```bash
-pnpm -C project-handbook make -- validate
-pnpm -C project-handbook make -- sprint-status
+ph validate
+ph sprint status
 ```
 
 ## Manual Validation (copy/paste; store evidence)
 
 ### 0) Evidence folder (per-run)
 ```bash
-EVID_ROOT="project-handbook/status/evidence/TASK-007"
+EVID_ROOT="ph/status/evidence/TASK-007"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-seaweedfs-cutover"
 EVID_DIR="$EVID_ROOT/$RUN_ID"
 mkdir -p "$EVID_DIR"
 ```
 
 Evidence you must produce (minimum):
-- `project-handbook/status/evidence/TASK-007/<run-id>/v2-ps.txt`
-- `project-handbook/status/evidence/TASK-007/<run-id>/vault-bootstrap.txt`
-- `project-handbook/status/evidence/TASK-007/<run-id>/artifact-bucket-init-run1.txt`
-- `project-handbook/status/evidence/TASK-007/<run-id>/artifact-bucket-init-run2.txt`
-- `project-handbook/status/evidence/TASK-007/<run-id>/v2-smoke-infra.txt`
-- `project-handbook/status/evidence/TASK-007/<run-id>/rg-minio-after.txt`
-- `project-handbook/status/evidence/TASK-007/<run-id>/leak-scan.txt`
-- `project-handbook/status/evidence/TASK-007/<run-id>/handbook-validate.txt`
+- `ph/status/evidence/TASK-007/<run-id>/v2-ps.txt`
+- `ph/status/evidence/TASK-007/<run-id>/vault-bootstrap.txt`
+- `ph/status/evidence/TASK-007/<run-id>/artifact-bucket-init-run1.txt`
+- `ph/status/evidence/TASK-007/<run-id>/artifact-bucket-init-run2.txt`
+- `ph/status/evidence/TASK-007/<run-id>/v2-smoke-infra.txt`
+- `ph/status/evidence/TASK-007/<run-id>/rg-minio-after.txt`
+- `ph/status/evidence/TASK-007/<run-id>/leak-scan.txt`
+- `ph/status/evidence/TASK-007/<run-id>/handbook-validate.txt`
 
 ### 1) Bring up v2 (required)
 ```bash
@@ -97,13 +97,13 @@ Pass criteria:
 
 ### 7) Handbook validation (store report)
 ```bash
-pnpm -C project-handbook make -- validate | tee "$EVID_DIR/handbook-validate.txt"
+ph validate | tee "$EVID_DIR/handbook-validate.txt"
 ```
 
 Pass criteria:
-- Command exits 0 and `project-handbook/status/validation.json` is updated.
+- Command exits 0 and `ph/status/validation.json` is updated.
 
 ## Sign-off
 - [ ] All validation steps completed
-- [ ] Evidence captured under `project-handbook/status/evidence/TASK-007/<run-id>/`
+- [ ] Evidence captured under `ph/status/evidence/TASK-007/<run-id>/`
 - [ ] Ready to mark task as "done"

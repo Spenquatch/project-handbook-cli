@@ -75,7 +75,7 @@ Integration checkpoint (required):
 
 ## Task Creation Guide
 ```bash
-make task-create title="Task Name" feature=feature-name decision=ADR-XXX points=3 lane="handbook/automation"
+ph task create --title "Task Name" --feature feature-name --decision ADR-XXX --points 3 --lane "handbook/automation"
 ```
 
 ## Telemetry (Points)
@@ -105,8 +105,8 @@ Notes:
 - `TASK-006`: requires `/secrets/artifacts.env` as the single source of truth for artifact-store config (`S3_ENDPOINT_URL` + creds + bucket), used by bucket-init + smoke probe.
 - `TASK-007`: cutover is performed by switching `S3_ENDPOINT_URL` to `http://seaweedfs:8333`, then removing MinIO after the probe is green.
 - `TASK-008`: runtime supergraph contract is explicit (`/dist/graphql-runtime/supergraph.graphql`) and Cosmo CLI creds are scoped to `supergraph-sync` via `/secrets/cosmo-cli.env` (Router never mounts Cosmo creds).
-- `TASK-009`: harvester publish/check is the hard gate; mirrors update only after full success via atomic rename; deterministic sanitized report at `v2/.tmp/harvester/publish-report.json` with evidence under `project-handbook/status/evidence/TASK-009/<run-id>/`.
-- `TASK-010`: codegen fetches schema inputs from Cosmo into `v2/.tmp/codegen/supergraph.graphql` (atomic) and enforces drift + ordering with evidence under `project-handbook/status/evidence/TASK-010/<run-id>/`.
+- `TASK-009`: harvester publish/check is the hard gate; mirrors update only after full success via atomic rename; deterministic sanitized report at `v2/.tmp/harvester/publish-report.json` with evidence under `ph/status/evidence/TASK-009/<run-id>/`.
+- `TASK-010`: codegen fetches schema inputs from Cosmo into `v2/.tmp/codegen/supergraph.graphql` (atomic) and enforces drift + ordering with evidence under `ph/status/evidence/TASK-010/<run-id>/`.
 
-Validation: `pnpm -C project-handbook make -- validate`  
-Report: `project-handbook/status/validation.json`
+Validation: `ph validate`  
+Report: `.ph/status/validation.json`

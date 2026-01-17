@@ -5,9 +5,6 @@ severity: P0
 status: closed
 created: 2025-09-22
 owner: unassigned
-archived_at: 2026-01-04T13:18:11Z
-archived_by_task: manual
-archived_by_sprint: manual
 ---
 
 # 🔴 [P0] Production database is down

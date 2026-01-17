@@ -46,4 +46,4 @@ None (local/dev). Router-propagated headers are consumed when implemented:
   - `errors?: array`
 
 ### Notes
-- Schema and header semantics: `project-handbook/contracts/tribuence-mini-v2/context-subgraph.md`
+- Schema and header semantics: `ph/contracts/tribuence-mini-v2/context-subgraph.md`

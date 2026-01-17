@@ -12,7 +12,7 @@ prio: P2
 due: 2026-01-16
 acceptance:
   - Task dependency graph is valid and sprint-status selects TASK-005 as “Next up”.
-  - Evidence directory conventions recorded under `project-handbook/status/evidence/TASK-005/` (what artefacts each DR task must capture, and naming conventions).
+  - Evidence directory conventions recorded under `ph/status/evidence/TASK-005/` (what artefacts each DR task must capture, and naming conventions).
 links:
   - ../../../../../sprints/current/plan.md
   - ../../../../../releases/current/plan.md

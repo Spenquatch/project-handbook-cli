@@ -11,19 +11,19 @@ links: []
 
 ## Pre-Work
 - [ ] Confirm `TASK-025` is `done`
-- [ ] Review `project-handbook/adr/0027-v2-context-control-plane-schema.md`
-- [ ] Review `project-handbook/features/v2_context-control-plane-schema/decision-register/DR-0001-context-control-plane-migration-and-consumption-contract.md` (create it during this task)
+- [ ] Review `ph/adr/0027-v2-context-control-plane-schema.md`
+- [ ] Review `ph/features/v2_context-control-plane-schema/decision-register/DR-0001-context-control-plane-migration-and-consumption-contract.md` (create it during this task)
 
 ## During Execution
-- [ ] Create `project-handbook/status/evidence/TASK-029/` and `index.md`
+- [ ] Create `ph/status/evidence/TASK-029/` and `index.md`
 - [ ] Capture current Context schema/migrations evidence (repo inspection only)
 - [ ] Complete DR-0001 (two options + recommendation + explicit approval request)
 - [ ] Update feature architecture/implementation docs with execution-ready plan
 
 ## Before Review
-- [ ] Run `pnpm -C project-handbook make -- validate`
+- [ ] Run `ph validate`
 - [ ] Ensure evidence list in `validation.md` is complete
-- [ ] Set status to `review` via `pnpm -C project-handbook make -- task-status ...`
+- [ ] Set status to `review` via `ph task status --id <TASK-###> --status <status>`
 
 ## After Completion
 - [ ] Operator approval obtained (required before marking DR as `Accepted`)

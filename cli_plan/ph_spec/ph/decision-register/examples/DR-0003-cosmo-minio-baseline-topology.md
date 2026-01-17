@@ -26,24 +26,24 @@ links:
   - which Cosmo components are required and which upstream “extras” we can avoid,
   - how we wire Cosmo into v2 Postgres/Vault while preserving “no Traefik exposure”, and
   - whether we keep MinIO or swap to a different S3-compatible store (SeaweedFS or RustFS).
-- Evidence for this decision lives under `project-handbook/status/evidence/TASK-001/` (start at `index.md`).
-- Legacy note: we have a known-good reference implementation in `modular-oss-saas/infra/compose/*` and `modular-oss-saas/scripts/infra/*` (DB bootstrap, migrations, bucket init, and Cosmo Keycloak realm), and should reuse that shape where it aligns with v2 conventions (evidence: `project-handbook/status/evidence/TASK-001/legacy-modular-cosmo-minio-snippets.txt`).
+- Evidence for this decision lives under `ph/status/evidence/TASK-001/` (start at `index.md`).
+- Legacy note: we have a known-good reference implementation in `modular-oss-saas/infra/compose/*` and `modular-oss-saas/scripts/infra/*` (DB bootstrap, migrations, bucket init, and Cosmo Keycloak realm), and should reuse that shape where it aligns with v2 conventions (evidence: `ph/status/evidence/TASK-001/legacy-modular-cosmo-minio-snippets.txt`).
 - Replacement candidates:
-  - SeaweedFS: documented single-node S3 gateway via `weed server -s3` / `weed mini` (S3 endpoint `:8333`) (evidence: `project-handbook/status/evidence/TASK-001/seaweedfs-readme-snippets.txt`).
-  - RustFS: “MinIO-like” ops but currently `1.0.0-alpha.*` and its S3 test harness filters out some feature suites (evidence: `project-handbook/status/evidence/TASK-001/rustfs-s3tests-snippets.txt`, `project-handbook/status/evidence/TASK-001/rustfs-dockerhub-tags.txt`).
+  - SeaweedFS: documented single-node S3 gateway via `weed server -s3` / `weed mini` (S3 endpoint `:8333`) (evidence: `ph/status/evidence/TASK-001/seaweedfs-readme-snippets.txt`).
+  - RustFS: “MinIO-like” ops but currently `1.0.0-alpha.*` and its S3 test harness filters out some feature suites (evidence: `ph/status/evidence/TASK-001/rustfs-s3tests-snippets.txt`, `ph/status/evidence/TASK-001/rustfs-dockerhub-tags.txt`).
 
 **Option A — SeaweedFS S3 gateway as the Cosmo artifact store (strict internal-only, no host binds)**
 - **Pros:**
   - Avoids betting the baseline on MinIO’s community posture while staying S3-compatible for Cosmo.
-  - SeaweedFS documents a single-node S3 setup (`weed server -s3` / `weed mini`) with an S3 endpoint on `:8333` (evidence: `project-handbook/status/evidence/TASK-001/seaweedfs-readme-snippets.txt`).
-  - Uses stable release tags on Docker Hub (evidence: `project-handbook/status/evidence/TASK-001/seaweedfs-dockerhub-tags.txt`).
+  - SeaweedFS documents a single-node S3 setup (`weed server -s3` / `weed mini`) with an S3 endpoint on `:8333` (evidence: `ph/status/evidence/TASK-001/seaweedfs-readme-snippets.txt`).
+  - Uses stable release tags on Docker Hub (evidence: `ph/status/evidence/TASK-001/seaweedfs-dockerhub-tags.txt`).
 - **Cons:**
-  - SeaweedFS itself notes MinIO is more ideal for close AWS S3 parity and that SeaweedFS is “trying to catch up” (evidence: `project-handbook/status/evidence/TASK-001/seaweedfs-readme-snippets.txt`).
+  - SeaweedFS itself notes MinIO is more ideal for close AWS S3 parity and that SeaweedFS is “trying to catch up” (evidence: `ph/status/evidence/TASK-001/seaweedfs-readme-snippets.txt`).
   - Introduces a new storage system to v2; even in single-node mode it has more concepts than MinIO.
   - Requires ADR update/superseding decision because ADR-0015 currently names MinIO explicitly.
 - **Cascading implications:**
   - v2 compose gains a Cosmo + SeaweedFS “infra cluster” that downstream tasks rely on (`TASK-003`, `TASK-004`).
-  - Secrets contract must be extended to cover SeaweedFS S3 gateway credentials (SeaweedFS docs show `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`) stored in Vault and rendered to an env file (evidence: `project-handbook/status/evidence/TASK-001/seaweedfs-readme-snippets.txt`).
+  - Secrets contract must be extended to cover SeaweedFS S3 gateway credentials (SeaweedFS docs show `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`) stored in Vault and rendered to an env file (evidence: `ph/status/evidence/TASK-001/seaweedfs-readme-snippets.txt`).
 - **Risks:**
   - Compatibility surprises only show up when Cosmo starts writing/reading artifacts; mitigate with an early “Cosmo artifact write/read” smoke probe.
 - **Unlocks:**
@@ -94,7 +94,7 @@ links:
 
 **Option B — Keep MinIO now (known-good) and plan SeaweedFS migration later (explicit tech debt)**
 - **Pros:**
-  - Lowest execution risk now: MinIO is already proven in the legacy modular compose + bootstrap scripts (bucket init, migrations, wiring) (evidence: `project-handbook/status/evidence/TASK-001/legacy-modular-cosmo-minio-snippets.txt`).
+  - Lowest execution risk now: MinIO is already proven in the legacy modular compose + bootstrap scripts (bucket init, migrations, wiring) (evidence: `ph/status/evidence/TASK-001/legacy-modular-cosmo-minio-snippets.txt`).
   - Aligns with ADR-0015 as written (MinIO explicitly named), avoiding immediate ADR churn.
   - Unblocks the v0.5.0 registry pipeline quickly.
 - **Cons:**

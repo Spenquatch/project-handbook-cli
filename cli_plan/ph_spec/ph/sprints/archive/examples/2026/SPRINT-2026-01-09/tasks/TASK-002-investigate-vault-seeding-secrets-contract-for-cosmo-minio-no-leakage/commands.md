@@ -11,14 +11,14 @@ links: []
 
 ## Task Status
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-002 status=doing
-pnpm -C project-handbook make -- task-status id=TASK-002 status=review
-pnpm -C project-handbook make -- task-status id=TASK-002 status=done
+ph task status --id TASK-002 --status doing
+ph task status --id TASK-002 --status review
+ph task status --id TASK-002 --status done
 ```
 
 ## Evidence Directory (required)
 ```bash
-EVID_DIR="project-handbook/status/evidence/TASK-002"
+EVID_DIR="ph/status/evidence/TASK-002"
 mkdir -p "$EVID_DIR"
 ${EDITOR:-vi} "$EVID_DIR/index.md"
 ```
@@ -35,12 +35,12 @@ rg -n "value not printed|never print|sanitize|placeholder|warn" v2/scripts/vault
 
 ## Edit the Decision Register entry
 ```bash
-${EDITOR:-vi} project-handbook/decision-register/DR-0004-vault-secrets-contract-cosmo-minio.md
+${EDITOR:-vi} ph/decision-register/DR-0004-vault-secrets-contract-cosmo-minio.md
 ```
 
 ## Handbook Validation
 ```bash
-pnpm -C project-handbook make -- validate
+ph validate
 ```
 
 ## Notes

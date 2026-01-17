@@ -11,14 +11,14 @@ links: []
 
 ## Task Status Updates
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-006 status=doing
-pnpm -C project-handbook make -- task-status id=TASK-006 status=review
-pnpm -C project-handbook make -- task-status id=TASK-006 status=done
+ph task status --id TASK-006 --status doing
+ph task status --id TASK-006 --status review
+ph task status --id TASK-006 --status done
 ```
 
 ## Evidence Directory (required; do not overwrite existing files)
 ```bash
-EVID_ROOT="project-handbook/status/evidence/TASK-006"
+EVID_ROOT="ph/status/evidence/TASK-006"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-cosmo-minio-baseline"
 EVID_DIR="$EVID_ROOT/$RUN_ID"
 mkdir -p "$EVID_DIR"
@@ -27,16 +27,16 @@ ${EDITOR:-vi} "$EVID_DIR/index.md"
 
 ## Read the controlling docs (capture copies if helpful)
 ```bash
-sed -n '1,220p' project-handbook/adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md | tee "$EVID_DIR/adr-0030.txt"
-sed -n '1,260p' project-handbook/decision-register/DR-0003-cosmo-minio-baseline-topology.md | tee "$EVID_DIR/dr-0003.txt"
-sed -n '1,260p' project-handbook/features/v2_registry-cosmo-minio-required/fdr/0001-vault-secrets-contract-cosmo-minio.md | tee "$EVID_DIR/fdr-0001.txt"
+sed -n '1,220p' ph/adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md | tee "$EVID_DIR/adr-0030.txt"
+sed -n '1,260p' ph/decision-register/DR-0003-cosmo-minio-baseline-topology.md | tee "$EVID_DIR/dr-0003.txt"
+sed -n '1,260p' ph/features/v2_registry-cosmo-minio-required/fdr/0001-vault-secrets-contract-cosmo-minio.md | tee "$EVID_DIR/fdr-0001.txt"
 ```
 
 ## Bring up v2 (service commands; required for validation)
 ```bash
 make -C v2 v2-down || true
 
-# Required: provide non-default Keycloak admin creds (see project-handbook/AGENT.md)
+# Required: provide non-default Keycloak admin creds (see ph/AGENT.md)
 KEYCLOAK_ADMIN=admin KEYCLOAK_ADMIN_PASSWORD=dev-not-admin make -C v2 v2-up 2>&1 | tee "$EVID_DIR/v2-up.txt"
 
 docker compose -p tribuence-v2 -f v2/infra/compose/docker-compose.v2.yml ps | tee "$EVID_DIR/v2-ps.txt"
@@ -101,8 +101,8 @@ rg -n "http://[^\\s]+:[^\\s]+@minio:9000|AWS_SECRET_ACCESS_KEY=|MINIO_SECRET_KEY
 
 ## Handbook validation (required)
 ```bash
-pnpm -C project-handbook make -- validate | tee "$EVID_DIR/handbook-validate.txt"
-pnpm -C project-handbook make -- sprint-status | tee "$EVID_DIR/sprint-status.txt"
+ph validate | tee "$EVID_DIR/handbook-validate.txt"
+ph sprint status | tee "$EVID_DIR/sprint-status.txt"
 ```
 
 ## Notes

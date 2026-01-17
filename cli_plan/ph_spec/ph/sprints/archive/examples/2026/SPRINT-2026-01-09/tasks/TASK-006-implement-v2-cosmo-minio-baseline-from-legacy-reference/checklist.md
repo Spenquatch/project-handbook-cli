@@ -10,10 +10,10 @@ links: []
 # Completion Checklist: Implement: v2 Cosmo+MinIO baseline (from legacy reference)
 
 ## Pre-Work (must be true before starting)
-- [ ] `TASK-002` is `done` (Vault contract accepted as `project-handbook/features/v2_registry-cosmo-minio-required/fdr/0001-vault-secrets-contract-cosmo-minio.md`)
-- [ ] Read: `project-handbook/adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md`
-- [ ] Read: `project-handbook/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
-- [ ] Evidence run folder created: `project-handbook/status/evidence/TASK-006/<run-id>/`
+- [ ] `TASK-002` is `done` (Vault contract accepted as `ph/features/v2_registry-cosmo-minio-required/fdr/0001-vault-secrets-contract-cosmo-minio.md`)
+- [ ] Read: `ph/adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md`
+- [ ] Read: `ph/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
+- [ ] Evidence run folder created: `ph/status/evidence/TASK-006/<run-id>/`
 
 ## Implementation (repo changes)
 - [ ] `v2/infra/compose/docker-compose.v2.yml` includes Cosmo + MinIO + deps with pinned images and **no Traefik exposure**
@@ -27,15 +27,15 @@ links: []
   - [ ] “Cosmo artifact write/read” probe (store-agnostic; reused by `TASK-007`)
 
 ## Validation Evidence (must be captured)
-- [ ] `v2-up` output captured (or `docker compose ps` + key logs) under `project-handbook/status/evidence/TASK-006/<run-id>/`
+- [ ] `v2-up` output captured (or `docker compose ps` + key logs) under `ph/status/evidence/TASK-006/<run-id>/`
 - [ ] `v2/scripts/vault/bootstrap-v2.sh` output captured and contains **no secret values**
 - [ ] `artifact-bucket-init` run twice; both runs succeed; logs captured
 - [ ] `V2_SMOKE_MODE=infra make -C v2 v2-smoke` passes; output captured
 - [ ] On Apple Silicon, Cosmo containers run `linux/arm64` (no Docker Desktop `AMD64` warnings); v2 uses multi-arch image digests
 - [ ] No stray one-shot containers remain after validation (e.g. `cosmo-db-migration-1`, `artifact-bucket-init-1`)
 - [ ] Leak scan run over the evidence folder and shows **zero** matches for credential-shaped strings
-- [ ] `pnpm -C project-handbook make -- validate` passes; output captured
+- [ ] `ph validate` passes; output captured
 
 ## Before Marking `review`
 - [ ] Feature status/plan docs updated as needed (links remain valid)
-- [ ] Task status set to `review`: `pnpm -C project-handbook make -- task-status id=TASK-006 status=review`
+- [ ] Task status set to `review`: `ph task status --id TASK-006 --status review`

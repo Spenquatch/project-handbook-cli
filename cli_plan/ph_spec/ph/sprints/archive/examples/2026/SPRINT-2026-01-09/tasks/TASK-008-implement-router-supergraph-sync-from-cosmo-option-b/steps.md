@@ -14,22 +14,22 @@ Implement **ADR-0031 / DR-0005 Option B**:
 - `supergraph-sync` fetches the latest valid federated-graph SDL from Cosmo and writes a runtime supergraph file.
 - Apollo Router consumes the runtime supergraph file and hot-reloads on updates.
 
-This is execution work under `v2/` plus handbook doc updates under `project-handbook/`.
+This is execution work under `v2/` plus handbook doc updates under `ph/`.
 
 ## Prerequisites
 - `TASK-006` is `done` (Cosmo baseline exists and is reachable from inside the v2 network).
 - `TASK-004` is `done` (harvester publish workflow + artifact ownership contract is explicit).
 - Local Docker works.
-- You will capture evidence under `project-handbook/status/evidence/TASK-008/<run-id>/` (no secrets).
+- You will capture evidence under `ph/status/evidence/TASK-008/<run-id>/` (no secrets).
 
 ## Step 1 — Confirm the contracts (already decided)
 Read (canonical):
-- `project-handbook/adr/0031-v2-router-supergraph-delivery-cosmo-sync-artifact.md`
-- `project-handbook/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md`
-- `project-handbook/decision-register/DR-0004-vault-secrets-contract-cosmo-minio.md`
-- `project-handbook/features/v2_schema-publishing-and-composition/implementation/IMPLEMENTATION.md`
+- `ph/adr/0031-v2-router-supergraph-delivery-cosmo-sync-artifact.md`
+- `ph/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md`
+- `ph/decision-register/DR-0004-vault-secrets-contract-cosmo-minio.md`
+- `ph/features/v2_schema-publishing-and-composition/implementation/IMPLEMENTATION.md`
 
-Then record (verbatim) in your evidence index (`project-handbook/status/evidence/TASK-008/<run-id>/index.md`):
+Then record (verbatim) in your evidence index (`ph/status/evidence/TASK-008/<run-id>/index.md`):
 - Runtime supergraph directory: `/dist/graphql-runtime`
 - Runtime supergraph file: `/dist/graphql-runtime/supergraph.graphql`
 - Shared volume name: `router-supergraph-runtime-v2`
@@ -90,11 +90,11 @@ Update `v2/scripts/v2-smoke.sh` so `V2_SMOKE_MODE=infra` can prove:
 2. Router health is green after a supergraph refresh (at minimum: sync job writes a new file; Router remains healthy).
 
 ## Step 6 — Evidence + handbook validation
-1. Capture evidence under `project-handbook/status/evidence/TASK-008/<run-id>/`:
+1. Capture evidence under `ph/status/evidence/TASK-008/<run-id>/`:
    - relevant compose snippets (no env values),
    - sync job logs (redaction-safe),
    - smoke outputs.
-2. Run `pnpm -C project-handbook make -- validate`.
+2. Run `ph validate`.
 3. Complete `checklist.md` and set task status to `review`.
 
 ## Notes

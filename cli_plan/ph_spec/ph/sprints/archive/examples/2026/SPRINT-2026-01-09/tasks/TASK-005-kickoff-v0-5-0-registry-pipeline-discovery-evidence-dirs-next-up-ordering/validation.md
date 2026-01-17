@@ -11,22 +11,22 @@ links: []
 
 ## Automated Validation
 ```bash
-pnpm -C project-handbook make -- validate
-pnpm -C project-handbook make -- sprint-status
+ph validate
+ph sprint status
 ```
 
 ## Manual Validation
 Pass/fail checks:
-1. `pnpm -C project-handbook make -- sprint-status` includes:
+1. `ph sprint status` includes:
    - `Next up: TASK-005`
-2. `project-handbook/status/evidence/TASK-005/README.md` exists and includes:
+2. `ph/status/evidence/TASK-005/README.md` exists and includes:
    - a section for each of `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`
    - an explicit list of required evidence files per task (or required “kinds” of evidence with naming rules)
    - a “no secrets in evidence” rule and examples of what not to capture
 
 Evidence files that must exist before `review`:
-- `project-handbook/status/evidence/TASK-005/sprint-status.txt`
-- `project-handbook/status/evidence/TASK-005/handbook-validate.txt`
+- `ph/status/evidence/TASK-005/sprint-status.txt`
+- `ph/status/evidence/TASK-005/handbook-validate.txt`
 
 ## Sign-off
 - [ ] All validation steps completed

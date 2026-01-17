@@ -11,14 +11,14 @@ links: []
 
 ## Task Status
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-004 status=doing
-pnpm -C project-handbook make -- task-status id=TASK-004 status=review
-pnpm -C project-handbook make -- task-status id=TASK-004 status=done
+ph task status --id TASK-004 --status doing
+ph task status --id TASK-004 --status review
+ph task status --id TASK-004 --status done
 ```
 
 ## Evidence Directory (required)
 ```bash
-EVID_DIR="project-handbook/status/evidence/TASK-004"
+EVID_DIR="ph/status/evidence/TASK-004"
 mkdir -p "$EVID_DIR"
 ${EDITOR:-vi} "$EVID_DIR/index.md"
 ```
@@ -40,7 +40,7 @@ rg -n "supergraph|subgraphs|join__Graph|composition" v2/scripts/v2-smoke.sh -S |
 
 ## Search for existing codegen wiring (likely absent in v2 today)
 ```bash
-rg -n "graphql-codegen|codegen" v2 project-handbook -S | tee "$EVID_DIR/rg-codegen.txt"
+rg -n "graphql-codegen|codegen" v2 ph -S | tee "$EVID_DIR/rg-codegen.txt"
 
 # Reference-only: use as inspiration, do not edit
 rg -n "graphql-codegen|codegen" modular-oss-saas -S | head -n 50 | tee "$EVID_DIR/rg-codegen-reference-only.txt" || true
@@ -48,12 +48,12 @@ rg -n "graphql-codegen|codegen" modular-oss-saas -S | head -n 50 | tee "$EVID_DI
 
 ## Edit the Decision Register entry
 ```bash
-${EDITOR:-vi} project-handbook/decision-register/DR-0006-harvester-publish-and-codegen-workflow.md
+${EDITOR:-vi} ph/decision-register/DR-0006-harvester-publish-and-codegen-workflow.md
 ```
 
 ## Handbook Validation
 ```bash
-pnpm -C project-handbook make -- validate
+ph validate
 ```
 
 ## Notes

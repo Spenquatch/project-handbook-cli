@@ -10,9 +10,9 @@ links: []
 # Completion Checklist: Kickoff: v0.5.0 registry pipeline discovery (evidence dirs + next-up ordering)
 
 ## Completion Criteria (binary)
-- [x] `pnpm -C project-handbook make -- sprint-status` selects `TASK-005` as “Next up”
-- [x] `project-handbook/status/evidence/TASK-005/README.md` exists and defines evidence conventions for `TASK-001`..`TASK-004`
+- [x] `ph sprint status` selects `TASK-005` as “Next up”
+- [x] `ph/status/evidence/TASK-005/README.md` exists and defines evidence conventions for `TASK-001`..`TASK-004`
 - [x] Evidence captured:
-  - [x] `project-handbook/status/evidence/TASK-005/sprint-status.txt`
-  - [x] `project-handbook/status/evidence/TASK-005/handbook-validate.txt`
-- [x] `pnpm -C project-handbook make -- validate` passes
+  - [x] `ph/status/evidence/TASK-005/sprint-status.txt`
+  - [x] `ph/status/evidence/TASK-005/handbook-validate.txt`
+- [x] `ph validate` passes

@@ -23,13 +23,13 @@ links: [../../../../../features/v2_context-control-plane-schema/overview.md]
 Produce an operator-approvable DR (`DR-0001`) that defines the Context control-plane snapshot query shape and the wrapper/UI consumption contract, with an additive migration plan for the existing Context service.
 
 ## Outputs (what must exist when done)
-- Create and complete `project-handbook/features/v2_context-control-plane-schema/decision-register/DR-0001-context-control-plane-migration-and-consumption-contract.md` (two viable options + evidence + explicit approval request; keep DR as `Proposed`).
-- `project-handbook/features/v2_context-control-plane-schema/architecture/ARCHITECTURE.md` updated with snapshot query shape + federation/consumption patterns.
-- `project-handbook/features/v2_context-control-plane-schema/implementation/IMPLEMENTATION.md` updated with an execution-ready migration plan (DB delta, rollout sequencing, invariants, validation approach).
-- Evidence captured under `project-handbook/status/evidence/TASK-029/` and referenced from DR-0001.
+- Create and complete `ph/features/v2_context-control-plane-schema/decision-register/DR-0001-context-control-plane-migration-and-consumption-contract.md` (two viable options + evidence + explicit approval request; keep DR as `Proposed`).
+- `ph/features/v2_context-control-plane-schema/architecture/ARCHITECTURE.md` updated with snapshot query shape + federation/consumption patterns.
+- `ph/features/v2_context-control-plane-schema/implementation/IMPLEMENTATION.md` updated with an execution-ready migration plan (DB delta, rollout sequencing, invariants, validation approach).
+- Evidence captured under `ph/status/evidence/TASK-029/` and referenced from DR-0001.
 
 ## After operator approval (same research session)
-- Promote the accepted decision to an FDR under `project-handbook/features/v2_context-control-plane-schema/fdr/` (likely `0001-*`) and create execution tasks that reference the FDR (not the DR).
+- Promote the accepted decision to an FDR under `ph/features/v2_context-control-plane-schema/fdr/` (likely `0001-*`) and create execution tasks that reference the FDR (not the DR).
 
 ## Non-goals
 - Do not implement schema changes or migrations in `v2/` during this task.
@@ -48,8 +48,8 @@ This task completes the feature-local `DR-0001` for the [v2_context-control-plan
 
 ## Quick Start
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-029 status=doing
-cd project-handbook/sprints/current/tasks/TASK-029-*/
+ph task status --id TASK-029 --status doing
+cd ph/sprints/current/tasks/TASK-029-*/
 cat steps.md
 cat commands.md
 cat validation.md

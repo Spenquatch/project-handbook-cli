@@ -11,14 +11,14 @@ links: []
 
 ## Task Status
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-029 status=doing
-pnpm -C project-handbook make -- task-status id=TASK-029 status=review
-pnpm -C project-handbook make -- task-status id=TASK-029 status=done
+ph task status --id TASK-029 --status doing
+ph task status --id TASK-029 --status review
+ph task status --id TASK-029 --status done
 ```
 
 ## Evidence Directory (required)
 ```bash
-EVID_DIR="project-handbook/status/evidence/TASK-029"
+EVID_DIR="ph/status/evidence/TASK-029"
 mkdir -p "$EVID_DIR"
 ${EDITOR:-vi} "$EVID_DIR/index.md"
 ```
@@ -27,8 +27,8 @@ ${EDITOR:-vi} "$EVID_DIR/index.md"
 ```bash
 set -euo pipefail
 
-sed -n '1,260p' project-handbook/adr/0027-v2-context-control-plane-schema.md | tee "$EVID_DIR/adr-0027.txt"
-DR_PATH="project-handbook/features/v2_context-control-plane-schema/decision-register/DR-0001-context-control-plane-migration-and-consumption-contract.md"
+sed -n '1,260p' ph/adr/0027-v2-context-control-plane-schema.md | tee "$EVID_DIR/adr-0027.txt"
+DR_PATH="ph/features/v2_context-control-plane-schema/decision-register/DR-0001-context-control-plane-migration-and-consumption-contract.md"
 ${EDITOR:-vi} "$DR_PATH"
 ```
 
@@ -41,5 +41,5 @@ find v2/services/context -maxdepth 5 -type f \( -name '*migrat*' -o -name '*.sql
 
 ## Handbook Validation
 ```bash
-pnpm -C project-handbook make -- validate
+ph validate
 ```

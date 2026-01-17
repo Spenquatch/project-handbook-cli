@@ -11,22 +11,22 @@ links: []
 
 ## Overview
 Implement the **MinIO baseline** for Cosmo artifact storage in the default v2 stack (internal-only), following:
-- `project-handbook/adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md`
-- `project-handbook/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
-- `project-handbook/features/v2_registry-cosmo-minio-required/fdr/0001-vault-secrets-contract-cosmo-minio.md`
+- `ph/adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md`
+- `ph/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
+- `ph/features/v2_registry-cosmo-minio-required/fdr/0001-vault-secrets-contract-cosmo-minio.md`
 
 ## Prerequisites
 - `TASK-002` is `done` (secrets contract accepted; referenced as FDR-0001).
-- Local Docker works; you can run `make -C v2 v2-up` (Keycloak admin creds required; see `project-handbook/AGENT.md`).
-- You will store evidence under `project-handbook/status/evidence/TASK-006/` (create a per-run subfolder to avoid clobbering existing files).
+- Local Docker works; you can run `make -C v2 v2-up` (Keycloak admin creds required; see `ph/AGENT.md`).
+- You will store evidence under `ph/status/evidence/TASK-006/` (create a per-run subfolder to avoid clobbering existing files).
 
 ## Step 1 — Preflight: lock the contracts and pins
 1. Read the controlling docs:
-   - `project-handbook/adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md`
-   - `project-handbook/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
-   - `project-handbook/features/v2_registry-cosmo-minio-required/architecture/ARCHITECTURE.md`
-   - `project-handbook/features/v2_registry-cosmo-minio-required/implementation/IMPLEMENTATION.md`
-   - `project-handbook/features/v2_registry-cosmo-minio-required/fdr/0001-vault-secrets-contract-cosmo-minio.md`
+   - `ph/adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md`
+   - `ph/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
+   - `ph/features/v2_registry-cosmo-minio-required/architecture/ARCHITECTURE.md`
+   - `ph/features/v2_registry-cosmo-minio-required/implementation/IMPLEMENTATION.md`
+   - `ph/features/v2_registry-cosmo-minio-required/fdr/0001-vault-secrets-contract-cosmo-minio.md`
 2. Confirm the version pins you will use match DR-0003/feature docs (Cosmo bundle tag, MinIO tag, deps tags).
 3. Confirm the posture rules you must enforce:
    - no Traefik routers/labels for Cosmo/MinIO
@@ -112,8 +112,8 @@ This probe must pass against MinIO now and SeaweedFS later (`TASK-007`) by chang
    - v2 bring-up logs (or `docker compose ps` + relevant service logs)
    - vault bootstrap output (redaction-safe)
    - smoke output, including the artifact probe
-4. Update any operator-facing docs as needed (minimum: keep `project-handbook/features/v2_registry-cosmo-minio-required/*` and `v2/docs/README.md` consistent with the new required baseline).
-5. Run `pnpm -C project-handbook make -- validate`.
+4. Update any operator-facing docs as needed (minimum: keep `ph/features/v2_registry-cosmo-minio-required/*` and `v2/docs/README.md` consistent with the new required baseline).
+5. Run `ph validate`.
 6. Ensure `checklist.md` is fully satisfied; move task to `review`.
 
 ## Notes / Guardrails

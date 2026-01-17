@@ -25,11 +25,11 @@ Make the sprint “registry pipeline discovery” tasks executable with no ambig
 - defining **evidence directory conventions** that `TASK-001`..`TASK-004` will follow.
 
 ## Deliverables (this task’s outputs)
-- `project-handbook/status/evidence/TASK-005/README.md` describes:
-  - what artefacts each research task must capture under `project-handbook/status/evidence/TASK-00X/`,
+- `ph/status/evidence/TASK-005/README.md` describes:
+  - what artefacts each research task must capture under `ph/status/evidence/TASK-00X/`,
   - filename conventions, and
   - “no secrets in evidence” rules.
-- `pnpm -C project-handbook make -- sprint-status` selects `TASK-005` as “Next up”.
+- `ph sprint status` selects `TASK-005` as “Next up”.
 
 ## Non-goals
 - No `v2/` implementation changes.
@@ -40,17 +40,17 @@ Make the sprint “registry pipeline discovery” tasks executable with no ambig
 - `TASK-001`..`TASK-004` depend on this task.
 
 ## Agent Navigation Rules (execution)
-1. Claim task: `pnpm -C project-handbook make -- task-status id=TASK-005 status=doing`
+1. Claim task: `ph task status --id TASK-005 --status doing`
 2. Follow `steps.md` in order; copy/paste from `commands.md`
-3. Record evidence under `project-handbook/status/evidence/TASK-005/`
+3. Record evidence under `ph/status/evidence/TASK-005/`
 4. Run `validation.md`, then complete `checklist.md`
 5. Set `review` when ready for review; `done` after approval
 
 ## Quick Start
 ```bash
 # Claim task + enter directory
-pnpm -C project-handbook make -- task-status id=TASK-005 status=doing
-cd project-handbook/sprints/current/tasks/TASK-005-*/
+ph task status --id TASK-005 --status doing
+cd ph/sprints/current/tasks/TASK-005-*/
 
 # Then follow:
 cat steps.md

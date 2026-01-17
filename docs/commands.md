@@ -1,6 +1,6 @@
 # Commands
 
-This is a practical overview of common commands. For authoritative behavior/mapping, refer to the handbook instance repo’s `cli_plan/v1_cli/CLI_CONTRACT.md`.
+This is a practical overview of common commands. For authoritative behavior/mapping, refer to `cli_plan/v1_cli/CLI_CONTRACT.md` in this repo.
 
 ## Diagnostics
 
@@ -41,5 +41,3 @@ This is a practical overview of common commands. For authoritative behavior/mapp
 - `ph reset` (dry-run)
 - `ph reset --confirm RESET --force true` (execute)
 - `ph reset-smoke` (destructive to project scope)
-- `ph migrate system-scope --confirm RESET --force true`
-

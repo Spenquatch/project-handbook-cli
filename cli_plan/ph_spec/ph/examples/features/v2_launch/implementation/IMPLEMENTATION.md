@@ -14,7 +14,7 @@ links:
 ## Build Steps (required)
 1. Define a single v2 launch gate runner (make target) that executes all required validations in order.
 2. Ensure every gate has deterministic, actionable failure output and does not require manual guesswork.
-3. Ensure evidence artifacts can be captured under `project-handbook/status/evidence/` for any failure.
+3. Ensure evidence artifacts can be captured under `ph/status/evidence/` for any failure.
 
 ## Gate Inventory + Mapping
 Use `./GATES.md` as the canonical mapping from `ADR-0028` gates → concrete command(s) → success criteria → evidence.

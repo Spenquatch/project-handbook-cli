@@ -23,9 +23,9 @@ REPORT_FILE="v2/.tmp/harvester/publish-report.json"
 
 ## Task Status Updates
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-009 status=doing
-pnpm -C project-handbook make -- task-status id=TASK-009 status=review
-pnpm -C project-handbook make -- task-status id=TASK-009 status=done
+ph task status --id TASK-009 --status doing
+ph task status --id TASK-009 --status review
+ph task status --id TASK-009 --status done
 ```
 
 ## Local dev (v2 stack)
@@ -50,13 +50,13 @@ docker compose -p "$PROJECT" -f "$COMPOSE_FILE" exec -T supergraph-sync sh -lc \
 
 ## Validation Commands (handbook)
 ```bash
-pnpm -C project-handbook make -- validate
-pnpm -C project-handbook make -- sprint-status
+ph validate
+ph sprint status
 ```
 
 ## Evidence directory
 ```bash
-EVID_ROOT="project-handbook/status/evidence/TASK-009"
+EVID_ROOT="ph/status/evidence/TASK-009"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-harvester-publish-check"
 EVID_DIR="$EVID_ROOT/$RUN_ID"
 mkdir -p "$EVID_DIR"
@@ -75,9 +75,9 @@ git -C v2 status
 git -C v2 add -A
 git -C v2 commit -m "TASK-009: v2 schema harvester publish/check + hardening" || true
 
-git -C project-handbook status
-git -C project-handbook add -A
-git -C project-handbook commit -m "TASK-009: update harvester docs/evidence" || true
+git -C <PH_ROOT> status
+git -C <PH_ROOT> add -A
+git -C <PH_ROOT> commit -m "TASK-009: update harvester docs/evidence" || true
 ```
 
 ## Notes

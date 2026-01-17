@@ -13,17 +13,17 @@ links: []
 This is a `session=research-discovery` task. The deliverable is a completed Decision Register entry (`DR-0005`) plus an execution-ready Router consumption plan for the owning feature.
 
 ## Prerequisites
-- `TASK-005` is `done` (evidence conventions exist at `project-handbook/status/evidence/TASK-005/README.md`)
+- `TASK-005` is `done` (evidence conventions exist at `ph/status/evidence/TASK-005/README.md`)
 
 ## Step 1 — Read constraints (ADR + feature docs + DR)
 Read:
-- `project-handbook/adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md`
-- `project-handbook/adr/0021-v2-schema-harvester-service.md`
-- `project-handbook/features/v2_schema-publishing-and-composition/overview.md`
-- `project-handbook/features/v2_schema-publishing-and-composition/implementation/IMPLEMENTATION.md`
-- `project-handbook/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md`
+- `ph/adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md`
+- `ph/adr/0021-v2-schema-harvester-service.md`
+- `ph/features/v2_schema-publishing-and-composition/overview.md`
+- `ph/features/v2_schema-publishing-and-composition/implementation/IMPLEMENTATION.md`
+- `ph/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md`
 
-Start `project-handbook/status/evidence/TASK-003/index.md` and list what each evidence artefact proves.
+Start `ph/status/evidence/TASK-003/index.md` and list what each evidence artefact proves.
 
 ## Step 2 — Document current v2 Router supergraph wiring (baseline)
 Goal: make the “current state” explicit so the change plan can name exact files.
@@ -37,8 +37,8 @@ Goal: make the “current state” explicit so the change plan can name exact fi
   - and a short header excerpt if needed.
 
 Evidence to capture:
-- `project-handbook/status/evidence/TASK-003/router-supergraph-wiring.txt`
-- `project-handbook/status/evidence/TASK-003/supergraph-local-stats.txt`
+- `ph/status/evidence/TASK-003/router-supergraph-wiring.txt`
+- `ph/status/evidence/TASK-003/supergraph-local-stats.txt`
 
 ## Step 3 — Define two viable consumption options (A/B)
 Update `DR-0005` with exactly two options:
@@ -53,13 +53,13 @@ Each option must specify:
 
 ## Step 4 — Complete `DR-0005` (with evidence + recommendation)
 1. Replace all “Pending research…” placeholders in:
-   - `project-handbook/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md`
-2. Add links to evidence files under `project-handbook/status/evidence/TASK-003/`.
+   - `ph/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md`
+2. Add links to evidence files under `ph/status/evidence/TASK-003/`.
 3. End the DR with recommendation + operator approval request (keep status `Proposed`).
 
 ## Step 5 — Update feature implementation doc (execution-ready plan)
 Update:
-- `project-handbook/features/v2_schema-publishing-and-composition/implementation/IMPLEMENTATION.md`
+- `ph/features/v2_schema-publishing-and-composition/implementation/IMPLEMENTATION.md`
 
 Include:
 - recommended consumption model (pending approval),
@@ -68,6 +68,6 @@ Include:
 - smoke probes to prove Router is serving the Cosmo-produced supergraph.
 
 ## Step 6 — Validate handbook + wrap for review
-1. Run `pnpm -C project-handbook make -- validate`.
+1. Run `ph validate`.
 2. Complete `validation.md` and `checklist.md`.
 3. Set task status to `review`.

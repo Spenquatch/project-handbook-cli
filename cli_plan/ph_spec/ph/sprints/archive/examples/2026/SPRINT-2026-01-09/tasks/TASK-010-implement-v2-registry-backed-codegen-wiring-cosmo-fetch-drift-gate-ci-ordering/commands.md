@@ -22,20 +22,20 @@ GENERATED_DIR="v2/apps/tribuence-mini/src/generated"
 
 ## Task Status Updates
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-010 status=doing
-pnpm -C project-handbook make -- task-status id=TASK-010 status=review
-pnpm -C project-handbook make -- task-status id=TASK-010 status=done
+ph task status --id TASK-010 --status doing
+ph task status --id TASK-010 --status review
+ph task status --id TASK-010 --status done
 ```
 
 ## Validation Commands (handbook)
 ```bash
-pnpm -C project-handbook make -- validate
-pnpm -C project-handbook make -- sprint-status
+ph validate
+ph sprint status
 ```
 
 ## Evidence directory
 ```bash
-EVID_ROOT="project-handbook/status/evidence/TASK-010"
+EVID_ROOT="ph/status/evidence/TASK-010"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-codegen-from-cosmo"
 EVID_DIR="$EVID_ROOT/$RUN_ID"
 mkdir -p "$EVID_DIR"
@@ -76,9 +76,9 @@ git -C v2 status
 git -C v2 add -A
 git -C v2 commit -m "TASK-010: v2 codegen wiring (Cosmo fetch + drift gate)" || true
 
-git -C project-handbook status
-git -C project-handbook add -A
-git -C project-handbook commit -m "TASK-010: update codegen task docs/evidence" || true
+git -C <PH_ROOT> status
+git -C <PH_ROOT> add -A
+git -C <PH_ROOT> commit -m "TASK-010: update codegen task docs/evidence" || true
 ```
 
 ## Notes

@@ -21,12 +21,12 @@ links: [../../../../../features/v2_registry-cosmo-minio-required/overview.md]
 **Session**: `task-execution`
 
 ## Agent Navigation Rules
-1. **Start work**: `pnpm -C project-handbook make -- task-status id=TASK-007 status=doing`
+1. **Start work**: `ph task status --id TASK-007 --status doing`
 2. **Read first**: `steps.md` for the exact sequence
 3. **Use commands**: Copy-paste from `commands.md`
 4. **Validate progress**: Follow `validation.md` guidelines
 5. **Check completion**: Use `checklist.md` before marking done
-6. **Update status**: `pnpm -C project-handbook make -- task-status id=TASK-007 status=review`
+6. **Update status**: `ph task status --id TASK-007 --status review`
 
 ## Context & Background
 This task performs the **SeaweedFS S3 gateway cutover** immediately after the MinIO baseline (`TASK-006`) is green, per:
@@ -40,9 +40,9 @@ Non-negotiables:
 
 ## Quick Start
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-007 status=doing
+ph task status --id TASK-007 --status doing
 
-cd project-handbook/sprints/current/tasks/TASK-007-cutover-replace-minio-with-seaweedfs-s3-gateway
+cd ph/sprints/current/tasks/TASK-007-cutover-replace-minio-with-seaweedfs-s3-gateway
 cat steps.md
 cat commands.md
 cat validation.md

@@ -32,4 +32,4 @@ links:
 
 ## Risk Mitigation Strategies
 - Prefer a small number of high-signal gates and keep them deterministic.
-- Enforce a single runner entrypoint (`TASK-006`) and store evidence artifacts under `project-handbook/status/evidence/` for every failure mode.
+- Enforce a single runner entrypoint (`TASK-006`) and store evidence artifacts under `ph/status/evidence/` for every failure mode.

@@ -46,8 +46,8 @@ Reference (read-only source):
 - `modular-oss-saas/scripts/vault/bootstrap-mini.sh` (`generate_anythingllm_api_key`)
 
 Contract linkage:
-- `project-handbook/contracts/tribuence-mini-v2/vault-bootstrap.md`
-- `project-handbook/contracts/tribuence-mini-v2/vault-secrets.md`
+- `ph/contracts/tribuence-mini-v2/vault-bootstrap.md`
+- `ph/contracts/tribuence-mini-v2/vault-secrets.md`
 
 ## Investigation Notes
 
@@ -56,4 +56,4 @@ Findings (2026-01-02):
 - This requires the AnythingLLM container to be running; therefore the v2 bootstrap workflow should be explicitly 2-phase (seed static keys first; mint service-derived keys after bring-up).
 
 ## Resolution (2026-01-02)
-- Implemented via sprint task `project-handbook/sprints/archive/2026/SPRINT-2026-01-02/tasks/TASK-020-v2-anythingllm-api-key-bootstrap-strategy/`.
+- Implemented via sprint task `ph/sprints/archive/2026/SPRINT-2026-01-02/tasks/TASK-020-v2-anythingllm-api-key-bootstrap-strategy/`.

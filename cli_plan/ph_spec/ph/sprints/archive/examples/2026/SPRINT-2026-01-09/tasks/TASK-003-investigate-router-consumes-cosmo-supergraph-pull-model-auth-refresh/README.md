@@ -13,7 +13,7 @@ links: [../../../features/v2_schema-publishing-and-composition/overview.md]
 
 ## Overview
 - **Feature**: [v2_schema-publishing-and-composition](../../../features/v2_schema-publishing-and-composition/overview.md)
-- **Decision**: `DR-0005` (`project-handbook/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md`)
+- **Decision**: `DR-0005` (`ph/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md`)
 - **Story Points**: 3
 - **Owner**: @spenser
 - **Lane**: `registry/router`
@@ -27,12 +27,12 @@ Decide and document how Apollo Router consumes a **Cosmo-produced supergraph** i
 - and the exact v2 config files that will change.
 
 ## Outputs (what must exist when done)
-- `project-handbook/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md` fully filled (Option A/B, evidence, recommendation, approval request).
-- `project-handbook/features/v2_schema-publishing-and-composition/implementation/IMPLEMENTATION.md` updated with an execution-ready Router plan:
+- `ph/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md` fully filled (Option A/B, evidence, recommendation, approval request).
+- `ph/features/v2_schema-publishing-and-composition/implementation/IMPLEMENTATION.md` updated with an execution-ready Router plan:
   - auth material requirements,
   - refresh model,
   - exact v2 config files to change (compose, router config, Vault templates).
-- Evidence captured under `project-handbook/status/evidence/TASK-003/` and referenced from `DR-0005`.
+- Evidence captured under `ph/status/evidence/TASK-003/` and referenced from `DR-0005`.
 
 ## Non-goals
 - Do not modify `v2/` Router configuration during this task.
@@ -43,8 +43,8 @@ ADR-0015 requires Router to serve a Cosmo-produced supergraph. Today v2 uses a l
 
 ## Quick Start
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-003 status=doing
-cd project-handbook/sprints/current/tasks/TASK-003-*/
+ph task status --id TASK-003 --status doing
+cd ph/sprints/current/tasks/TASK-003-*/
 
 cat steps.md
 cat commands.md

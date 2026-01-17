@@ -8,7 +8,7 @@ tags: [ph, spec]
 
 ## Directory Purpose
 - Path: (directory containing this `contract.md`)
-- Summary: (TBD)
+- Summary: Active bug backlog entries (P0–P4), organized as one directory per bug item.
 
 ## Ownership
 - Owner: Shared.
@@ -20,20 +20,51 @@ tags: [ph, spec]
   - The CLI MUST NOT overwrite `BUG-*/README.md` without explicit `--force`.
 
 ## Creation
-- Created/updated by: (TBD; `ph ...` commands)
-- Non-destructive: MUST NOT overwrite user-owned files without explicit flags
+- Created/updated by:
+  - `ph init` (creates directory structure).
+  - `ph backlog add --type bug ...` (creates a new bug item directory + `README.md`).
+  - `ph backlog triage --issue <BUG-...>` (MAY create or update `triage.md` for analysis; primarily used for P0s).
+- Non-destructive:
+  - `ph backlog add` MUST refuse to overwrite an existing `<BUG_DIR>/` unless `--force` is provided.
+  - `ph backlog triage` MUST refuse to overwrite an existing `triage.md` unless `--force` is provided.
 
 ## Required Files and Directories
-- (TBD)
+- Required layout for each bug item directory:
+  - `<BUG_DIR>/README.md`
+- Optional files:
+  - `<BUG_DIR>/triage.md` (P0 analysis template; may be absent; does not require front matter)
+- Allowed item directory names:
+  - `BUG-<severity>-<YYYYMMDD>-<HHMM|HHMMSS>[--<slug>]` (recommended)
+  - Examples MAY use an `EXAMPLE-` prefix.
 
 ## Schemas
-- (TBD; file formats, required keys, constraints)
+- `README.md` MUST include YAML front matter with at least:
+  - `title: <string>`
+  - `type: bugs`
+  - `severity: P0|P1|P2|P3|P4`
+  - `status: open|closed`
+  - `created: YYYY-MM-DD`
+  - `owner: <string>` (e.g. `unassigned` or `@handle`)
+- `README.md` MUST NOT include archival metadata keys (these are reserved for archived items under `ph/backlog/archive/bugs/`):
+  - `archived_at`
+  - `archived_by_task`
+  - `archived_by_sprint`
+- `triage.md` is free-form Markdown and MAY omit front matter (it is treated as a working analysis doc/template).
+- YAML front matter MAY include additional keys; unknown keys MUST be preserved as content.
 
 ## Invariants
-- (TBD)
+- Bug item directories MUST contain exactly one primary `README.md`.
+- If `triage.md` exists, it MUST be a regular file (not a directory).
 
 ## Validation Rules
-- (TBD; what `ph check` / `ph check-all` should enforce here)
+- `ph validate` SHOULD enforce:
+  - required file presence (`README.md`)
+  - required front matter keys and allowed values (severity/status/date formats)
+  - P0 triage: if `severity: P0`, `triage.md` SHOULD exist (warning if missing)
+  - archival keys are forbidden under non-archive items
+- `ph backlog list` and `ph backlog stats` MAY use these directories as inputs; they MUST NOT rewrite markdown bodies.
 
 ## Examples Mapping
-- (TBD; example fixtures that demonstrate this contract)
+- `examples/EXAMPLE-BUG-P0-20250922-1144/` demonstrates:
+  - a bug `README.md` with required keys,
+  - an optional `triage.md` analysis template.

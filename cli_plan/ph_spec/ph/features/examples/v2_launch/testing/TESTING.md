@@ -25,7 +25,7 @@ links:
 6) Run Playwright E2E for login → onboarding → landing harness gating.
 
 ## Acceptance Criteria
-- [ ] `pnpm -C project-handbook make -- validate` passes.
+- [ ] `ph validate` passes.
 - [ ] v2 baseline services are healthy (Cosmo + MinIO required).
 - [ ] v2 observability baseline services are healthy (Prometheus + Grafana + Loki + Alertmanager).
 - [ ] Schema publishing + composition checks pass and Router serves the composed supergraph.

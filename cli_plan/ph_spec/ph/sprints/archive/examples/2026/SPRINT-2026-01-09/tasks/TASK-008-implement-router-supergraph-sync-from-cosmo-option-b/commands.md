@@ -32,20 +32,20 @@ SUPERGRAPH_SYNC_POLL_INTERVAL_SECONDS_DEFAULT="30"
 
 ## Task Status Updates
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-008 status=doing
-pnpm -C project-handbook make -- task-status id=TASK-008 status=review
-pnpm -C project-handbook make -- task-status id=TASK-008 status=done
+ph task status --id TASK-008 --status doing
+ph task status --id TASK-008 --status review
+ph task status --id TASK-008 --status done
 ```
 
 ## Validation Commands
 ```bash
-pnpm -C project-handbook make -- validate
-pnpm -C project-handbook make -- sprint-status
+ph validate
+ph sprint status
 ```
 
 ## Evidence Directory (required; do not overwrite existing files)
 ```bash
-EVID_ROOT="project-handbook/status/evidence/TASK-008"
+EVID_ROOT="ph/status/evidence/TASK-008"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-router-supergraph-sync"
 EVID_DIR="$EVID_ROOT/$RUN_ID"
 mkdir -p "$EVID_DIR"
@@ -76,7 +76,7 @@ npx -y "@apollo/rover@${ROVER_VERSION}" supergraph compose --help | tee "$EVID_D
 ```bash
 make -C v2 v2-down || true
 
-# Required: provide non-default Keycloak admin creds (see project-handbook/AGENT.md)
+# Required: provide non-default Keycloak admin creds (see ph/AGENT.md)
 KEYCLOAK_ADMIN=admin KEYCLOAK_ADMIN_PASSWORD=dev-not-admin make -C v2 v2-up | tee "$EVID_DIR/v2-up.txt"
 
 docker compose -p tribuence-v2 -f v2/infra/compose/docker-compose.v2.yml ps | tee "$EVID_DIR/v2-ps.txt"
@@ -131,15 +131,15 @@ wc -l "$EVID_DIR/token-scan-hits.txt" | tee "$EVID_DIR/token-scan-hits-count.txt
 
 ## Handbook Validation (required)
 ```bash
-pnpm -C project-handbook make -- validate | tee "$EVID_DIR/handbook-validate.txt"
-pnpm -C project-handbook make -- sprint-status | tee "$EVID_DIR/sprint-status.txt"
+ph validate | tee "$EVID_DIR/handbook-validate.txt"
+ph sprint status | tee "$EVID_DIR/sprint-status.txt"
 ```
 
-## Git (project-handbook + v2)
+## Git (<PH_ROOT> + v2)
 ```bash
-# project-handbook changes (task docs + any handbook updates)
-git -C project-handbook status
-git -C project-handbook commit -am "TASK-008: router supergraph sync task docs"
+# <PH_ROOT> changes (task docs + any handbook updates)
+git -C <PH_ROOT> status
+git -C <PH_ROOT> commit -am "TASK-008: router supergraph sync task docs"
 
 # v2 changes (implementation)
 git -C v2 status

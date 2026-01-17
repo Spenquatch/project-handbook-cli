@@ -26,7 +26,7 @@ links: []
 - **Daily status**: [Status by date](../../../../status/daily/)
 
 ### Prior Evidence (read-only; no values)
-- “No current codegen wiring exists” snapshot: `project-handbook/status/evidence/TASK-004/rg-codegen.txt`
+- “No current codegen wiring exists” snapshot: `ph/status/evidence/TASK-004/rg-codegen.txt`
 
 ## Notes
 Add concrete links here only when you discover resources during the task (no placeholders).

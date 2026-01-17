@@ -11,10 +11,10 @@ links: []
 
 ## Pre-Work
 - [ ] Confirm `TASK-006` and `TASK-004` are `done`
-- [ ] Read: `project-handbook/adr/0031-v2-router-supergraph-delivery-cosmo-sync-artifact.md`
-- [ ] Read: `project-handbook/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md`
-- [ ] Read: `project-handbook/decision-register/DR-0004-vault-secrets-contract-cosmo-minio.md`
-- [ ] Evidence run folder created: `project-handbook/status/evidence/TASK-008/<run-id>/`
+- [ ] Read: `ph/adr/0031-v2-router-supergraph-delivery-cosmo-sync-artifact.md`
+- [ ] Read: `ph/decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md`
+- [ ] Read: `ph/decision-register/DR-0004-vault-secrets-contract-cosmo-minio.md`
+- [ ] Evidence run folder created: `ph/status/evidence/TASK-008/<run-id>/`
 
 ## During Execution
 - [ ] `v2/infra/compose/docker-compose.v2.yml` includes `supergraph-sync` and a shared runtime-supergraph volume (RW for sync; RO for Router)
@@ -28,11 +28,11 @@ links: []
 
 ## Before Review
 - [ ] `V2_SMOKE_MODE=infra make -C v2 v2-smoke` passes (includes runtime supergraph assertions)
-- [ ] Evidence captured under `project-handbook/status/evidence/TASK-008/<run-id>/` (see `validation.md`)
-- [ ] `pnpm -C project-handbook make -- validate` passes
-- [ ] Set status to `review`: `pnpm -C project-handbook make -- task-status id=TASK-008 status=review`
+- [ ] Evidence captured under `ph/status/evidence/TASK-008/<run-id>/` (see `validation.md`)
+- [ ] `ph validate` passes
+- [ ] Set status to `review`: `ph task status --id TASK-008 --status review`
 
 ## After Completion
 - [ ] PR reviewed and merged (or commit ready in sprint worktree)
 - [ ] Update owning feature docs/changelog if needed
-- [ ] Move status to `done`: `pnpm -C project-handbook make -- task-status id=TASK-008 status=done`
+- [ ] Move status to `done`: `ph task status --id TASK-008 --status done`

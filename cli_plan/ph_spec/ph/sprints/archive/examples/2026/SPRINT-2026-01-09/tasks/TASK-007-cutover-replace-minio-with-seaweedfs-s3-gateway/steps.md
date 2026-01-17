@@ -22,12 +22,12 @@ This task assumes:
 - You know the pinned SeaweedFS image and S3 port:
   - image: `chrislusf/seaweedfs:4.05`
   - S3 endpoint port: `8333`
-- Evidence will be captured under `project-handbook/status/evidence/TASK-007/` (use a per-run subfolder).
+- Evidence will be captured under `ph/status/evidence/TASK-007/` (use a per-run subfolder).
 
 ## Step 1 — Preflight: confirm baseline invariants
 1. Re-read the decisions that bound this task:
-   - `project-handbook/adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md`
-   - `project-handbook/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
+   - `ph/adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md`
+   - `ph/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
 2. Confirm these are true before modifying anything:
    - MinIO baseline stack is green (`TASK-006` validation evidence exists).
    - The “Cosmo artifact write/read” probe exists and passes against MinIO.
@@ -74,8 +74,8 @@ After the probe passes against SeaweedFS:
 ## Step 6 — Documentation and ADR hygiene
 1. Update any v2 docs that mention MinIO as the artifact store (e.g., `v2/docs/README.md`) to reflect “SeaweedFS (S3)”.
 2. ADR hygiene (required by acceptance):
-   - Update `project-handbook/adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md` to reflect that ADR-0030 supersedes the “MinIO required” wording (either by setting `status: superseded` with a link to ADR-0030, or by adding an explicit note that the artifact store is now SeaweedFS S3 per ADR-0030).
-3. Run `pnpm -C project-handbook make -- validate`.
+   - Update `ph/adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md` to reflect that ADR-0030 supersedes the “MinIO required” wording (either by setting `status: superseded` with a link to ADR-0030, or by adding an explicit note that the artifact store is now SeaweedFS S3 per ADR-0030).
+3. Run `ph validate`.
 
 ## Notes
 - Do not proceed to “remove MinIO” until the artifact probe passes against SeaweedFS.

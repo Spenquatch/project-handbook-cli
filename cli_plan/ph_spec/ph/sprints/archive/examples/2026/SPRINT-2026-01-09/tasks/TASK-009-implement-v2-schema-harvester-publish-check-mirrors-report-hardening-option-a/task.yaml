@@ -16,7 +16,7 @@ acceptance:
   - SDL mirror updates are atomic and safe: temp file → rename; no partial writes; never delete last-known-good mirrors on failure.
   - Publish report artifact is deterministic and sanitized (stable JSON shape, stable ordering, no secrets/tokens/JWTs, bounded error strings).
   - Legacy reference code (`modular-oss-saas/services/schema-harvester/`) may be reused for patterns, but v2 must implement the additional hardening/enhancements above; “port as-is” is not acceptable.
-  - Evidence captured under `project-handbook/status/evidence/TASK-009/` proving: publish/check gate behavior, no secret leakage, and atomic mirror update behavior.
+  - Evidence captured under `ph/status/evidence/TASK-009/` proving: publish/check gate behavior, no secret leakage, and atomic mirror update behavior.
 links:
   - ../../../../../adr/0032-v2-harvester-publish-and-codegen-workflow.md
   - ../../../../../decision-register/DR-0006-harvester-publish-and-codegen-workflow.md

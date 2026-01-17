@@ -39,12 +39,12 @@ This task is `session=task-execution`: the key contracts are pre-decided and mus
 - **Apollo Router compatibility**: `wgc federated-graph fetch-schema` returns the composed API schema (not a federation supergraph). To produce an Apollo Router-compatible supergraph, `supergraph-sync` uses `wgc federated-graph fetch --apollo-compatibility` and then runs `rover supergraph compose` to generate a federation supergraph SDL.
 
 ## Agent Navigation Rules
-1. **Start work**: `pnpm -C project-handbook make -- task-status id=TASK-008 status=doing`
+1. **Start work**: `ph task status --id TASK-008 --status doing`
 2. **Read first**: `steps.md` for implementation sequence
 3. **Use commands**: Copy-paste from `commands.md`
 4. **Validate progress**: Follow `validation.md` guidelines
 5. **Check completion**: Use `checklist.md` before marking done
-6. **Update status**: `pnpm -C project-handbook make -- task-status id=TASK-008 status=review`
+6. **Update status**: `ph task status --id TASK-008 --status review`
 
 ## Context & Background
 This task implements **ADR-0031** (accepted from `DR-0005`): Router consumes a Cosmo-produced supergraph via a **local runtime artifact file** that is kept up-to-date by a Harvester-owned “supergraph sync” helper.
@@ -56,8 +56,8 @@ Key posture constraints:
 
 ## Quick Start
 ```bash
-pnpm -C project-handbook make -- task-status id=TASK-008 status=doing
-cd project-handbook/sprints/current/tasks/TASK-008-implement-router-supergraph-sync-from-cosmo-option-b/
+ph task status --id TASK-008 --status doing
+cd ph/sprints/current/tasks/TASK-008-implement-router-supergraph-sync-from-cosmo-option-b/
 
 # Follow implementation
 cat steps.md              # Read implementation steps

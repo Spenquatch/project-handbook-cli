@@ -15,20 +15,20 @@ This is a sprint hygiene + documentation wiring task:
 - define evidence conventions so the downstream `research-discovery` tasks (`TASK-001`..`TASK-004`) all capture comparable artefacts.
 
 ## Prerequisites
-- `pnpm` installed
-- You can run Project Handbook make targets via `pnpm -C project-handbook make -- <target>`
+- `ph` installed
+- Prefer explicit root selection when needed: `ph --root <PH_ROOT> ...`
 
 ## Step 1 — Confirm sprint task graph and “Next up”
-1. Run `pnpm -C project-handbook make -- sprint-status`.
+1. Run `ph sprint status`.
 2. Confirm “Next up” is `TASK-005` (all other tasks should depend on it).
-3. If “Next up” is not `TASK-005`, fix only `depends_on` fields in `project-handbook/sprints/current/tasks/*/task.yaml` until it is.
+3. If “Next up” is not `TASK-005`, fix only `depends_on` fields in `ph/sprints/current/tasks/*/task.yaml` until it is.
 
 Evidence to capture:
-- `project-handbook/status/evidence/TASK-005/sprint-status.txt` (copy/paste output)
+- `ph/status/evidence/TASK-005/sprint-status.txt` (copy/paste output)
 
 ## Step 2 — Define evidence conventions for this workstream
-Create `project-handbook/status/evidence/TASK-005/README.md` that answers, explicitly:
-1. For each of `TASK-001`..`TASK-004`, which evidence files must exist under `project-handbook/status/evidence/TASK-00X/`.
+Create `ph/status/evidence/TASK-005/README.md` that answers, explicitly:
+1. For each of `TASK-001`..`TASK-004`, which evidence files must exist under `ph/status/evidence/TASK-00X/`.
 2. Naming conventions (recommended):
    - `index.md` as the evidence table-of-contents for each task
    - `rg-*.txt` for ripgrep outputs
@@ -45,11 +45,11 @@ Ensure each of `TASK-001`..`TASK-004`:
 
 ## Step 4 — Handbook validation
 Run:
-- `pnpm -C project-handbook make -- validate`
+- `ph validate`
 
 Evidence to capture:
-- `project-handbook/status/evidence/TASK-005/handbook-validate.txt`
+- `ph/status/evidence/TASK-005/handbook-validate.txt`
 
 ## Step 5 — Mark ready for review
 1. Complete `checklist.md`.
-2. Set status: `pnpm -C project-handbook make -- task-status id=TASK-005 status=review`.
+2. Set status: `ph task status --id TASK-005 --status review`.

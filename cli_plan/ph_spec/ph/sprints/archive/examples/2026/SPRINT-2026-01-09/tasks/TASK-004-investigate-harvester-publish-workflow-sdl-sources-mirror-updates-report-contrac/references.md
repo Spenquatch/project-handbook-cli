@@ -16,11 +16,11 @@ links: []
 - **Feature**: [Feature overview](../../../../../features/v2_schema-harvester-service/overview.md)
 - **Architecture**: [Feature architecture](../../../../../features/v2_schema-harvester-service/architecture/ARCHITECTURE.md)
 - **Also impacts**: [v2_codegen-from-registry](../../../../../features/v2_codegen-from-registry/overview.md)
-- **Decision Register Entry**: `project-handbook/decision-register/DR-0006-harvester-publish-and-codegen-workflow.md`
+- **Decision Register Entry**: `ph/decision-register/DR-0006-harvester-publish-and-codegen-workflow.md`
 - **ADRs**:
-  - `project-handbook/adr/0021-v2-schema-harvester-service.md`
-  - `project-handbook/adr/0019-v2-codegen-from-registry.md`
-- **Evidence conventions (from TASK-005)**: `project-handbook/status/evidence/TASK-005/README.md`
+  - `ph/adr/0021-v2-schema-harvester-service.md`
+  - `ph/adr/0019-v2-codegen-from-registry.md`
+- **Evidence conventions (from TASK-005)**: `ph/status/evidence/TASK-005/README.md`
 
 ### v2 Reference (read-only)
 - `v2/infra/compose/graphql/subgraphs.yaml`

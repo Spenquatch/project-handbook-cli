@@ -23,7 +23,10 @@ This folder is the **only** place we track v1 CLI execution planning and due dil
 ## What you are building
 
 - A separately-installed Python CLI tool named `project-handbook-cli` that provides the `ph` command.
-- The `ph` tool operates on a “handbook instance repo” (this repo) as **data/templates/plans**, and MUST NOT execute repo-local Python scripts at runtime.
+- The `ph` tool operates on a “handbook instance repo” (any user project repo with `.ph/config.json`) as **data/templates/plans**, and MUST NOT execute repo-local Python scripts at runtime.
+  - This repo also includes `legacy-reference/project-handbook/` as a reference snapshot; it is not a v1 `PH_ROOT` and is intentionally ignored by git.
+  - IMPORTANT: do not use `../project-handbook/` or `legacy-reference/project-handbook/` as a development target/fixture; it is legacy + Make-era and will create confusion.
+  - When running commands during development, prefer `ph --root /absolute/path/to/target` so you don’t accidentally operate on the wrong directory.
 
 ## Sources of truth (read in this order)
 
@@ -53,6 +56,9 @@ There are two independent workstreams under `cli_plan/`:
 Default policy:
 - If any due-diligence task is not `done`, work due diligence first.
 - Only return to `cli_plan/tasks.json` once `cli_plan/due-diligence.json` is fully `done`.
+
+Important note:
+- `cli_plan/tasks.json` and older `cli_plan/session_logs.md` entries may include historical references to the deprecated root marker (`project_handbook.config.json`) and system scope (`--scope system`). For v1, treat `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md` + `cli_plan/v1_cli/CLI_CONTRACT.md` as authoritative.
 
 ## Strict workflow (do this every session)
 

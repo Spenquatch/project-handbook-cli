@@ -11,15 +11,15 @@ links: []
 
 ## Automated Validation
 ```bash
-pnpm -C project-handbook make -- validate
-pnpm -C project-handbook make -- sprint-status
+ph validate
+ph sprint status
 ```
 
 ## Manual Validation (copy/paste; pass/fail)
 
 ### 0) Evidence directory (required)
 ```bash
-EVID_ROOT="project-handbook/status/evidence/TASK-010"
+EVID_ROOT="ph/status/evidence/TASK-010"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-codegen-from-cosmo"
 EVID_DIR="$EVID_ROOT/$RUN_ID"
 mkdir -p "$EVID_DIR"
@@ -96,11 +96,11 @@ Pass if:
 - `token-scan-hits-count.txt` reports `0`
 
 ## Required evidence files (minimum)
-- `project-handbook/status/evidence/TASK-010/<run-id>/index.md`
-- `project-handbook/status/evidence/TASK-010/<run-id>/v2-codegen.txt`
-- `project-handbook/status/evidence/TASK-010/<run-id>/v2-codegen-check.txt`
-- `project-handbook/status/evidence/TASK-010/<run-id>/typecheck.txt`
-- `project-handbook/status/evidence/TASK-010/<run-id>/token-scan-hits-count.txt`
+- `ph/status/evidence/TASK-010/<run-id>/index.md`
+- `ph/status/evidence/TASK-010/<run-id>/v2-codegen.txt`
+- `ph/status/evidence/TASK-010/<run-id>/v2-codegen-check.txt`
+- `ph/status/evidence/TASK-010/<run-id>/typecheck.txt`
+- `ph/status/evidence/TASK-010/<run-id>/token-scan-hits-count.txt`
 
 ## Sign-off
 - [ ] All validation steps completed
@@ -111,14 +111,14 @@ Pass if:
 Decision: **APPROVE**
 
 Reproduced:
-- `pnpm -C project-handbook make -- validate`
+- `ph validate`
 - `make -C v2 v2-codegen`
 - `make -C v2 v2-codegen-check` (clean pass + expected failure on injected drift)
 - Ordering: `make -C v2 v2-publish` → `make -C v2 v2-codegen-check` → `pnpm -C v2/apps/tribuence-mini typecheck`
 - Secret leakage scan per this doc (0 hits)
 
 Evidence:
-- `project-handbook/status/evidence/TASK-010/20260111T085706Z-reviewer-rerun/`
+- `ph/status/evidence/TASK-010/20260111T085706Z-reviewer-rerun/`
 
 Review fixes applied:
 - Ensure drift test cleanup removes untracked drift marker.

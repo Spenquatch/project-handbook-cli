@@ -28,10 +28,10 @@
 - Align with release plan for next milestones
 
 ## Quick Links
-- `make onboarding` (default guide)
-- `make onboarding session sprint-planning` to facilitate planning
-- `make onboarding session sprint-closing` to close a sprint cleanly
-- `make onboarding session research-discovery` for research-discovery decisions
-- `make onboarding session continue-session` for continuity
+- `ph onboarding` (default guide)
+- `ph onboarding session sprint-planning` to facilitate planning
+- `ph onboarding session sprint-closing` to close a sprint cleanly
+- `ph onboarding session research-discovery` for research-discovery decisions
+- `ph onboarding session continue-session` for continuity
 
-> Generated with `make status`.
+> Generated with `ph status`.

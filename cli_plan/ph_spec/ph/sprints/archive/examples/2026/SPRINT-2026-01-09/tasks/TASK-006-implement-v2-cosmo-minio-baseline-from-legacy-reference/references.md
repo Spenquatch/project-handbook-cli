@@ -12,22 +12,22 @@ links: []
 ## Internal References
 
 ### Decision Context
-- **ADR-0030**: `project-handbook/adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md`
-- **DR-0003** (accepted; pins + inventory): `project-handbook/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
-- **FDR-0001** (accepted; Vault contract): `project-handbook/features/v2_registry-cosmo-minio-required/fdr/0001-vault-secrets-contract-cosmo-minio.md`
-- **Feature overview**: `project-handbook/features/v2_registry-cosmo-minio-required/overview.md`
-- **Feature architecture**: `project-handbook/features/v2_registry-cosmo-minio-required/architecture/ARCHITECTURE.md`
-- **Feature implementation**: `project-handbook/features/v2_registry-cosmo-minio-required/implementation/IMPLEMENTATION.md`
-- **Feature testing**: `project-handbook/features/v2_registry-cosmo-minio-required/testing/TESTING.md`
+- **ADR-0030**: `ph/adr/0030-v2-cosmo-artifact-store-minio-baseline-then-seaweedfs.md`
+- **DR-0003** (accepted; pins + inventory): `ph/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
+- **FDR-0001** (accepted; Vault contract): `ph/features/v2_registry-cosmo-minio-required/fdr/0001-vault-secrets-contract-cosmo-minio.md`
+- **Feature overview**: `ph/features/v2_registry-cosmo-minio-required/overview.md`
+- **Feature architecture**: `ph/features/v2_registry-cosmo-minio-required/architecture/ARCHITECTURE.md`
+- **Feature implementation**: `ph/features/v2_registry-cosmo-minio-required/implementation/IMPLEMENTATION.md`
+- **Feature testing**: `ph/features/v2_registry-cosmo-minio-required/testing/TESTING.md`
 
 ### Sprint Context
-- **Sprint Plan**: `project-handbook/sprints/current/plan.md`
-- **Sprint Tasks**: `project-handbook/sprints/current/tasks/`
-- **Daily status**: `project-handbook/status/daily/`
+- **Sprint Plan**: `ph/sprints/current/plan.md`
+- **Sprint Tasks**: `ph/sprints/current/tasks/`
+- **Daily status**: `ph/status/daily/`
 
 ### Evidence Context (do not re-create; reuse for guidance)
-- `project-handbook/status/evidence/TASK-001/index.md` (Cosmo/MinIO topology evidence)
-- `project-handbook/status/evidence/TASK-002/index.md` (Vault “no leakage” evidence)
+- `ph/status/evidence/TASK-001/index.md` (Cosmo/MinIO topology evidence)
+- `ph/status/evidence/TASK-002/index.md` (Vault “no leakage” evidence)
 
 ### v2 Wiring Touchpoints (expected to change)
 - Compose: `v2/infra/compose/docker-compose.v2.yml`

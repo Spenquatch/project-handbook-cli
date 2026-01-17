@@ -13,15 +13,15 @@ links: []
 This is a `session=research-discovery` task. The deliverable is a completed Decision Register entry (`DR-0003`) plus execution-ready feature documentation. No product code changes.
 
 ## Prerequisites
-- `TASK-005` is `done` (evidence conventions exist at `project-handbook/status/evidence/TASK-005/README.md`)
+- `TASK-005` is `done` (evidence conventions exist at `ph/status/evidence/TASK-005/README.md`)
 
 ## Step 1 — Ground truth the constraints (ADR + feature docs)
 1. Read:
-   - `project-handbook/adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md`
-   - `project-handbook/features/v2_registry-cosmo-minio-required/overview.md`
-   - `project-handbook/features/v2_registry-cosmo-minio-required/architecture/ARCHITECTURE.md`
-   - `project-handbook/features/v2_registry-cosmo-minio-required/implementation/IMPLEMENTATION.md`
-   - `project-handbook/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
+   - `ph/adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md`
+   - `ph/features/v2_registry-cosmo-minio-required/overview.md`
+   - `ph/features/v2_registry-cosmo-minio-required/architecture/ARCHITECTURE.md`
+   - `ph/features/v2_registry-cosmo-minio-required/implementation/IMPLEMENTATION.md`
+   - `ph/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
 2. Extract (and write into the evidence index):
    - required Cosmo dependencies per ADR-0015 (ClickHouse, Redis, NATS, Cosmo Keycloak, etc),
    - posture rules: no Traefik exposure, and the DR must choose exactly one host-bind posture:
@@ -29,7 +29,7 @@ This is a `session=research-discovery` task. The deliverable is a completed Deci
      - Option B: operator-only binds to `127.0.0.1` (localhost-only)
 
 Evidence to capture:
-- `project-handbook/status/evidence/TASK-001/index.md` (table-of-contents + “what each artefact proves”)
+- `ph/status/evidence/TASK-001/index.md` (table-of-contents + “what each artefact proves”)
 
 ## Step 2 — Inventory current v2 wiring patterns (compose + Vault)
 Goal: decide how Cosmo/MinIO should “fit” the existing v2 conventions.
@@ -41,9 +41,9 @@ Goal: decide how Cosmo/MinIO should “fit” the existing v2 conventions.
    - `v2/infra/vault/templates/*.tpl` (rendered `/secrets/*.env` conventions)
 
 Evidence to capture (examples; follow TASK-005 conventions):
-- `project-handbook/status/evidence/TASK-001/v2-compose-inventory.txt`
-- `project-handbook/status/evidence/TASK-001/v2-vault-kv-layout-snippets.txt`
-- `project-handbook/status/evidence/TASK-001/v2-vault-templates-inventory.txt`
+- `ph/status/evidence/TASK-001/v2-compose-inventory.txt`
+- `ph/status/evidence/TASK-001/v2-vault-kv-layout-snippets.txt`
+- `ph/status/evidence/TASK-001/v2-vault-templates-inventory.txt`
 
 ## Step 3 — Define two viable topology options (A/B)
 Update `DR-0003` with two options (no third option):
@@ -60,8 +60,8 @@ Each option must specify, explicitly:
 
 ## Step 4 — Complete `DR-0003` (with evidence + recommendation)
 1. Replace all “Pending research…” placeholders in:
-   - `project-handbook/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
-2. Add links to evidence files under `project-handbook/status/evidence/TASK-001/`.
+   - `ph/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
+2. Add links to evidence files under `ph/status/evidence/TASK-001/`.
 3. End the DR with:
    - recommended option (A or B),
    - crisp rationale,
@@ -69,8 +69,8 @@ Each option must specify, explicitly:
 
 ## Step 5 — Update feature docs to be execution-ready (pending approval)
 Update these docs to reflect the **recommended** option (explicitly marked “pending operator approval”):
-- `project-handbook/features/v2_registry-cosmo-minio-required/architecture/ARCHITECTURE.md`
-- `project-handbook/features/v2_registry-cosmo-minio-required/implementation/IMPLEMENTATION.md`
+- `ph/features/v2_registry-cosmo-minio-required/architecture/ARCHITECTURE.md`
+- `ph/features/v2_registry-cosmo-minio-required/implementation/IMPLEMENTATION.md`
 
 Include:
 - exact v2 files that will change to implement the topology,
@@ -80,6 +80,6 @@ Include:
   - Cosmo/MinIO are not reachable via Traefik.
 
 ## Step 6 — Validate handbook + wrap for review
-1. Run `pnpm -C project-handbook make -- validate`.
+1. Run `ph validate`.
 2. Complete `validation.md` and `checklist.md` requirements.
 3. Set task status to `review`.

@@ -15,9 +15,9 @@ links: []
 - **Decision**: `DR-0003`
 - **Feature**: [Feature overview](../../../features/v2_registry-cosmo-minio-required/overview.md)
 - **Architecture**: [Feature architecture](../../../features/v2_registry-cosmo-minio-required/architecture/ARCHITECTURE.md)
-- **Decision Register Entry**: `project-handbook/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
-- **ADR**: `project-handbook/adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md`
-- **Evidence conventions (from TASK-005)**: `project-handbook/status/evidence/TASK-005/README.md`
+- **Decision Register Entry**: `ph/decision-register/DR-0003-cosmo-minio-baseline-topology.md`
+- **ADR**: `ph/adr/0015-tribuence-mini-v2-cosmo-minio-and-schema-publishing.md`
+- **Evidence conventions (from TASK-005)**: `ph/status/evidence/TASK-005/README.md`
 
 ### v2 Reference (read-only)
 - `v2/infra/compose/docker-compose.v2.yml`

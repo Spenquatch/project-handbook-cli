@@ -25,14 +25,14 @@ The runner must:
 - run gates in a deterministic order,
 - fail fast with actionable output,
 - emit a stable summary at the end (pass/fail per gate),
-- support writing evidence artifacts under `project-handbook/status/evidence/<TASK-ID>/`.
+- support writing evidence artifacts under `ph/status/evidence/<TASK-ID>/`.
 
 ## Runner Entrypoint (single command)
 
 The canonical runner entrypoint is:
 
 ```bash
-EVIDENCE_DIR="../project-handbook/status/evidence/<TASK-ID>" make -C v2 v2-launch-gates
+EVIDENCE_DIR="../ph/status/evidence/<TASK-ID>" make -C v2 v2-launch-gates
 ```
 
 Runner requirements:
@@ -46,7 +46,7 @@ This sprint’s scope is intentionally minimal: scaffold the runner and validate
 
 | Gate | Command(s) | Success Criteria | Evidence |
 |------|------------|------------------|----------|
-| Handbook validation | `pnpm -C project-handbook make -- validate` | exits `0` | `$EVIDENCE_DIR/handbook-validate.txt` |
+| Handbook validation | `ph validate` | exits `0` | `$EVIDENCE_DIR/handbook-validate.txt` |
 | v2 smoke (router mode) | `V2_SMOKE_MODE=router make -C v2 v2-smoke` | exits `0` | `$EVIDENCE_DIR/v2-smoke-router.txt` |
 | onboarding E2E (Playwright) | `pnpm -C apps/tribuence-mini exec playwright test e2e/onboarding-workspace-create-harness.spec.ts --output "$(cd "$EVIDENCE_DIR" && pwd)/playwright"` | exits `0` | `$EVIDENCE_DIR/playwright-onboarding.txt` + `$EVIDENCE_DIR/playwright/` |
 

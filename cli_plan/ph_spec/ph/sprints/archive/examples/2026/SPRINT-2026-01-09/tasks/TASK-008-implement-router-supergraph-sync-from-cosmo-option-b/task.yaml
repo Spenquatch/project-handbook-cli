@@ -16,7 +16,7 @@ acceptance:
   - Apollo Router consumes the runtime supergraph file (read-only) and hot-reloads on changes.
   - Cosmo credentials are Vault-rendered and mounted only into `supergraph-sync` (Router never mounts Cosmo creds); no secret values printed in logs/evidence.
   - Smoke probes prove: (1) runtime supergraph file exists and is non-empty, (2) Router remains healthy across a supergraph refresh.
-  - Evidence captured under `project-handbook/status/evidence/TASK-008/<run-id>/` and handbook validation passes.
+  - Evidence captured under `ph/status/evidence/TASK-008/<run-id>/` and handbook validation passes.
 links:
   - ../../../../../adr/0031-v2-router-supergraph-delivery-cosmo-sync-artifact.md
   - ../../../../../decision-register/DR-0005-router-supergraph-consumption-from-cosmo.md

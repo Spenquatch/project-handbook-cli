@@ -11,29 +11,29 @@ links: []
 
 ## Automated Validation
 ```bash
-pnpm -C project-handbook make -- validate
-pnpm -C project-handbook make -- sprint-status
+ph validate
+ph sprint status
 ```
 
 ## Manual Validation (copy/paste; store evidence)
 
 ### 0) Evidence folder (per-run)
 ```bash
-EVID_ROOT="project-handbook/status/evidence/TASK-006"
+EVID_ROOT="ph/status/evidence/TASK-006"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-cosmo-minio-baseline"
 EVID_DIR="$EVID_ROOT/$RUN_ID"
 mkdir -p "$EVID_DIR"
 ```
 
 Evidence you must produce (minimum):
-- `project-handbook/status/evidence/TASK-006/<run-id>/v2-ps.txt`
-- `project-handbook/status/evidence/TASK-006/<run-id>/vault-bootstrap.txt`
-- `project-handbook/status/evidence/TASK-006/<run-id>/artifact-bucket-init-run1.txt`
-- `project-handbook/status/evidence/TASK-006/<run-id>/artifact-bucket-init-run2.txt`
-- `project-handbook/status/evidence/TASK-006/<run-id>/v2-smoke-infra.txt`
-- `project-handbook/status/evidence/TASK-006/<run-id>/v2-ps-post-infra.txt`
-- `project-handbook/status/evidence/TASK-006/<run-id>/leak-scan.txt`
-- `project-handbook/status/evidence/TASK-006/<run-id>/handbook-validate.txt`
+- `ph/status/evidence/TASK-006/<run-id>/v2-ps.txt`
+- `ph/status/evidence/TASK-006/<run-id>/vault-bootstrap.txt`
+- `ph/status/evidence/TASK-006/<run-id>/artifact-bucket-init-run1.txt`
+- `ph/status/evidence/TASK-006/<run-id>/artifact-bucket-init-run2.txt`
+- `ph/status/evidence/TASK-006/<run-id>/v2-smoke-infra.txt`
+- `ph/status/evidence/TASK-006/<run-id>/v2-ps-post-infra.txt`
+- `ph/status/evidence/TASK-006/<run-id>/leak-scan.txt`
+- `ph/status/evidence/TASK-006/<run-id>/handbook-validate.txt`
 
 ### 1) Bring up v2 (required)
 ```bash
@@ -103,15 +103,15 @@ Pass criteria:
 
 ### 6) Handbook validation (store report)
 ```bash
-pnpm -C project-handbook make -- validate | tee "$EVID_DIR/handbook-validate.txt"
+ph validate | tee "$EVID_DIR/handbook-validate.txt"
 ```
 
 Pass criteria:
-- Command exits 0 and `project-handbook/status/validation.json` is updated.
+- Command exits 0 and `ph/status/validation.json` is updated.
 
 ## Sign-off
 - [ ] All validation steps completed
-- [ ] Evidence captured under `project-handbook/status/evidence/TASK-006/<run-id>/`
+- [ ] Evidence captured under `ph/status/evidence/TASK-006/<run-id>/`
 - [ ] Ready to mark task as "done"
 
 ## Reviewer Decision (2026-01-11)
@@ -119,14 +119,14 @@ Pass criteria:
 Decision: **APPROVE**
 
 Reproduced evidence (review run):
-- Evidence folder: `project-handbook/status/evidence/TASK-006/20260111T002840Z-reviewer/`
+- Evidence folder: `ph/status/evidence/TASK-006/20260111T002840Z-reviewer/`
 - Commands executed (high-level):
   - `make -C v2 v2-down || true`
   - `TRAEFIK_ENTRYPOINT_HTTP=8080 TRAEFIK_ENTRYPOINT_HTTPS=8443 KEYCLOAK_ADMIN=admin KEYCLOAK_ADMIN_PASSWORD=dev-not-admin make -C v2 v2-up`
   - `V2_VAULT_FETCH_KEYCLOAK_CLIENT_SECRET=true V2_VAULT_MINT_ANYLLM_API_KEY=true bash v2/scripts/vault/bootstrap-v2.sh`
   - `docker compose ... --profile cosmo-init run --rm artifact-bucket-init` (twice)
   - `V2_SMOKE_MODE=infra V2_SMOKE_ROUTER_URL=http://router.local:8080/ make -C v2 v2-smoke`
-  - `pnpm -C project-handbook make -- validate`
+  - `ph validate`
 
 Notes (review-blocking fixes applied during review):
 - `v2/infra/vault/templates/cosmo.env.tpl` now also renders FDR-named env vars (`COSMO_AUTH_*`, `COSMO_SEED_*`) alongside existing Cosmo runtime env names.

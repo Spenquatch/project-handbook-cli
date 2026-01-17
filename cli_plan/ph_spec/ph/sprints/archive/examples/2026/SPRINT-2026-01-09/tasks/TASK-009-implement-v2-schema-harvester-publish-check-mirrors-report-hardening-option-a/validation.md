@@ -11,15 +11,15 @@ links: []
 
 ## Automated Validation
 ```bash
-pnpm -C project-handbook make -- validate
-pnpm -C project-handbook make -- sprint-status
+ph validate
+ph sprint status
 ```
 
 ## Manual Validation (copy/paste; pass/fail)
 
 ### 0) Evidence directory (required)
 ```bash
-EVID_ROOT="project-handbook/status/evidence/TASK-009"
+EVID_ROOT="ph/status/evidence/TASK-009"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-harvester-publish-check"
 EVID_DIR="$EVID_ROOT/$RUN_ID"
 mkdir -p "$EVID_DIR"
@@ -106,13 +106,13 @@ Pass if:
 - `mirrors-diff.txt` is empty (no mirror changes)
 
 ## Required evidence files (minimum)
-- `project-handbook/status/evidence/TASK-009/<run-id>/index.md`
-- `project-handbook/status/evidence/TASK-009/<run-id>/v2-publish.txt`
-- `project-handbook/status/evidence/TASK-009/<run-id>/mirrors-before.sha256`
-- `project-handbook/status/evidence/TASK-009/<run-id>/mirrors-after.sha256`
-- `project-handbook/status/evidence/TASK-009/<run-id>/mirrors-diff.txt`
-- `project-handbook/status/evidence/TASK-009/<run-id>/publish-report.sha256`
-- `project-handbook/status/evidence/TASK-009/<run-id>/token-scan-hits-count.txt`
+- `ph/status/evidence/TASK-009/<run-id>/index.md`
+- `ph/status/evidence/TASK-009/<run-id>/v2-publish.txt`
+- `ph/status/evidence/TASK-009/<run-id>/mirrors-before.sha256`
+- `ph/status/evidence/TASK-009/<run-id>/mirrors-after.sha256`
+- `ph/status/evidence/TASK-009/<run-id>/mirrors-diff.txt`
+- `ph/status/evidence/TASK-009/<run-id>/publish-report.sha256`
+- `ph/status/evidence/TASK-009/<run-id>/token-scan-hits-count.txt`
 
 ## Sign-off
 - [ ] All validation steps completed

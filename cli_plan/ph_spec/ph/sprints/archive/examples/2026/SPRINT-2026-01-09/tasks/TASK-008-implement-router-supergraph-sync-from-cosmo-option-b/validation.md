@@ -11,8 +11,8 @@ links: []
 
 ## Automated Validation
 ```bash
-pnpm -C project-handbook make -- validate
-pnpm -C project-handbook make -- sprint-status
+ph validate
+ph sprint status
 V2_SMOKE_MODE=infra make -C v2 v2-smoke
 ```
 
@@ -35,14 +35,14 @@ Pass/fail checks required before `review`:
 4. Smoke probes:
    - `V2_SMOKE_MODE=infra make -C v2 v2-smoke` passes and includes assertions for the runtime supergraph file and Router health stability across refresh.
 5. Evidence captured (minimum):
-   - `project-handbook/status/evidence/TASK-008/<run-id>/index.md`
-   - `project-handbook/status/evidence/TASK-008/<run-id>/rg-router-supergraph-wiring.txt`
-    - `project-handbook/status/evidence/TASK-008/<run-id>/v2-up.txt`
-    - `project-handbook/status/evidence/TASK-008/<run-id>/v2-smoke-infra.txt`
-    - `project-handbook/status/evidence/TASK-008/<run-id>/runtime-supergraph-router-stats.txt`
-    - `project-handbook/status/evidence/TASK-008/<run-id>/supergraph-sync-logs.txt`
-    - `project-handbook/status/evidence/TASK-008/<run-id>/apollo-router-logs-after-refresh.txt`
-    - `project-handbook/status/evidence/TASK-008/<run-id>/token-scan-hits.txt` (must not contain secret values)
+   - `ph/status/evidence/TASK-008/<run-id>/index.md`
+   - `ph/status/evidence/TASK-008/<run-id>/rg-router-supergraph-wiring.txt`
+    - `ph/status/evidence/TASK-008/<run-id>/v2-up.txt`
+    - `ph/status/evidence/TASK-008/<run-id>/v2-smoke-infra.txt`
+    - `ph/status/evidence/TASK-008/<run-id>/runtime-supergraph-router-stats.txt`
+    - `ph/status/evidence/TASK-008/<run-id>/supergraph-sync-logs.txt`
+    - `ph/status/evidence/TASK-008/<run-id>/apollo-router-logs-after-refresh.txt`
+    - `ph/status/evidence/TASK-008/<run-id>/token-scan-hits.txt` (must not contain secret values)
 
 ## Sign-off
 - [ ] All validation steps completed
@@ -53,7 +53,7 @@ Pass/fail checks required before `review`:
 Decision: **APPROVE**
 
 Reproduced checks (repo root):
-- `pnpm -C project-handbook make -- validate` → `0 error(s), 0 warning(s)`
+- `ph validate` → `0 error(s), 0 warning(s)`
 - `V2_SMOKE_MODE=infra make -C v2 v2-smoke` → `Summary: pass=14 fail=0 skip=0` (includes runtime supergraph existence + forced refresh + Router liveness after refresh)
 
 Spot checks:
