@@ -40,13 +40,33 @@ tags: [ph, spec]
   - `changelog.md`
 
 ## Schemas
-- (TBD; file formats, required keys, constraints)
+- Each delivered version directory MUST satisfy the same base schemas as `ph/releases/current/contract.md` for:
+  - `plan.md` (`type: release-plan`)
+  - `progress.md` (`type: release-progress`)
+  - `features.yaml` (`version: vX.Y.Z`, plus sprint metadata and `features` map)
+- Additional delivered-only requirements:
+  - In `plan.md` front matter:
+    - `status` MUST be `delivered`
+    - `delivered_date: YYYY-MM-DD` MUST be present
+    - `delivered_sprint: SPRINT-...` MUST be present
+  - `changelog.md` MUST include YAML front matter with at least:
+    - `title: <string>`
+    - `type: changelog`
+    - `version: vX.Y.Z`
+    - `date: YYYY-MM-DD`
+  - YAML/JSON unknown keys MUST be preserved.
 
 ## Invariants
 - In `plan.md` front matter, `status` MUST be `delivered`.
+- Delivered release directories are immutable outputs:
+  - the CLI MUST treat delivered release directories as read-only content after creation.
 
 ## Validation Rules
-- (TBD; what `ph check` / `ph check-all` should enforce here)
+- `ph validate` SHOULD enforce:
+  - each `vX.Y.Z/` directory contains required files (`plan.md`, `progress.md`, `features.yaml`, `changelog.md`)
+  - version consistency across files (`version` matches the enclosing directory name)
+  - `plan.md` includes delivered metadata fields and `status: delivered`
+  - delivered directories are excluded from any “active/current” computations except for listing/history
 
 ## Examples Mapping
-- (TBD; example fixtures that demonstrate this contract)
+- `examples/v0.5.1/` demonstrates a delivered release directory file set (`plan.md`, `progress.md`, `features.yaml`, `changelog.md`).

@@ -44,21 +44,51 @@ tags: [ph, spec]
 - `plan.md` MUST include front matter containing at least:
   - `type: release-plan`
   - `version: vX.Y.Z`
+  - `start_sprint: SPRINT-...`
+  - `end_sprint: SPRINT-...`
+  - `planned_sprints: <integer>`
+  - `sprint_ids: [SPRINT-..., ...]`
   - `status: planned|in_progress|delivered`
+- If `status: delivered`, `plan.md` MUST include:
+  - `delivered_sprint: SPRINT-...`
+  - `delivered_date: YYYY-MM-DD`
 - `progress.md` MUST include front matter containing at least:
   - `type: release-progress`
   - `version: vX.Y.Z`
+- `changelog.md` (when present) MUST include front matter containing at least:
+  - `type: changelog`
+  - `version: vX.Y.Z`
 - `features.yaml` MUST include at least:
   - `version: vX.Y.Z`
+  - `start_sprint: SPRINT-...`
+  - `end_sprint: SPRINT-...`
+  - `planned_sprints: <integer>`
+  - `features: <map>`
+- `features.yaml` `features` map values SHOULD include:
+  - `type: regular|epic`
+  - `priority: P0|P1|P2|P3|P4`
+  - `status: planned|in_progress|done|blocked`
+  - `completion: <0..100>`
+  - `critical_path: <boolean>`
 
 ## Invariants
 - `plan.md` `version` MUST match the release version used by `ph release close --version ...`.
+- `sprint_ids` MUST be consistent:
+  - `planned_sprints` MUST equal the length of `sprint_ids`.
+  - `start_sprint` MUST equal the first entry in `sprint_ids`.
+  - `end_sprint` MUST equal the last entry in `sprint_ids`.
 - `ph release close --version vX.Y.Z` MUST:
   - refuse if `delivered/vX.Y.Z/` already exists, and
   - move the entire `current/` directory into `delivered/vX.Y.Z/` as a single operation when supported by the filesystem.
 
 ## Validation Rules
-- `ph check-all` SHOULD fail if any required file is missing or if `version` fields are inconsistent across `plan.md`, `progress.md`, and `features.yaml`.
+- `ph validate` SHOULD enforce:
+  - required file presence (`plan.md`, `progress.md`, `features.yaml`)
+  - `version` fields are consistent across `plan.md`, `progress.md`, `features.yaml` (and `changelog.md` if present)
+  - sprint metadata consistency (`sprint_ids` vs `planned_sprints` vs `start_sprint`/`end_sprint`)
 
 ## Examples Mapping
-- (TBD; example fixtures that demonstrate this contract)
+- `examples/current/` demonstrates the active release working set:
+  - `examples/current/plan.md`
+  - `examples/current/progress.md`
+  - `examples/current/features.yaml`

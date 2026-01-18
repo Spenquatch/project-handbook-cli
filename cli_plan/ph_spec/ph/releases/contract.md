@@ -37,17 +37,34 @@ tags: [ph, spec]
   - `planning/`
   - `current/`
   - `delivered/`
+- Optional files:
+  - `CHANGELOG.md` (project changelog; not required by v1 `ph release *` commands)
 
 ## Schemas
-- (TBD; file formats, required keys, constraints)
+- This directory has no root-level schema beyond subdirectory contracts.
+- If `CHANGELOG.md` exists:
+  - It MUST be Markdown with YAML front matter including at least:
+    - `title: <string>`
+    - `type: changelog`
+    - `date: YYYY-MM-DD`
+  - Additional keys are allowed; unknown keys MUST be preserved.
 
 ## Invariants
+- `ph/releases/` MUST contain only:
+  - `planning/`
+  - `current/`
+  - `delivered/`
+  - `CHANGELOG.md` (optional)
 - `current/` MUST be a directory (not a symlink).
 - `delivered/` MUST contain only delivered release version directories of the form `vX.Y.Z/` (semantic version).
 
 ## Validation Rules
-- If `current/` exists, it MUST satisfy `ph/releases/current/contract.md`.
-- Any `delivered/vX.Y.Z/` MUST satisfy `ph/releases/delivered/contract.md`.
+- `ph validate` SHOULD enforce:
+  - required directories exist
+  - `current/` satisfies `ph/releases/current/contract.md`
+  - each `delivered/vX.Y.Z/` satisfies `ph/releases/delivered/contract.md`
+  - if `CHANGELOG.md` exists, it has parseable YAML front matter
 
 ## Examples Mapping
-- (TBD; example fixtures that demonstrate this contract)
+- `examples/CHANGELOG.md` demonstrates a project changelog artifact.
+- `examples/v0.5.1/` demonstrates the active release working-set file shapes (`plan.md`, `progress.md`, `features.yaml`) for a planned release version.

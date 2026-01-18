@@ -25,8 +25,13 @@ tags: [ph, spec]
   - The CLI MUST NOT overwrite any `README.md` content without explicit `--force`.
 
 ## Creation
-- Created/updated by: (TBD; `ph ...` commands)
-- Non-destructive: MUST NOT overwrite user-owned files without explicit flags
+- Created/updated by:
+  - `ph init` (creates directory structure and seeds an empty `index.json`).
+  - `ph parking add ...` (creates new item directories and updates `index.json`).
+  - `ph parking list` / `ph parking review` (MAY read `index.json`; MAY rebuild it from filesystem if missing/stale).
+  - Items are archived by moving item directories into `archive/` (manual or future CLI command).
+- Non-destructive:
+  - The CLI MUST treat markdown content (`README.md`) as project-owned source-of-truth and refuse to overwrite without explicit flags.
 
 ## Required Files and Directories
 - Required file:
@@ -40,13 +45,59 @@ tags: [ph, spec]
 - Allowed categories (authoritative): `features`, `technical-debt`, `research`, `external-requests`
 
 ## Schemas
-- (TBD; file formats, required keys, constraints)
+- `index.json` MUST be valid JSON with this top-level shape:
+  - `last_updated: <RFC3339 timestamp | null>`
+  - `total_items: <integer>`
+  - `by_category: { "features": [<id>...], "technical-debt": [...], "research": [...], "external-requests": [...] }`
+  - `items: [ <item>... ]`
+- Each `items[]` entry MUST include (at minimum):
+  - `id: <string>` (directory name, e.g. `FEAT-20260111-social-login`)
+  - `path: <string>` (path relative to `PH_CONTENT_ROOT`, e.g. `parking-lot/features/<id>`)
+  - `type: features|technical-debt|research|external-requests` (from `README.md` front matter)
+  - `status: parking-lot` (from `README.md` front matter)
+  - `created: YYYY-MM-DD` (from `README.md` front matter)
+  - `owner: <string>` (from `README.md` front matter)
+  - `title: <string>` (from `README.md` front matter)
+  - `tags: [<string>...]` (from `README.md` front matter; may be empty)
+- `items[]` MAY include additional keys copied from `README.md` front matter; unknown keys MUST be preserved.
+- `index.json` MUST catalog only non-archive items under:
+  - `features/`
+  - `technical-debt/`
+  - `research/`
+  - `external-requests/`
+- `archive/**` items MUST NOT appear in `index.json` (they are immutable records and are handled by archive contracts).
+- Parking-lot item `README.md` MUST include YAML front matter with at least:
+  - `title: <string>`
+  - `type: features|technical-debt|research|external-requests` (MUST match the category directory)
+  - `status: parking-lot`
+  - `created: YYYY-MM-DD`
+  - `owner: <string>` (e.g. `unassigned` or `@handle`)
+  - `tags: [<string>, ...]` (may be empty)
+- YAML front matter MAY include additional keys; unknown keys MUST be preserved as content.
 
 ## Invariants
-- (TBD)
+- `ph/parking-lot/` MUST contain only:
+  - `index.json`
+  - `features/`
+  - `technical-debt/`
+  - `research/`
+  - `external-requests/`
+  - `archive/`
+- All IDs listed in `by_category` MUST appear exactly once in `items[]`.
+- All `items[].path` values MUST be under `parking-lot/` and MUST NOT point into `parking-lot/archive/`.
 
 ## Validation Rules
-- `allowed_categories` MUST match `process/checks/validation_rules.json` (`parking_lot.allowed_categories`).
+- `allowed_categories` MUST match `.ph/process/checks/validation_rules.json` (`parking_lot.allowed_categories`).
+- `ph validate` SHOULD enforce:
+  - required directories exist
+  - `index.json` exists and is valid JSON with the required top-level keys
+  - `by_category` is consistent with `items[]` (no missing/unknown IDs)
+  - each item directory under `features/`, `technical-debt/`, `research/`, `external-requests/` satisfies its category contract:
+    - `ph/parking-lot/features/contract.md`
+    - `ph/parking-lot/technical-debt/contract.md`
+    - `ph/parking-lot/research/contract.md`
+    - `ph/parking-lot/external-requests/contract.md`
+  - `archive/` exists and satisfies `ph/parking-lot/archive/contract.md`
 
 ## Examples Mapping
-- (TBD; example fixtures that demonstrate this contract)
+- `examples/index.json` demonstrates the `index.json` catalog shape (empty bootstrap case).

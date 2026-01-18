@@ -1,13 +1,10 @@
 ---
 title: Process: fix session-end index paths
 type: research
-status: archived
+status: parking-lot
 created: 2025-12-30
 owner: @spenser
 tags: []
-archived_at: 2026-01-04T23:09:09Z
-archived_by_task: manual
-archived_by_sprint: manual
 ---
 
 # Process: fix session-end index paths

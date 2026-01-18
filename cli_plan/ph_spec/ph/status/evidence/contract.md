@@ -8,7 +8,7 @@ tags: [ph, spec]
 
 ## Directory Purpose
 - Path: (directory containing this `contract.md`)
-- Summary: (TBD)
+- Summary: Evidence bundles (logs, command outputs, screenshots, and supporting notes) captured during work so decisions and implementations are reviewable and reproducible.
 
 ## Ownership
 - Owner: Project (human-directed).
@@ -20,20 +20,38 @@ tags: [ph, spec]
   - The CLI MUST NOT overwrite evidence artifacts without explicit `--force`.
 
 ## Creation
-- Created/updated by: (TBD; `ph ...` commands)
-- Non-destructive: MUST NOT overwrite user-owned files without explicit flags
+- Created/updated by:
+  - `ph init` (creates `status/evidence/`)
+  - Humans/agents create subdirectories and evidence artifacts as needed during work (typically alongside a `TASK-###`).
+- Non-destructive:
+  - The CLI MUST NOT overwrite evidence artifacts without explicit `--force`.
 
 ## Required Files and Directories
-- (TBD)
+- None. This directory MAY be empty.
 
 ## Schemas
-- (TBD; file formats, required keys, constraints)
+- Evidence directories are intentionally flexible; any file type is allowed.
+- Recommended organization (not required):
+  - `TASK-###/` (one directory per task)
+    - `index.md` (optional; evidence index/summary for reviewers)
+    - `*.log`, `*.txt`, `*.json`, `*.md`, etc.
+- If `TASK-###/index.md` exists, it SHOULD be Markdown with YAML front matter containing at least:
+  - `type: evidence`
+  - `date: YYYY-MM-DD`
+  - `task_id: TASK-###`
+  - `tags: [evidence, task, ...]`
+  - `links: [<relative path>, ...]`
+- YAML front matter MAY include additional keys; unknown keys MUST be preserved.
 
 ## Invariants
-- (TBD)
+- Evidence MUST NOT include secret values (credentials, tokens, private keys, unredacted `.env` contents).
+- Evidence artifacts SHOULD prefer sanitized outputs (headers redacted, secrets masked) and reference source files/paths when possible.
 
 ## Validation Rules
-- (TBD; what `ph check` / `ph check-all` should enforce here)
+- `ph validate` SHOULD treat evidence as best-effort:
+  - it MAY ignore non-Markdown files entirely
+  - it SHOULD enforce YAML front matter on any `*.md` evidence files (consistent with global front matter rules)
 
 ## Examples Mapping
-- (TBD; example fixtures that demonstrate this contract)
+- `examples/TASK-002/index.md` demonstrates an evidence index with front matter and reviewer-friendly links.
+- `examples/TASK-002/*.log` and `examples/TASK-002/*.txt` demonstrate typical raw evidence artifacts captured alongside the index.

@@ -6,7 +6,9 @@ start_sprint: SPRINT-2026-01-16
 end_sprint: SPRINT-2026-01-30
 planned_sprints: 3
 sprint_ids: [SPRINT-2026-01-16, SPRINT-2026-01-23, SPRINT-2026-01-30]
-status: planned
+status: delivered
+delivered_date: 2026-01-11
+delivered_sprint: SPRINT-2026-01-30
 date: 2026-01-11
 tags: [release, planning]
 links: []

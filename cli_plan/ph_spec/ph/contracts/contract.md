@@ -8,7 +8,7 @@ tags: [ph, spec]
 
 ## Directory Purpose
 - Path: (directory containing this `contract.md`)
-- Summary: (TBD)
+- Summary: Project-owned contract documents (Markdown/JSON) that define stable interfaces, inventories, and invariants (e.g. API endpoint contracts) referenced by ADRs, tasks, and validation evidence.
 
 ## Ownership
 - Owner: Project (human-directed).
@@ -21,20 +21,43 @@ tags: [ph, spec]
   - The CLI MUST NOT overwrite or rewrite contract artifacts under `ph/contracts/`.
 
 ## Creation
-- Created/updated by: (TBD; `ph ...` commands)
-- Non-destructive: MUST NOT overwrite user-owned files without explicit flags
+- Created/updated by:
+  - `ph init` (creates `ph/contracts/` if missing).
+  - Humans (or agents directed by humans) author and maintain the contract artifacts; the CLI treats this directory as read-only content.
+- Non-destructive:
+  - The CLI MUST NOT create, modify, or delete contract artifacts under `ph/contracts/` during normal operation.
 
 ## Required Files and Directories
-- (TBD)
+- Required:
+  - `ph/contracts/` (directory)
+- Optional:
+  - Any subdirectories (e.g. `api/`) used to group related contracts.
+  - `README.md` files for navigation within subtrees.
 
 ## Schemas
-- (TBD; file formats, required keys, constraints)
+- Markdown contracts (`**/*.md`):
+  - MAY include YAML front matter.
+  - If YAML front matter is present, it MUST be valid YAML.
+- JSON contract artifacts (`**/*.json`):
+  - MUST be valid JSON.
+  - If an `api/api-contracts.json` registry is present, the recommended shape is:
+    - `updated_at: YYYY-MM-DD`
+    - `contracts: [ { id, service, audience, method, path, owner, status, doc, ... }... ]`
 
 ## Invariants
-- (TBD)
+- This directory is project-owned and treated as source-of-truth:
+  - Contract artifacts MUST NOT be regenerated from derived state.
+  - Contract artifacts MUST NOT be overwritten without explicit operator intent.
 
 ## Validation Rules
-- (TBD; what `ph check` / `ph check-all` should enforce here)
+- `ph validate` SHOULD enforce:
+  - `ph/contracts/` exists
+  - any `*.json` files present are parseable as JSON (warn if invalid; do not mutate)
+- `ph` commands MUST treat contract artifacts as read-only unless a future, explicitly-scoped command is introduced for updating them.
 
 ## Examples Mapping
-- (TBD; example fixtures that demonstrate this contract)
+- `examples/inventory.md` demonstrates a human-maintained inventory contract document with front matter and verification notes.
+- `examples/api/` demonstrates an API contracts subtree:
+  - `examples/api/README.md` (subtree overview)
+  - `examples/api/api-contracts.json` (registry manifest)
+  - `examples/api/*.md` (endpoint contracts)

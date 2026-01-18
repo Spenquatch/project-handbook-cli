@@ -8,7 +8,7 @@ tags: [ph, spec]
 
 ## Directory Purpose
 - Path: (directory containing this `contract.md`)
-- Summary: (TBD)
+- Summary: Daily status updates written as dated Markdown files under `daily/YYYY/MM/DD.md` (month partition, filename is the day number).
 
 ## Ownership
 - Owner: Shared.
@@ -20,20 +20,37 @@ tags: [ph, spec]
   - The CLI MUST NOT overwrite an existing daily status file without explicit `--force`.
 
 ## Creation
-- Created/updated by: (TBD; `ph ...` commands)
-- Non-destructive: MUST NOT overwrite user-owned files without explicit flags
+- Created/updated by:
+  - `ph init` (creates `status/daily/`)
+  - `ph daily generate` (creates today’s daily status file; weekend-aware by default)
+  - `ph daily generate --force` (creates today’s daily status file even on weekends)
+  - `ph daily check --verbose` (read-only)
+- Non-destructive:
+  - The CLI MUST NOT overwrite an existing daily status file without explicit `--force`.
 
 ## Required Files and Directories
-- (TBD)
+- None. This directory MAY be empty.
 
 ## Schemas
-- (TBD; file formats, required keys, constraints)
+- Daily status files MUST follow this path pattern:
+  - `YYYY/MM/DD.md` (where `DD.md` is the day-of-month, zero-padded)
+- Each daily status file MUST be Markdown with YAML front matter containing at least:
+  - `title: <string>`
+  - `type: status-daily`
+  - `date: YYYY-MM-DD` (MUST match the path)
+  - `sprint: SPRINT-...` (the current sprint id)
+  - `tags: [status, daily, ...]`
+- YAML front matter MAY include additional keys; unknown keys MUST be preserved.
 
 ## Invariants
-- (TBD)
+- There MUST be at most one daily status file per date (`date` is unique).
+- If a daily status file exists at `YYYY/MM/DD.md`, its front matter `date` MUST equal `YYYY-MM-DD`.
 
 ## Validation Rules
-- (TBD; what `ph check` / `ph check-all` should enforce here)
+- `ph validate` SHOULD enforce (best-effort):
+  - daily files match the `YYYY/MM/DD.md` path pattern
+  - required front matter keys exist (`type`, `date`, `sprint`)
+  - `date` front matter matches the path
 
 ## Examples Mapping
-- (TBD; example fixtures that demonstrate this contract)
+- `examples/2026/01/03.md` demonstrates a daily status entry with the required front matter keys and a typical section layout.

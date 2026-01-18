@@ -1,13 +1,10 @@
 ---
 title: Standardize task directory slugs (avoid ':' and parentheses)
 type: technical-debt
-status: archived
+status: parking-lot
 created: 2026-01-02
 owner: @spenser
 tags: ["process", "tooling", "portability"]
-archived_at: 2026-01-04T23:09:09Z
-archived_by_task: manual
-archived_by_sprint: manual
 ---
 
 # Standardize task directory slugs (avoid ':' and parentheses)

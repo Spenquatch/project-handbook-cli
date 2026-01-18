@@ -28,13 +28,26 @@ tags: [ph, spec]
 - No required files for v1.
 
 ## Schemas
-- (TBD; file formats, required keys, constraints)
+- There is no required schema for this directory in v1; it is an operator-managed staging area.
+- If Markdown files are present:
+  - They MUST include YAML front matter (global `ph/` rule).
+  - A recommended shape for release summary docs is:
+    - `title: <string>`
+    - `type: release`
+    - `version: vX.Y.Z`
+    - `date: YYYY-MM-DD`
+    - `tags: [release, ...]`
+    - `links: [<relative path>, ...]`
 
 ## Invariants
-- (TBD)
+- This directory MUST NOT be required for v1 command execution:
+  - `ph release *` commands MUST operate only on `ph/releases/current/` and `ph/releases/delivered/`.
 
 ## Validation Rules
-- (TBD; what `ph check` / `ph check-all` should enforce here)
+- `ph validate` SHOULD:
+  - treat this directory as optional,
+  - verify any `*.md` files present have parseable YAML front matter,
+  - avoid enforcing additional structure (it is an operator-managed staging area).
 
 ## Examples Mapping
-- (TBD; example fixtures that demonstrate this contract)
+- `examples/EXAMPLE-v0.1.0.md` demonstrates a lightweight release summary document stored in the planning area.

@@ -137,6 +137,1353 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-01-18 00:22 UTC — DD-0129 — Complete spec contract for sprints/archive/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0129)
+- cli_plan/ph_spec/ph/sprints/archive/contract.md
+- cli_plan/ph_spec/ph/sprints/archive/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/sprints/archive/`.
+
+Work performed (ordered):
+1. Reviewed the existing `sprints/archive/` contract stub and the included example fixtures.
+2. Cross-checked v1 `ph sprint close` / `ph sprint archive` behavior in the CLI contract to ensure the archive contract matches expected side effects.
+3. Completed the archive contract by specifying `index.json` constraints, sprint artifact front matter requirements, invariants, validation rules, and examples mapping.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- cat cli_plan/ph_spec/ph/sprints/archive/contract.md
+- ls -la cli_plan/ph_spec/ph/sprints/archive/examples && find cli_plan/ph_spec/ph/sprints/archive/examples -maxdepth 3 -type f -print
+- sed -n '1,200p' cli_plan/ph_spec/ph/sprints/archive/examples/index.json && echo '---' && sed -n '1,200p' cli_plan/ph_spec/ph/sprints/archive/examples/2026/SPRINT-2026-01-09/plan.md && echo '---' && sed -n '1,200p' cli_plan/ph_spec/ph/sprints/archive/examples/2026/SPRINT-2026-01-09/burndown.md && echo '---' && sed -n '1,240p' cli_plan/ph_spec/ph/sprints/archive/examples/2026/SPRINT-2026-01-09/retrospective.md
+- sed -n '330,470p' cli_plan/v1_cli/CLI_CONTRACT.md
+- sed -n '120,170p' cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- rg -n '\\(TBD\\)|TBD' cli_plan/ph_spec/ph/sprints/archive/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/sprints/archive/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the examples mapping matches the included fixtures.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/sprints/archive/` directory contract and reconciled it against the included example fixtures and v1 CLI contract expectations.
+
+Next task:
+- DD-0130
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-18 00:33 UTC — DD-0130 — Complete spec contract for sprints/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0130)
+- cli_plan/ph_spec/ph/sprints/contract.md
+- cli_plan/ph_spec/ph/sprints/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/sprints/`.
+
+Work performed (ordered):
+1. Reviewed the existing `sprints/` contract stub and the included sprint plan example fixtures.
+2. Cross-checked v1 sprint behaviors (`plan`/`open`/`close`/`archive`) to ensure the `current` pointer semantics are captured.
+3. Completed the contract by specifying sprint plan front matter, task directory expectations, invariants, validation rules, and examples mapping.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,260p' cli_plan/ph_spec/ph/sprints/contract.md
+- ls -la cli_plan/ph_spec/ph/sprints/examples && find cli_plan/ph_spec/ph/sprints/examples -maxdepth 3 -type f -print
+- sed -n '1,260p' cli_plan/ph_spec/ph/sprints/examples/2026/SPRINT-2026-01-11/plan.md
+- sed -n '1,140p' cli_plan/ph_spec/ph/sprints/examples/scaffold/2026/SPRINT-2026-01-11/plan.md
+- rg -n '\\(TBD\\)|TBD' cli_plan/ph_spec/ph/sprints/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/sprints/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the examples mapping matches the included fixtures.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/sprints/` directory contract and reconciled it against the included example fixtures.
+
+Next task:
+- DD-0131
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-18 00:35 UTC — DD-0131 — Complete spec contract for status/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0131)
+- cli_plan/ph_spec/ph/status/contract.md
+- cli_plan/ph_spec/ph/status/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/status/`.
+
+Work performed (ordered):
+1. Reviewed the status contract stub and the included example fixtures (`README.md`, `current.json`, `validation.json`, `current_summary.md.example`).
+2. Cross-checked the v1 CLI behaviors for `ph status`, `ph validate`, and the front matter exemption rules for `status/current_summary.md`.
+3. Completed the contract by specifying required subdirectories, derived artifacts, schemas, invariants, validation rules, and examples mapping.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,260p' cli_plan/ph_spec/ph/status/contract.md
+- ls -la cli_plan/ph_spec/ph/status/examples && find cli_plan/ph_spec/ph/status/examples -maxdepth 3 -type f -print | head -n 50
+- sed -n '1,120p' cli_plan/ph_spec/ph/status/examples/README.md && echo '---' && cat cli_plan/ph_spec/ph/status/examples/current.json && echo '---' && cat cli_plan/ph_spec/ph/status/examples/validation.json && echo '---' && sed -n '1,220p' cli_plan/ph_spec/ph/status/examples/current_summary.md.example
+- sed -n '1,260p' src/ph/status.py
+- rg -n 'status/current_summary\\.md' src/ph/validate_docs.py
+- rg -n '\\(TBD\\)|TBD' cli_plan/ph_spec/ph/status/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/status/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the examples mapping matches the included fixtures.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/status/` directory contract and reconciled it against the included example fixtures and the current v1 CLI behavior.
+
+Next task:
+- DD-0132
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-18 00:37 UTC — DD-0132 — Complete spec contract for status/daily/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0132)
+- cli_plan/ph_spec/ph/status/daily/contract.md
+- cli_plan/ph_spec/ph/status/daily/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/status/daily/`.
+
+Work performed (ordered):
+1. Reviewed the daily status contract stub and the included daily example fixture.
+2. Cross-checked the v1 CLI contract for `ph daily generate` pathing and weekend-aware behavior.
+3. Completed the contract by specifying path pattern, required front matter keys, invariants, validation rules, and examples mapping.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,260p' cli_plan/ph_spec/ph/status/daily/contract.md
+- ls -la cli_plan/ph_spec/ph/status/daily/examples && find cli_plan/ph_spec/ph/status/daily/examples -maxdepth 4 -type f -print | head -n 50
+- sed -n '1,260p' cli_plan/ph_spec/ph/status/daily/examples/2026/01/03.md
+- sed -n '330,430p' cli_plan/v1_cli/CLI_CONTRACT.md
+- rg -n '\\(TBD\\)|TBD' cli_plan/ph_spec/ph/status/daily/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/status/daily/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the examples mapping matches the included fixture.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/status/daily/` directory contract and reconciled it against the included example fixture and v1 CLI contract expectations.
+
+Next task:
+- DD-0133
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-18 00:38 UTC — DD-0133 — Complete spec contract for status/evidence/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0133)
+- cli_plan/ph_spec/ph/status/evidence/contract.md
+- cli_plan/ph_spec/ph/status/evidence/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/status/evidence/`.
+
+Work performed (ordered):
+1. Reviewed the evidence contract stub and the included example evidence bundle directory.
+2. Captured recommended (non-enforced) structure patterns for per-task evidence directories and index files.
+3. Completed the contract by specifying purpose, creation/ownership rules, invariants (no secrets), validation guidance, and examples mapping.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,260p' cli_plan/ph_spec/ph/status/evidence/contract.md
+- ls -la cli_plan/ph_spec/ph/status/evidence/examples && find cli_plan/ph_spec/ph/status/evidence/examples -maxdepth 3 -type f -print | head -n 50
+- ls -la cli_plan/ph_spec/ph/status/evidence/examples/TASK-002 && sed -n '1,120p' cli_plan/ph_spec/ph/status/evidence/examples/TASK-002/index.md
+- rg -n '\\(TBD\\)|TBD' cli_plan/ph_spec/ph/status/evidence/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/status/evidence/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the examples mapping matches the included fixture bundle.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/status/evidence/` directory contract and reconciled it against the included example evidence bundle.
+
+Next task:
+- DD-0134
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-18 00:39 UTC — DD-0134 — Complete spec contract for status/exports/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0134)
+- cli_plan/ph_spec/ph/status/exports/contract.md
+- cli_plan/ph_spec/ph/status/exports/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/status/exports/`.
+
+Work performed (ordered):
+1. Reviewed the exports contract stub and the included example export bundle artifacts.
+2. Defined a stable export bundle grouping convention (tarball + checksum + paths + manifest + README) that matches the examples.
+3. Completed the contract by specifying required file formats, invariants, validation guidance, and examples mapping.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,260p' cli_plan/ph_spec/ph/status/exports/contract.md
+- ls -la cli_plan/ph_spec/ph/status/exports/examples && find cli_plan/ph_spec/ph/status/exports/examples -maxdepth 4 -type f -print | head -n 50
+- sed -n '1,120p' cli_plan/ph_spec/ph/status/exports/examples/SPRINT-2026-01-11-doc-review.README.txt && echo '---' && sed -n '1,200p' cli_plan/ph_spec/ph/status/exports/examples/SPRINT-2026-01-11-doc-review.manifest.txt && echo '---' && cat cli_plan/ph_spec/ph/status/exports/examples/SPRINT-2026-01-11-doc-review.tar.gz.sha256 && echo '---' && sed -n '1,80p' cli_plan/ph_spec/ph/status/exports/examples/SPRINT-2026-01-11-doc-review.paths.txt
+- rg -n '\\(TBD\\)|TBD' cli_plan/ph_spec/ph/status/exports/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/status/exports/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the examples mapping matches the included bundle fixtures.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/status/exports/` directory contract and reconciled it against the included example export bundle artifacts.
+
+Next task:
+- NONE
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 23:44 UTC — DD-0128 — Complete spec contract for roadmap/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0128)
+- cli_plan/ph_spec/ph/roadmap/contract.md
+- cli_plan/ph_spec/ph/roadmap/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/roadmap/`.
+
+Work performed (ordered):
+1. Reviewed the roadmap contract stub, example fixture, and v1 `ph roadmap` contract surface.
+2. Completed the roadmap contract with required file, heading requirements, and command mapping (`show/create/validate`).
+3. Mapped the existing roadmap example fixture to the contract.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,240p' cli_plan/ph_spec/ph/roadmap/contract.md
+- ls -la cli_plan/ph_spec/ph/roadmap/examples && find cli_plan/ph_spec/ph/roadmap/examples -maxdepth 2 -type f -print -exec sed -n '1,200p' {} \;
+- sed -n '656,690p' cli_plan/v1_cli/CLI_CONTRACT.md
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/roadmap/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/roadmap/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the example fixture demonstrates the required front matter and headings.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/roadmap/` directory contract and reconciled it against the included example fixture and v1 CLI contract.
+
+Next task:
+- DD-0129
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 23:43 UTC — DD-0127 — Complete spec contract for releases/planning/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0127)
+- cli_plan/ph_spec/ph/releases/planning/contract.md
+- cli_plan/ph_spec/ph/releases/planning/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/releases/planning/`.
+
+Work performed (ordered):
+1. Reviewed the releases/planning contract stub, example fixture, and v1 release contract notes.
+2. Completed the planning contract with minimal schema guidance and explicit “not used by v1 commands” invariants.
+3. Mapped the existing example fixture to the contract.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,240p' cli_plan/ph_spec/ph/releases/planning/contract.md
+- ls -la cli_plan/ph_spec/ph/releases/planning/examples && find cli_plan/ph_spec/ph/releases/planning/examples -maxdepth 3 -type f -print -exec sed -n '1,80p' {} \;
+- rg -n "releases/planning" cli_plan/v1_cli/CLI_CONTRACT.md
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/releases/planning/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/releases/planning/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the example release summary fixture is referenced in Examples Mapping.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/releases/planning/` directory contract and reconciled it against the included example fixture and v1 release contract notes.
+
+Next task:
+- DD-0128
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 23:41 UTC — DD-0126 — Complete spec contract for releases/delivered/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0126)
+- cli_plan/ph_spec/ph/releases/delivered/contract.md
+- legacy-reference/project-handbook/releases/v*/** (reference only)
+
+Goal:
+- Complete and validate the contract for `ph/releases/delivered/`.
+
+Work performed (ordered):
+1. Reviewed the delivered release contract stub and legacy delivered release artifacts for schema reference.
+2. Completed the delivered contract schemas and validation expectations (delivered metadata and immutability).
+3. Reconciled the delivered example fixture to include `changelog.md` and `status: delivered`.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,320p' cli_plan/ph_spec/ph/releases/delivered/contract.md
+- ls -la cli_plan/ph_spec/ph/releases/delivered/examples && find cli_plan/ph_spec/ph/releases/delivered/examples -maxdepth 4 -type f -print -exec sed -n '1,80p' {} \;
+- ls -la legacy-reference/project-handbook/releases | head
+- sed -n '1,40p' legacy-reference/project-handbook/releases/v0.5.0/changelog.md
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/releases/delivered/contract.md || true
+- ls -la cli_plan/ph_spec/ph/releases/delivered/examples/v0.5.1 && rg -n "^status:" cli_plan/ph_spec/ph/releases/delivered/examples/v0.5.1/plan.md && rg -n "^type:|^version:" cli_plan/ph_spec/ph/releases/delivered/examples/v0.5.1/changelog.md
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/releases/delivered/contract.md
+- cli_plan/ph_spec/ph/releases/delivered/examples/v0.5.1/changelog.md
+- cli_plan/ph_spec/ph/releases/delivered/examples/v0.5.1/plan.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the delivered example fixture contains `changelog.md` plus `status: delivered` with delivered metadata fields.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/releases/delivered/` directory contract and reconciled the delivered example fixture to match delivered semantics.
+
+Next task:
+- DD-0127
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 23:39 UTC — DD-0125 — Complete spec contract for releases/current/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0125)
+- cli_plan/ph_spec/ph/releases/current/contract.md
+- cli_plan/ph_spec/ph/releases/examples/v0.5.1/**
+
+Goal:
+- Complete and validate the contract for `ph/releases/current/`.
+
+Work performed (ordered):
+1. Reviewed the v1 `ph release` contract and the existing active-release example fixture under `releases/current/examples/`.
+2. Completed the `ph/releases/current/` contract with concrete `plan.md`, `progress.md`, `features.yaml`, and `changelog.md` schema requirements.
+3. Added invariants and validation expectations for sprint metadata and version consistency.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,260p' cli_plan/ph_spec/ph/releases/current/contract.md
+- find cli_plan/ph_spec/ph/releases/examples/v0.5.1 -maxdepth 1 -type f -print -exec sed -n '1,120p' {} \;
+- sed -n '688,740p' cli_plan/v1_cli/CLI_CONTRACT.md
+- ls -la cli_plan/ph_spec/ph/releases/current/examples 2>/dev/null || true
+- find cli_plan/ph_spec/ph/releases/current/examples -maxdepth 3 -type f -print -exec sed -n '1,100p' {} \;
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/releases/current/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/releases/current/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the documented schemas match the existing example fixture file shapes.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/releases/current/` directory contract and reconciled it against the v1 `ph release` command contract and example fixtures.
+
+Next task:
+- DD-0126
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 23:37 UTC — DD-0124 — Complete spec contract for releases/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0124)
+- cli_plan/ph_spec/ph/releases/contract.md
+- cli_plan/ph_spec/ph/releases/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/releases/`.
+
+Work performed (ordered):
+1. Reviewed the release subdirectory contracts and existing example fixtures under `releases/examples/`.
+2. Completed the `ph/releases/` root contract with explicit invariants, optional root `CHANGELOG.md` schema, and validation expectations.
+3. Mapped the existing example fixtures to the documented contract structure.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,260p' cli_plan/ph_spec/ph/releases/contract.md
+- sed -n '1,260p' cli_plan/ph_spec/ph/releases/current/contract.md
+- sed -n '1,320p' cli_plan/ph_spec/ph/releases/delivered/contract.md
+- ls -la cli_plan/ph_spec/ph/releases/examples && find cli_plan/ph_spec/ph/releases/examples -maxdepth 4 -type f -print -exec sed -n '1,140p' {} \;
+- rg -n "## `ph release`|ph release plan|ph release close|release add-feature" cli_plan/v1_cli/CLI_CONTRACT.md -n
+- sed -n '680,770p' cli_plan/v1_cli/CLI_CONTRACT.md
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/releases/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/releases/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the existing example fixtures are referenced in Examples Mapping.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/releases/` directory contract and reconciled it against the existing example fixtures and v1 `ph release` contract surface.
+
+Next task:
+- DD-0125
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 23:34 UTC — DD-0123 — Complete spec contract for parking-lot/technical-debt/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0123)
+- cli_plan/ph_spec/ph/parking-lot/contract.md
+- cli_plan/ph_spec/ph/parking-lot/technical-debt/contract.md
+- cli_plan/ph_spec/ph/parking-lot/technical-debt/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/parking-lot/technical-debt/`.
+
+Work performed (ordered):
+1. Reviewed the technical-debt category contract stub and its example fixture.
+2. Completed the contract with item naming rules, required README schema, and non-destructive creation semantics.
+3. Reconciled the provided example fixture to represent an active parking-lot item (`status: parking-lot`, no archival keys).
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,220p' cli_plan/ph_spec/ph/parking-lot/technical-debt/contract.md
+- ls -la cli_plan/ph_spec/ph/parking-lot/technical-debt/examples && find cli_plan/ph_spec/ph/parking-lot/technical-debt/examples -maxdepth 4 -type f -print -exec sed -n '1,120p' {} \;
+- rg -n "DEBT-YYYYMMDD" legacy-reference/project-handbook/docs/PARKING_LOT_SYSTEM.md
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/parking-lot/technical-debt/contract.md cli_plan/ph_spec/ph/parking-lot/technical-debt/examples/DEBT-20260102-standardize-task-directory-slu/README.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/parking-lot/technical-debt/contract.md
+- cli_plan/ph_spec/ph/parking-lot/technical-debt/examples/DEBT-20260102-standardize-task-directory-slu/README.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the reconciled example fixture now matches the active item schema (`status: parking-lot`).
+
+Outcome:
+- status: done
+- summary: Completed the `ph/parking-lot/technical-debt/` directory contract and reconciled the provided example fixture to match the active parking-lot item schema.
+
+Next task:
+- DD-0124
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 23:32 UTC — DD-0122 — Complete spec contract for parking-lot/research/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0122)
+- cli_plan/ph_spec/ph/parking-lot/contract.md
+- cli_plan/ph_spec/ph/parking-lot/research/contract.md
+- cli_plan/ph_spec/ph/parking-lot/research/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/parking-lot/research/`.
+
+Work performed (ordered):
+1. Reviewed the research category contract stub and its example fixture.
+2. Completed the contract with item naming rules, required README schema, and non-destructive creation semantics.
+3. Reconciled the provided example fixture to represent an active parking-lot item (`status: parking-lot`, no archival keys).
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,220p' cli_plan/ph_spec/ph/parking-lot/research/contract.md
+- ls -la cli_plan/ph_spec/ph/parking-lot/research/examples && find cli_plan/ph_spec/ph/parking-lot/research/examples -maxdepth 4 -type f -print -exec sed -n '1,120p' {} \;
+- rg -n "RES-YYYYMMDD" legacy-reference/project-handbook/docs/PARKING_LOT_SYSTEM.md
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/parking-lot/research/contract.md cli_plan/ph_spec/ph/parking-lot/research/examples/RES-20251230-process-fix-session-end-index-/README.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/parking-lot/research/contract.md
+- cli_plan/ph_spec/ph/parking-lot/research/examples/RES-20251230-process-fix-session-end-index-/README.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the reconciled example fixture now matches the active item schema (`status: parking-lot`).
+
+Outcome:
+- status: done
+- summary: Completed the `ph/parking-lot/research/` directory contract and reconciled the provided example fixture to match the active parking-lot item schema.
+
+Next task:
+- DD-0123
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 23:31 UTC — DD-0121 — Complete spec contract for parking-lot/features/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0121)
+- cli_plan/ph_spec/ph/parking-lot/contract.md
+- cli_plan/ph_spec/ph/parking-lot/features/contract.md
+- cli_plan/ph_spec/ph/parking-lot/features/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/parking-lot/features/`.
+
+Work performed (ordered):
+1. Reviewed the features category contract stub and confirmed there are no example fixtures for this category.
+2. Completed the contract with item naming rules, required README schema, and non-destructive creation semantics.
+3. Aligned the item front matter expectations with the parking-lot root contract (`status: parking-lot`, no archival keys for active items).
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,220p' cli_plan/ph_spec/ph/parking-lot/features/contract.md
+- ls -la cli_plan/ph_spec/ph/parking-lot/features/examples && find cli_plan/ph_spec/ph/parking-lot/features/examples -maxdepth 4 -type f -print -exec sed -n '1,120p' {} \;
+- rg -n "FEAT-<YYYYMMDD>" -n legacy-reference/project-handbook/docs/PARKING_LOT_SYSTEM.md
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/parking-lot/features/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/parking-lot/features/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and that the recommended `FEAT-<YYYYMMDD>-<slug>` naming convention is consistent with the legacy-parity documentation.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/parking-lot/features/` directory contract, including schema and validation rules, despite no example fixtures being present.
+
+Next task:
+- DD-0122
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 23:30 UTC — DD-0120 — Complete spec contract for parking-lot/external-requests/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0120)
+- cli_plan/ph_spec/ph/parking-lot/contract.md
+- cli_plan/ph_spec/ph/parking-lot/external-requests/contract.md
+- cli_plan/ph_spec/ph/parking-lot/external-requests/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/parking-lot/external-requests/`.
+
+Work performed (ordered):
+1. Reviewed the external-requests contract stub and confirmed there are no example fixtures for this category.
+2. Completed the contract with item naming rules, required README schema, and non-destructive creation semantics.
+3. Aligned the item front matter expectations with the parking-lot root contract (`status: parking-lot`, no archival keys for active items).
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,220p' cli_plan/ph_spec/ph/parking-lot/external-requests/contract.md
+- ls -la cli_plan/ph_spec/ph/parking-lot/external-requests/examples && find cli_plan/ph_spec/ph/parking-lot/external-requests/examples -maxdepth 4 -type f -print -exec sed -n '1,120p' {} \;
+- sed -n '1,80p' legacy-reference/project-handbook/docs/PARKING_LOT_SYSTEM.md
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/parking-lot/external-requests/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/parking-lot/external-requests/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and that the recommended `EXT-<YYYYMMDD>-<slug>` naming convention matches the legacy-parity documentation.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/parking-lot/external-requests/` directory contract, including schema and validation rules, despite no example fixtures being present.
+
+Next task:
+- DD-0121
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 23:28 UTC — DD-0119 — Complete spec contract for parking-lot/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0119)
+- cli_plan/ph_spec/ph/parking-lot/contract.md
+- cli_plan/ph_spec/ph/parking-lot/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/parking-lot/`.
+
+Work performed (ordered):
+1. Reviewed the v1 `ph parking` contract and the existing parking-lot index example fixture.
+2. Completed the `ph/parking-lot/` contract (index schema, item README front matter, invariants, and validation rules).
+3. Reconciled the example `index.json` timestamp format to be RFC3339 (`Z` suffix).
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,260p' cli_plan/ph_spec/ph/parking-lot/contract.md
+- ls -la cli_plan/ph_spec/ph/parking-lot/examples && find cli_plan/ph_spec/ph/parking-lot/examples -maxdepth 3 -type f -print -exec cat {} \;
+- sed -n '520,560p' cli_plan/v1_cli/CLI_CONTRACT.md
+- sed -n '130,220p' legacy-reference/project-handbook/docs/PARKING_LOT_SYSTEM.md
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/parking-lot/contract.md cli_plan/ph_spec/ph/parking-lot/examples/index.json || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/parking-lot/contract.md
+- cli_plan/ph_spec/ph/parking-lot/examples/index.json
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the `examples/index.json` now matches the documented timestamp format.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/parking-lot/` directory contract and reconciled the bundled index example with the documented schema.
+
+Next task:
+- DD-0120
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 22:29 UTC — DD-0118 — Complete spec contract for parking-lot/archive/technical-debt/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0118)
+- cli_plan/ph_spec/ph/parking-lot/archive/contract.md
+- cli_plan/ph_spec/ph/parking-lot/archive/technical-debt/contract.md
+- cli_plan/ph_spec/ph/parking-lot/archive/technical-debt/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/parking-lot/archive/technical-debt/`.
+
+Work performed (ordered):
+1. Reviewed the archive technical-debt contract stub and the existing archived technical-debt example fixture.
+2. Completed the contract with explicit archive move semantics and schema rules inherited from the archive root contract.
+3. Mapped the archived technical-debt example fixture to the documented schema and validation rules.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,240p' cli_plan/ph_spec/ph/parking-lot/archive/technical-debt/contract.md
+- ls -la cli_plan/ph_spec/ph/parking-lot/archive/technical-debt/examples && find cli_plan/ph_spec/ph/parking-lot/archive/technical-debt/examples -maxdepth 4 -type f -print -exec sed -n '1,120p' {} \;
+- find cli_plan/ph_spec/ph/parking-lot/archive/examples/technical-debt -maxdepth 3 -type f -print -exec sed -n '1,140p' {} \;
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/parking-lot/archive/technical-debt/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/parking-lot/archive/technical-debt/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the example fixture includes `status: archived` plus the required archival metadata keys.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/parking-lot/archive/technical-debt/` directory contract and reconciled it against the included archived technical-debt example fixture.
+
+Next task:
+- DD-0119
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 22:28 UTC — DD-0117 — Complete spec contract for parking-lot/archive/research/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0117)
+- cli_plan/ph_spec/ph/parking-lot/archive/contract.md
+- cli_plan/ph_spec/ph/parking-lot/archive/research/contract.md
+- cli_plan/ph_spec/ph/parking-lot/archive/research/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/parking-lot/archive/research/`.
+
+Work performed (ordered):
+1. Reviewed the archive research contract stub and the existing archived research example fixture.
+2. Completed the contract with explicit archive move semantics and schema rules inherited from the archive root contract.
+3. Mapped the archived research example fixture to the documented schema and validation rules.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,240p' cli_plan/ph_spec/ph/parking-lot/archive/research/contract.md
+- ls -la cli_plan/ph_spec/ph/parking-lot/archive/research/examples && find cli_plan/ph_spec/ph/parking-lot/archive/research/examples -maxdepth 4 -type f -print -exec sed -n '1,120p' {} \;
+- find cli_plan/ph_spec/ph/parking-lot/archive/examples/research -maxdepth 3 -type f -print -exec sed -n '1,120p' {} \;
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/parking-lot/archive/research/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/parking-lot/archive/research/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the example fixture includes `status: archived` plus the required archival metadata keys.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/parking-lot/archive/research/` directory contract and reconciled it against the included archived research example fixture.
+
+Next task:
+- DD-0118
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 22:26 UTC — DD-0116 — Complete spec contract for parking-lot/archive/features/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0116)
+- cli_plan/ph_spec/ph/parking-lot/archive/contract.md
+- cli_plan/ph_spec/ph/parking-lot/archive/features/contract.md
+- cli_plan/ph_spec/ph/parking-lot/archive/features/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/parking-lot/archive/features/`.
+
+Work performed (ordered):
+1. Reviewed the archive feature category contract stub and confirmed there are no example fixtures for this category.
+2. Completed the contract with explicit archive move semantics and schema rules inherited from the archive root contract.
+3. Added validation expectations for archived feature items.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,240p' cli_plan/ph_spec/ph/parking-lot/archive/features/contract.md
+- ls -la cli_plan/ph_spec/ph/parking-lot/archive/features/examples && find cli_plan/ph_spec/ph/parking-lot/archive/features/examples -maxdepth 4 -type f -print -exec sed -n '1,120p' {} \;
+- find cli_plan/ph_spec/ph/parking-lot/archive/examples -maxdepth 4 -type f -print -exec rg -n "type: features" {} \; 2>/dev/null || true
+- rg -n "^archived_at:|^type:|^status:" -n cli_plan/ph_spec/ph/parking-lot/archive/examples/technical-debt/DEBT-20260102-standardize-task-directory-slu/README.md cli_plan/ph_spec/ph/parking-lot/archive/examples/research/RES-20251230-process-fix-session-end-index-/README.md
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/parking-lot/archive/features/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/parking-lot/archive/features/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and aligns with the archive root schema requirements for `status: archived` + archival metadata.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/parking-lot/archive/features/` directory contract, including schema and validation rules, despite no example fixtures being present.
+
+Next task:
+- DD-0117
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 22:19 UTC — DD-0115 — Complete spec contract for parking-lot/archive/external-requests/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0115)
+- cli_plan/ph_spec/ph/parking-lot/archive/external-requests/contract.md
+- cli_plan/ph_spec/ph/parking-lot/archive/external-requests/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/parking-lot/archive/external-requests/`.
+
+Work performed (ordered):
+1. Reviewed the external-requests archive contract stub and confirmed there are no example fixtures for this category.
+2. Completed the contract with explicit archive move semantics and naming/schema rules inherited from the archive root contract.
+3. Added validation expectations for archived external request items.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,240p' cli_plan/ph_spec/ph/parking-lot/archive/external-requests/contract.md
+- ls -la cli_plan/ph_spec/ph/parking-lot/archive/external-requests/examples && find cli_plan/ph_spec/ph/parking-lot/archive/external-requests/examples -maxdepth 3 -type f -print -exec sed -n '1,140p' {} \;
+- find cli_plan/ph_spec/ph/parking-lot/archive/examples -maxdepth 3 -type f -print | rg -n "external-requests" || true
+- ls -la cli_plan/ph_spec/ph/parking-lot/examples && find cli_plan/ph_spec/ph/parking-lot/examples -maxdepth 4 -type f -print -exec sed -n '1,80p' {} \;
+- rg -n "external-requests|EXT-|REQ-|XR-" -S legacy-reference cli_plan/ph_spec/ph | head -n 50
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/parking-lot/archive/external-requests/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/parking-lot/archive/external-requests/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and that the recommended `EXT-<YYYYMMDD>-<slug>` naming convention is consistent with the legacy reference.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/parking-lot/archive/external-requests/` directory contract, including schema and validation rules, despite no example fixtures being present.
+
+Next task:
+- DD-0116
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 22:18 UTC — DD-0114 — Complete spec contract for parking-lot/archive/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0114)
+- cli_plan/ph_spec/ph/parking-lot/archive/contract.md
+- cli_plan/ph_spec/ph/parking-lot/archive/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/parking-lot/archive/`.
+
+Work performed (ordered):
+1. Reviewed the archive contract stub and the existing archived parking-lot example fixtures.
+2. Completed the archive contract with explicit archive move semantics and required archived README front matter.
+3. Added validation expectations (archive is read-only; archived items excluded from the active `index.json` catalog).
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,260p' cli_plan/ph_spec/ph/parking-lot/archive/contract.md
+- sed -n '1,260p' cli_plan/ph_spec/ph/parking-lot/contract.md
+- ls -la cli_plan/ph_spec/ph/parking-lot/archive/examples && find cli_plan/ph_spec/ph/parking-lot/archive/examples -maxdepth 4 -type f -print -exec sed -n '1,160p' {} \;
+- rg -n -- "ph parking" cli_plan/v1_cli/CLI_CONTRACT.md | head -n 120
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/parking-lot/archive/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/parking-lot/archive/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the documented archived README front matter requirements match the provided archive example fixtures.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/parking-lot/archive/` directory contract and reconciled it against the included archived example fixtures.
+
+Next task:
+- DD-0115
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 22:15 UTC — DD-0113 — Complete spec contract for features/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0113)
+- cli_plan/ph_spec/ph/features/contract.md
+- cli_plan/ph_spec/ph/features/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/features/`.
+
+Work performed (ordered):
+1. Reviewed the feature example fixture to infer the standard file set and required front matter keys.
+2. Completed the `ph/features/` contract with creation/move semantics and explicit required vs optional artifacts.
+3. Reconciled schema expectations with the v1 CLI feature command surface (`create`, `status`, `update-status`, `archive`).
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,260p' cli_plan/ph_spec/ph/features/contract.md
+- ls -la cli_plan/ph_spec/ph/features/examples && find cli_plan/ph_spec/ph/features/examples -maxdepth 4 -type f -print -exec sed -n '1,160p' {} \;
+- rg -n "## `ph feature`|ph feature create|ph feature list|ph feature status|ph feature update-status|ph feature summary" cli_plan/v1_cli/CLI_CONTRACT.md
+- sed -n '456,520p' cli_plan/v1_cli/CLI_CONTRACT.md
+- find cli_plan/ph_spec/ph/features/examples/v2_launch -maxdepth 3 -type f -print
+- sed -n '1,160p' cli_plan/ph_spec/ph/features/examples/v2_launch/testing/TESTING.md
+- sed -n '460,505p' cli_plan/v1_cli/CLI_CONTRACT.md
+- rg -n -- "--stage <" cli_plan/v1_cli/CLI_CONTRACT.md
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/features/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/features/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and its required file set matches the included feature example fixture.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/features/` directory contract and reconciled it against the v1 CLI feature commands and the provided example feature docs.
+
+Next task:
+- DD-0114
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 22:06 UTC — DD-0112 — Complete spec contract for features/archive/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0112)
+- cli_plan/ph_spec/ph/features/archive/contract.md
+- cli_plan/ph_spec/ph/features/archive/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/features/archive/`.
+
+Work performed (ordered):
+1. Reviewed the existing `ph/features/archive/` contract stub and confirmed there are no example fixtures for this directory.
+2. Completed the archive contract with move semantics (`ph feature archive`), immutability rules, and validation expectations.
+3. Reconciled the contract against the v1 CLI contract’s feature archive behavior (move-only, `--force` for collisions).
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,240p' cli_plan/ph_spec/ph/features/archive/contract.md
+- rg -n "## `ph feature`|ph feature" cli_plan/v1_cli/CLI_CONTRACT.md | head -n 120
+- sed -n '450,520p' cli_plan/v1_cli/CLI_CONTRACT.md
+- rg -n "ph feature archive" cli_plan/v1_cli/CLI_CONTRACT.md
+- ls -la cli_plan/ph_spec/ph/features/archive/examples && find cli_plan/ph_spec/ph/features/archive/examples -maxdepth 3 -type f -print -exec sed -n '1,120p' {} \;
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/features/archive/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/features/archive/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and its move/immutability rules align with `ph feature archive` as defined in `CLI_CONTRACT.md`.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/features/archive/` directory contract with explicit archive move semantics and read-only expectations.
+
+Next task:
+- DD-0113
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 22:05 UTC — DD-0111 — Complete spec contract for decision-register/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0111)
+- cli_plan/ph_spec/ph/decision-register/contract.md
+- cli_plan/ph_spec/ph/decision-register/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/decision-register/`.
+
+Work performed (ordered):
+1. Reviewed the existing `ph/decision-register/` contract stub and the bundled example DR/README fixtures.
+2. Completed the directory contract (purpose, creation rules, file naming, front matter requirements, and validation expectations).
+3. Mapped the example fixtures to the documented schema and conventions.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,260p' cli_plan/ph_spec/ph/decision-register/contract.md
+- ls -la cli_plan/ph_spec/ph/decision-register/examples && find cli_plan/ph_spec/ph/decision-register/examples -maxdepth 2 -type f -print -exec sed -n '1,200p' {} \;
+- rg -n "decision-register|\\bDR-" cli_plan/v1_cli/CLI_CONTRACT.md | head -n 80
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/decision-register/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/decision-register/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the example fixtures match the documented filename/front matter conventions.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/decision-register/` directory contract and reconciled it against the included example README and DR entry.
+
+Next task:
+- DD-0112
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 22:03 UTC — DD-0110 — Complete spec contract for contracts/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0110)
+- cli_plan/ph_spec/ph/contracts/contract.md
+- cli_plan/ph_spec/ph/contracts/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/contracts/`.
+
+Work performed (ordered):
+1. Reviewed existing `ph/contracts/` contract stub and example fixtures.
+2. Completed the directory contract with purpose, ownership/overwrite rules, optional schemas, and validation expectations.
+3. Mapped the existing examples to the documented contract structure.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,240p' cli_plan/ph_spec/ph/contracts/contract.md
+- rg -n "ph contract|contracts/" cli_plan/v1_cli/CLI_CONTRACT.md | head -n 80
+- ls -la cli_plan/ph_spec/ph/contracts/examples && find cli_plan/ph_spec/ph/contracts/examples -maxdepth 3 -type f -print -exec sed -n '1,160p' {} \;
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/contracts/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/contracts/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the documented examples exist under `ph/contracts/examples/`.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/contracts/` directory contract and reconciled it with the existing example fixtures.
+
+Next task:
+- DD-0111
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 21:59 UTC — DD-0109 — Complete spec contract for ph/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0109)
+- cli_plan/ph_spec/ph/contract.md
+- cli_plan/ph_spec/ph/**/contract.md
+
+Goal:
+- Complete and validate the contract for the `ph/` root directory.
+
+Work performed (ordered):
+1. Reviewed the v1 layout/contract sources of truth for the `PH_CONTENT_ROOT` (`ph/`) content tree.
+2. Completed the `ph/` root contract with required top-level directories, invariants, and validation delegation to subdirectory contracts.
+3. Reconciled the `ph/examples/backlog/bugs` example fixture with the non-archive bug contract by removing archived-only front matter keys.
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- ls -la cli_plan/ph_spec/ph && ls -la cli_plan/ph_spec/ph/examples 2>/dev/null || true
+- sed -n '1,220p' cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- find cli_plan/ph_spec/ph/examples -maxdepth 3 -type f -print | head -n 50
+- find cli_plan/ph_spec/ph/examples -maxdepth 2 -type d -print
+- find cli_plan/ph_spec/ph/examples/backlog -type f -maxdepth 3 -print -exec sed -n '1,80p' {} \;
+- find cli_plan/ph_spec/ph/examples/sprints -type f -maxdepth 4 -print -exec sed -n '1,120p' {} \;
+- rg -n "PH_CONTENT_ROOT|content root" cli_plan/v1_cli/CLI_CONTRACT.md
+- sed -n '1,120p' cli_plan/v1_cli/CLI_CONTRACT.md
+- rg -n "now-next-later\\.md" cli_plan/v1_cli/CLI_CONTRACT.md
+- sed -n '120,170p' cli_plan/v1_cli/CLI_CONTRACT.md
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/contract.md || true
+- rg -n "archived_" cli_plan/ph_spec/ph/examples/backlog/bugs/EXAMPLE-BUG-P0-20250922-1144/README.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/contract.md
+- cli_plan/ph_spec/ph/examples/backlog/bugs/EXAMPLE-BUG-P0-20250922-1144/README.md
+
+Verification:
+- Confirmed the root `ph/` contract has no remaining `(TBD)` placeholders and the updated example fixture no longer includes archived-only front matter keys.
+
+Outcome:
+- status: done
+- summary: Completed the `ph/` root contract and reconciled the bundled example fixture with the non-archive bug contract.
+
+Next task:
+- DD-0110
+
+Blockers (if blocked):
+- (none)
+
+## 2026-01-17 21:57 UTC — DD-0108 — Complete spec contract for backlog/work-items/
+
+Agent: GPT-5.2 (Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: (not used; due-diligence only)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/due-diligence.json (task DD-0108)
+- cli_plan/ph_spec/ph/backlog/contract.md
+- cli_plan/ph_spec/ph/backlog/work-items/contract.md
+- cli_plan/ph_spec/ph/backlog/work-items/examples/**
+
+Goal:
+- Complete and validate the contract for `ph/backlog/work-items/`.
+
+Work performed (ordered):
+1. Reviewed the backlog contracts and the existing example work-item README fixture.
+2. Completed the `ph/backlog/work-items/` contract sections (purpose, creation, required layout, schema, invariants, validation, examples).
+3. Reconciled the work-item schema with `ph backlog add` and the archived work-item contract (archival keys forbidden for active items).
+
+Commands executed (exact):
+- date -u +"%Y-%m-%dT%H:%M:%SZ" && date -u +"%Y-%m-%d %H:%M UTC"
+- sed -n '1,220p' cli_plan/ph_spec/ph/backlog/contract.md
+- sed -n '1,200p' cli_plan/ph_spec/ph/backlog/work-items/contract.md
+- ls -la cli_plan/ph_spec/ph/backlog/work-items/examples
+- find cli_plan/ph_spec/ph/backlog/work-items/examples/WORK-P2-20260106-213751 -maxdepth 2 -type f -print -exec sed -n '1,160p' {} \;
+- sed -n '1,240p' cli_plan/ph_spec/ph/backlog/archive/work-items/contract.md
+- rg -n "backlog add|ph backlog" cli_plan/v1_cli/CLI_CONTRACT.md
+- sed -n '480,570p' cli_plan/v1_cli/CLI_CONTRACT.md
+- rg -n "\\(TBD\\)|TBD" cli_plan/ph_spec/ph/backlog/work-items/contract.md || true
+- date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+Files changed (exact paths):
+- cli_plan/due-diligence.json
+- cli_plan/session_logs.md
+- cli_plan/ph_spec/ph/backlog/work-items/contract.md
+
+Verification:
+- Confirmed the contract has no remaining `(TBD)` placeholders and the example fixture includes the required front matter keys for active work-items.
+
+Outcome:
+- status: done
+- summary: Completed the backlog work-items directory contract and reconciled it against the examples and the CLI/backlog contracts.
+
+Next task:
+- DD-0109
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-01-17 04:13 UTC — DD-0006 — Define content vs internal ownership rules
 
 Agent: GPT-5.2 (Codex CLI)
