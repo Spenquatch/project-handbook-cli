@@ -45,13 +45,13 @@ TOPICS: dict[str, str] = {
         "                        - Update status with dependency validation\n"
     ),
     "feature": """Feature management commands
-  ph feature list             - List features with owner, stage, and links
-  ph feature create --name foo [--epic] [--owner @alice]
+  make feature-list             - List features with owner, stage, and links
+  make feature-create name=foo [epic=true] [owner=@alice]
                                 - Scaffold architecture/implementation/testing docs
-  ph feature status --name foo --stage in_progress
-  ph feature update-status    - Sync status.md files from sprint/task data
-  ph feature summary          - Aggregate progress for reporting
-  ph feature archive --name foo [--force]
+  make feature-status name=foo stage=in_progress
+  make feature-update-status    - Sync status.md files from sprint/task data
+  make feature-summary          - Aggregate progress for reporting
+  make feature-archive name=foo [force=true]
                                 - Completeness check + move to features/implemented/
 """,
     "release": (

@@ -5410,3 +5410,63 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-04 21:00 UTC — V1P-0004 — Parity: `make help feature` → `ph help feature`
+
+Agent: GPT-5.2 (Codex CLI Orchestrator) + background Codex exec
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable temp copy (created via `mktemp -d` from `/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0004)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- /Users/spensermcconnell/.codex/skills/coding-agent/SKILL.md
+
+Goal:
+- Achieve strict stdout parity for `ph --root <PH_ROOT> help feature` vs legacy `pnpm make -- help feature` / `pnpm make -- help-feature` run against the same disposable legacy repo copy.
+
+Work performed (ordered):
+1. Created a disposable copy of the legacy handbook repo as `PH_ROOT` and ran legacy `pnpm make -- help feature` / `pnpm make -- help-feature`.
+2. Ran `uv run ph --root "$PH_ROOT" help feature` and compared stdout byte-for-byte.
+3. Updated help topic text so `ph help feature` matches legacy `make`-style output and added deterministic pytest coverage to lock parity.
+4. Ran `ruff` + `pytest` and committed changes; updated bookkeeping via commit amend.
+
+Commands executed (exact):
+- LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"
+- PH_ROOT="$(mktemp -d -t ph-parity-V1P-0004-XXXXXXXX)"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"
+- (cd "$PH_ROOT" && pnpm install --frozen-lockfile)
+- (cd "$PH_ROOT" && pnpm make -- help feature) > /tmp/legacy-help-feature.txt
+- (cd "$PH_ROOT" && pnpm make -- help-feature) > /tmp/legacy-help-feature-dashed.txt
+- uv run ph --root "$PH_ROOT" help feature > /tmp/ph-help-feature.txt
+- diff -u /tmp/legacy-help-feature.txt /tmp/ph-help-feature.txt
+- uv run ruff check .
+- uv run pytest -q
+- git commit -m "Parity: V1P-0004 help feature"
+- git commit --amend --no-edit
+
+Files changed (exact paths):
+- cli_plan/tasks_v1_parity.json
+- cli_plan/session_logs.md
+- src/ph/help_text.py
+- tests/test_help_topics.py
+
+Verification:
+- `diff -u /tmp/legacy-help-feature.txt /tmp/ph-help-feature.txt` produced no output (byte-for-byte match).
+- Legacy `pnpm make -- help feature` creates/updates `PH_ROOT/.project-handbook/history.log`; `ph help feature` appends history and skips auto-validation (no `PH_ROOT/.project-handbook/status/validation.json`).
+- Note: `pnpm make -- help-feature` differs only in pnpm’s echoed command line; `ph help feature` matches the `pnpm make -- help feature` form.
+- `uv run ruff check .` passed.
+- `uv run pytest -q` passed.
+
+Outcome:
+- status: done
+- summary: `ph help feature` matches legacy `pnpm make -- help feature` stdout exactly and its post-hook behavior aligns with legacy for help (history yes, auto-validate no).
+
+Next task:
+- V1P-0005
+
+Blockers (if blocked):
+- (none)

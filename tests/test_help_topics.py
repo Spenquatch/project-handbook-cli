@@ -55,6 +55,24 @@ def _expected_help_task_stdout(*, resolved: Path) -> bytes:
     ).encode()
 
 
+def _expected_help_feature_stdout(*, resolved: Path) -> bytes:
+    return (
+        "\n"
+        f"> project-handbook@0.0.0 make {resolved}\n"
+        "> make -- help feature\n"
+        "\n"
+        "Feature management commands\n"
+        "  make feature-list             - List features with owner, stage, and links\n"
+        "  make feature-create name=foo [epic=true] [owner=@alice]\n"
+        "                                - Scaffold architecture/implementation/testing docs\n"
+        "  make feature-status name=foo stage=in_progress\n"
+        "  make feature-update-status    - Sync status.md files from sprint/task data\n"
+        "  make feature-summary          - Aggregate progress for reporting\n"
+        "  make feature-archive name=foo [force=true]\n"
+        "                                - Completeness check + move to features/implemented/\n"
+    ).encode()
+
+
 def test_help_stdout_matches_legacy_make_help(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     result = subprocess.run(["ph", "help", "--root", str(tmp_path)], capture_output=True)
@@ -120,6 +138,28 @@ def test_help_task_stdout_matches_legacy_pnpm_make_help_task(tmp_path: Path) -> 
     history_log = tmp_path / ".project-handbook" / "history.log"
     assert history_log.exists()
     assert history_log.stat().st_size > 0
+    assert not (tmp_path / ".project-handbook" / "status" / "validation.json").exists()
+
+
+def test_help_feature_stdout_matches_legacy_pnpm_make_help_feature(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _write_legacy_like_package_json(tmp_path)
+    resolved = tmp_path.resolve()
+
+    result = subprocess.run(["ph", "--root", str(tmp_path), "help", "feature"], capture_output=True)
+    assert result.returncode == 0
+    assert result.stdout == _expected_help_feature_stdout(resolved=resolved)
+
+    history_log = tmp_path / ".project-handbook" / "history.log"
+    assert history_log.exists()
+    first_lines = history_log.read_text(encoding="utf-8").splitlines()
+    assert len(first_lines) > 0
+    assert not (tmp_path / ".project-handbook" / "status" / "validation.json").exists()
+
+    result_2 = subprocess.run(["ph", "--root", str(tmp_path), "help", "feature"], capture_output=True)
+    assert result_2.returncode == 0
+    second_lines = history_log.read_text(encoding="utf-8").splitlines()
+    assert len(second_lines) > len(first_lines)
     assert not (tmp_path / ".project-handbook" / "status" / "validation.json").exists()
 
 
