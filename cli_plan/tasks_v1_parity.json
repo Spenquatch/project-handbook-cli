@@ -1,0 +1,865 @@
+{
+  "meta": {
+    "title": "CLI Plan \u2013 Strict Parity Task Queue (Make \u2192 ph)",
+    "type": "task-queue",
+    "date": "2026-02-04",
+    "tags": [
+      "cli",
+      "plan",
+      "parity",
+      "make",
+      "v1"
+    ],
+    "sources_of_truth": [
+      "cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md",
+      "cli_plan/v1_cli/CLI_CONTRACT.md",
+      "cli_plan/PARITY_CHECKLIST.md",
+      "cli_plan/v0_make/MAKE_CONTRACT.md"
+    ],
+    "legacy_reference_repo": "/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook",
+    "notes": [
+      "This queue is intentionally granular (one checklist checkbox per task).",
+      "Use a disposable copy of `legacy-reference/project-handbook/` as PH_ROOT for parity runs.",
+      "Mark tasks done only once the `ph` behavior matches legacy (or an intentional delta is documented in ADR/contract/spec)."
+    ]
+  },
+  "phases": [
+    {
+      "id": "PHASE-P01",
+      "order": 1,
+      "title": "Parity \u2014 Help",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    },
+    {
+      "id": "PHASE-P02",
+      "order": 2,
+      "title": "Parity \u2014 Daily (project)",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    },
+    {
+      "id": "PHASE-P03",
+      "order": 3,
+      "title": "Parity \u2014 Sprint (project)",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    },
+    {
+      "id": "PHASE-P04",
+      "order": 4,
+      "title": "Parity \u2014 Task (project)",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    },
+    {
+      "id": "PHASE-P05",
+      "order": 5,
+      "title": "Parity \u2014 Feature (project)",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    },
+    {
+      "id": "PHASE-P06",
+      "order": 6,
+      "title": "Parity \u2014 Backlog (project)",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    },
+    {
+      "id": "PHASE-P07",
+      "order": 7,
+      "title": "Parity \u2014 Parking (project)",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    },
+    {
+      "id": "PHASE-P08",
+      "order": 8,
+      "title": "Parity \u2014 Validation + status",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    },
+    {
+      "id": "PHASE-P09",
+      "order": 9,
+      "title": "Parity \u2014 Dashboards",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    },
+    {
+      "id": "PHASE-P10",
+      "order": 10,
+      "title": "Parity \u2014 Roadmap (project only)",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    },
+    {
+      "id": "PHASE-P11",
+      "order": 11,
+      "title": "Parity \u2014 Release (project only)",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    },
+    {
+      "id": "PHASE-P12",
+      "order": 12,
+      "title": "Parity \u2014 Onboarding + sessions",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    },
+    {
+      "id": "PHASE-P13",
+      "order": 13,
+      "title": "Parity \u2014 Session summarization",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    },
+    {
+      "id": "PHASE-P14",
+      "order": 14,
+      "title": "Parity \u2014 Utilities",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    },
+    {
+      "id": "PHASE-P15",
+      "order": 15,
+      "title": "Parity \u2014 CLI-only (not in reference Makefile)",
+      "goals": [
+        "Achieve strict parity with the legacy Make workflow for this command family.",
+        "Lock in parity with deterministic tests where feasible."
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "V1P-0001",
+      "phase_id": "PHASE-P01",
+      "order": 1,
+      "title": "Parity: `make help` \u2192 `ph help`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make help` \u2192 `ph help`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Help)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> help`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0002",
+      "phase_id": "PHASE-P01",
+      "order": 2,
+      "title": "Parity: `make help sprint` / `make help-sprint` \u2192 `ph help sprint`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make help sprint` / `make help-sprint` \u2192 `ph help sprint`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Help)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> help sprint`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0003",
+      "phase_id": "PHASE-P01",
+      "order": 3,
+      "title": "Parity: `make help task` / `make help-task` \u2192 `ph help task`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make help task` / `make help-task` \u2192 `ph help task`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Help)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> help task`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0004",
+      "phase_id": "PHASE-P01",
+      "order": 4,
+      "title": "Parity: `make help feature` / `make help-feature` \u2192 `ph help feature`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make help feature` / `make help-feature` \u2192 `ph help feature`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Help)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> help feature`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0005",
+      "phase_id": "PHASE-P01",
+      "order": 5,
+      "title": "Parity: `make help release` / `make help-release` \u2192 `ph help release`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make help release` / `make help-release` \u2192 `ph help release`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Help)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> help release`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0006",
+      "phase_id": "PHASE-P01",
+      "order": 6,
+      "title": "Parity: `make help backlog` / `make help-backlog` \u2192 `ph help backlog`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make help backlog` / `make help-backlog` \u2192 `ph help backlog`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Help)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> help backlog`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0007",
+      "phase_id": "PHASE-P01",
+      "order": 7,
+      "title": "Parity: `make help parking` / `make help-parking` \u2192 `ph help parking`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make help parking` / `make help-parking` \u2192 `ph help parking`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Help)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> help parking`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0008",
+      "phase_id": "PHASE-P01",
+      "order": 8,
+      "title": "Parity: `make help validation` / `make help-validation` \u2192 `ph help validation`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make help validation` / `make help-validation` \u2192 `ph help validation`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Help)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> help validation`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0009",
+      "phase_id": "PHASE-P01",
+      "order": 9,
+      "title": "Parity: `make help utilities` / `make help-utilities` \u2192 `ph help utilities`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make help utilities` / `make help-utilities` \u2192 `ph help utilities`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Help)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> help utilities`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0010",
+      "phase_id": "PHASE-P02",
+      "order": 1,
+      "title": "Parity: `make daily` \u2192 `ph daily generate`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make daily` \u2192 `ph daily generate`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Daily (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> daily generate`\n- Outputs to verify: `status/daily/YYYY/MM/DD.md`\n"
+    },
+    {
+      "id": "V1P-0011",
+      "phase_id": "PHASE-P02",
+      "order": 2,
+      "title": "Parity: `make daily-force` \u2192 `ph daily generate --force`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make daily-force` \u2192 `ph daily generate --force`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Daily (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> daily generate --force`\n- Outputs to verify: `status/daily/YYYY/MM/DD.md`\n"
+    },
+    {
+      "id": "V1P-0012",
+      "phase_id": "PHASE-P02",
+      "order": 3,
+      "title": "Parity: `make daily-check` \u2192 `ph daily check --verbose`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make daily-check` \u2192 `ph daily check --verbose`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Daily (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> daily check --verbose`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0013",
+      "phase_id": "PHASE-P03",
+      "order": 1,
+      "title": "Parity: `make sprint-plan` \u2192 `ph sprint plan`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make sprint-plan` \u2192 `ph sprint plan`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Sprint (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> sprint plan`\n- Outputs to verify: `sprints/<year>/<SPRINT-...>/plan.md`, `sprints/current`\n"
+    },
+    {
+      "id": "V1P-0014",
+      "phase_id": "PHASE-P03",
+      "order": 2,
+      "title": "Parity: `make sprint-open sprint=SPRINT-...` \u2192 `ph sprint open --sprint SPRINT-...`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make sprint-open sprint=SPRINT-...` \u2192 `ph sprint open --sprint SPRINT-...`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Sprint (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `sprints/<year>/<SPRINT-...>/` exists\n- Command: `ph --root <PH_ROOT> sprint open --sprint SPRINT-...`\n- Outputs to verify: `sprints/current`\n"
+    },
+    {
+      "id": "V1P-0015",
+      "phase_id": "PHASE-P03",
+      "order": 3,
+      "title": "Parity: `make sprint-status` \u2192 `ph sprint status`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make sprint-status` \u2192 `ph sprint status`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Sprint (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> sprint status`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0016",
+      "phase_id": "PHASE-P03",
+      "order": 4,
+      "title": "Parity: `make sprint-tasks` \u2192 `ph sprint tasks`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make sprint-tasks` \u2192 `ph sprint tasks`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Sprint (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `sprints/current` exists\n- Command: `ph --root <PH_ROOT> sprint tasks`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0017",
+      "phase_id": "PHASE-P03",
+      "order": 5,
+      "title": "Parity: `make burndown` \u2192 `ph sprint burndown`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make burndown` \u2192 `ph sprint burndown`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Sprint (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `sprints/current` exists\n- Command: `ph --root <PH_ROOT> sprint burndown`\n- Outputs to verify: `sprints/<year>/<SPRINT-...>/burndown.md`\n"
+    },
+    {
+      "id": "V1P-0018",
+      "phase_id": "PHASE-P03",
+      "order": 6,
+      "title": "Parity: `make sprint-capacity` \u2192 `ph sprint capacity`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make sprint-capacity` \u2192 `ph sprint capacity`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Sprint (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `sprints/current` exists\n- Command: `ph --root <PH_ROOT> sprint capacity`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0019",
+      "phase_id": "PHASE-P03",
+      "order": 7,
+      "title": "Parity: `make sprint-archive [sprint=SPRINT-...]` \u2192 `ph sprint archive [--sprint SPRINT-...]`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make sprint-archive [sprint=SPRINT-...]` \u2192 `ph sprint archive [--sprint SPRINT-...]`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Sprint (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: sprint exists (`sprints/<year>/<SPRINT-...>/`)\n- Command: `ph --root <PH_ROOT> sprint archive [--sprint SPRINT-...]`\n- Outputs to verify: `sprints/archive/**`, `sprints/archive/index.json`\n"
+    },
+    {
+      "id": "V1P-0020",
+      "phase_id": "PHASE-P03",
+      "order": 8,
+      "title": "Parity: `make sprint-close` \u2192 `ph sprint close`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make sprint-close` \u2192 `ph sprint close`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Sprint (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `sprints/current` exists\n- Command: `ph --root <PH_ROOT> sprint close`\n- Outputs to verify: `sprints/<year>/<SPRINT-...>/retrospective.md`, `sprints/archive/**`, `sprints/archive/index.json`\n"
+    },
+    {
+      "id": "V1P-0021",
+      "phase_id": "PHASE-P04",
+      "order": 1,
+      "title": "Parity: `make task-create ...` \u2192 `ph task create ...`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make task-create ...` \u2192 `ph task create ...`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Task (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `sprints/current` exists; referenced feature exists; lane must not start with `handbook/`\n- Command: `ph --root <PH_ROOT> task create --title \"...\" --feature <name> --decision ADR-0000 --points 1 --lane ops --session task-execution`\n- Outputs to verify: `sprints/current/tasks/TASK-###-*/task.yaml` (and other task files under the same directory)\n"
+    },
+    {
+      "id": "V1P-0022",
+      "phase_id": "PHASE-P04",
+      "order": 2,
+      "title": "Parity: `make task-list` \u2192 `ph task list`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make task-list` \u2192 `ph task list`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Task (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> task list`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0023",
+      "phase_id": "PHASE-P04",
+      "order": 3,
+      "title": "Parity: `make task-show id=TASK-###` \u2192 `ph task show --id TASK-###`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make task-show id=TASK-###` \u2192 `ph task show --id TASK-###`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Task (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `sprints/**/tasks/TASK-###-*/` exists\n- Command: `ph --root <PH_ROOT> task show --id TASK-###`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0024",
+      "phase_id": "PHASE-P04",
+      "order": 4,
+      "title": "Parity: `make task-status id=TASK-### status=doing [force=true]` \u2192 `ph task status --id TASK-### --status doing [--force]`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make task-status id=TASK-### status=doing [force=true]` \u2192 `ph task status --id TASK-### --status doing [--force]`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Task (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `sprints/**/tasks/TASK-###-*/task.yaml` exists\n- Command: `ph --root <PH_ROOT> task status --id TASK-### --status doing [--force]`\n- Outputs to verify: `sprints/**/tasks/TASK-###-*/task.yaml`\n"
+    },
+    {
+      "id": "V1P-0025",
+      "phase_id": "PHASE-P05",
+      "order": 1,
+      "title": "Parity: `make feature-list` \u2192 `ph feature list`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make feature-list` \u2192 `ph feature list`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Feature (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> feature list`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0026",
+      "phase_id": "PHASE-P05",
+      "order": 2,
+      "title": "Parity: `make feature-create name=<name>` \u2192 `ph feature create --name <name>`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make feature-create name=<name>` \u2192 `ph feature create --name <name>`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Feature (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> feature create --name <name>`\n- Outputs to verify: `features/<name>/`\n"
+    },
+    {
+      "id": "V1P-0027",
+      "phase_id": "PHASE-P05",
+      "order": 3,
+      "title": "Parity: `make feature-status name=<name> stage=<stage>` \u2192 `ph feature status --name <name> --stage <stage>`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make feature-status name=<name> stage=<stage>` \u2192 `ph feature status --name <name> --stage <stage>`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Feature (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `features/<name>/` exists\n- Command: `ph --root <PH_ROOT> feature status --name <name> --stage <stage>`\n- Outputs to verify: `features/<name>/overview.md` (front matter/status fields updated)\n"
+    },
+    {
+      "id": "V1P-0028",
+      "phase_id": "PHASE-P05",
+      "order": 4,
+      "title": "Parity: `make feature-update-status` \u2192 `ph feature update-status`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make feature-update-status` \u2192 `ph feature update-status`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Feature (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> feature update-status`\n- Outputs to verify: `features/**/status.md` (and/or other feature status artifacts written by updater)\n"
+    },
+    {
+      "id": "V1P-0029",
+      "phase_id": "PHASE-P05",
+      "order": 5,
+      "title": "Parity: `make feature-summary` \u2192 `ph feature summary`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make feature-summary` \u2192 `ph feature summary`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Feature (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> feature summary`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0030",
+      "phase_id": "PHASE-P05",
+      "order": 6,
+      "title": "Parity: `make feature-archive name=<name> [force=true]` \u2192 `ph feature archive --name <name> [--force]`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make feature-archive name=<name> [force=true]` \u2192 `ph feature archive --name <name> [--force]`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Feature (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `features/<name>/` exists\n- Command: `ph --root <PH_ROOT> feature archive --name <name> [--force]`\n- Outputs to verify: `features/implemented/<name>/`\n"
+    },
+    {
+      "id": "V1P-0031",
+      "phase_id": "PHASE-P06",
+      "order": 1,
+      "title": "Parity: `make backlog-add ...` \u2192 `ph backlog add ...`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make backlog-add ...` \u2192 `ph backlog add ...`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Backlog (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> backlog add --type bugs --title \\\"...\\\" --severity P2`\n- Outputs to verify: `backlog/index.json`, `backlog/<type>/<ID>/**`\n"
+    },
+    {
+      "id": "V1P-0032",
+      "phase_id": "PHASE-P06",
+      "order": 2,
+      "title": "Parity: `make backlog-list ...` \u2192 `ph backlog list ...`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make backlog-list ...` \u2192 `ph backlog list ...`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Backlog (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> backlog list ...`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0033",
+      "phase_id": "PHASE-P06",
+      "order": 3,
+      "title": "Parity: `make backlog-triage issue=<ID>` \u2192 `ph backlog triage --issue <ID>`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make backlog-triage issue=<ID>` \u2192 `ph backlog triage --issue <ID>`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Backlog (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `backlog/<type>/<ID>/` exists\n- Command: `ph --root <PH_ROOT> backlog triage --issue <ID>`\n- Outputs to verify: `backlog/index.json`, `backlog/<type>/<ID>/**` (triage metadata updated)\n"
+    },
+    {
+      "id": "V1P-0034",
+      "phase_id": "PHASE-P06",
+      "order": 4,
+      "title": "Parity: `make backlog-assign issue=<ID> [sprint=current]` \u2192 `ph backlog assign --issue <ID> [--sprint current]`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make backlog-assign issue=<ID> [sprint=current]` \u2192 `ph backlog assign --issue <ID> [--sprint current]`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Backlog (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `backlog/<type>/<ID>/` exists\n- Command: `ph --root <PH_ROOT> backlog assign --issue <ID> [--sprint current]`\n- Outputs to verify: `backlog/index.json`, `backlog/<type>/<ID>/**` (assignment metadata updated)\n"
+    },
+    {
+      "id": "V1P-0035",
+      "phase_id": "PHASE-P06",
+      "order": 5,
+      "title": "Parity: `make backlog-rubric` \u2192 `ph backlog rubric`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make backlog-rubric` \u2192 `ph backlog rubric`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Backlog (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> backlog rubric`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0036",
+      "phase_id": "PHASE-P06",
+      "order": 6,
+      "title": "Parity: `make backlog-stats` \u2192 `ph backlog stats`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make backlog-stats` \u2192 `ph backlog stats`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Backlog (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> backlog stats`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0037",
+      "phase_id": "PHASE-P07",
+      "order": 1,
+      "title": "Parity: `make parking-add ...` \u2192 `ph parking add ...`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make parking-add ...` \u2192 `ph parking add ...`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Parking (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> parking add --type technical-debt --title \\\"...\\\"`\n- Outputs to verify: `parking-lot/index.json`, `parking-lot/<category>/<ID>/**`\n"
+    },
+    {
+      "id": "V1P-0038",
+      "phase_id": "PHASE-P07",
+      "order": 2,
+      "title": "Parity: `make parking-list ...` \u2192 `ph parking list ...`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make parking-list ...` \u2192 `ph parking list ...`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Parking (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> parking list ...`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0039",
+      "phase_id": "PHASE-P07",
+      "order": 3,
+      "title": "Parity: `make parking-review` \u2192 `ph parking review`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make parking-review` \u2192 `ph parking review`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Parking (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> parking review`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0040",
+      "phase_id": "PHASE-P07",
+      "order": 4,
+      "title": "Parity: `make parking-promote item=<ID> [target=later]` \u2192 `ph parking promote --item <ID> [--target later]`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make parking-promote item=<ID> [target=later]` \u2192 `ph parking promote --item <ID> [--target later]`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Parking (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `parking-lot/<category>/<ID>/` exists\n- Command: `ph --root <PH_ROOT> parking promote --item <ID> [--target later]`\n- Outputs to verify: `parking-lot/index.json`, `parking-lot/<category>/<ID>/**` (promotion metadata updated)\n"
+    },
+    {
+      "id": "V1P-0041",
+      "phase_id": "PHASE-P08",
+      "order": 1,
+      "title": "Parity: `make validate` \u2192 `ph validate`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make validate` \u2192 `ph validate`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Validation + status)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> validate`\n- Outputs to verify: `status/validation.json`\n"
+    },
+    {
+      "id": "V1P-0042",
+      "phase_id": "PHASE-P08",
+      "order": 2,
+      "title": "Parity: `make validate-quick` \u2192 `ph validate --quick`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make validate-quick` \u2192 `ph validate --quick`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Validation + status)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> validate --quick`\n- Outputs to verify: `status/validation.json`\n"
+    },
+    {
+      "id": "V1P-0043",
+      "phase_id": "PHASE-P08",
+      "order": 3,
+      "title": "Parity: `make pre-exec-lint` \u2192 `ph pre-exec lint`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make pre-exec-lint` \u2192 `ph pre-exec lint`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Validation + status)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `sprints/current/tasks/` exists and contains tasks\n- Command: `ph --root <PH_ROOT> pre-exec lint`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0044",
+      "phase_id": "PHASE-P08",
+      "order": 4,
+      "title": "Parity: `make pre-exec-audit [sprint=SPRINT-...] [date=YYYY-MM-DD] [evidence_dir=<path>]` \u2192 `ph pre-exec audit [...]`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make pre-exec-audit [sprint=SPRINT-...] [date=YYYY-MM-DD] [evidence_dir=<path>]` \u2192 `ph pre-exec audit [...]`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Validation + status)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `sprints/current/plan.md` exists (or `--sprint` is provided)\n- Command: `ph --root <PH_ROOT> pre-exec audit [--sprint SPRINT-...] [--date YYYY-MM-DD] [--evidence-dir <path>]`\n- Outputs to verify: `status/evidence/PRE-EXEC/<SPRINT-...>/<YYYY-MM-DD>/**` (when `--evidence-dir` is not provided)\n"
+    },
+    {
+      "id": "V1P-0045",
+      "phase_id": "PHASE-P08",
+      "order": 5,
+      "title": "Parity: `make status` \u2192 `ph status`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make status` \u2192 `ph status`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Validation + status)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> status`\n- Outputs to verify: `status/current.json`, `status/current_summary.md`\n"
+    },
+    {
+      "id": "V1P-0046",
+      "phase_id": "PHASE-P09",
+      "order": 1,
+      "title": "Parity: `make dashboard` \u2192 `ph dashboard`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make dashboard` \u2192 `ph dashboard`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Dashboards)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> dashboard`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0047",
+      "phase_id": "PHASE-P10",
+      "order": 1,
+      "title": "Parity: `make roadmap` \u2192 `ph roadmap show`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make roadmap` \u2192 `ph roadmap show`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Roadmap (project only))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `roadmap/now-next-later.md` exists (or create it first)\n- Command: `ph --root <PH_ROOT> roadmap show`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0048",
+      "phase_id": "PHASE-P10",
+      "order": 2,
+      "title": "Parity: `make roadmap-show` \u2192 `ph roadmap show`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make roadmap-show` \u2192 `ph roadmap show`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Roadmap (project only))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `roadmap/now-next-later.md` exists (or create it first)\n- Command: `ph --root <PH_ROOT> roadmap show`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0049",
+      "phase_id": "PHASE-P10",
+      "order": 3,
+      "title": "Parity: `make roadmap-create` \u2192 `ph roadmap create`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make roadmap-create` \u2192 `ph roadmap create`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Roadmap (project only))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> roadmap create`\n- Outputs to verify: `roadmap/now-next-later.md`\n"
+    },
+    {
+      "id": "V1P-0050",
+      "phase_id": "PHASE-P10",
+      "order": 4,
+      "title": "Parity: `make roadmap-validate` \u2192 `ph roadmap validate`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make roadmap-validate` \u2192 `ph roadmap validate`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Roadmap (project only))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `roadmap/now-next-later.md` exists\n- Command: `ph --root <PH_ROOT> roadmap validate`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0051",
+      "phase_id": "PHASE-P11",
+      "order": 1,
+      "title": "Parity: `make release-plan ...` \u2192 `ph release plan ...`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make release-plan ...` \u2192 `ph release plan ...`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Release (project only))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> release plan [--version next] ...`\n- Outputs to verify: `releases/<version>/plan.md`, `releases/<version>/progress.md`, `releases/<version>/features.yaml`, `releases/current`\n"
+    },
+    {
+      "id": "V1P-0052",
+      "phase_id": "PHASE-P11",
+      "order": 2,
+      "title": "Parity: `make release-activate release=<vX.Y.Z>` \u2192 `ph release activate --release <vX.Y.Z>`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make release-activate release=<vX.Y.Z>` \u2192 `ph release activate --release <vX.Y.Z>`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Release (project only))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `releases/<vX.Y.Z>/` exists\n- Command: `ph --root <PH_ROOT> release activate --release <vX.Y.Z>`\n- Outputs to verify: `releases/current`\n"
+    },
+    {
+      "id": "V1P-0053",
+      "phase_id": "PHASE-P11",
+      "order": 3,
+      "title": "Parity: `make release-clear` \u2192 `ph release clear`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make release-clear` \u2192 `ph release clear`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Release (project only))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> release clear`\n- Outputs to verify: `releases/current` is absent\n"
+    },
+    {
+      "id": "V1P-0054",
+      "phase_id": "PHASE-P11",
+      "order": 4,
+      "title": "Parity: `make release-status` \u2192 `ph release status`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make release-status` \u2192 `ph release status`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Release (project only))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `releases/current` exists and points at a valid `releases/<version>/`\n- Command: `ph --root <PH_ROOT> release status`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0055",
+      "phase_id": "PHASE-P11",
+      "order": 5,
+      "title": "Parity: `make release-show` \u2192 `ph release show`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make release-show` \u2192 `ph release show`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Release (project only))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `releases/current` exists and points at a valid `releases/<version>/`\n- Command: `ph --root <PH_ROOT> release show`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0056",
+      "phase_id": "PHASE-P11",
+      "order": 6,
+      "title": "Parity: `make release-progress` \u2192 `ph release progress`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make release-progress` \u2192 `ph release progress`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Release (project only))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `releases/current` exists and points at a valid `releases/<version>/`\n- Command: `ph --root <PH_ROOT> release progress`\n- Outputs to verify: `releases/<version>/progress.md`\n"
+    },
+    {
+      "id": "V1P-0057",
+      "phase_id": "PHASE-P11",
+      "order": 7,
+      "title": "Parity: `make release-add-feature ...` \u2192 `ph release add-feature ...`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make release-add-feature ...` \u2192 `ph release add-feature ...`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Release (project only))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `releases/<version>/features.yaml` exists (created by `ph release plan`)\n- Command: `ph --root <PH_ROOT> release add-feature --release <vX.Y.Z> --feature <name> ...`\n- Outputs to verify: `releases/<version>/features.yaml`\n"
+    },
+    {
+      "id": "V1P-0058",
+      "phase_id": "PHASE-P11",
+      "order": 8,
+      "title": "Parity: `make release-suggest version=<vX.Y.Z>` \u2192 `ph release suggest --version <vX.Y.Z>`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make release-suggest version=<vX.Y.Z>` \u2192 `ph release suggest --version <vX.Y.Z>`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Release (project only))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> release suggest --version <vX.Y.Z>`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0059",
+      "phase_id": "PHASE-P11",
+      "order": 9,
+      "title": "Parity: `make release-list` \u2192 `ph release list`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make release-list` \u2192 `ph release list`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Release (project only))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> release list`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0060",
+      "phase_id": "PHASE-P11",
+      "order": 10,
+      "title": "Parity: `make release-close version=<vX.Y.Z>` \u2192 `ph release close --version <vX.Y.Z>`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make release-close version=<vX.Y.Z>` \u2192 `ph release close --version <vX.Y.Z>`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Release (project only))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `releases/<version>/` exists\n- Command: `ph --root <PH_ROOT> release close --version <vX.Y.Z>`\n- Outputs to verify: `releases/<version>/plan.md`, `releases/<version>/changelog.md`\n"
+    },
+    {
+      "id": "V1P-0061",
+      "phase_id": "PHASE-P12",
+      "order": 1,
+      "title": "Parity: `make onboarding` \u2192 `ph onboarding`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make onboarding` \u2192 `ph onboarding`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Onboarding + sessions)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> onboarding`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0062",
+      "phase_id": "PHASE-P12",
+      "order": 2,
+      "title": "Parity: `make onboarding session list` \u2192 `ph onboarding session list`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make onboarding session list` \u2192 `ph onboarding session list`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Onboarding + sessions)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `process/sessions/templates/*.md` exists\n- Command: `ph --root <PH_ROOT> onboarding session list`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0063",
+      "phase_id": "PHASE-P12",
+      "order": 3,
+      "title": "Parity: `make onboarding session continue-session` \u2192 `ph onboarding session continue-session`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make onboarding session continue-session` \u2192 `ph onboarding session continue-session`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Onboarding + sessions)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `process/sessions/logs/latest_summary.md` exists (or has been created by `ph end-session`)\n- Command: `ph --root <PH_ROOT> onboarding session continue-session`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0064",
+      "phase_id": "PHASE-P12",
+      "order": 4,
+      "title": "Parity: `make onboarding session <template>` \u2192 `ph onboarding session <template>`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make onboarding session <template>` \u2192 `ph onboarding session <template>`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Onboarding + sessions)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `process/sessions/templates/<template>.md` exists\n- Command: `ph --root <PH_ROOT> onboarding session <template>`\n- Outputs to verify: (none; stdout only)\n"
+    },
+    {
+      "id": "V1P-0065",
+      "phase_id": "PHASE-P13",
+      "order": 1,
+      "title": "Parity: `make end-session ...` \u2192 `ph end-session ...`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make end-session ...` \u2192 `ph end-session ...`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Session summarization)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: rollout log exists at `--log <path>`\n- Command: `ph --root <PH_ROOT> end-session --log <rollout.jsonl> [--skip-codex] ...`\n- Outputs to verify:\n"
+    },
+    {
+      "id": "V1P-0066",
+      "phase_id": "PHASE-P14",
+      "order": 1,
+      "title": "Parity: `make clean` \u2192 `ph clean`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make clean` \u2192 `ph clean`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Utilities)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> clean`\n- Outputs to verify: (none; deletes `**/__pycache__/**` and `**/*.pyc` under PH_ROOT)\n"
+    },
+    {
+      "id": "V1P-0067",
+      "phase_id": "PHASE-P14",
+      "order": 2,
+      "title": "Parity: `make install-hooks` \u2192 `ph hooks install`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make install-hooks` \u2192 `ph hooks install`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Utilities)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `.git/` exists\n- Command: `ph --root <PH_ROOT> hooks install`\n- Outputs to verify: `.git/hooks/post-commit`, `.git/hooks/pre-push`\n"
+    },
+    {
+      "id": "V1P-0068",
+      "phase_id": "PHASE-P14",
+      "order": 3,
+      "title": "Parity: `make check-all` \u2192 `ph check-all`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make check-all` \u2192 `ph check-all`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Utilities)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> check-all`\n- Outputs to verify: `status/validation.json`, `status/current.json`, `status/current_summary.md`\n"
+    },
+    {
+      "id": "V1P-0069",
+      "phase_id": "PHASE-P14",
+      "order": 4,
+      "title": "Parity: `make test-system` \u2192 `ph test system`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `make test-system` \u2192 `ph test system`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Utilities)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> test system`\n- Outputs to verify: `status/validation.json`, `status/current.json`, `status/current_summary.md` (written by internal `ph validate` + `ph status`)\n"
+    },
+    {
+      "id": "V1P-0070",
+      "phase_id": "PHASE-P15",
+      "order": 1,
+      "title": "Parity: `ph reset` / `ph reset-smoke`",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: strict parity for: `ph reset` / `ph reset-smoke`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: CLI-only (not in reference Makefile))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Note: the reference Make interface does not define `reset*` targets.\n"
+    }
+  ]
+}

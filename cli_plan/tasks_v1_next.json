@@ -6,6 +6,7 @@
     "tags": ["cli", "plan", "v1", "next"],
     "notes": [
       "This queue is for incremental v1 work after the initial Make→CLI migration.",
+      "Use this queue after the strict parity baseline in `cli_plan/tasks_v1_parity.json` is complete.",
       "Authoritative layout: repo-root content trees, marker `project_handbook.config.json`, internals under `.project-handbook/**` (see cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md).",
       "Every task MUST be sized to fit a single agent session and must include deterministic tests where feasible.",
       "Legacy reference repo for parity checks: /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (run via `pnpm make -- <target>`)."

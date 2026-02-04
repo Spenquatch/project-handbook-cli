@@ -33,4 +33,5 @@ Authoritative CLI design:
 ## Task queues
 
 - `cli_plan/tasks.json`: historical migration task queue (now complete; kept as an audit trail).
+- `cli_plan/tasks_v1_parity.json`: strict parity queue (one checkbox per task from `cli_plan/PARITY_CHECKLIST.md`).
 - `cli_plan/tasks_v1_next.json`: active incremental v1 task queue (preferred for new work).

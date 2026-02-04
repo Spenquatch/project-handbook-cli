@@ -6,6 +6,7 @@ tags: [cli, plan, execution, agent]
 links:
   - ./tasks.json
   - ./tasks_v1_next.json
+  - ./tasks_v1_parity.json
   - ./due-diligence.json
   - ./backlog.json
   - ./session_logs.md
@@ -56,11 +57,13 @@ There are two independent workstreams under `cli_plan/`:
 
 1. **Due diligence (preferred until complete)**: finish the `ph_spec` contracts + example validation checklist in `cli_plan/due-diligence.json`.
 2. **CLI implementation (historical)**: the original migration task queue in `cli_plan/tasks.json` (now complete; keep for audit trail).
-3. **Next tasks (active)**: incremental v1 work in `cli_plan/tasks_v1_next.json` (preferred for new sessions).
+3. **Strict parity (active)**: granular Make→CLI parity tasks in `cli_plan/tasks_v1_parity.json` (one checkbox per task from `cli_plan/PARITY_CHECKLIST.md`).
+4. **Next tasks (post-parity)**: incremental v1 improvements in `cli_plan/tasks_v1_next.json` (use after parity baseline is green).
 
 Default policy:
 - If any due-diligence task is not `done`, work due diligence first.
-- If due diligence is complete, use `cli_plan/tasks_v1_next.json` for new work.
+- If due diligence is complete, use `cli_plan/tasks_v1_parity.json` for new work until parity baseline is complete.
+- After parity is complete, use `cli_plan/tasks_v1_next.json` for follow-on refinements.
 - Only refer to `cli_plan/tasks.json` for historical context.
 
 Important note:
@@ -116,6 +119,19 @@ Given `cli_plan/tasks_v1_next.json`:
 3. If `CANDIDATES` is empty:
    - pick the single `blocked` task with the lowest `(phase.order, task.order)` and work only on unblocking it
    - if there are no blocked tasks, stop and report: “No runnable v1-next tasks. All v1-next tasks are done.”
+4. Otherwise pick the single task in `CANDIDATES` with the lowest `(phase.order, task.order)`.
+5. The selected task is “the next task” for this session.
+
+### Parity queue (`cli_plan/tasks_v1_parity.json`)
+
+Given `cli_plan/tasks_v1_parity.json`:
+
+1. Build the set `DONE = { task.id | task.status == "done" }`.
+2. Compute the candidate list:
+   - `CANDIDATES = [ task | task.status == "todo" AND every dep in task.depends_on is in DONE ]`
+3. If `CANDIDATES` is empty:
+   - pick the single `blocked` task with the lowest `(phase.order, task.order)` and work only on unblocking it
+   - if there are no blocked tasks, stop and report: “No runnable parity tasks. All parity tasks are done.”
 4. Otherwise pick the single task in `CANDIDATES` with the lowest `(phase.order, task.order)`.
 5. The selected task is “the next task” for this session.
 
