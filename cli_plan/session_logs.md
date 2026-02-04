@@ -142,6 +142,44 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-04 23:16 UTC — V1P-0011 — Parity: `make daily-force` → `ph daily generate --force`
+
+Agent:
+Environment:
+Handbook instance repo:
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0011)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for legacy `pnpm make -- daily-force` vs `ph --root <PH_ROOT> daily generate --force` (stdout + `status/daily/YYYY/MM/DD.md`).
+
+Work performed (ordered):
+1. (pending)
+
+Commands executed (exact):
+- (pending)
+
+Files changed (exact paths):
+- (pending)
+
+Verification:
+- (pending)
+
+Outcome:
+- status: in_progress
+- summary: (pending)
+
+Next task:
+- (pending)
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-04 22:43 UTC — V1P-0010 — Parity: `make daily` → `ph daily generate`
 
 Agent: GPT-5.2 (Codex CLI background agent via Orchestrator)
