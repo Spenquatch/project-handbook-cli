@@ -145,6 +145,25 @@ def _expected_help_validation_stdout(*, resolved: Path) -> bytes:
     ).encode()
 
 
+def _expected_help_utilities_stdout(*, resolved: Path) -> bytes:
+    return (
+        "\n"
+        f"> project-handbook@0.0.0 make {resolved}\n"
+        "> make -- help utilities\n"
+        "\n"
+        "Utility + daily-use commands\n"
+        "  make daily / daily-force / daily-check - Manage daily status cadence\n"
+        "  make onboarding                 - Root onboarding guide\n"
+        "  make onboarding session <template> - Facilitated prompts (e.g., sprint-planning)\n"
+        "  make onboarding session continue-session - Show latest Codex + command history summary\n"
+        "  make end-session                - Generate session summary via headless Codex\n"
+        "  make dashboard                  - Quick sprint + validation snapshot\n"
+        "  make clean                      - Remove Python caches\n"
+        "  make install-hooks              - Install repo git hooks\n"
+        "  make test-system                - Automation smoke test suite\n"
+    ).encode()
+
+
 def test_help_stdout_matches_legacy_make_help(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     result = subprocess.run(["ph", "help", "--root", str(tmp_path)], capture_output=True)
@@ -288,6 +307,21 @@ def test_help_validation_stdout_matches_legacy_pnpm_make_help_validation(tmp_pat
     result = subprocess.run(["ph", "--root", str(tmp_path), "help", "validation"], capture_output=True)
     assert result.returncode == 0
     assert result.stdout == _expected_help_validation_stdout(resolved=resolved)
+
+    history_log = tmp_path / ".project-handbook" / "history.log"
+    assert history_log.exists()
+    assert history_log.stat().st_size > 0
+    assert not (tmp_path / ".project-handbook" / "status" / "validation.json").exists()
+
+
+def test_help_utilities_stdout_matches_legacy_pnpm_make_help_utilities(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _write_legacy_like_package_json(tmp_path)
+    resolved = tmp_path.resolve()
+
+    result = subprocess.run(["ph", "--root", str(tmp_path), "help", "utilities"], capture_output=True)
+    assert result.returncode == 0
+    assert result.stdout == _expected_help_utilities_stdout(resolved=resolved)
 
     history_log = tmp_path / ".project-handbook" / "history.log"
     assert history_log.exists()

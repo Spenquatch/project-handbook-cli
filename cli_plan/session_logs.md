@@ -142,6 +142,65 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-04 22:30 UTC — V1P-0009 — Parity: `make help utilities` → `ph help utilities`
+
+Agent: GPT-5.2 (Codex CLI background agent via Orchestrator)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable PH_ROOT (rsync copy of legacy repo into mktemp)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0009)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- src/ph/help_text.py
+- tests/test_help_topics.py
+
+Goal:
+- Achieve strict stdout parity for legacy `pnpm make -- help utilities` vs `ph --root <PH_ROOT> help utilities`.
+
+Work performed (ordered):
+1. Created a disposable PH_ROOT from the legacy handbook repo and captured legacy stdout for `help utilities` (and `help-utilities`).
+2. Captured `ph` stdout for `help utilities` against the same PH_ROOT and diffed outputs (initial mismatch).
+3. Updated the `utilities` help topic text to mirror the legacy `make ...` command list.
+4. Added a deterministic pytest asserting exact stdout for `ph help utilities`.
+5. Re-ran legacy vs `ph` capture + diff; verified byte-for-byte match.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- PH_ROOT=\"$(mktemp -d -t ph-parity-V1P-0009-XXXXXXXX)\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT\" && pnpm make -- help utilities) > /tmp/legacy-help-utilities.txt
+- (cd \"$PH_ROOT\" && pnpm make -- help-utilities) > /tmp/legacy-help-utilities-dashed.txt
+- uv run ph --root \"$PH_ROOT\" help utilities > /tmp/ph-help-utilities.txt
+- diff -u /tmp/legacy-help-utilities.txt /tmp/ph-help-utilities.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/help_text.py
+- tests/test_help_topics.py
+
+Verification:
+- `diff -u /tmp/legacy-help-utilities.txt /tmp/ph-help-utilities.txt` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+- Note: legacy `pnpm make -- help utilities` stdout differs from `pnpm make -- help-utilities` stdout (the echoed `> make -- ...` line); `ph help utilities` matches the former (checklist canonical).
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> help utilities` now matches legacy `pnpm make -- help utilities` stdout byte-for-byte; parity locked via pytest.
+
+Next task:
+- V1P-0010
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-01-18 00:22 UTC — DD-0129 — Complete spec contract for sprints/archive/
 
 Agent: GPT-5.2 (Codex CLI)

@@ -96,19 +96,15 @@ TOPICS: dict[str, str] = {
   make test-system               - Run validation + status + daily smoke checks
 """,
     "utilities": """Utility + daily-use commands
-  ph daily generate / daily generate --force / daily check --verbose - Manage daily status cadence
-  ph onboarding                 - Root onboarding guide
-  ph onboarding session <template> - Facilitated prompts (e.g., sprint-planning)
-  ph onboarding session continue-session - Show latest Codex + command history summary
-  ph end-session                - Generate session summary via headless Codex
-  ph dashboard                  - Quick sprint + validation snapshot
-  ph --scope system <command>   - System scope commands under .project-handbook/system (roadmap/releases excluded)
-  ph reset                      - Dry-run project reset (execute requires --confirm RESET --force true)
-  ph reset-smoke                - Prove reset preserves system scope
-  ph init                       - Initialize a new handbook instance repo (root marker)
-  ph clean                      - Remove Python caches
-  ph hooks install              - Install repo git hooks
-  ph test system                - Automation smoke test suite
+  make daily / daily-force / daily-check - Manage daily status cadence
+  make onboarding                 - Root onboarding guide
+  make onboarding session <template> - Facilitated prompts (e.g., sprint-planning)
+  make onboarding session continue-session - Show latest Codex + command history summary
+  make end-session                - Generate session summary via headless Codex
+  make dashboard                  - Quick sprint + validation snapshot
+  make clean                      - Remove Python caches
+  make install-hooks              - Install repo git hooks
+  make test-system                - Automation smoke test suite
 """,
     "roadmap": """Roadmap workflow commands
   ph roadmap show     - Show roadmap now/next/later
