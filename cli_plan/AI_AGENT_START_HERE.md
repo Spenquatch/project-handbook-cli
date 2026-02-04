@@ -5,6 +5,7 @@ date: 2026-01-14
 tags: [cli, plan, execution, agent]
 links:
   - ./tasks.json
+  - ./tasks_v1_next.json
   - ./due-diligence.json
   - ./backlog.json
   - ./session_logs.md
@@ -54,11 +55,13 @@ The `ph` CLI MUST treat the directory that contains `project_handbook.config.jso
 There are two independent workstreams under `cli_plan/`:
 
 1. **Due diligence (preferred until complete)**: finish the `ph_spec` contracts + example validation checklist in `cli_plan/due-diligence.json`.
-2. **CLI implementation**: the older task queue in `cli_plan/tasks.json`.
+2. **CLI implementation (historical)**: the original migration task queue in `cli_plan/tasks.json` (now complete; keep for audit trail).
+3. **Next tasks (active)**: incremental v1 work in `cli_plan/tasks_v1_next.json` (preferred for new sessions).
 
 Default policy:
 - If any due-diligence task is not `done`, work due diligence first.
-- Only return to `cli_plan/tasks.json` once `cli_plan/due-diligence.json` is fully `done`.
+- If due diligence is complete, use `cli_plan/tasks_v1_next.json` for new work.
+- Only refer to `cli_plan/tasks.json` for historical context.
 
 Important note:
 - `cli_plan/tasks.json` and older `cli_plan/session_logs.md` entries include historical references to a deprecated `.ph/**` / `ph/**` layout. For v1, treat `cli_plan/v1_cli/CLI_CONTRACT.md` + `cli_plan/ph_spec/` as authoritative.
@@ -100,6 +103,19 @@ Given `cli_plan/tasks.json`:
 3. If `CANDIDATES` is empty:
    - pick the single `blocked` task with the lowest `(phase.order, task.order)` and work only on unblocking it
    - if there are no blocked tasks, stop and report: “No runnable tasks. All tasks are done.”
+4. Otherwise pick the single task in `CANDIDATES` with the lowest `(phase.order, task.order)`.
+5. The selected task is “the next task” for this session.
+
+### Next queue (`cli_plan/tasks_v1_next.json`)
+
+Given `cli_plan/tasks_v1_next.json`:
+
+1. Build the set `DONE = { task.id | task.status == "done" }`.
+2. Compute the candidate list:
+   - `CANDIDATES = [ task | task.status == "todo" AND every dep in task.depends_on is in DONE ]`
+3. If `CANDIDATES` is empty:
+   - pick the single `blocked` task with the lowest `(phase.order, task.order)` and work only on unblocking it
+   - if there are no blocked tasks, stop and report: “No runnable v1-next tasks. All v1-next tasks are done.”
 4. Otherwise pick the single task in `CANDIDATES` with the lowest `(phase.order, task.order)`.
 5. The selected task is “the next task” for this session.
 

@@ -29,3 +29,8 @@ Authoritative CLI design:
 ## Parity rule
 
 `v1_cli` MUST preserve the intent and ergonomics of `v0_make` where applicable, while improving usability by ensuring the CLI can bootstrap a repo (`ph init`) and scaffold required files/directories (so commands don’t assume a pre-existing handbook filesystem).
+
+## Task queues
+
+- `cli_plan/tasks.json`: historical migration task queue (now complete; kept as an audit trail).
+- `cli_plan/tasks_v1_next.json`: active incremental v1 task queue (preferred for new work).

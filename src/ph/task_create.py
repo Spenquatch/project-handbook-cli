@@ -532,7 +532,7 @@ def run_task_create(
             "Before the task is marked `review`, add:",
             "- exact copy/paste command(s),",
             "- exact pass/fail success criteria,",
-            f"- exact evidence file list (under `project-handbook/status/evidence/{task_id}/`).",
+            f"- exact evidence file list (under `status/evidence/{task_id}/`).",
             "",
             "## Sign-off",
             "- [ ] All validation steps completed",

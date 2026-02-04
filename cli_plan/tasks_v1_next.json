@@ -1,0 +1,155 @@
+{
+  "meta": {
+    "title": "CLI Plan – v1 Next Tasks (Repo-Root Layout)",
+    "type": "task-queue",
+    "date": "2026-02-04",
+    "tags": ["cli", "plan", "v1", "next"],
+    "notes": [
+      "This queue is for incremental v1 work after the initial Make→CLI migration.",
+      "Authoritative layout: repo-root content trees, marker `project_handbook.config.json`, internals under `.project-handbook/**` (see cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md).",
+      "Every task MUST be sized to fit a single agent session and must include deterministic tests where feasible.",
+      "Legacy reference repo for parity checks: /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (run via `pnpm make -- <target>`)."
+    ]
+  },
+  "phases": [
+    {
+      "id": "PHASE-N1",
+      "order": 1,
+      "title": "Bootstrap + Scaffolding Completeness",
+      "goals": [
+        "Ensure `ph init` produces a fully usable, validation-clean handbook repo from an empty directory.",
+        "Eliminate any remaining docs/spec drift that could cause an agent to build commands that assume pre-existing files."
+      ]
+    },
+    {
+      "id": "PHASE-N2",
+      "order": 2,
+      "title": "Task Templates + Pre-Exec Gate UX",
+      "goals": [
+        "Make `ph task create` output compatible with `ph pre-exec lint` expectations (evidence paths, secret-scan, task id references).",
+        "Port legacy pre-exec patterns and ignore rules precisely where needed."
+      ]
+    },
+    {
+      "id": "PHASE-N3",
+      "order": 3,
+      "title": "Parity Audit (Domain-by-Domain)",
+      "goals": [
+        "Validate `ph` behavior against the legacy Make repo for each domain (sprints, tasks, releases, backlog, parking-lot).",
+        "Document intentional deltas vs legacy behavior and ensure contracts/specs reflect them."
+      ]
+    },
+    {
+      "id": "PHASE-N4",
+      "order": 4,
+      "title": "Docs + Agent UX",
+      "goals": [
+        "Ensure `cli_plan/docs` and top-level docs communicate that `ph` creates/scaffolds the entire system.",
+        "Make the “happy path” obvious for a new handbook repo: init → doctor → plan sprint → create tasks → pre-exec → execute."
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "V1N-0001",
+      "phase_id": "PHASE-N1",
+      "order": 1,
+      "title": "Init scaffolds required READMEs (validation-clean)",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Update `ph init` to seed any missing directory READMEs that are considered required by the spec (e.g. `status/README.md`) and ensure all seeded markdown is validation-clean (YAML front matter included). Add/adjust tests to ensure `ph init` then `ph validate --quick` exits 0 in a fresh directory."
+    },
+    {
+      "id": "V1N-0002",
+      "phase_id": "PHASE-N1",
+      "order": 2,
+      "title": "Port full session templates from legacy",
+      "status": "todo",
+      "depends_on": ["V1N-0001"],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Port the real `process/sessions/templates/*.md` set from the legacy repo into the `ph init` scaffold (non-destructive; do not overwrite). Ensure templates are validation-clean (YAML front matter). Add tests that `ph onboarding session list` includes expected topics and `ph onboarding session <topic>` prints a non-empty template."
+    },
+    {
+      "id": "V1N-0003",
+      "phase_id": "PHASE-N2",
+      "order": 1,
+      "title": "Fix task template evidence paths + secret-scan placeholders",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Update `ph task create` templates so the generated docs include: (1) an explicit evidence path placeholder `status/evidence/<TASK-###>/...`, and (2) an explicit `secret-scan.txt` evidence expectation. Ensure the output does NOT contain ambiguous language that triggers `ph pre-exec lint` by default (or only uses ambiguity words inside checkboxes that are ignored). Add tests to assert the generated task docs contain the evidence and secret-scan strings."
+    },
+    {
+      "id": "V1N-0004",
+      "phase_id": "PHASE-N2",
+      "order": 2,
+      "title": "Research-discovery task template parity",
+      "status": "todo",
+      "depends_on": ["V1N-0003"],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Ensure `ph task create --session research-discovery` scaffolds task docs that satisfy pre-exec lint alignment rules (Decision Register output expectation + exactly two options Option A / Option B). Add tests that a newly created research-discovery task triggers no session-alignment failures in `ph pre-exec lint` once required placeholders are present."
+    },
+    {
+      "id": "V1N-0005",
+      "phase_id": "PHASE-N2",
+      "order": 3,
+      "title": "Pre-exec lint patterns parity audit",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Compare `ph pre-exec lint` patterns + ignore rules with the legacy `process/checks/pre_exec_audit.py` implementation. Decide which differences are intentional and which are bugs. Update implementation/tests accordingly. Acceptance: add deterministic tests covering at least one ignore-case (checkbox TODO) and one blocking-case (bare TBD)."
+    },
+    {
+      "id": "V1N-0006",
+      "phase_id": "PHASE-N3",
+      "order": 1,
+      "title": "Sprint parity audit vs legacy Make",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Audit `ph sprint plan|open|status|tasks|close|archive|burndown|capacity` behavior against the legacy repo. For each command: confirm created files, symlink behavior, stdout hints, and post-hook behavior. Create/adjust tests to lock in at least 2 high-risk parity points (e.g. `sprints/current` behavior and close/archive outputs)."
+    },
+    {
+      "id": "V1N-0007",
+      "phase_id": "PHASE-N3",
+      "order": 2,
+      "title": "Release parity audit vs legacy Make",
+      "status": "todo",
+      "depends_on": ["V1N-0006"],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Audit `ph release *` behavior against legacy `make release-*`. Confirm `--activate` semantics, `releases/current` pointer behavior, `release show` output, and `release progress` regeneration. Add/adjust tests for at least one edge case: missing `releases/current` and missing `releases/<version>/plan.md`."
+    },
+    {
+      "id": "V1N-0008",
+      "phase_id": "PHASE-N3",
+      "order": 3,
+      "title": "Backlog + parking parity audit vs legacy Make",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Audit backlog and parking-lot command behavior (create/list/triage/assign/stats/review/promote) against legacy Make. Confirm index.json behavior (create/rebuild/update) and non-destructive guarantees. Add tests for rebuilding missing indexes from filesystem."
+    },
+    {
+      "id": "V1N-0009",
+      "phase_id": "PHASE-N4",
+      "order": 1,
+      "title": "Update cli_plan/docs to emphasize full scaffolding UX",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Review `cli_plan/docs/**` and ensure it clearly states: `ph` is responsible for scaffolding/creating the full filesystem and normal workflows do not assume pre-existing directories/files. Add/adjust a single canonical “happy path” flow: init → doctor → sprint plan → task create → pre-exec audit → execute."
+    },
+    {
+      "id": "V1N-0010",
+      "phase_id": "PHASE-N4",
+      "order": 2,
+      "title": "Contract/spec drift scan automation",
+      "status": "todo",
+      "depends_on": ["V1N-0009"],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Add a lightweight check (pytest or script) that scans for known-drift markers in planning/spec docs (e.g. `.ph/config.json`, `ph/**` layout references) and fails if they appear outside explicitly-marked historical docs. Keep the allowlist small and explicit."
+    }
+  ]
+}
+
