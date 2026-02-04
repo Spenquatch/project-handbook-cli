@@ -4,7 +4,7 @@ type: process
 date: 2026-01-14
 tags: [cli, plan, execution, agent]
 links:
-  - ./tasks.json
+  - ./archive/tasks_legacy.json
   - ./tasks_v1_next.json
   - ./tasks_v1_parity.json
   - ./due-diligence.json
@@ -56,7 +56,7 @@ The `ph` CLI MUST treat the directory that contains `project_handbook.config.jso
 There are two independent workstreams under `cli_plan/`:
 
 1. **Due diligence (preferred until complete)**: finish the `ph_spec` contracts + example validation checklist in `cli_plan/due-diligence.json`.
-2. **CLI implementation (historical)**: the original migration task queue in `cli_plan/tasks.json` (now complete; keep for audit trail).
+2. **CLI implementation (historical)**: the original migration task queue in `cli_plan/archive/tasks_legacy.json` (complete; keep for audit trail).
 3. **Strict parity (active)**: granular Make→CLI parity tasks in `cli_plan/tasks_v1_parity.json` (one checkbox per task from `cli_plan/PARITY_CHECKLIST.md`).
 4. **Next tasks (post-parity)**: incremental v1 improvements in `cli_plan/tasks_v1_next.json` (use after parity baseline is green).
 
@@ -64,10 +64,10 @@ Default policy:
 - If any due-diligence task is not `done`, work due diligence first.
 - If due diligence is complete, use `cli_plan/tasks_v1_parity.json` for new work until parity baseline is complete.
 - After parity is complete, use `cli_plan/tasks_v1_next.json` for follow-on refinements.
-- Only refer to `cli_plan/tasks.json` for historical context.
+- Only refer to `cli_plan/archive/tasks_legacy.json` for historical context.
 
 Important note:
-- `cli_plan/tasks.json` and older `cli_plan/session_logs.md` entries include historical references to a deprecated `.ph/**` / `ph/**` layout. For v1, treat `cli_plan/v1_cli/CLI_CONTRACT.md` + `cli_plan/ph_spec/` as authoritative.
+- `cli_plan/archive/tasks_legacy.json` and older `cli_plan/session_logs.md` entries include historical references to a deprecated `.ph/**` / `ph/**` layout. For v1, treat `cli_plan/v1_cli/CLI_CONTRACT.md` + `cli_plan/ph_spec/` as authoritative.
 
 ## Strict workflow (do this every session)
 
@@ -96,9 +96,9 @@ Given `cli_plan/due-diligence.json`:
    - if there are blocked tasks, pick the blocked task with the lowest numeric ID and work only on unblocking it
    - else stop and report: “No runnable due-diligence tasks. All due-diligence tasks are done.”
 
-### CLI queue (`cli_plan/tasks.json`)
+### CLI queue (`cli_plan/archive/tasks_legacy.json`)
 
-Given `cli_plan/tasks.json`:
+Given `cli_plan/archive/tasks_legacy.json`:
 
 1. Build the set `DONE = { task.id | task.status == "done" }`.
 2. Compute the candidate list:
@@ -156,7 +156,7 @@ For the active due-diligence task object:
   - add `"unblock_steps": ["<exact step to unblock>", "..."]`
   - add `"next_task_id": "<computed next DD-#### id or NONE>"`
 
-### CLI tasks (`cli_plan/tasks.json`)
+### CLI tasks (`cli_plan/archive/tasks_legacy.json`)
 
 For the active CLI task object:
 

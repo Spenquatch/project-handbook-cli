@@ -2,7 +2,7 @@
   "version": 1,
   "generated_at": "2026-01-18T20:16:53Z",
   "owner": "project-handbook",
-  "purpose": "Backlog of v1 CLI planning items that are not yet scheduled into cli_plan/tasks.json (or require contract/spec changes first).",
+  "purpose": "Backlog of v1 CLI planning items that are not yet scheduled into cli_plan/tasks_v1_parity.json (or require contract/spec changes first).",
   "status_values": ["todo", "in_progress", "done", "blocked", "deferred"],
   "items": [
     {
