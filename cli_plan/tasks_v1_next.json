@@ -36,7 +36,8 @@
       "title": "Parity Audit (Domain-by-Domain)",
       "goals": [
         "Validate `ph` behavior against the legacy Make repo for each domain (sprints, tasks, releases, backlog, parking-lot).",
-        "Document intentional deltas vs legacy behavior and ensure contracts/specs reflect them."
+        "Document intentional deltas vs legacy behavior and ensure contracts/specs reflect them.",
+        "Ensure cross-cutting commands (help, dashboard, hooks, onboarding/end-session, reset) match the contract and legacy UX where required."
       ]
     },
     {
@@ -138,7 +139,7 @@
       "status": "todo",
       "depends_on": [],
       "work_location": "cli_repo",
-      "kickoff_prompt": "Review `cli_plan/docs/**` and ensure it clearly states: `ph` is responsible for scaffolding/creating the full filesystem and normal workflows do not assume pre-existing directories/files. Add/adjust a single canonical “happy path” flow: init → doctor → sprint plan → task create → pre-exec audit → execute."
+      "kickoff_prompt": "Review `docs/**` and `cli_plan/**` and ensure they clearly state: `ph` is responsible for scaffolding/creating the full filesystem and normal workflows do not assume pre-existing directories/files. Add/adjust a single canonical “happy path” flow: init → doctor → sprint plan → task create → pre-exec audit → execute."
     },
     {
       "id": "V1N-0010",
@@ -149,7 +150,56 @@
       "depends_on": ["V1N-0009"],
       "work_location": "cli_repo",
       "kickoff_prompt": "Add a lightweight check (pytest or script) that scans for known-drift markers in planning/spec docs (e.g. `.ph/config.json`, `ph/**` layout references) and fails if they appear outside explicitly-marked historical docs. Keep the allowlist small and explicit."
+    },
+    {
+      "id": "V1N-0011",
+      "phase_id": "PHASE-N3",
+      "order": 4,
+      "title": "Help + dashboard parity audit vs legacy Make",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Audit `ph help` topic outputs and `ph dashboard` output against the legacy Make targets (`help*`, `dashboard`). Confirm banner lines, topic lists, and that Make-era command examples are rewritten to `ph` consistently. Add/adjust tests to lock in at least: (1) dashboard banner + “Recent Daily Status” behavior, (2) help contains `--scope system` line where expected by current UX."
+    },
+    {
+      "id": "V1N-0012",
+      "phase_id": "PHASE-N3",
+      "order": 5,
+      "title": "Hooks + orchestration parity audit",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Audit `ph hooks install`, `ph check-all`, and `ph test system` against legacy `install-hooks`, `check-all`, and `test-system`. Confirm that post-command hooks run exactly once for orchestration commands (no double history/validate). Add/adjust tests for: (1) check-all doesn’t double-run hooks, (2) test system prints expected section ordering and continues through all steps."
+    },
+    {
+      "id": "V1N-0013",
+      "phase_id": "PHASE-N3",
+      "order": 6,
+      "title": "Onboarding + end-session parity audit",
+      "status": "todo",
+      "depends_on": ["V1N-0002"],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Audit `ph onboarding` and `ph end-session` behavior against legacy `make onboarding` and `make end-session` scripts. Confirm output paths under `process/sessions/logs/` and `process/sessions/session_end/`, manifest/index updates, and remediation messages (e.g. continue-session when missing). Add/adjust tests to cover at least: (1) end-session writes latest_summary + manifest, (2) session_end_index is updated deterministically."
+    },
+    {
+      "id": "V1N-0014",
+      "phase_id": "PHASE-N3",
+      "order": 7,
+      "title": "Reset + reset-smoke safety parity audit",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Audit `ph reset` and `ph reset-smoke` behavior vs legacy expectations (dry-run default, strict confirm/force, forbidden subtree protection). Ensure `ph init`-seeded `process/automation/reset_spec.json` is sufficient and safe-by-default. Add tests for at least: (1) reset refuses without exact confirm, (2) reset refuses if forbidden subtree rules are violated."
+    },
+    {
+      "id": "V1N-0015",
+      "phase_id": "PHASE-N3",
+      "order": 8,
+      "title": "Roadmap parity audit + link normalization rules",
+      "status": "todo",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Audit `ph roadmap show|create|validate` behavior vs legacy `make roadmap*`. Confirm required headings, default seed file shape, and link normalization/validation behavior. Add tests for at least: (1) missing file remediation, (2) validate catches broken relative links under PH_ROOT."
     }
   ]
 }
-
