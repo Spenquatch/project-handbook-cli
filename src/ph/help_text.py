@@ -73,12 +73,12 @@ TOPICS: dict[str, str] = {
         "  make release-close version=v1.2.0 - Close and document retro notes\n"
     ),
     "backlog": """Issue backlog + triage commands
-  ph backlog add --type bug|wildcards|work-items --title 'X' --severity P1 --desc 'Y' [--owner @alice]
-  ph backlog list [--severity P1] [--category ops] [--format table]
-  ph backlog triage --issue BUG-001 - AI-assisted rubric + action items
-  ph backlog assign --issue BUG-001 --sprint current
-  ph backlog rubric            - Print P0-P4 criteria
-  ph backlog stats             - Metrics grouped by severity/category
+  make backlog-add type=bug|wildcards|work-items title='X' severity=P1 desc='Y' [owner=@alice]
+  make backlog-list [severity=P1] [category=ops] [format=table]
+  make backlog-triage issue=BUG-001 - AI-assisted rubric + action items
+  make backlog-assign issue=BUG-001 sprint=current
+  make backlog-rubric            - Print P0-P4 criteria
+  make backlog-stats             - Metrics grouped by severity/category
 """,
     "parking": """Parking lot workflow commands
   ph parking add --type features --title 'Idea' --desc 'Y' [--owner @alice] [--tags 'foo,bar']

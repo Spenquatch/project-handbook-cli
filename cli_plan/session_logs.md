@@ -5530,3 +5530,61 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-04 21:43 UTC — V1P-0006 — Parity: `make help backlog` → `ph help backlog`
+
+Agent: GPT-5.2 (Codex CLI Orchestrator) + background Codex exec
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable temp copy (created via `mktemp -d` from `/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0006)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- /Users/spensermcconnell/.codex/skills/coding-agent/SKILL.md
+- src/ph/help_text.py
+- tests/test_help_topics.py
+
+Goal:
+Match legacy `pnpm make -- help backlog` stdout byte-for-byte via `ph --root <PH_ROOT> help backlog`.
+
+Work performed (ordered):
+1. Captured legacy stdout for `help backlog` (and `help-backlog`) against a disposable `PH_ROOT`.
+2. Captured `ph` stdout for `help backlog` against the same `PH_ROOT` and diffed outputs.
+3. Updated `src/ph/help_text.py` backlog topic to mirror legacy `make backlog-*` help text.
+4. Added a deterministic pytest asserting exact stdout for `ph help backlog`.
+
+Commands executed (exact):
+- LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"
+- PH_ROOT="$(mktemp -d -t ph-parity-V1P-0006-XXXXXXXX)"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"
+- (cd "$PH_ROOT" && pnpm install --frozen-lockfile)
+- (cd "$PH_ROOT" && pnpm make -- help backlog) > /tmp/legacy-help-backlog.txt
+- (cd "$PH_ROOT" && pnpm make -- help-backlog) > /tmp/legacy-help-backlog-dashed.txt
+- uv run ph --root "$PH_ROOT" help backlog > /tmp/ph-help-backlog.txt
+- diff -u /tmp/legacy-help-backlog.txt /tmp/ph-help-backlog.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/help_text.py
+- tests/test_help_topics.py
+
+Verification:
+- `diff -u /tmp/legacy-help-backlog.txt /tmp/ph-help-backlog.txt` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> help backlog` now matches legacy `pnpm make -- help backlog` stdout byte-for-byte; parity locked via pytest.
+
+Next task:
+- V1P-0007
+
+Blockers (if blocked):
+- (none)

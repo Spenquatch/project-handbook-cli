@@ -98,6 +98,22 @@ def _expected_help_release_stdout(*, resolved: Path) -> bytes:
     ).encode()
 
 
+def _expected_help_backlog_stdout(*, resolved: Path) -> bytes:
+    return (
+        "\n"
+        f"> project-handbook@0.0.0 make {resolved}\n"
+        "> make -- help backlog\n"
+        "\n"
+        "Issue backlog + triage commands\n"
+        "  make backlog-add type=bug|wildcards|work-items title='X' severity=P1 desc='Y' [owner=@alice]\n"
+        "  make backlog-list [severity=P1] [category=ops] [format=table]\n"
+        "  make backlog-triage issue=BUG-001 - AI-assisted rubric + action items\n"
+        "  make backlog-assign issue=BUG-001 sprint=current\n"
+        "  make backlog-rubric            - Print P0-P4 criteria\n"
+        "  make backlog-stats             - Metrics grouped by severity/category\n"
+    ).encode()
+
+
 def test_help_stdout_matches_legacy_make_help(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     result = subprocess.run(["ph", "help", "--root", str(tmp_path)], capture_output=True)
@@ -196,6 +212,21 @@ def test_help_release_stdout_matches_legacy_pnpm_make_help_release(tmp_path: Pat
     result = subprocess.run(["ph", "--root", str(tmp_path), "help", "release"], capture_output=True)
     assert result.returncode == 0
     assert result.stdout == _expected_help_release_stdout(resolved=resolved)
+
+    history_log = tmp_path / ".project-handbook" / "history.log"
+    assert history_log.exists()
+    assert history_log.stat().st_size > 0
+    assert not (tmp_path / ".project-handbook" / "status" / "validation.json").exists()
+
+
+def test_help_backlog_stdout_matches_legacy_pnpm_make_help_backlog(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _write_legacy_like_package_json(tmp_path)
+    resolved = tmp_path.resolve()
+
+    result = subprocess.run(["ph", "--root", str(tmp_path), "help", "backlog"], capture_output=True)
+    assert result.returncode == 0
+    assert result.stdout == _expected_help_backlog_stdout(resolved=resolved)
 
     history_log = tmp_path / ".project-handbook" / "history.log"
     assert history_log.exists()
