@@ -73,6 +73,31 @@ def _expected_help_feature_stdout(*, resolved: Path) -> bytes:
     ).encode()
 
 
+def _expected_help_release_stdout(*, resolved: Path) -> bytes:
+    return (
+        "\n"
+        f"> project-handbook@0.0.0 make {resolved}\n"
+        "> make -- help release\n"
+        "\n"
+        "Release coordination commands\n"
+        "  make release-plan [version=v1.2.0|version=next] [bump=patch|minor|major] [sprints=3] "
+        '[sprint_ids="SPRINT-...,SPRINT-..."] [activate=true]\n'
+        "                                - Generate a release plan scaffold (optionally activate)\n"
+        "  make release-activate release=v1.2.0\n"
+        "                                - Set releases/current to an existing release\n"
+        "  make release-clear             - Unset current release pointer\n"
+        "  make release-status           - Summaries + health for current release\n"
+        "  make release-show             - Print releases/current/plan.md + computed status "
+        "(best for sprint planning/closing)\n"
+        "  make release-progress         - Refresh releases/current/progress.md "
+        "(auto-generated; no need to edit manually)\n"
+        "  make release-add-feature release=v1.2.0 feature=auth [epic=true] [critical=true]\n"
+        "  make release-suggest version=v1.2.0 - Recommend features based on status data\n"
+        "  make release-list             - List every release folder + status\n"
+        "  make release-close version=v1.2.0 - Close and document retro notes\n"
+    ).encode()
+
+
 def test_help_stdout_matches_legacy_make_help(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     result = subprocess.run(["ph", "help", "--root", str(tmp_path)], capture_output=True)
@@ -160,6 +185,21 @@ def test_help_feature_stdout_matches_legacy_pnpm_make_help_feature(tmp_path: Pat
     assert result_2.returncode == 0
     second_lines = history_log.read_text(encoding="utf-8").splitlines()
     assert len(second_lines) > len(first_lines)
+    assert not (tmp_path / ".project-handbook" / "status" / "validation.json").exists()
+
+
+def test_help_release_stdout_matches_legacy_pnpm_make_help_release(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _write_legacy_like_package_json(tmp_path)
+    resolved = tmp_path.resolve()
+
+    result = subprocess.run(["ph", "--root", str(tmp_path), "help", "release"], capture_output=True)
+    assert result.returncode == 0
+    assert result.stdout == _expected_help_release_stdout(resolved=resolved)
+
+    history_log = tmp_path / ".project-handbook" / "history.log"
+    assert history_log.exists()
+    assert history_log.stat().st_size > 0
     assert not (tmp_path / ".project-handbook" / "status" / "validation.json").exists()
 
 

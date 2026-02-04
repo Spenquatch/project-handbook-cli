@@ -56,14 +56,21 @@ TOPICS: dict[str, str] = {
 """,
     "release": (
         "Release coordination commands\n"
-        "  ph release plan [--version v1.2.0|next] [--bump patch|minor|major] [--sprints 3] "
-        '[--sprint-ids "SPRINT-...,SPRINT-..."]\n'
-        "                                - Generate plan.md with selected sprints/features\n"
-        "  ph release status           - Summaries + health for current release\n"
-        "  ph release add-feature --release v1.2.0 --feature auth [--epic] [--critical]\n"
-        "  ph release suggest --version v1.2.0 - Recommend features based on status data\n"
-        "  ph release list             - List every release folder + status\n"
-        "  ph release close --version v1.2.0 - Close and document retro notes\n"
+        "  make release-plan [version=v1.2.0|version=next] [bump=patch|minor|major] [sprints=3] "
+        '[sprint_ids="SPRINT-...,SPRINT-..."] [activate=true]\n'
+        "                                - Generate a release plan scaffold (optionally activate)\n"
+        "  make release-activate release=v1.2.0\n"
+        "                                - Set releases/current to an existing release\n"
+        "  make release-clear             - Unset current release pointer\n"
+        "  make release-status           - Summaries + health for current release\n"
+        "  make release-show             - Print releases/current/plan.md + computed status "
+        "(best for sprint planning/closing)\n"
+        "  make release-progress         - Refresh releases/current/progress.md "
+        "(auto-generated; no need to edit manually)\n"
+        "  make release-add-feature release=v1.2.0 feature=auth [epic=true] [critical=true]\n"
+        "  make release-suggest version=v1.2.0 - Recommend features based on status data\n"
+        "  make release-list             - List every release folder + status\n"
+        "  make release-close version=v1.2.0 - Close and document retro notes\n"
     ),
     "backlog": """Issue backlog + triage commands
   ph backlog add --type bug|wildcards|work-items --title 'X' --severity P1 --desc 'Y' [--owner @alice]

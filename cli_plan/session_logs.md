@@ -5470,3 +5470,63 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-04 21:18 UTC — V1P-0005 — Parity: `make help release` → `ph help release`
+
+Agent: GPT-5.2 (Codex CLI Orchestrator) + background Codex exec
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable temp copy (created via `mktemp -d` from `/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0005)
+- cli_plan/PARITY_CHECKLIST.md (Help)
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- /Users/spensermcconnell/.codex/skills/coding-agent/SKILL.md
+- src/ph/help_text.py
+- tests/test_help_topics.py
+
+Goal:
+- Achieve strict stdout parity for `ph --root <PH_ROOT> help release` vs legacy `pnpm make -- help release` / `pnpm make -- help-release` run against the same disposable legacy repo copy.
+
+Work performed (ordered):
+1. Created disposable `PH_ROOT` via `rsync` from the legacy repo and ran `pnpm install --frozen-lockfile` once.
+2. Captured legacy stdout for `pnpm make -- help release` and `pnpm make -- help-release`.
+3. Captured `ph` stdout for `ph --root <PH_ROOT> help release` and diffed; found `release` help topic printed `ph release ...` instead of legacy `make release-...`.
+4. Updated `src/ph/help_text.py` release topic to match legacy `make help release` output byte-for-byte.
+5. Added deterministic pytest coverage for `ph help release`.
+6. Re-ran the parity diff; ran `ruff` + `pytest`.
+
+Commands executed (exact):
+- LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"
+- PH_ROOT="$(mktemp -d -t ph-parity-V1P-0005-XXXXXXXX)"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"
+- (cd "$PH_ROOT" && pnpm install --frozen-lockfile)
+- (cd "$PH_ROOT" && pnpm make -- help release) > /tmp/legacy-help-release.txt
+- (cd "$PH_ROOT" && pnpm make -- help-release) > /tmp/legacy-help-release-dashed.txt
+- uv run ph --root "$PH_ROOT" help release > /tmp/ph-help-release.txt
+- diff -u /tmp/legacy-help-release.txt /tmp/ph-help-release.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/help_text.py
+- tests/test_help_topics.py
+
+Verification:
+- `diff -u /tmp/legacy-help-release.txt /tmp/ph-help-release.txt` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> help release` now matches legacy `pnpm make -- help release` stdout byte-for-byte; parity locked via pytest.
+
+Next task:
+- V1P-0006
+
+Blockers (if blocked):
+- (none)
