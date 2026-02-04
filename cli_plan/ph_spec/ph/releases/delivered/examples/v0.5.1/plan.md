@@ -41,7 +41,7 @@ Brief description of what this release delivers.
 
 
 ## Feature Assignments
-*Use `make release-add-feature` to assign features to this release*
+*Use `ph release add-feature` to assign features to this release*
 
 ## Scope Control
 - **Scope lock date**: TBD

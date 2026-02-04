@@ -14,6 +14,8 @@ links:
 
 Every execution session MUST append exactly one entry below, and MUST reference a single task ID from `cli_plan/tasks.json`.
 
+Note: Some older entries describe a deprecated `.ph/**` + `ph/**` layout. The current v1 layout is defined by `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` (repo-root content; marker `project_handbook.config.json`; internals under `.project-handbook/**`).
+
 ## Entry template (copy/paste)
 
 ```markdown

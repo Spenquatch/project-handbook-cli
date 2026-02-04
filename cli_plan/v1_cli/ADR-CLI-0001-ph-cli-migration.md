@@ -6,7 +6,7 @@ status: superseded
 date: 2026-01-13
 tags: [handbook, cli, automation, ergonomics, reliability]
 links:
-  - ./ADR-CLI-0003-ph-project-layout.md
+  - ./ADR-CLI-0004-ph-root-layout.md
   - ./CLI_CONTRACT.md
   - ../v0_make/MAKE_CONTRACT.md
 ---
@@ -15,9 +15,7 @@ links:
 
 This ADR is **superseded** and kept for context only. Do not implement new behavior from this document:
 
-- v1 root marker is `.ph/config.json` (not `project_handbook.config.json`)
-- v1 has no system scope (`--scope system` is removed)
-- use `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md` and `cli_plan/v1_cli/CLI_CONTRACT.md` as the sources of truth
+- use `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` and `cli_plan/v1_cli/CLI_CONTRACT.md` as the sources of truth
 
 # Context
 
@@ -27,10 +25,10 @@ The handbook currently exposes workflows via `make` targets that shell out to Py
 
 This ADR’s **packaging** motivations still hold, but its original assumptions about:
 
-- the root marker location (`project_handbook.config.json` at repo root), and
-- the existence of “system scope” (`--scope system`)
+- the root marker location, and
+- system-scope semantics
 
-are superseded by `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md` (marker: `.ph/config.json`, no system scope).
+are superseded by `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` (marker: `project_handbook.config.json`, internals under `.project-handbook/**`).
 
 This works well, but reliability issues repeatedly show up around:
 
@@ -82,16 +80,16 @@ The Project Handbook repository remains viewable and editable (Markdown/JSON/etc
 
 ## Repository marker + schema versioning (required)
 
-The handbook root MUST contain `.ph/config.json` and `ph` MUST treat its presence as the canonical root marker (independent of any repo-local Python scripts).
+The handbook root MUST contain `project_handbook.config.json` and `ph` MUST treat its presence as the canonical root marker (independent of any repo-local Python scripts).
 
-`.ph/config.json` MUST contain:
+`project_handbook.config.json` MUST contain:
 
 - `handbook_schema_version`: integer, MUST be `1` for v1 CLI
 - `requires_ph_version`: string, PEP 440 compatible specifier, MUST be `>=0.1.0,<0.2.0`
 - `repo_root`: string, MUST be `"."`
 
 On every invocation, `ph` MUST:
-- read `.ph/config.json`,
+- read `project_handbook.config.json`,
 - refuse to run if `handbook_schema_version` is not supported,
 - refuse to run if the installed `ph` version does not satisfy `requires_ph_version`,
 - print a remediation message that includes the exact `uv tool install ...` command to resolve it.
@@ -111,9 +109,9 @@ Rationale:
 
 `ph` resolves the handbook root using a deterministic search strategy:
 
-1. If `--root <path>` is provided, use it (must contain `.ph/config.json`).
+1. If `--root <path>` is provided, use it (must contain `project_handbook.config.json`).
 2. Else, walk up from `cwd` looking for a directory that contains:
-   - `.ph/config.json`
+   - `project_handbook.config.json`
 3. If none found, exit with a fatal error that instructs how to run with `--root`.
 
 This makes command behavior independent of the directory you run from.
@@ -134,7 +132,7 @@ Examples:
 
 After a successful command:
 
-1. Append history entry to `.ph/history.log`
+1. Append history entry to `.project-handbook/history.log`
 2. Run `ph validate --quick --silent-success` unless:
    - the command is `validate` itself, or
    - the command is `reset` / `reset-smoke`, or

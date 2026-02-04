@@ -60,7 +60,7 @@ def test_release_status_fails_when_no_current_release(tmp_path: Path) -> None:
     )
     assert result.returncode == 1
     assert "❌ No current release found" in result.stdout
-    assert "ph release plan" in result.stdout
+    assert "ph release activate" in result.stdout
 
 
 def test_release_commands_reject_system_scope(tmp_path: Path) -> None:

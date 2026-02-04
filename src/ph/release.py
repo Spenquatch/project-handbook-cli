@@ -9,12 +9,14 @@ from .feature_status_updater import calculate_feature_metrics, collect_all_sprin
 
 _SYSTEM_SCOPE_REMEDIATION = "Releases are project-scope only. Use: ph --scope project release ..."
 
-_PLAN_HINT_LINES = (
-    "Release plan saved under releases/current/plan.md",
-    "  - Review lanes/dependencies + feature priorities in releases/current/plan.md",
-    "  - Confirm sprint alignment via 'ph release status'",
-    "  - Run 'ph validate --quick' before sharing externally",
-)
+def _plan_hint_lines(*, version: str) -> tuple[str, ...]:
+    return (
+        f"Release plan scaffold created under releases/{version}/plan.md",
+        "  - Assign features via 'ph release add-feature --release <version> --feature <name>'",
+        "  - Activate when ready via 'ph release activate --release <version>'",
+        "  - Confirm sprint alignment via 'ph release status' (requires an active release)",
+        "  - Run 'ph validate --quick' before sharing externally",
+    )
 
 _ADD_FEATURE_SUCCESS_PREFIX = "✅ Added"
 
@@ -68,18 +70,31 @@ def get_current_release(*, ph_root: Path) -> str | None:
         if target_path.exists():
             return target.name
         current_link.unlink(missing_ok=True)
-    elif current_link.exists():
-        current_link.unlink(missing_ok=True)
+    return None
 
-    available = list_release_versions(ph_root=ph_root)
-    if not available:
-        return None
-    latest = available[-1]
+
+def set_current_release(*, ph_root: Path, version: str) -> bool:
+    if not version.startswith("v"):
+        version = f"v{version}"
+    release_dir = ph_root / "releases" / version
+    if not release_dir.exists():
+        return False
+
+    releases_dir = ph_root / "releases"
+    current_link = releases_dir / "current"
+    if current_link.exists() or current_link.is_symlink():
+        current_link.unlink(missing_ok=True)
     try:
-        current_link.symlink_to(latest)
+        current_link.symlink_to(version)
     except OSError:
-        pass
-    return latest
+        return False
+    return True
+
+
+def clear_current_release(*, ph_root: Path) -> None:
+    current_link = ph_root / "releases" / "current"
+    if current_link.exists() or current_link.is_symlink():
+        current_link.unlink(missing_ok=True)
 
 
 def calculate_sprint_range(*, start_sprint: str, sprint_count: int, explicit: list[str] | None = None) -> list[str]:
@@ -288,11 +303,6 @@ links: []
 """
         progress_path.write_text(progress_content, encoding="utf-8")
 
-    current_link = releases_dir / "current"
-    if current_link.exists() or current_link.is_symlink():
-        current_link.unlink(missing_ok=True)
-    current_link.symlink_to(version)
-
     return release_dir
 
 
@@ -304,6 +314,7 @@ def run_release_plan(
     sprints: int,
     start_sprint: str | None,
     sprint_ids: str | None,
+    activate: bool,
     env: dict[str, str],
 ) -> int:
     if ctx.scope == "system":
@@ -333,7 +344,7 @@ def run_release_plan(
     if not raw_version.startswith("v"):
         raw_version = f"v{raw_version}"
 
-    release_dir = _ensure_release_files_exist(
+    _ensure_release_files_exist(
         ph_root=ctx.ph_root,
         version=raw_version,
         sprint_count=sprint_count,
@@ -342,20 +353,119 @@ def run_release_plan(
         env=env,
     )
 
-    print(f"✅ Created release plan: {raw_version}")
-    print(f"📁 Location: {release_dir}")
-    if explicit_sprint_ids:
-        print(f"📅 Timeline: {len(explicit_sprint_ids)} custom sprint(s) → {', '.join(explicit_sprint_ids)}")
-    else:
-        print(f"📅 Timeline: {sprint_count} sprints starting {start_sprint}")
-    print("📝 Next steps:")
-    print(f"   1. Edit {release_dir}/plan.md to define release goals")
-    print(f"   2. Add features: ph release add-feature --release {raw_version} --feature feature-name")
-    print("   3. Review timeline and adjust if needed")
-    print()
-    for line in _PLAN_HINT_LINES:
+    if activate:
+        ok = set_current_release(ph_root=ctx.ph_root, version=raw_version)
+        if not ok:
+            print(f"⚠️  Failed to activate current release (symlink): releases/current → {raw_version}")
+
+    for line in _plan_hint_lines(version=raw_version):
         print(line)
     return 0
+
+
+def run_release_activate(*, ctx: Context, release: str) -> int:
+    if ctx.scope == "system":
+        print(_SYSTEM_SCOPE_REMEDIATION)
+        return 1
+
+    version = (release or "").strip()
+    if not version:
+        print("❌ Usage: ph release activate --release vX.Y.Z")
+        return 2
+    if not version.startswith("v"):
+        version = f"v{version}"
+
+    if not set_current_release(ph_root=ctx.ph_root, version=version):
+        print(f"❌ Release {version} not found (expected: releases/{version}/)")
+        return 1
+
+    print(f"⭐ Current release set to: {version}")
+    return 0
+
+
+def run_release_clear(*, ctx: Context) -> int:
+    if ctx.scope == "system":
+        print(_SYSTEM_SCOPE_REMEDIATION)
+        return 1
+    clear_current_release(ph_root=ctx.ph_root)
+    print("⭐ Cleared current release")
+    return 0
+
+
+def run_release_progress(*, ctx: Context, env: dict[str, str]) -> int:
+    if ctx.scope == "system":
+        print(_SYSTEM_SCOPE_REMEDIATION)
+        return 1
+
+    version = _read_current_release_target(ph_root=ctx.ph_root)
+    if not version:
+        print("❌ No current release found")
+        print("💡 Activate one with: ph release activate --release vX.Y.Z")
+        return 1
+
+    release_dir = ctx.ph_root / "releases" / version
+    if not release_dir.exists():
+        print(f"❌ Release {version} not found")
+        return 1
+
+    features = load_release_features(ph_root=ctx.ph_root, version=version)
+    progress = calculate_release_progress(ph_root=ctx.ph_root, version=version, features=features, env=env)
+    today = clock_today(env=env).strftime("%Y-%m-%d")
+
+    lines: list[str] = []
+    lines.append("---")
+    lines.append(f"title: Release {version} Progress")
+    lines.append("type: release-progress")
+    lines.append(f"version: {version}")
+    lines.append(f"date: {today}")
+    lines.append("tags: [release, progress]")
+    lines.append("links: []")
+    lines.append("---")
+    lines.append("")
+    lines.append(f"# Release {version} Progress")
+    lines.append("")
+    lines.append("*This file is auto-generated. Do not edit manually.*")
+    lines.append("")
+    if progress:
+        lines.append(f"- Health: {progress.get('health', 'Unknown')}")
+        lines.append(f"- Avg completion: {progress.get('avg_completion', 0)}%")
+        completed = progress.get("completed_features", 0)
+        total = progress.get("total_features", 0)
+        lines.append(f"- Completed features: {completed}/{total}")
+        lines.append("")
+        lines.append("## Feature Progress")
+        for feature_name in sorted(features.keys()):
+            completion = int(progress.get("feature_completions", {}).get(feature_name, 0))
+            lines.append(f"- {feature_name}: {completion}%")
+    else:
+        lines.append("_No features assigned yet. Add features via `ph release add-feature`._")
+    lines.append("")
+
+    path = release_dir / "progress.md"
+    path.write_text("\n".join(lines), encoding="utf-8")
+    print(f"📝 Updated: {path}")
+    return 0
+
+
+def run_release_show(*, ctx: Context, env: dict[str, str]) -> int:
+    if ctx.scope == "system":
+        print(_SYSTEM_SCOPE_REMEDIATION)
+        return 1
+
+    version = _read_current_release_target(ph_root=ctx.ph_root)
+    if not version:
+        print("❌ No current release found")
+        print("💡 Activate one with: ph release activate --release vX.Y.Z")
+        return 1
+
+    plan_path = ctx.ph_root / "releases" / version / "plan.md"
+    if not plan_path.exists():
+        print(f"❌ Missing release plan: {plan_path}")
+        return 1
+
+    print(plan_path.read_text(encoding="utf-8"), end="")
+    print("")
+    return run_release_status(ctx=ctx, env=env)
 
 
 def _read_current_release_target(*, ph_root: Path) -> str | None:
@@ -552,9 +662,9 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
             print("📦 Available releases:")
             for name in available:
                 print(f"  • {name}")
-            print("💡 Set one active with: ln -s <release> releases/current or re-run ph release plan")
+            print("💡 Activate one with: ph release activate --release vX.Y.Z")
         else:
-            print("💡 Create one with: ph release plan --version v1.2.0 --sprints 3")
+            print("💡 Create one with: ph release plan --version v1.2.0 --sprints 3 --activate")
         return 1
 
     release_dir = ctx.ph_root / "releases" / version

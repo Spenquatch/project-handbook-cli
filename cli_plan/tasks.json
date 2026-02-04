@@ -2,23 +2,23 @@
   "version": 3,
   "owner": "project-handbook",
   "status_values": ["todo", "in_progress", "done", "blocked"],
-  "root_marker": ".ph/config.json",
+  "root_marker": "project_handbook.config.json",
   "session_log": "cli_plan/session_logs.md",
   "sources_of_truth": [
-    "cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md",
+    "cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md",
     "cli_plan/v1_cli/CLI_CONTRACT.md",
     "cli_plan/due-diligence.json",
     "cli_plan/v0_make/MAKE_CONTRACT.md"
   ],
   "notes": [
-    "This task queue contains legacy prompts written during the Make→CLI transition; treat any mention of system scope (`--scope system` / `.project-handbook/**`) and any Make compatibility layer as deprecated.",
-    "For v1, the root marker is `.ph/config.json`, internals live under `.ph/**`, content lives under `ph/**`, and system scope is removed. If a task conflicts with those constraints, rewrite the task before executing it."
+    "This task queue contains legacy prompts written during the Make→CLI transition; treat any mention of a `.ph/**` + `ph/**` layout as historical (superseded by the Make-era root layout).",
+    "For v1, the root marker is `project_handbook.config.json`, internals live under `.project-handbook/**`, and handbook content lives at repo root (e.g. `adr/`, `sprints/`, `features/`). If a task conflicts with those constraints, rewrite the task before executing it."
   ],
   "global_rules": [
     "All v1 execution planning lives under cli_plan/ only.",
     "Every task execution MUST append exactly one session log entry to cli_plan/session_logs.md and MUST reference exactly one task ID.",
     "The installed `ph` tool MUST NOT execute repo-local Python scripts at runtime.",
-    "PH_ROOT is the directory that contains .ph/config.json.",
+    "PH_ROOT is the directory that contains project_handbook.config.json.",
     "All command semantics, hints, and hooks MUST match cli_plan/v1_cli/CLI_CONTRACT.md."
   ],
   "implementation_strategy": {
@@ -103,7 +103,7 @@
       "order": 1,
       "title": "Root Detection + Diagnostics",
       "goals": [
-        "Implement deterministic PH_ROOT detection using .ph/config.json.",
+        "Implement deterministic PH_ROOT detection using project_handbook.config.json.",
         "Implement schema/version enforcement for safe upgrades.",
         "Provide `ph doctor` for fast diagnosis."
       ],
@@ -182,7 +182,7 @@
       "work_location": "external_repo",
       "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 14:31 UTC — CLI-0001 — Create project-handbook-cli repository",
       "next_task_id": "CLI-0002",
-      "kickoff_prompt": "Create a new repository named `project-handbook-cli` (separate from the handbook instance repo). Add a README that states: distribution name `project-handbook-cli`, console script `ph`, root marker `.ph/config.json`, and the rule that `ph` MUST NOT execute repo-local Python scripts. Add exactly one session log entry referencing CLI-0001 and then set CLI-0001 status to done.",
+      "kickoff_prompt": "Create a new repository named `project-handbook-cli` (separate from the handbook instance repo). Add a README that states: distribution name `project-handbook-cli`, console script `ph`, root marker `project_handbook.config.json`, and the rule that `ph` MUST NOT execute repo-local Python scripts. Add exactly one session log entry referencing CLI-0001 and then set CLI-0001 status to done.",
       "steps": [
         "Create a new git repository named `project-handbook-cli`.",
         "Add README with the required statements (distribution name, console script, root marker path, no repo-local Python execution).",
@@ -283,7 +283,7 @@
       "work_location": "external_repo",
       "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 15:04 UTC — CLI-0101 — Implement PH_ROOT detection using the root marker",
       "next_task_id": "CLI-0102",
-      "kickoff_prompt": "Implement PH_ROOT detection per cli_plan/v1_cli/CLI_CONTRACT.md. Root marker is `.ph/config.json`. Implement `--root <path>` override and upward directory walk from cwd. Add unit tests for: in-repo, nested subdir, outside repo failure with remediation containing an example `--root` invocation.",
+      "kickoff_prompt": "Implement PH_ROOT detection per cli_plan/v1_cli/CLI_CONTRACT.md. Root marker is `project_handbook.config.json`. Implement `--root <path>` override and upward directory walk from cwd. Add unit tests for: in-repo, nested subdir, outside repo failure with remediation containing an example `--root` invocation.",
       "steps": [
         "Add root discovery module that resolves PH_ROOT via marker detection.",
         "Integrate root discovery into the CLI entrypoint before dispatch.",
@@ -300,7 +300,7 @@
       "id": "CLI-0102",
       "phase_id": "PHASE-01",
       "order": 2,
-      "title": "Load and validate `.ph/config.json`",
+      "title": "Load and validate `project_handbook.config.json`",
       "status": "done",
       "started_at": "2026-01-14T15:15:53Z",
       "completed_at": "2026-01-14T15:17:33Z",
@@ -308,7 +308,7 @@
       "work_location": "external_repo",
       "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 15:15 UTC — CLI-0102 — Load and validate cli_plan/project_handbook.config.json",
       "next_task_id": "CLI-0103",
-      "kickoff_prompt": "Implement config loading from `<PH_ROOT>/.ph/config.json` and enforce: handbook_schema_version == 1 and installed ph version satisfies requires_ph_version. On mismatch: exit non-zero and include `uv tool install project-handbook-cli` in remediation. Add unit tests for schema mismatch and version mismatch.",
+      "kickoff_prompt": "Implement config loading from `<PH_ROOT>/project_handbook.config.json` and enforce: handbook_schema_version == 1 and installed ph version satisfies requires_ph_version. On mismatch: exit non-zero and include `uv tool install project-handbook-cli` in remediation. Add unit tests for schema mismatch and version mismatch.",
       "steps": [
         "Implement config loader and schema checks.",
         "Implement requires_ph_version evaluation.",
@@ -1477,7 +1477,7 @@
       "last_session_log_ref": "cli_plan/session_logs.md#2026-01-14 23:28 UTC — CLI-0505 — Implement ph init and update CLI contract",
       "completed_at": "2026-01-14T23:32:35Z",
       "next_task_id": "NONE",
-      "kickoff_prompt": "Add an explicit initializer command to create the root marker config for a new handbook instance repo, and update the CLI contract accordingly.\n\nAuthoritative constraints:\n- Root marker: `.ph/config.json` (directory containing it is PH_ROOT).\n- Schema: `handbook_schema_version == 1`, `repo_root == \".\"`.\n- Version gate: `requires_ph_version` must match v1 range (currently `>=0.1.0,<0.2.0`).\n\nHard requirements:\n1) Contract update:\n- Update `cli_plan/v1_cli/CLI_CONTRACT.md` to define `ph init` (command, behavior, outputs, exit codes).\n- Explicitly document root resolution exception for `ph init` (it can run outside an existing PH_ROOT).\n2) CLI behavior:\n- Command: `ph init`.\n- Root selection:\n  - If `--root <path>` is provided, write to that directory.\n  - Else write to `cwd`.\n- Create `.ph/config.json` if missing; create `.ph/` directory if needed.\n- If config already exists, do not overwrite; exit 0.\n- On success, MUST skip post-command hooks entirely (no history, no auto-validation).\n3) Stdout:\n- On create, print: `Created: .ph/config.json`.\n- If already exists, print: `Already exists: .ph/config.json`.\n4) Tests (integration, deterministic):\n- In a temp dir with no marker, run `ph init` and assert exit 0 and the config file exists with correct JSON fields.\n- Run `ph init` again and assert exit 0 and stdout matches the \"Already exists\" line.\n- Ensure the command works without an existing handbook repo and does not attempt root-marker-based resolution.\n\nDocs:\n- Update the CLI repo MkDocs quickstart to include `ph init` as the first step for new handbook instance repos.",
+      "kickoff_prompt": "Add an explicit initializer command to create the root marker config for a new handbook instance repo, and update the CLI contract accordingly.\n\nAuthoritative constraints:\n- Root marker: `project_handbook.config.json` (directory containing it is PH_ROOT).\n- Schema: `handbook_schema_version == 1`, `repo_root == \".\"`.\n- Version gate: `requires_ph_version` must match v1 range (currently `>=0.1.0,<0.2.0`).\n\nHard requirements:\n1) Contract update:\n- Update `cli_plan/v1_cli/CLI_CONTRACT.md` to define `ph init` (command, behavior, outputs, exit codes).\n- Explicitly document root resolution exception for `ph init` (it can run outside an existing PH_ROOT).\n2) CLI behavior:\n- Command: `ph init`.\n- Root selection:\n  - If `--root <path>` is provided, write to that directory.\n  - Else write to `cwd`.\n- Create `project_handbook.config.json` if missing.\n- If config already exists, do not overwrite; exit 0.\n- On success, MUST skip post-command hooks entirely (no history, no auto-validation).\n3) Stdout:\n- On create, print: `Created: project_handbook.config.json`.\n- If already exists, print: `Already exists: project_handbook.config.json`.\n4) Tests (integration, deterministic):\n- In a temp dir with no marker, run `ph init` and assert exit 0 and the config file exists with correct JSON fields.\n- Run `ph init` again and assert exit 0 and stdout matches the \"Already exists\" line.\n- Ensure the command works without an existing handbook repo and does not attempt root-marker-based resolution.\n\nDocs:\n- Update the CLI repo MkDocs quickstart to include `ph init` as the first step for new handbook instance repos.",
       "steps": [
         "Update `cli_plan/v1_cli/CLI_CONTRACT.md` to add `ph init` and document root resolution exception.",
         "Implement `ph init` in the CLI entrypoint so it runs without an existing marker and writes the marker JSON file.",
@@ -1488,7 +1488,7 @@
         "CLI_CONTRACT update + init command + integration tests + quickstart docs update."
       ],
       "acceptance_criteria": [
-        "`ph init` creates `.ph/config.json` when missing and is idempotent when present.",
+        "`ph init` creates `project_handbook.config.json` when missing and is idempotent when present.",
         "`ph init` uses `--root` when provided and otherwise uses `cwd`.",
         "Successful `ph init` skips post-command hooks entirely.",
         "Integration tests pass and contract/docs are updated."
@@ -1507,7 +1507,7 @@
       "last_session_log_ref": "cli_plan/session_logs.md#2026-01-15 00:52 UTC — CLI-0506 — Enhance ph init to scaffold required repo assets",
       "completed_at": "2026-01-15T00:54:23Z",
       "next_task_id": "NONE",
-      "kickoff_prompt": "Update `ph init` so a brand-new directory becomes a minimally valid handbook instance repo that passes `ph doctor`.\n\nHard requirements:\n1) `ph init` must create (if missing) under the target root:\n- `.ph/config.json`\n- `process/checks/validation_rules.json`\n- `process/automation/system_scope_config.json`\n- `process/automation/reset_spec.json`\n- `process/sessions/templates/` (directory)\n\n2) Do not overwrite existing files.\n\n3) Update `cli_plan/v1_cli/CLI_CONTRACT.md` to reflect the new init scaffolding behavior and stdout.\n\n4) Add/adjust integration tests so:\n- `ph init` followed by `ph doctor` exits 0 in a fresh temp directory.\n\nNotes:\n- Keep file contents minimal but valid for v1 CLI behavior.\n- `system_scope_config.json` should include sensible default routing prefixes (handbook-/ph- and handbook/).\n- `reset_spec.json` must be schema-valid and safe-by-default.",
+      "kickoff_prompt": "Update `ph init` so a brand-new directory becomes a minimally valid handbook instance repo that passes `ph doctor`.\n\nHard requirements:\n1) `ph init` must create (if missing) under the target root:\n- `project_handbook.config.json`\n- `process/checks/validation_rules.json`\n- `process/automation/system_scope_config.json`\n- `process/automation/reset_spec.json`\n- `process/sessions/templates/` (directory)\n\n2) Do not overwrite existing files.\n\n3) Update `cli_plan/v1_cli/CLI_CONTRACT.md` to reflect the new init scaffolding behavior and stdout.\n\n4) Add/adjust integration tests so:\n- `ph init` followed by `ph doctor` exits 0 in a fresh temp directory.\n\nNotes:\n- Keep file contents minimal but valid for v1 CLI behavior.\n- `system_scope_config.json` should include sensible default routing prefixes (handbook-/ph- and handbook/).\n- `reset_spec.json` must be schema-valid and safe-by-default.",
       "steps": [
         "Update CLI contract `ph init` behavior/output to include scaffolding of required assets.",
         "Implement scaffolding in `ph init` (create missing dirs/files with safe default JSON).",
@@ -1560,7 +1560,7 @@
       "last_session_log_ref": "cli_plan/session_logs.md#2026-01-15 03:18 UTC — CLI-0508 — ADR + contract: adopt .ph internals and ph content layout; remove system scope",
       "completed_at": "2026-01-15T03:30:28Z",
       "next_task_id": "NONE",
-      "kickoff_prompt": "Decide and document the v1 filesystem layout for using `ph` inside an arbitrary project repo.\n\nRequirements:\n- The project root (where you run `ph`) stays the user repo root.\n- All CLI-owned config/state lives under `.ph/**`.\n- All handbook content lives under `ph/**`.\n- Root marker becomes `.ph/config.json`.\n- Remove `--scope system` and all “system scope” behavior from the contract.\n\nDeliverables:\n- New ADR under `cli_plan/v1_cli/` describing the new layout and rationale (including why `.ph/config.json` is preferred over `ph/.internals/...`).\n- Update `cli_plan/v1_cli/CLI_CONTRACT.md` and `cli_plan/AI_AGENT_START_HERE.md` to match.\n- Update `cli_plan/tasks.json` global rules/root marker if referenced.",
+      "kickoff_prompt": "Historical: this task captured an earlier v1 layout proposal (`.ph/**` internals + `ph/**` content). It is superseded by `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` (repo-root Make-era layout + `.project-handbook/**` internals, marker `project_handbook.config.json`).",
       "steps": [
         "Write ADR for `.ph/` + `ph/` layout.",
         "Update `CLI_CONTRACT.md` root detection and paths.",

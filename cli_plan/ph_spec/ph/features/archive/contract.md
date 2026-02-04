@@ -21,6 +21,7 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph feature archive --name <name> [--force]` moves `features/<name>/` into `features/implemented/<name>/`.
   - `pnpm make -- feature-archive name=<name> [force=true]` moves `features/<name>/` into `features/implemented/<name>/`.
 - Non-destructive:
   - Archiving MUST refuse to overwrite an existing destination directory unless `--force` is provided.

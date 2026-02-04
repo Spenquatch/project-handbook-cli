@@ -24,7 +24,7 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
     (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
-def test_release_plan_creates_files_symlink_and_hints(tmp_path: Path) -> None:
+def test_release_plan_creates_files_and_hints(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
 
     env = dict(os.environ)
@@ -59,20 +59,35 @@ def test_release_plan_creates_files_symlink_and_hints(tmp_path: Path) -> None:
     assert features_path.exists()
 
     current_link = tmp_path / "releases" / "current"
-    assert current_link.is_symlink()
-    assert current_link.readlink().name == "v1.2.3"
+    assert not current_link.exists()
 
     plan_text = plan_path.read_text(encoding="utf-8")
     assert "date: 2099-01-01" in plan_text
 
     expected_hints = [
-        "Release plan saved under releases/current/plan.md",
-        "  - Review lanes/dependencies + feature priorities in releases/current/plan.md",
-        "  - Confirm sprint alignment via 'ph release status'",
+        "Release plan scaffold created under releases/v1.2.3/plan.md",
+        "  - Assign features via 'ph release add-feature --release <version> --feature <name>'",
+        "  - Activate when ready via 'ph release activate --release <version>'",
+        "  - Confirm sprint alignment via 'ph release status' (requires an active release)",
         "  - Run 'ph validate --quick' before sharing externally",
     ]
     for line in expected_hints:
         assert line in result.stdout
+
+
+def test_release_plan_activate_sets_current(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+
+    result = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "plan", "--version", "v1.2.3", "--activate"],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+
+    current_link = tmp_path / "releases" / "current"
+    assert current_link.is_symlink()
+    assert current_link.readlink().name == "v1.2.3"
 
 
 def test_release_plan_rejects_system_scope(tmp_path: Path) -> None:

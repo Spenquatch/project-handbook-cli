@@ -21,6 +21,7 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph parking add --type technical-debt --title "..." ...` (creates a new item directory + `README.md` and updates `parking-lot/index.json`).
   - `pnpm make -- parking-add type=technical-debt title="..." ...` (creates a new item directory + `README.md` and updates `parking-lot/index.json`).
 - Non-destructive:
   - `ph parking add` MUST refuse to overwrite an existing `<ITEM_DIR>/` unless `--force` is provided.

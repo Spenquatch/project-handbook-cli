@@ -21,7 +21,8 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `pnpm make -- pre-exec-audit` (creates a `PRE-EXEC/<sprint>/<date>/` evidence bundle by default)
+  - `ph pre-exec audit` (creates a `PRE-EXEC/<sprint>/<date>/` evidence bundle by default)
+  - `pnpm make -- pre-exec-audit` (legacy; creates a `PRE-EXEC/<sprint>/<date>/` evidence bundle by default)
   - Humans/agents create subdirectories and evidence artifacts as needed during work (typically alongside a `TASK-###`).
 - Non-destructive:
   - The CLI MUST NOT overwrite evidence artifacts without explicit `--force`.

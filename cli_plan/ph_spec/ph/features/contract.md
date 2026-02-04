@@ -21,6 +21,11 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph feature create --name <name> [--epic] [--owner @handle] [--stage <stage>]` (creates a new feature directory and seeds the standard feature doc set).
+  - `ph feature status --name <name> --stage <stage>` (updates stage in `status.md`).
+  - `ph feature update-status` (recomputes feature `status.md` files from sprint/task data).
+  - `ph feature summary` (prints an aggregate summary view).
+  - `ph feature archive --name <name> [--force]` (moves the feature directory into `features/implemented/`).
   - `pnpm make -- feature-create name=<name> [epic=true] [owner=@handle] [stage=<stage>]` (creates a new feature directory and seeds the standard feature doc set).
   - `pnpm make -- feature-status name=<name> stage=<stage>` (updates stage in `status.md`).
   - `pnpm make -- feature-update-status` (recomputes feature `status.md` files from sprint/task data).

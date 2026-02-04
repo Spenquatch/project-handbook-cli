@@ -8,7 +8,7 @@ tags: [ph, spec]
 
 ## Directory Purpose
 - Path (handbook instance): `PH_ROOT/`
-- Summary: Project handbook **instance root** containing human-authored planning/execution docs (ADR, backlog, features, sprints, status, etc.). This contract reflects the **Make-era** on-disk layout used by `pnpm make`.
+- Summary: Project handbook **instance root** containing human-authored planning/execution docs (ADR, backlog, features, sprints, status, etc.). The v1 CLI (`ph`) adopts the **Make-era repo-root layout**; legacy automation used `pnpm make -- <target>`.
 
 ## Ownership
 - Owner: Shared.
@@ -28,17 +28,25 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph init`: bootstraps a new instance repo by scaffolding the canonical directory tree and required process assets (non-destructive).
+  - `ph <domain> ...`: domain commands scaffold new content and regenerate internal artifacts they own.
   - `pnpm make -- <target>` (legacy): writes/updates derived artifacts and scaffolds new content per domain (`task-create`, `backlog-add`, `parking-add`, etc.).
   - Humans/agents: create/edit most Markdown content directly.
 - Non-destructive:
   - Generators MUST refuse to overwrite existing content files by default (unless the command explicitly supports a `--force` mode).
 
 ## Required Files and Directories
+- Required marker file:
+  - `project_handbook.config.json` (defines `PH_ROOT`; used by `ph` root detection)
+- Common entrypoint doc (required for `ph onboarding`):
+  - `ONBOARDING.md`
 - Required directories under `PH_ROOT/`:
   - `adr/`
+  - `assets/` (optional contents; directory SHOULD exist)
   - `backlog/`
   - `contracts/`
   - `decision-register/`
+  - `docs/` (optional; validation rules typically skip `docs/**`)
   - `features/`
   - `parking-lot/`
   - `process/` (automation + validation rules + session templates)
@@ -46,6 +54,7 @@ tags: [ph, spec]
   - `roadmap/`
   - `sprints/`
   - `status/`
+  - `tools/` (optional)
 - Optional internal directory:
   - `.project-handbook/` (automation-owned; history + system-scope data root)
 - Optional files:

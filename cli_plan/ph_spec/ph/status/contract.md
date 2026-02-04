@@ -26,6 +26,9 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph status` (writes `current.json` and `current_summary.md`)
+  - `ph validate` / `ph validate --quick` (writes `validation.json`)
+  - `ph daily generate` / `ph daily generate --force` (writes daily status entries under `daily/` per the daily contract)
   - `pnpm make -- status` (writes `current.json` and `current_summary.md`)
   - `pnpm make -- validate` / `pnpm make -- validate-quick` (writes `validation.json`)
   - `pnpm make -- daily` / `pnpm make -- daily-force` (writes daily status entries under `daily/` per the daily contract)

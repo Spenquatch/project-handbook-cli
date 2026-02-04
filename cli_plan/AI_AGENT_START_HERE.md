@@ -12,6 +12,7 @@ links:
   - ./v1_cli/ADR-CLI-0001-ph-cli-migration.md
   - ./v1_cli/ADR-CLI-0002-handbook-instance-scaffolding.md
   - ./v1_cli/ADR-CLI-0003-ph-project-layout.md
+  - ./v1_cli/ADR-CLI-0004-ph-root-layout.md
   - ./v1_cli/CLI_CONTRACT.md
   - ./v0_make/MAKE_CONTRACT.md
   - ./ph_spec/
@@ -24,28 +25,29 @@ This folder is the **only** place we track v1 CLI execution planning and due dil
 ## What you are building
 
 - A separately-installed Python CLI tool named `project-handbook-cli` that provides the `ph` command.
-- The `ph` tool operates on a “handbook instance repo” (any user project repo with `.ph/config.json`) as **data/templates/plans**, and MUST NOT execute repo-local Python scripts at runtime.
-  - This repo also includes `legacy-reference/project-handbook/` as a reference snapshot; it is not a v1 `PH_ROOT` and is intentionally ignored by git.
-  - IMPORTANT: do not use `../project-handbook/` or `legacy-reference/project-handbook/` as a development target/fixture; it is legacy + Make-era and will create confusion.
+- The `ph` tool operates on a “handbook instance repo” (any repo with `project_handbook.config.json`) as **data/templates/plans**, and MUST NOT execute repo-local Python scripts at runtime.
+  - Reference implementation for parity/real-world behavior: `/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook` (invoked via `pnpm make -- <target>`).
+  - This repo also includes `legacy-reference/project-handbook/` as a historical snapshot; it is gitignored and not used as a primary validation target.
   - When running commands during development, prefer `ph --root /absolute/path/to/target` so you don’t accidentally operate on the wrong directory.
 
 ## Sources of truth (read in this order)
 
-1. `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md` (project layout + marker)
+1. `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` (project layout + marker)
 2. `cli_plan/v1_cli/CLI_CONTRACT.md`
 3. `cli_plan/ph_spec/` (directory-by-directory spec + examples)
 4. `cli_plan/due-diligence.json` (work queue for spec completion)
 5. `cli_plan/v0_make/MAKE_CONTRACT.md` (parity reference, optional)
 6. `cli_plan/v1_cli/ADR-CLI-0001-ph-cli-migration.md` (historical context)
-7. `cli_plan/v1_cli/ADR-CLI-0002-handbook-instance-scaffolding.md` (historical context)
+7. `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md` (historical context; superseded)
+8. `cli_plan/v1_cli/ADR-CLI-0002-handbook-instance-scaffolding.md` (historical context; superseded)
 
 ## Root marker for v1
 
 For v1, the handbook instance repo root is detected by the presence of:
 
-- `.ph/config.json`
+- `project_handbook.config.json`
 
-The `ph` CLI MUST treat the directory that contains `.ph/config.json` as `PH_ROOT`.
+The `ph` CLI MUST treat the directory that contains `project_handbook.config.json` as `PH_ROOT`.
 
 ## Workstreams
 
@@ -59,7 +61,7 @@ Default policy:
 - Only return to `cli_plan/tasks.json` once `cli_plan/due-diligence.json` is fully `done`.
 
 Important note:
-- `cli_plan/tasks.json` and older `cli_plan/session_logs.md` entries may include historical references to the deprecated root marker (`project_handbook.config.json`) and system scope (`--scope system`). For v1, treat `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md` + `cli_plan/v1_cli/CLI_CONTRACT.md` as authoritative.
+- `cli_plan/tasks.json` and older `cli_plan/session_logs.md` entries include historical references to a deprecated `.ph/**` / `ph/**` layout. For v1, treat `cli_plan/v1_cli/CLI_CONTRACT.md` + `cli_plan/ph_spec/` as authoritative.
 
 ## Strict workflow (do this every session)
 

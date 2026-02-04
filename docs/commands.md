@@ -6,17 +6,19 @@ This is a practical overview of common commands. For authoritative behavior/mapp
 
 - `ph doctor`
 - `ph help [topic]`
+- `ph init`
 
 ## Validation + status
 
 - `ph validate [--quick]`
+- `ph pre-exec <lint|audit> [...]`
 - `ph status`
 - `ph dashboard`
 - `ph check-all`
 
 ## Sprint
 
-- `ph sprint plan [--sprint SPRINT-YYYY-MM-DD-XX]`
+- `ph sprint plan [--sprint SPRINT-SEQ-####|SPRINT-YYYY-MM-DD|SPRINT-YYYY-W##]`
 - `ph sprint open --sprint SPRINT-...`
 - `ph sprint status`
 - `ph sprint tasks`
@@ -34,7 +36,7 @@ This is a practical overview of common commands. For authoritative behavior/mapp
 ## Roadmap + releases (project-scope only)
 
 - `ph roadmap <show|create|validate>`
-- `ph release <plan|status|list|add-feature|suggest|close>`
+- `ph release <plan|activate|clear|status|show|progress|list|add-feature|suggest|close>`
 
 ## Destructive operations
 

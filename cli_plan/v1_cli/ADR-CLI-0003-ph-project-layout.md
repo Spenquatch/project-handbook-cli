@@ -2,15 +2,24 @@
 id: ADR-CLI-0003
 title: Adopt `.ph/` Internals + `ph/` Content Layout (No System Scope)
 type: adr
-status: proposed
+status: superseded
 date: 2026-01-15
 tags: [cli, layout, scaffolding, config, marker]
 links:
   - ./ADR-CLI-0001-ph-cli-migration.md
   - ./ADR-CLI-0002-handbook-instance-scaffolding.md
+  - ./ADR-CLI-0004-ph-root-layout.md
   - ./CLI_CONTRACT.md
   - ../AI_AGENT_START_HERE.md
 ---
+
+# Note (superseded)
+
+This ADR captured an earlier v1 layout proposal (`.ph/**` internals + `ph/**` content). It is **superseded** by:
+
+- `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md`
+
+The accepted v1 layout uses repo-root content trees and the root marker `project_handbook.config.json`.
 
 # Context
 

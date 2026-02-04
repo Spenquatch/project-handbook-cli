@@ -25,6 +25,8 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph sprint plan [--sprint SPRINT-...]` (creates a new sprint directory and seeds `plan.md`, updates `sprints/current`)
+  - `ph sprint open --sprint SPRINT-...` (updates `sprints/current` pointer)
   - `pnpm make -- sprint-plan [sprint=SPRINT-...]` (creates a new sprint directory and seeds `plan.md`, updates `sprints/current`)
   - `pnpm make -- sprint-open sprint=SPRINT-...` (updates `sprints/current` pointer)
 - Non-destructive: sprint scaffolding MUST NOT overwrite an existing sprint directory or its `plan.md` unless an explicit force mode is provided by the caller.

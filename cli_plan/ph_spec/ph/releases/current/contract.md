@@ -28,6 +28,13 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph release plan ...` (creates seed files if missing).
+  - `ph release plan ... --activate` (also sets `releases/current` to the created version directory).
+  - `ph release activate --release vX.Y.Z` (sets `releases/current` to an existing version directory).
+  - `ph release clear` (removes `releases/current` pointer).
+  - `ph release add-feature --release vX.Y.Z --feature <name> ...` (updates `features.yaml`).
+  - `ph release status|show|progress` (updates `progress.md`).
+  - `ph release close --version vX.Y.Z` (writes `changelog.md` and updates delivery metadata in `plan.md` front matter).
   - `pnpm make -- release-plan [version=next|vX.Y.Z] ...` (creates seed files if missing).
   - `pnpm make -- release-plan ... activate=true` (also sets `releases/current` to the created version directory).
   - `pnpm make -- release-activate release=vX.Y.Z` (sets `releases/current` to an existing version directory).
@@ -43,7 +50,7 @@ tags: [ph, spec]
   - `plan.md`
   - `features.yaml`
   - `progress.md`
-- Optional files (created during `ph release close` before the directory is moved to `delivered/`):
+- Optional files (created during `ph release close`; directories are not moved by default):
   - `changelog.md`
 
 ## Schemas

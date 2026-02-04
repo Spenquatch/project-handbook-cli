@@ -8,7 +8,7 @@ tags: [ph, spec]
 
 ## Directory Purpose
 - Path (handbook instance): `PH_ROOT/releases/`
-- Summary: Release lifecycle root containing versioned release directories (`vX.Y.Z/`) plus an optional `current` pointer used by `make release-status|show|progress`.
+- Summary: Release lifecycle root containing versioned release directories (`vX.Y.Z/`) plus an optional `current` pointer used by `ph release status|show|progress` (legacy: `make release-status|show|progress`).
 
 ## Ownership
 - Owner: Shared.
@@ -27,6 +27,13 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph release plan [--version next|vX.Y.Z] [--bump patch|minor|major] [--sprints N] [--sprint-ids ...] [--activate]` (creates `releases/vX.Y.Z/` and seed files; activates only with `--activate`).
+  - `ph release activate --release vX.Y.Z` (creates/updates `releases/current` pointer).
+  - `ph release clear` (removes `releases/current` pointer).
+  - `ph release status` / `ph release show` / `ph release progress` (reads current; updates `progress.md`).
+  - `ph release add-feature --release vX.Y.Z --feature <name> [--epic] [--critical]` (updates `features.yaml`).
+  - `ph release close --version vX.Y.Z` (generates `changelog.md` and marks release delivered in `plan.md`; does **not** move directories).
+  - `ph release list` / `ph release suggest` (read-only helpers).
   - `pnpm make -- release-plan [version=next|vX.Y.Z] [bump=patch|minor|major] [sprints=N] [sprint_ids=...] [activate=true]` (creates `releases/vX.Y.Z/` and seed files).
   - `pnpm make -- release-activate release=vX.Y.Z` (creates/updates `releases/current` pointer).
   - `pnpm make -- release-clear` (removes `releases/current` pointer).

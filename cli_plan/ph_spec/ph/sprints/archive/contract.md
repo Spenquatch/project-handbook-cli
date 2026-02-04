@@ -28,6 +28,8 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph sprint close` (moves the current sprint into `sprints/archive/YYYY/<sprint-id>/`, updates `index.json`)
+  - `ph sprint archive [--sprint SPRINT-...]` (moves the specified sprint into `sprints/archive/YYYY/<sprint-id>/`, updates `index.json`)
   - `pnpm make -- sprint-close` (moves the current sprint into `sprints/archive/YYYY/<sprint-id>/`, updates `index.json`)
   - `pnpm make -- sprint-archive [sprint=SPRINT-...]` (moves the specified sprint into `sprints/archive/YYYY/<sprint-id>/`, updates `index.json`)
 - Non-destructive: MUST refuse to overwrite an existing archived sprint directory.

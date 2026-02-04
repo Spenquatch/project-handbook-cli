@@ -8,7 +8,7 @@ tags: [ph, spec]
 
 ## Directory Purpose
 - Path (handbook instance): `PH_ROOT/releases/delivered/`
-- Summary: Reserved container for delivered-release artifacts. **In the current legacy automation**, `make release-close` marks a release as delivered *in place* under `releases/vX.Y.Z/` and does not move directories into `releases/delivered/`.
+- Summary: Reserved container for delivered-release artifacts. In both the legacy automation and the current `ph` CLI, `release close` marks a release as delivered *in place* under `releases/vX.Y.Z/` and does not move directories into `releases/delivered/`.
 
 ## Ownership
 - Owner: Shared.
@@ -19,12 +19,13 @@ tags: [ph, spec]
 - Overwrite rules:
   - The CLI MUST NOT overwrite any delivered release directory contents without explicit `--force`.
 - Mutability:
-  - CLI-managed: directory moves on close; `changelog.md` generation.
+  - CLI-managed: `changelog.md` generation and `plan.md` delivery metadata updates (no directory moves by default).
   - Human-edited: post-delivery notes may be appended, but MUST NOT break required schemas.
 
 ## Creation
 - Created/updated by:
-  - `pnpm make -- release-plan` ensures `releases/delivered/` exists (even if unused).
+  - `ph release plan` ensures `releases/delivered/` exists (even if unused).
+  - `pnpm make -- release-plan` (legacy) ensures `releases/delivered/` exists (even if unused).
 - Non-destructive: tooling must not delete or rewrite files placed here.
 
 ## Required Files and Directories

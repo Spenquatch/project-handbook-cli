@@ -21,6 +21,7 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph backlog add --type wildcards ...` (creates a new wildcard item directory + `README.md`).
   - `pnpm make -- backlog-add type=wildcards ...` (creates a new wildcard item directory + `README.md`).
 - Non-destructive:
   - `ph backlog add` MUST refuse to overwrite an existing `<WILD_DIR>/` unless `--force` is provided.

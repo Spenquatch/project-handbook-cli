@@ -7,7 +7,7 @@ date: 2026-01-15
 tags: [handbook, cli, scaffolding, templates, init]
 links:
   - ./ADR-CLI-0001-ph-cli-migration.md
-  - ./ADR-CLI-0003-ph-project-layout.md
+  - ./ADR-CLI-0004-ph-root-layout.md
   - ./CLI_CONTRACT.md
   - ../AI_AGENT_START_HERE.md
 ---
@@ -16,10 +16,7 @@ links:
 
 This ADR is **superseded** and kept for context only. Do not implement new behavior from this document:
 
-- v1 root marker is `.ph/config.json` (not `project_handbook.config.json`)
-- v1 uses `.ph/**` (internals) + `ph/**` (content)
-- v1 has no system scope (`--scope system` is removed)
-- use `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md` and `cli_plan/v1_cli/CLI_CONTRACT.md` as the sources of truth
+- use `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` and `cli_plan/v1_cli/CLI_CONTRACT.md` as the sources of truth
 
 # Context
 
@@ -27,7 +24,7 @@ This ADR is **superseded** and kept for context only. Do not implement new behav
 
 ## Update (2026-01-15)
 
-This ADR assumes a “handbook instance repo” layout at repo root. The v1 direction for using `ph` inside arbitrary projects is now defined in `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md` (internals under `.ph/**`, content under `ph/**`, marker `.ph/config.json`, no system scope). Treat this ADR as historical background on “full scaffolding” only.
+This ADR assumes a “handbook instance repo” layout at repo root. The accepted v1 direction is now defined in `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` (root marker `project_handbook.config.json`, internals under `.project-handbook/**`). Treat this ADR as historical background on “full scaffolding” only.
 
 However, creating a *new* handbook instance repo from scratch still requires external steps (copying/cloning an existing instance), and it is easy to end up with a “half-initialized” directory that passes root detection but lacks expected content/templates and conventions.
 
@@ -67,13 +64,13 @@ Embed the scaffold template inside the installed CLI package so it is:
 
 The template should include:
 
-- directory skeleton (content under `ph/**`, internals under `.ph/**`),
+- directory skeleton (content under `PH_ROOT/**`, internals under `PH_ROOT/.project-handbook/**`),
 - minimal seed files that encode conventions (READMEs, example ADRs, `.gitkeep` where appropriate),
 - JSON/YAML defaults required by `ph`.
 
 ## Root marker and internal state location
 
-Removed. v1 layout is defined by `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md` (marker `.ph/config.json`, internals `.ph/**`, content `ph/**`).
+Removed. v1 layout is defined by `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` (marker `project_handbook.config.json`, internals under `.project-handbook/**`).
 
 ## Documentation placement
 
@@ -92,7 +89,7 @@ Keep CLI documentation in the CLI repo (MkDocs) and treat it as product docs:
 - `project-handbook-cli/docs/**` (or MkDocs-configured docs dir)
 
 Avoid relocating the handbook instance repo’s entire documentation under a new `ph/` directory unless there is a strong, user-facing reason and a migration plan, because it would be a breaking change to links and mental model.
-v1 intentionally uses `ph/**` for content to keep internals isolated under `.ph/**`.
+Historical note: an earlier v1 design proposed `ph/**` for content to isolate internals under `.ph/**`, but this approach is superseded by ADR-CLI-0004.
 
 # Options considered
 

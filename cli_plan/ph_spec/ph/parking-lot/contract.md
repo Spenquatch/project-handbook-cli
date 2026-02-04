@@ -26,6 +26,9 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph parking add --type <category> --title "..." [--desc "..."] [--owner @handle] [--tags "a,b"]` (creates new item directories and updates `index.json`).
+  - `ph parking list ...` / `ph parking review` (reads `index.json`; may rebuild it from filesystem if missing/stale).
+  - `ph parking promote --item <ID> [--target now|next|later]` (records promotion metadata; does not remove the item by default).
   - `pnpm make -- parking-add type=<category> title="..." [desc="..."] [owner=@handle] [tags="a,b"]` (creates new item directories and updates `index.json`).
   - `pnpm make -- parking-list ...` / `pnpm make -- parking-review` (reads `index.json`; may rebuild it from filesystem if missing/stale).
   - `pnpm make -- parking-promote item=<ID> [target=now|next|later]` (records promotion metadata; does not remove the item by default).

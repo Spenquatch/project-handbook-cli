@@ -21,6 +21,8 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph roadmap create` (creates `roadmap/now-next-later.md` if missing).
+  - Humans edit roadmap content directly; `ph roadmap show` / `ph roadmap validate` are read-only.
   - `pnpm make -- roadmap-create` (creates `roadmap/now-next-later.md` if missing).
   - Humans edit roadmap content directly; `pnpm make -- roadmap` / `pnpm make -- roadmap-validate` are read-only.
 - Non-destructive:

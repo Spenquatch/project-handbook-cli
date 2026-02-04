@@ -26,6 +26,11 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph backlog add ...` (creates a new item directory under `backlog/<bugs|wildcards|work-items>/<ID>/` and updates `index.json`).
+  - `ph backlog list ...` / `ph backlog stats` (reads `index.json`; may rebuild it from filesystem if missing/stale).
+  - `ph backlog triage --issue <ID>` (may create `triage.md` for P0s; updates `index.json`).
+  - `ph backlog assign --issue <ID> [--sprint current|next|SPRINT-...]` (records `sprint:` in the item front matter; updates `index.json`).
+  - `ph backlog rubric` (read-only; prints severity rubric guidance).
   - `pnpm make -- backlog-add ...` (creates a new item directory under `backlog/<bugs|wildcards|work-items>/<ID>/` and updates `index.json`).
   - `pnpm make -- backlog-list ...` / `pnpm make -- backlog-stats` (reads `index.json`; may rebuild it from filesystem if missing/stale).
   - `pnpm make -- backlog-triage issue=<ID>` (may create `triage.md` for P0s; updates `index.json`).

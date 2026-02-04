@@ -118,10 +118,10 @@
       "completed_at": "2026-01-17T04:34:00Z",
       "last_session_log_ref": "cli_plan/session_logs.md#2026-01-17-0421-utc--dd-0007--align-validation-rules-with-new-phph-layout",
       "next_task_id": "DD-0100",
-      "title": "Align validation rules with new ph/.ph layout",
+      "title": "Align validation rules with v1 layout",
       "type": "audit",
       "scope": "ph_spec",
-      "description": "Review `process/checks/validation_rules.json` assumptions (paths, required structures) and ensure they match the intended ph/.ph layout for general projects.",
+      "description": "Review `process/checks/validation_rules.json` assumptions (paths, required structures) and ensure they match the v1 repo-root layout (marker `project_handbook.config.json`, internals under `.project-handbook/**`).",
       "acceptance_criteria": [
         "Validation rule paths and checks align with the v1 ph layout and the ph_spec contracts."
       ]

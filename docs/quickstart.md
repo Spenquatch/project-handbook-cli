@@ -18,11 +18,13 @@ Verify:
 
 ## Point `ph` at a handbook instance repo
 
-`ph` discovers the handbook root by searching upward from `cwd` for `.ph/config.json`.
+`ph` discovers the handbook root by searching upward from `cwd` for `project_handbook.config.json`.
 
 If you are starting a new handbook instance repo directory, initialize the root marker first:
 
 - `ph init`
+
+`ph init` is safe and idempotent: it creates the root marker, required process assets, seeds onboarding/session templates, and scaffolds the canonical handbook directory tree (without overwriting existing files).
 
 Then verify required assets:
 

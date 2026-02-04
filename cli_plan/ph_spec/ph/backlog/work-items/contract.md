@@ -21,6 +21,7 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph backlog add --type work-items ...` (creates a new work-item directory + `README.md`).
   - `pnpm make -- backlog-add type=work-items ...` (creates a new work-item directory + `README.md`).
 - Non-destructive:
   - `ph backlog add` MUST refuse to overwrite an existing `<WORK_DIR>/` unless `--force` is provided.

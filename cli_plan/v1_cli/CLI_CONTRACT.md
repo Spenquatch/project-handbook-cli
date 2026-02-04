@@ -5,7 +5,7 @@ date: 2026-01-13
 tags: [handbook, cli, contract, automation]
 links:
   - ./ADR-CLI-0001-ph-cli-migration.md
-  - ./ADR-CLI-0003-ph-project-layout.md
+  - ./ADR-CLI-0004-ph-root-layout.md
   - ../v0_make/MAKE_CONTRACT.md
   - ../PARITY_CHECKLIST.md
 ---
@@ -92,18 +92,56 @@ Command:
 - `ph init`
 
 Flags:
+ - `--gitignore` / `--no-gitignore`
+   - default: `--gitignore`
+
 Behavior:
-- Purpose: initialize a new Project Handbook repo by creating the minimal config + process assets required by `ph`.
+- Purpose: bootstrap a Project Handbook repo by creating the marker config, required process assets, and the canonical directory tree so other `ph` commands don’t assume pre-existing files.
 - Root selection:
   - If `--root <path>` is provided, write under that directory.
   - Else, write under `cwd`.
 - Create these paths if missing (do not overwrite existing files):
   - `project_handbook.config.json`
+  - `ONBOARDING.md` (seeded)
   - `process/checks/validation_rules.json`
+  - `process/automation/system_scope_config.json` (optional; routing prefixes and exclusions)
+  - `process/automation/reset_spec.json` (CLI-only maintenance utility)
+  - `process/AI_AGENT_START_HERE.md` (seeded; lightweight agent workflow guide)
+  - `process/playbooks/` (directory; seeded with basic playbooks)
   - `process/sessions/templates/` (directory)
+  - `process/sessions/logs/` (directory; includes `.gitkeep`)
+  - `process/sessions/logs/latest_summary.md` (seeded placeholder)
+  - `process/sessions/session_end/` (directory)
+  - `process/sessions/session_end/session_end_index.json` (seeded; `{ "records": [] }`)
+  - `.project-handbook/` (directory; includes `.gitkeep`)
+  - Content roots (repo-root layout):
+    - `adr/`
+    - `assets/` (includes `.gitkeep`)
+    - `backlog/{bugs,wildcards,work-items}/` and `backlog/archive/{bugs,wildcards,work-items}/`
+    - `backlog/index.json` (seeded; empty index)
+    - `contracts/`
+    - `decision-register/`
+    - `docs/logs/` (includes `.gitkeep`; contents are ignored by validation rules by default)
+    - `features/implemented/`
+    - `parking-lot/index.json` (seeded; empty index)
+    - `parking-lot/{features,technical-debt,research,external-requests}/` and `parking-lot/archive/{features,technical-debt,research,external-requests}/`
+    - `releases/planning/` and `releases/delivered/`
+    - `roadmap/` (seed file: `roadmap/now-next-later.md`)
+    - `sprints/archive/`
+    - `sprints/archive/index.json` (seeded; empty archive index)
+    - `status/{daily,evidence,exports}/`
+    - `tools/` (includes `.gitkeep`)
 
 Notes:
-- `ph init` does not scaffold the full content tree (`adr/`, `sprints/`, `features/`, etc.). Those are created via domain commands (`ph sprint plan`, `ph feature create`, etc.) and/or direct authoring.
+- `ph init` is non-destructive and idempotent: it creates missing paths but never overwrites existing content.
+- Domain commands MUST still be robust (create missing parent directories they own), so running `ph init` is recommended but not required.
+
+Gitignore behavior:
+- If `--gitignore` (default), `ph init` SHOULD update/create `PH_ROOT/.gitignore` idempotently with at least:
+  - `.project-handbook/history.log`
+  - `process/sessions/logs/*` and `!process/sessions/logs/.gitkeep`
+  - `status/exports`
+- If `--no-gitignore`, `ph init` MUST NOT read or write `PH_ROOT/.gitignore`.
 
 Stdout:
 - Always print exactly one line for the marker file:

@@ -21,6 +21,9 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
+  - `ph backlog add --type bugs ...` (creates a new bug item directory + `README.md`).
+    - Compatibility: the underlying manager normalizes `bug|bugs` → `bugs`.
+  - `ph backlog triage --issue <BUG-...>` (MAY create `triage.md` for analysis; primarily used for P0s).
   - `pnpm make -- backlog-add type=bugs ...` (creates a new bug item directory + `README.md`).
     - Compatibility: the underlying manager normalizes `bug|bugs` → `bugs`.
   - `pnpm make -- backlog-triage issue=<BUG-...>` (MAY create `triage.md` for analysis; primarily used for P0s).

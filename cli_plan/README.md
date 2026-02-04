@@ -17,9 +17,9 @@ This folder is versioned so we can always compare the **current Make-based inter
 
 ### `v0_make/`
 Authoritative snapshot/contract of the current command surface:
-- Make targets (including historical `hb-*` scope variants)
+- Make targets (including placeholders/no-ops)
 - Hook behavior (history + auto validation)
-- Destructive safety semantics (reset/migration)
+- Pre-exec gates + release coordination targets
 
 ### `v1_cli/`
 Authoritative CLI design:
@@ -28,4 +28,4 @@ Authoritative CLI design:
 
 ## Parity rule
 
-`v1_cli` MUST preserve the intent and ergonomics of `v0_make` where applicable, while removing Make-era concepts that don’t generalize (notably system scope and any Make compatibility layer).
+`v1_cli` MUST preserve the intent and ergonomics of `v0_make` where applicable, while improving usability by ensuring the CLI can bootstrap a repo (`ph init`) and scaffold required files/directories (so commands don’t assume a pre-existing handbook filesystem).

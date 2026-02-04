@@ -40,11 +40,16 @@ from .onboarding import (
 )
 from .orchestration import run_check_all, run_test_system
 from .parking import run_parking_add, run_parking_list, run_parking_promote, run_parking_review
+from .pre_exec import PreExecError, run_pre_exec_audit, run_pre_exec_lint
 from .release import (
+    run_release_activate,
     run_release_add_feature,
+    run_release_clear,
     run_release_close,
     run_release_list,
     run_release_plan,
+    run_release_progress,
+    run_release_show,
     run_release_status,
     run_release_suggest,
 )
@@ -106,7 +111,23 @@ def build_parser() -> argparse.ArgumentParser:
     version_parser = subparsers.add_parser("version", help="Print installed ph version", parents=[sub_common])
     version_parser.set_defaults(_handler=_handle_version)
 
-    subparsers.add_parser("init", help="Initialize a new handbook instance repo", parents=[sub_common])
+    init_parser = subparsers.add_parser("init", help="Initialize a new handbook instance repo", parents=[sub_common])
+    init_gitignore_group = init_parser.add_mutually_exclusive_group()
+    init_gitignore_group.add_argument(
+        "--gitignore",
+        dest="gitignore",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Update/create .gitignore with recommended handbook ignores (default)",
+    )
+    init_gitignore_group.add_argument(
+        "--no-gitignore",
+        dest="gitignore",
+        action="store_false",
+        default=argparse.SUPPRESS,
+        help="Do not read or write .gitignore",
+    )
+    init_parser.set_defaults(gitignore=True)
 
     doctor_parser = subparsers.add_parser(
         "doctor",
@@ -377,12 +398,18 @@ def build_parser() -> argparse.ArgumentParser:
     release_subparsers = release_parser.add_subparsers(dest="release_command")
     release_plan_parser = release_subparsers.add_parser("plan", help="Create a release plan", parents=[sub_common])
     release_plan_parser.add_argument("--version", help="Release version (vX.Y.Z or 'next')")
+    release_plan_parser.add_argument("--activate", action="store_true", help="Activate this release as current")
     release_plan_parser.add_argument("--bump", choices=["patch", "minor", "major"], default="patch")
     release_plan_parser.add_argument("--sprints", type=int, default=3, help="Number of sprints (default: 3)")
     release_plan_parser.add_argument("--start-sprint", help="Starting sprint id (SPRINT-...)")
     release_plan_parser.add_argument("--sprint-ids", help="Comma-separated sprint ids (overrides --sprints)")
+    release_activate = release_subparsers.add_parser("activate", help="Set the current release", parents=[sub_common])
+    release_activate.add_argument("--release", required=True, help="Release version (vX.Y.Z)")
+    release_subparsers.add_parser("clear", help="Clear the current release pointer", parents=[sub_common])
     release_subparsers.add_parser("list", help="List release folders", parents=[sub_common])
     release_subparsers.add_parser("status", help="Show current release status", parents=[sub_common])
+    release_subparsers.add_parser("show", help="Print current release plan + computed status", parents=[sub_common])
+    release_subparsers.add_parser("progress", help="Regenerate releases/current/progress.md", parents=[sub_common])
     release_add_feature = release_subparsers.add_parser(
         "add-feature", help="Assign a feature to a release", parents=[sub_common]
     )
@@ -409,6 +436,18 @@ def build_parser() -> argparse.ArgumentParser:
     validate_parser.add_argument(
         "--silent-success", action="store_true", help="Suppress output when there are no issues"
     )
+
+    pre_exec_parser = subparsers.add_parser("pre-exec", help="Pre-execution lint/audit gate", parents=[sub_common])
+    pre_exec_subparsers = pre_exec_parser.add_subparsers(dest="pre_exec_command")
+    pre_exec_subparsers.add_parser("lint", help="Strict task-doc lint gate", parents=[sub_common])
+    pre_exec_audit = pre_exec_subparsers.add_parser(
+        "audit",
+        help="Capture evidence bundle + lint",
+        parents=[sub_common],
+    )
+    pre_exec_audit.add_argument("--sprint", help="Override sprint id (default: from sprints/current/plan.md)")
+    pre_exec_audit.add_argument("--date", help="Override evidence date (default: today YYYY-MM-DD)")
+    pre_exec_audit.add_argument("--evidence-dir", help="Override evidence directory path")
     return parser
 
 
@@ -436,7 +475,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "init":
         target_root = Path(getattr(args, "root", None) or Path.cwd()).resolve()
         try:
-            exit_code = run_init(target_root=target_root)
+            exit_code = run_init(target_root=target_root, update_gitignore=bool(getattr(args, "gitignore", True)))
         except InitError as exc:
             print(str(exc), file=sys.stderr, end="")
             return 2
@@ -818,7 +857,11 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = 2
             elif args.command == "release":
                 if args.release_command is None:
-                    print("Usage: ph release <plan|list|status|add-feature|suggest|close>\n", file=sys.stderr, end="")
+                    print(
+                        "Usage: ph release <plan|activate|clear|status|show|progress|list|add-feature|suggest|close>\n",
+                        file=sys.stderr,
+                        end="",
+                    )
                     exit_code = 2
                 elif args.release_command == "plan":
                     exit_code = run_release_plan(
@@ -828,12 +871,21 @@ def main(argv: list[str] | None = None) -> int:
                         sprints=int(getattr(args, "sprints", 3)),
                         start_sprint=getattr(args, "start_sprint", None),
                         sprint_ids=getattr(args, "sprint_ids", None),
+                        activate=bool(getattr(args, "activate", False)),
                         env=os.environ,
                     )
+                elif args.release_command == "activate":
+                    exit_code = run_release_activate(ctx=ctx, release=str(getattr(args, "release")))
+                elif args.release_command == "clear":
+                    exit_code = run_release_clear(ctx=ctx)
                 elif args.release_command == "list":
                     exit_code = run_release_list(ctx=ctx)
                 elif args.release_command == "status":
                     exit_code = run_release_status(ctx=ctx, env=os.environ)
+                elif args.release_command == "show":
+                    exit_code = run_release_show(ctx=ctx, env=os.environ)
+                elif args.release_command == "progress":
+                    exit_code = run_release_progress(ctx=ctx, env=os.environ)
                 elif args.release_command == "add-feature":
                     exit_code = run_release_add_feature(
                         ctx=ctx,
@@ -847,7 +899,11 @@ def main(argv: list[str] | None = None) -> int:
                 elif args.release_command == "close":
                     exit_code = run_release_close(ctx=ctx, version=str(getattr(args, "version")), env=os.environ)
                 else:
-                    print("Usage: ph release <plan|list|status|add-feature|suggest|close>\n", file=sys.stderr, end="")
+                    print(
+                        "Usage: ph release <plan|activate|clear|status|show|progress|list|add-feature|suggest|close>\n",
+                        file=sys.stderr,
+                        end="",
+                    )
                     exit_code = 2
             elif args.command == "validate":
                 exit_code, _out_path, message = run_validate(
@@ -859,6 +915,27 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 if message:
                     print(message, end="")
+            elif args.command == "pre-exec":
+                if getattr(args, "pre_exec_command", None) is None:
+                    print("Usage: ph pre-exec <lint|audit>\n", file=sys.stderr, end="")
+                    exit_code = 2
+                elif args.pre_exec_command == "lint":
+                    exit_code = run_pre_exec_lint(ctx=ctx)
+                elif args.pre_exec_command == "audit":
+                    try:
+                        exit_code = run_pre_exec_audit(
+                            ph_root=ph_root,
+                            ctx=ctx,
+                            sprint=getattr(args, "sprint", None),
+                            date=getattr(args, "date", None),
+                            evidence_dir=getattr(args, "evidence_dir", None),
+                        )
+                    except PreExecError as exc:
+                        print(f"\n❌ PRE-EXEC AUDIT FAILED: {exc}")
+                        exit_code = 1
+                else:
+                    print("Usage: ph pre-exec <lint|audit>\n", file=sys.stderr, end="")
+                    exit_code = 2
             elif args.command == "daily":
                 if args.daily_command is None:
                     print("Usage: ph daily <generate|check>\n", file=sys.stderr, end="")
