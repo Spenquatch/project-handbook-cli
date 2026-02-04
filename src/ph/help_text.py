@@ -25,14 +25,14 @@ Tip: most workflows print next-step guidance after they run.
 
 TOPICS: dict[str, str] = {
     "sprint": """Sprint workflow commands
-  ph sprint plan      - Create a new sprint skeleton (auto-updates sprints/current)
-  ph sprint open      - Switch sprints/current to an existing sprint
-  ph sprint status    - Show day-of-sprint, health, and next suggested task
-  ph sprint tasks     - List every task under the active sprint
-  ph sprint burndown  - Generate an ASCII burndown chart and save to sprint dir
-  ph sprint close     - Produce retrospective, archive sprint, summarize velocity
-  ph sprint capacity  - Display sprint telemetry (points + lanes; not a scope cap)
-  ph sprint archive   - Manually archive a specific sprint (reruns only)
+  make sprint-plan      - Create a new sprint skeleton (auto-updates sprints/current)
+  make sprint-open      - Switch sprints/current to an existing sprint
+  make sprint-status    - Show day-of-sprint, health, and next suggested task
+  make sprint-tasks     - List every task under the active sprint
+  make burndown         - Generate an ASCII burndown chart and save to sprint dir
+  make sprint-close     - Produce retrospective, archive sprint, summarize velocity
+  make sprint-capacity  - Display sprint telemetry (points + lanes; not a scope cap)
+  make sprint-archive   - Manually archive a specific sprint (reruns only)
 """,
     "task": """Task workflow commands
   ph task create --title 'X' --feature foo --decision ADR-001 [--points 5] [--owner @alice] [--lane handbook/automation]

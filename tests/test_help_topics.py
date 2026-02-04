@@ -13,6 +13,31 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
     )
 
 
+def _write_legacy_like_package_json(ph_root: Path) -> None:
+    (ph_root / "package.json").write_text(
+        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
+        encoding="utf-8",
+    )
+
+
+def _expected_help_sprint_stdout(*, resolved: Path) -> bytes:
+    return (
+        "\n"
+        f"> project-handbook@0.0.0 make {resolved}\n"
+        "> make -- help sprint\n"
+        "\n"
+        "Sprint workflow commands\n"
+        "  make sprint-plan      - Create a new sprint skeleton (auto-updates sprints/current)\n"
+        "  make sprint-open      - Switch sprints/current to an existing sprint\n"
+        "  make sprint-status    - Show day-of-sprint, health, and next suggested task\n"
+        "  make sprint-tasks     - List every task under the active sprint\n"
+        "  make burndown         - Generate an ASCII burndown chart and save to sprint dir\n"
+        "  make sprint-close     - Produce retrospective, archive sprint, summarize velocity\n"
+        "  make sprint-capacity  - Display sprint telemetry (points + lanes; not a scope cap)\n"
+        "  make sprint-archive   - Manually archive a specific sprint (reruns only)\n"
+    ).encode()
+
+
 def test_help_stdout_matches_legacy_make_help(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     result = subprocess.run(["ph", "help", "--root", str(tmp_path)], capture_output=True)
@@ -40,6 +65,32 @@ def test_help_stdout_matches_legacy_make_help(tmp_path: Path) -> None:
         "Tip: most workflows print next-step guidance after they run.\n"
     ).encode()
     assert result.stdout == expected
+
+
+def test_help_sprint_stdout_matches_legacy_pnpm_make_help_sprint(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _write_legacy_like_package_json(tmp_path)
+    resolved = tmp_path.resolve()
+    result = subprocess.run(["ph", "help", "sprint", "--root", str(tmp_path)], capture_output=True)
+    assert result.returncode == 0
+    assert result.stdout == _expected_help_sprint_stdout(resolved=resolved)
+    history_log = tmp_path / ".project-handbook" / "history.log"
+    assert history_log.exists()
+    assert history_log.stat().st_size > 0
+    assert not (tmp_path / ".project-handbook" / "status" / "validation.json").exists()
+
+
+def test_help_sprint_accepts_root_before_command(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _write_legacy_like_package_json(tmp_path)
+    resolved = tmp_path.resolve()
+    result = subprocess.run(["ph", "--root", str(tmp_path), "help", "sprint"], capture_output=True)
+    assert result.returncode == 0
+    assert result.stdout == _expected_help_sprint_stdout(resolved=resolved)
+    history_log = tmp_path / ".project-handbook" / "history.log"
+    assert history_log.exists()
+    assert history_log.stat().st_size > 0
+    assert not (tmp_path / ".project-handbook" / "status" / "validation.json").exists()
 
 
 def test_help_topics_exist(tmp_path: Path) -> None:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 from pathlib import Path
@@ -69,6 +70,28 @@ from .task_create import run_task_create
 from .task_status import run_task_status
 from .task_view import run_task_list, run_task_show
 from .validate_docs import run_validate
+
+
+def _format_pnpm_make_preamble(*, ph_root: Path, make_args: list[str]) -> str:
+    pkg = ph_root / "package.json"
+    if not pkg.exists():
+        return ""
+
+    try:
+        data = json.loads(pkg.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ""
+
+    name = data.get("name")
+    version = data.get("version")
+    if not isinstance(name, str) or not name.strip():
+        return ""
+    if not isinstance(version, str) or not version.strip():
+        return ""
+
+    cwd = str(ph_root.resolve())
+    args = " ".join(make_args)
+    return f"\n> {name}@{version} make {cwd}\n> make -- {args}\n\n"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -528,7 +551,11 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"Unknown help topic: {args.topic}\n", file=sys.stderr, end="")
                     exit_code = 2
                 else:
-                    print(text, end="")
+                    make_args = ["help"]
+                    if topic:
+                        make_args.append(topic)
+                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
+                    sys.stdout.write(text)
             elif args.command == "onboarding":
                 if args.onboarding_command is None:
                     print(read_onboarding_markdown(ph_root=ph_root), end="")
