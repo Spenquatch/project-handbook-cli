@@ -34,14 +34,16 @@ TOPICS: dict[str, str] = {
   make sprint-capacity  - Display sprint telemetry (points + lanes; not a scope cap)
   make sprint-archive   - Manually archive a specific sprint (reruns only)
 """,
-    "task": """Task workflow commands
-  ph task create --title 'X' --feature foo --decision ADR-001 [--points 5] [--owner @alice] [--lane handbook/automation]
-                        - Scaffold a new sprint task directory with docs/checklists
-  ph task list        - Show all tasks in the current sprint
-  ph task show --id TASK-### - Print task metadata + file locations
-  ph task status --id TASK-### --status doing [--force]
-                        - Update status with dependency validation
-""",
+    "task": (
+        "Task workflow commands\n"
+        "  make task-create title='X' feature=foo decision=ADR-001 [points=5] [owner=@alice] "
+        "[lane=handbook/automation] [release=current|vX.Y.Z] [gate=true]\n"
+        "                        - Scaffold a new sprint task directory with docs/checklists\n"
+        "  make task-list        - Show all tasks in the current sprint\n"
+        "  make task-show id=TASK-### - Print task metadata + file locations\n"
+        "  make task-status id=TASK-### status=doing [force=true]\n"
+        "                        - Update status with dependency validation\n"
+    ),
     "feature": """Feature management commands
   ph feature list             - List features with owner, stage, and links
   ph feature create --name foo [--epic] [--owner @alice]

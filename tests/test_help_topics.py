@@ -38,6 +38,23 @@ def _expected_help_sprint_stdout(*, resolved: Path) -> bytes:
     ).encode()
 
 
+def _expected_help_task_stdout(*, resolved: Path) -> bytes:
+    return (
+        "\n"
+        f"> project-handbook@0.0.0 make {resolved}\n"
+        "> make -- help task\n"
+        "\n"
+        "Task workflow commands\n"
+        "  make task-create title='X' feature=foo decision=ADR-001 [points=5] [owner=@alice] "
+        "[lane=handbook/automation] [release=current|vX.Y.Z] [gate=true]\n"
+        "                        - Scaffold a new sprint task directory with docs/checklists\n"
+        "  make task-list        - Show all tasks in the current sprint\n"
+        "  make task-show id=TASK-### - Print task metadata + file locations\n"
+        "  make task-status id=TASK-### status=doing [force=true]\n"
+        "                        - Update status with dependency validation\n"
+    ).encode()
+
+
 def test_help_stdout_matches_legacy_make_help(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     result = subprocess.run(["ph", "help", "--root", str(tmp_path)], capture_output=True)
@@ -87,6 +104,19 @@ def test_help_sprint_accepts_root_before_command(tmp_path: Path) -> None:
     result = subprocess.run(["ph", "--root", str(tmp_path), "help", "sprint"], capture_output=True)
     assert result.returncode == 0
     assert result.stdout == _expected_help_sprint_stdout(resolved=resolved)
+    history_log = tmp_path / ".project-handbook" / "history.log"
+    assert history_log.exists()
+    assert history_log.stat().st_size > 0
+    assert not (tmp_path / ".project-handbook" / "status" / "validation.json").exists()
+
+
+def test_help_task_stdout_matches_legacy_pnpm_make_help_task(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _write_legacy_like_package_json(tmp_path)
+    resolved = tmp_path.resolve()
+    result = subprocess.run(["ph", "--root", str(tmp_path), "help", "task"], capture_output=True)
+    assert result.returncode == 0
+    assert result.stdout == _expected_help_task_stdout(resolved=resolved)
     history_log = tmp_path / ".project-handbook" / "history.log"
     assert history_log.exists()
     assert history_log.stat().st_size > 0
