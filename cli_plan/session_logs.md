@@ -5647,3 +5647,62 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-04 22:12 UTC — V1P-0008 — Parity: `make help validation` → `ph help validation`
+
+Agent: GPT-5.2 (Codex CLI background agent via Orchestrator)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable PH_ROOT (rsync copy of legacy repo into mktemp)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0008)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- src/ph/help_text.py
+- tests/test_help_topics.py
+
+Goal:
+- Achieve strict stdout parity for legacy `pnpm make -- help validation` vs `ph --root <PH_ROOT> help validation`.
+
+Work performed (ordered):
+1. Created a disposable PH_ROOT from the legacy handbook repo and captured legacy stdout for `help validation` (and `help-validation`).
+2. Captured `ph` stdout for `help validation` against the same PH_ROOT and diffed outputs (initial mismatch).
+3. Updated the `validation` help topic text to mirror the legacy `make validate*`, `pre-exec-*`, `status`, `check-all`, and `test-system` lines.
+4. Added a deterministic pytest asserting exact stdout for `ph help validation`.
+5. Re-ran legacy vs `ph` capture + diff; verified byte-for-byte match.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- PH_ROOT=\"$(mktemp -d -t ph-parity-V1P-0008-XXXXXXXX)\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT\" && pnpm make -- help validation) > /tmp/legacy-help-validation.txt
+- (cd \"$PH_ROOT\" && pnpm make -- help-validation) > /tmp/legacy-help-validation-dashed.txt
+- UV_CACHE_DIR=\"/tmp/uv-cache\" XDG_CACHE_HOME=\"/tmp/xdg-cache\" uv run ph --root \"$PH_ROOT\" help validation > /tmp/ph-help-validation.txt
+- diff -u /tmp/legacy-help-validation.txt /tmp/ph-help-validation.txt
+- UV_CACHE_DIR=\"/tmp/uv-cache\" XDG_CACHE_HOME=\"/tmp/xdg-cache\" uv run ruff check .
+- UV_CACHE_DIR=\"/tmp/uv-cache\" XDG_CACHE_HOME=\"/tmp/xdg-cache\" uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/help_text.py
+- tests/test_help_topics.py
+
+Verification:
+- `diff -u /tmp/legacy-help-validation.txt /tmp/ph-help-validation.txt` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+- Note: legacy `pnpm make -- help validation` stdout differs from `pnpm make -- help-validation` stdout; `ph help validation` matches the former (checklist canonical).
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> help validation` now matches legacy `pnpm make -- help validation` stdout byte-for-byte; parity locked via pytest.
+
+Next task:
+- V1P-0009
+
+Blockers (if blocked):
+- (none)

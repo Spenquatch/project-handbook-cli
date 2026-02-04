@@ -87,11 +87,13 @@ TOPICS: dict[str, str] = {
   make parking-promote item=FEAT-001 target=later
 """,
     "validation": """Validation, status, and test commands
-  ph validate --quick            - Fast lint (runs automatically after every ph)
-  ph validate                  - Full validation suite
-  ph status                    - Regenerate status/current_summary.md
-  ph check-all                 - Convenience alias for validate + status
-  ph test system               - Run validation + status + daily smoke checks
+  make validate-quick            - Fast lint (runs automatically after every make)
+  make validate                  - Full validation suite
+  make pre-exec-lint             - Strict sprint task lint (session/purpose + ambiguity gate)
+  make pre-exec-audit            - Full pre-exec audit (captures evidence + runs pre-exec-lint)
+  make status                    - Regenerate status/current_summary.md
+  make check-all                 - Convenience alias for validate + status
+  make test-system               - Run validation + status + daily smoke checks
 """,
     "utilities": """Utility + daily-use commands
   ph daily generate / daily generate --force / daily check --verbose - Manage daily status cadence
