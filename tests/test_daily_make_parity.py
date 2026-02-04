@@ -57,6 +57,47 @@ def _write_backlog_index(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
+EXPECTED_DAILY_STATUS_2026_02_04 = (
+    "---\n"
+    "title: Daily Status - 2026-02-04\n"
+    "type: status-daily\n"
+    "date: 2026-02-04\n"
+    "sprint: SPRINT-SEQ-0004\n"
+    "tags: [status, daily]\n"
+    "links: [../../../sprints/current.md]\n"
+    "---\n"
+    "\n"
+    "# Daily Status - Wednesday, February 04, 2026\n"
+    "\n"
+    "## Sprint: SPRINT-SEQ-0004\n"
+    "**Weekday**: Wednesday (daily status is date-based; sprint planning may be bounded)\n"
+    "\n"
+    "## Progress\n"
+    "- [ ] No tasks currently in progress\n"
+    "\n"
+    "## Completed Today\n"
+    "- [ ] (Update with completed tasks)\n"
+    "\n"
+    "## Blockers\n"
+    "- None\n"
+    "\n"
+    "## Backlog Impact\n"
+    "- P1 Issues: 2 high priority for next sprint\n"
+    "- New issues discovered: (Update if any)\n"
+    "\n"
+    "## Decisions\n"
+    "- (Document any technical decisions made today)\n"
+    "\n"
+    "## Next Focus\n"
+    "- Continue current work\n"
+    "\n"
+    "## Sprint Telemetry\n"
+    "- Total Points: 28\n"
+    "- Completed: 28\n"
+    "- In Progress: 0\n"
+    "- Velocity: 28/28 (100%)\n"
+)
+
 
 def test_daily_generate_stdout_and_file_match_make_daily(tmp_path: Path) -> None:
     _write_legacy_like_config(tmp_path)
@@ -87,44 +128,36 @@ def test_daily_generate_stdout_and_file_match_make_daily(tmp_path: Path) -> None
 
     out_path = tmp_path / "status" / "daily" / "2026" / "02" / "04.md"
     assert out_path.exists()
-    assert out_path.read_text(encoding="utf-8") == (
-        "---\n"
-        "title: Daily Status - 2026-02-04\n"
-        "type: status-daily\n"
-        "date: 2026-02-04\n"
-        "sprint: SPRINT-SEQ-0004\n"
-        "tags: [status, daily]\n"
-        "links: [../../../sprints/current.md]\n"
-        "---\n"
-        "\n"
-        "# Daily Status - Wednesday, February 04, 2026\n"
-        "\n"
-        "## Sprint: SPRINT-SEQ-0004\n"
-        "**Weekday**: Wednesday (daily status is date-based; sprint planning may be bounded)\n"
-        "\n"
-        "## Progress\n"
-        "- [ ] No tasks currently in progress\n"
-        "\n"
-        "## Completed Today\n"
-        "- [ ] (Update with completed tasks)\n"
-        "\n"
-        "## Blockers\n"
-        "- None\n"
-        "\n"
-        "## Backlog Impact\n"
-        "- P1 Issues: 2 high priority for next sprint\n"
-        "- New issues discovered: (Update if any)\n"
-        "\n"
-        "## Decisions\n"
-        "- (Document any technical decisions made today)\n"
-        "\n"
-        "## Next Focus\n"
-        "- Continue current work\n"
-        "\n"
-        "## Sprint Telemetry\n"
-        "- Total Points: 28\n"
-        "- Completed: 28\n"
-        "- In Progress: 0\n"
-        "- Velocity: 28/28 (100%)\n"
-    )
+    assert out_path.read_text(encoding="utf-8") == EXPECTED_DAILY_STATUS_2026_02_04
 
+
+def test_daily_generate_force_stdout_matches_make_daily_force(tmp_path: Path) -> None:
+    _write_legacy_like_config(tmp_path)
+    _write_legacy_like_package_json(tmp_path)
+    _write_sprint_with_done_tasks(tmp_path)
+    _write_backlog_index(tmp_path)
+
+    env = dict(os.environ)
+    env["PH_FAKE_TODAY"] = "2026-02-04"
+
+    result = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "daily", "generate", "--force"],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0
+
+    resolved = tmp_path.resolve()
+    expected_stdout = (
+        "\n"
+        f"> project-handbook@0.0.0 make {resolved}\n"
+        "> make -- daily-force\n"
+        "\n"
+        f"Created daily status: {resolved}/status/daily/2026/02/04.md\n"
+    )
+    assert result.stdout == expected_stdout
+
+    out_path = tmp_path / "status" / "daily" / "2026" / "02" / "04.md"
+    assert out_path.exists()
+    assert out_path.read_text(encoding="utf-8") == EXPECTED_DAILY_STATUS_2026_02_04

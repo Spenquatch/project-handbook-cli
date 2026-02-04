@@ -144,9 +144,9 @@ Blockers (if blocked):
 
 ## 2026-02-04 23:16 UTC — V1P-0011 — Parity: `make daily-force` → `ph daily generate --force`
 
-Agent:
-Environment:
-Handbook instance repo:
+Agent: GPT-5.2 (Codex CLI background agent via Orchestrator)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable PH_ROOT (rsync copy of legacy repo into mktemp)
 CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
 
 Inputs reviewed:
@@ -154,28 +154,54 @@ Inputs reviewed:
 - cli_plan/tasks_v1_parity.json (task V1P-0011)
 - cli_plan/PARITY_CHECKLIST.md
 - cli_plan/v1_cli/CLI_CONTRACT.md
+- src/ph/cli.py
+- tests/test_daily_make_parity.py
 
 Goal:
 - Achieve strict parity for legacy `pnpm make -- daily-force` vs `ph --root <PH_ROOT> daily generate --force` (stdout + `status/daily/YYYY/MM/DD.md`).
 
 Work performed (ordered):
-1. (pending)
+1. Created a disposable PH_ROOT from the legacy handbook repo and captured legacy stdout + the generated daily file for `pnpm make -- daily-force`.
+2. Captured `ph daily generate --force` stdout + daily file output and diffed against legacy (initial mismatch).
+3. Updated `ph daily generate --force` to print a legacy-matching `> make -- daily-force` preamble.
+4. Added a deterministic pytest locking `--force` stdout parity and confirming the generated daily file matches the legacy baseline.
+5. Re-ran diffs + ruff/pytest.
 
 Commands executed (exact):
-- (pending)
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- PH_ROOT=\"$(mktemp -d -t ph-parity-V1P-0011-XXXXXXXX)\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT\" && pnpm make -- daily-force) > /tmp/legacy-daily-force-stdout.txt
+- LEGACY_DAILY_FILE=$(ls -1 \"$PH_ROOT\"/status/daily/*/*/*.md | sort | tail -n 1)
+- cp \"$LEGACY_DAILY_FILE\" /tmp/legacy-daily-force.md
+- rm -f \"$LEGACY_DAILY_FILE\"
+- uv run ph --root \"$PH_ROOT\" daily generate --force > /tmp/ph-daily-force-stdout.txt
+- PH_DAILY_FILE=$(ls -1 \"$PH_ROOT\"/status/daily/*/*/*.md | sort | tail -n 1)
+- cp \"$PH_DAILY_FILE\" /tmp/ph-daily-force.md
+- diff -u /tmp/legacy-daily-force-stdout.txt /tmp/ph-daily-force-stdout.txt
+- diff -u /tmp/legacy-daily-force.md /tmp/ph-daily-force.md
+- uv run ruff check .
+- uv run pytest -q
 
 Files changed (exact paths):
-- (pending)
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/cli.py
+- tests/test_daily_make_parity.py
 
 Verification:
-- (pending)
+- `diff -u /tmp/legacy-daily-force-stdout.txt /tmp/ph-daily-force-stdout.txt` returned no diff (byte-for-byte match).
+- `diff -u /tmp/legacy-daily-force.md /tmp/ph-daily-force.md` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
 
 Outcome:
-- status: in_progress
-- summary: (pending)
+- status: done
+- summary: `ph --root <PH_ROOT> daily generate --force` now matches legacy `pnpm make -- daily-force` stdout and daily file output; parity locked via pytest.
 
 Next task:
-- (pending)
+- V1P-0012
 
 Blockers (if blocked):
 - (none)
