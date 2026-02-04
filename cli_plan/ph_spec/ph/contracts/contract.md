@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/contracts/
+title: PH Spec Contract — contracts/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/contracts/`
 - Summary: Project-owned contract documents (Markdown/JSON) that define stable interfaces, inventories, and invariants (e.g. API endpoint contracts) referenced by ADRs, tasks, and validation evidence.
 
 ## Ownership
@@ -18,18 +18,17 @@ tags: [ph, spec]
 - Derived/internal artifacts (CLI-authored; safe to regenerate):
   - (none)
 - Overwrite rules:
-  - The CLI MUST NOT overwrite or rewrite contract artifacts under `ph/contracts/`.
+  - The CLI MUST NOT overwrite or rewrite contract artifacts under `contracts/`.
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates `ph/contracts/` if missing).
   - Humans (or agents directed by humans) author and maintain the contract artifacts; the CLI treats this directory as read-only content.
 - Non-destructive:
-  - The CLI MUST NOT create, modify, or delete contract artifacts under `ph/contracts/` during normal operation.
+  - The CLI MUST NOT create, modify, or delete contract artifacts under `contracts/` during normal operation.
 
 ## Required Files and Directories
 - Required:
-  - `ph/contracts/` (directory)
+  - `contracts/` (directory)
 - Optional:
   - Any subdirectories (e.g. `api/`) used to group related contracts.
   - `README.md` files for navigation within subtrees.
@@ -51,7 +50,7 @@ tags: [ph, spec]
 
 ## Validation Rules
 - `ph validate` SHOULD enforce:
-  - `ph/contracts/` exists
+  - `contracts/` exists
   - any `*.json` files present are parseable as JSON (warn if invalid; do not mutate)
 - `ph` commands MUST treat contract artifacts as read-only unless a future, explicitly-scoped command is introduced for updating them.
 

@@ -117,7 +117,7 @@ Date: 2026-01-12
 - Sessions and dependencies match `task.yaml` and the sprint execution order (`TASK-040`/`TASK-041` after `TASK-032`/`TASK-033`).
 - In-scope execution docs are unambiguous: additive-only contract changes, empty-safe surfaces, deterministic ordering semantics, and evidence paths are explicit.
 - Feature status pages document cross-task dependencies for `TASK-040` and `TASK-041`.
-- `ph validate --quick` is clean (see `.ph/status/validation.json`).
+- `ph validate --quick` is clean (see `status/validation.json`).
 
 ## Pre-Execution Audit Gate (third-party feedback incorporated)
 Date: 2026-01-12

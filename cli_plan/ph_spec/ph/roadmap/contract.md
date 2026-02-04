@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/roadmap/
+title: PH Spec Contract — roadmap/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/roadmap/`
 - Summary: Roadmap container for a single canonical “Now / Next / Later” roadmap document consumed by `ph roadmap *`.
 
 ## Ownership
@@ -21,9 +21,8 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates `ph/roadmap/` and seeds `now-next-later.md` if missing).
-  - `ph roadmap create` (creates `roadmap/now-next-later.md` if missing).
-  - Humans edit roadmap content directly; `ph roadmap show`/`validate` are read-only.
+  - `pnpm make -- roadmap-create` (creates `roadmap/now-next-later.md` if missing).
+  - Humans edit roadmap content directly; `pnpm make -- roadmap` / `pnpm make -- roadmap-validate` are read-only.
 - Non-destructive:
   - The CLI MUST NOT overwrite `now-next-later.md` without explicit `--force`.
 
@@ -45,7 +44,7 @@ tags: [ph, spec]
 
 ## Invariants
 - There is exactly one canonical roadmap file for v1:
-  - `ph/roadmap/now-next-later.md`
+  - `roadmap/now-next-later.md`
 
 ## Validation Rules
 - `ph roadmap validate` MUST enforce:

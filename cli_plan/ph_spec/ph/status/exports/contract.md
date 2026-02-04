@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/status/exports/
+title: PH Spec Contract — status/exports/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/status/exports/`
 - Summary: CLI-generated export bundles (typically tarballs) intended for sharing handbook artifacts (plans, docs, reports) outside the repo while keeping contents deterministic and reviewable.
 
 ## Ownership
@@ -25,7 +25,7 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates `status/exports/`)
+  - Directory may be created manually or by future tooling (it is not required by the legacy Make automation).
   - Export tooling/automation (future `ph export ...` commands; or external scripts) MAY create bundles in this directory.
 - Non-destructive:
   - The CLI MUST NOT overwrite an existing export file unless `--force` is provided.

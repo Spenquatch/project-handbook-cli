@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/backlog/archive/bugs/
+title: PH Spec Contract — backlog/archive/bugs/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/backlog/archive/bugs/`
 - Summary: Archived bug backlog entries (immutable historical record), organized as one directory per bug item.
 
 ## Ownership
@@ -21,8 +21,7 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates directory structure).
-  - Bug items are archived by moving an existing `ph/backlog/bugs/<BUG-...>/` directory into `ph/backlog/archive/bugs/<BUG-...>/` (manual or future CLI command).
+  - Bug items are archived by moving an existing `backlog/bugs/<BUG-...>/` directory into `backlog/archive/bugs/<BUG-...>/` (manual or via task tooling).
 - Non-destructive:
   - Archiving MUST refuse to overwrite an existing destination directory unless `--force` is provided.
   - The CLI MUST NOT rewrite archived markdown bodies.
@@ -40,10 +39,12 @@ tags: [ph, spec]
 - `README.md` MUST include YAML front matter with at least:
   - `title: <string>`
   - `type: bugs`
+  - `input_type: <string>` (legacy; often `bug` or `bugs`)
   - `severity: P0|P1|P2|P3|P4`
   - `status: closed`
   - `created: YYYY-MM-DD`
   - `owner: <string>` (e.g. `unassigned` or `@handle`)
+  - `sprint: <SPRINT-... | null>` (when archived via sprint/task workflows)
   - `archived_at: <RFC3339 timestamp>`
   - `archived_by_task: <TASK-... | manual>`
   - `archived_by_sprint: <SPRINT-... | manual>`

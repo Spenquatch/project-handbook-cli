@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/sprints/archive/
+title: PH Spec Contract — sprints/archive/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/sprints/archive/`
 - Summary: Archived sprints and their immutable artifacts, plus an `index.json` catalog of archived sprint metadata.
 
 ## Ownership
@@ -28,27 +28,33 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates `sprints/archive/` and seeds `index.json`)
-  - `ph sprint close` (moves the current sprint into `sprints/archive/YYYY/<sprint-id>/`, updates `index.json`)
-  - `ph sprint archive --sprint <id>` (moves the specified sprint into `sprints/archive/YYYY/<sprint-id>/`, updates `index.json`)
+  - `pnpm make -- sprint-close` (moves the current sprint into `sprints/archive/YYYY/<sprint-id>/`, updates `index.json`)
+  - `pnpm make -- sprint-archive [sprint=SPRINT-...]` (moves the specified sprint into `sprints/archive/YYYY/<sprint-id>/`, updates `index.json`)
 - Non-destructive: MUST refuse to overwrite an existing archived sprint directory.
 
 ## Required Files and Directories
 - Required files:
   - `index.json`
 - Archived sprint directory layout (canonical):
-  - `YYYY/SPRINT-<...>/`
-    - `plan.md`
-    - `tasks/` (may be empty)
-    - `retrospective.md`
-    - `burndown.md`
+  - Date/ISO-week ids:
+    - `YYYY/SPRINT-<...>/`
+      - `plan.md`
+      - `tasks/` (may be empty)
+      - `retrospective.md`
+      - `burndown.md`
+  - Sequence ids:
+    - `SEQ/SPRINT-SEQ-####/`
+      - `plan.md`
+      - `tasks/` (may be empty)
+      - `retrospective.md`
+      - `burndown.md`
 
 ## Schemas
 - `index.json` MUST be a JSON object with:
   - `sprints`: array of objects containing at least:
     - `sprint` (string; sprint id `SPRINT-...`)
     - `archived_at` (string; RFC3339 timestamp, UTC preferred)
-    - `path` (string; path relative to `PH_ROOT/ph/` such as `sprints/archive/2026/SPRINT-2026-01-09`)
+    - `path` (string; path relative to `PH_ROOT/` such as `sprints/archive/2026/SPRINT-2026-01-09`)
     - `start` (string; `YYYY-MM-DD`)
     - `end` (string; `YYYY-MM-DD`)
 - `YYYY/SPRINT-*/plan.md` MUST be Markdown with YAML front matter containing at least:
@@ -66,8 +72,9 @@ tags: [ph, spec]
 - `ph sprint close` MUST:
   - create `retrospective.md` in the sprint directory before archiving, and
   - ensure a final `burndown.md` exists in the sprint directory before archiving.
+- On archive, tooling SHOULD rewrite any `sprints/current/tasks/...` links into immutable archived paths (to avoid historical tasks pointing at a moving `current` pointer). This is legacy behavior in `process/automation/sprint_manager.py` (via `process/automation/link_rewriter.py`).
 - On archive, `sprints/current` MUST NOT be left pointing at a non-existent sprint directory.
-- The sprint directory year partition `YYYY/` MUST equal the year segment in the sprint id (`SPRINT-YYYY-...`).
+- For date/ISO-week ids, the sprint directory year partition `YYYY/` MUST equal the year segment in the sprint id (`SPRINT-YYYY-...`).
 - Every entry in `index.json.sprints[*].path` MUST be under `sprints/archive/`.
 
 ## Validation Rules

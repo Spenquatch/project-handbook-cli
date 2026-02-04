@@ -16,14 +16,9 @@ def _write_valid_config(ph_root: Path) -> None:
 def _write_required_assets(ph_root: Path) -> None:
     _write_valid_config(ph_root)
     (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
     (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
     (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
-        '{"routing_rules": {}}', encoding="utf-8"
-    )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def test_doctor_ok_exits_zero(tmp_path: Path) -> None:

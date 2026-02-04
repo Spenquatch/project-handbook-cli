@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/status/
+title: PH Spec Contract — status/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/status/`
 - Summary: Status surfaces for the handbook instance: a generated “current” snapshot, a human-readable summary, validation output, plus subtrees for daily updates, evidence bundles, and export bundles.
 
 ## Ownership
@@ -26,10 +26,10 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates `status/` and subdirectories)
-  - `ph status` (writes `current.json` and `current_summary.md`)
-  - `ph validate` (writes `validation.json`)
-  - `ph daily generate` (writes daily status entries under `daily/` per the daily contract)
+  - `pnpm make -- status` (writes `current.json` and `current_summary.md`)
+  - `pnpm make -- validate` / `pnpm make -- validate-quick` (writes `validation.json`)
+  - `pnpm make -- daily` / `pnpm make -- daily-force` (writes daily status entries under `daily/` per the daily contract)
+  - Humans/agents (evidence bundles, exports, and README edits)
 - Non-destructive:
   - The CLI MUST NOT overwrite user-owned files under `status/` (including `README.md`) without explicit `--force`.
 
@@ -37,9 +37,9 @@ tags: [ph, spec]
 - Required files:
   - `README.md`
 - Required directories:
-  - `daily/` (see `ph/status/daily/contract.md`)
-  - `evidence/` (see `ph/status/evidence/contract.md`)
-  - `exports/` (see `ph/status/exports/contract.md`)
+  - `daily/` (see `status/daily/contract.md`)
+  - `evidence/` (see `status/evidence/contract.md`)
+  - `exports/` (see `status/exports/contract.md`)
 - Optional derived files (created on-demand by `ph`):
   - `current.json`
   - `current_summary.md`

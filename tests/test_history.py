@@ -74,7 +74,7 @@ def test_history_logs_on_failure(tmp_path: Path) -> None:
 def test_history_logs_doctor_failure(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     # remove a required asset so doctor fails
-    (tmp_path / "process" / "automation" / "reset_spec.json").unlink()
+    (tmp_path / "process" / "checks" / "validation_rules.json").unlink()
     result = subprocess.run(["ph", "doctor", "--root", str(tmp_path)], capture_output=True, text=True)
     assert result.returncode == 3
     history_text = _history_path(tmp_path).read_text(encoding="utf-8")

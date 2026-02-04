@@ -109,4 +109,4 @@ Notes:
 - `TASK-010`: codegen fetches schema inputs from Cosmo into `v2/.tmp/codegen/supergraph.graphql` (atomic) and enforces drift + ordering with evidence under `ph/status/evidence/TASK-010/<run-id>/`.
 
 Validation: `ph validate`  
-Report: `.ph/status/validation.json`
+Report: `status/validation.json`

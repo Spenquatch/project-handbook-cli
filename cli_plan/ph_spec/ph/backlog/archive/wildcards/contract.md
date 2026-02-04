@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/backlog/archive/wildcards/
+title: PH Spec Contract — backlog/archive/wildcards/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/backlog/archive/wildcards/`
 - Summary: Archived wildcard backlog entries (immutable historical record), organized as one directory per wildcard item.
 
 ## Ownership
@@ -21,8 +21,7 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates directory structure).
-  - Wildcard items are archived by moving an existing `ph/backlog/wildcards/<WILD-...>/` directory into `ph/backlog/archive/wildcards/<WILD-...>/` (manual or future CLI command).
+  - Wildcard items are archived by moving an existing `backlog/wildcards/<WILD-...>/` directory into `backlog/archive/wildcards/<WILD-...>/` (manual or via task tooling).
 - Non-destructive:
   - Archiving MUST refuse to overwrite an existing destination directory unless `--force` is provided.
   - The CLI MUST NOT rewrite archived markdown bodies.
@@ -42,6 +41,8 @@ tags: [ph, spec]
   - `status: closed`
   - `created: YYYY-MM-DD`
   - `owner: <string>` (e.g. `unassigned` or `@handle`)
+  - `input_type: <string>` (optional; preserved if present)
+  - `sprint: <SPRINT-... | null>` (optional; present if assignment metadata was recorded)
   - `archived_at: <RFC3339 timestamp>`
   - `archived_by_task: <TASK-... | manual>`
   - `archived_by_sprint: <SPRINT-... | manual>`

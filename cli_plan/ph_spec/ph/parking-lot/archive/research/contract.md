@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/parking-lot/archive/research/
+title: PH Spec Contract — parking-lot/archive/research/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/parking-lot/archive/research/`
 - Summary: Archived research parking-lot items (immutable record), organized as one directory per item under the `research/` archive category.
 
 ## Ownership
@@ -21,8 +21,7 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates directory structure).
-  - Research parking-lot items are archived by moving an existing `ph/parking-lot/research/<RES-...>/` directory into `ph/parking-lot/archive/research/<RES-...>/` (manual or future CLI command).
+  - Research parking-lot items are archived by moving an existing `parking-lot/research/<RES-...>/` directory into `parking-lot/archive/research/<RES-...>/` (manual).
 - Non-destructive:
   - Archiving MUST refuse to overwrite an existing destination directory unless `--force` is provided.
   - The CLI MUST NOT rewrite archived markdown bodies (read-only content).
@@ -35,7 +34,7 @@ tags: [ph, spec]
   - Examples MAY use an `EXAMPLE-` prefix.
 
 ## Schemas
-- `README.md` MUST follow the archived parking-lot schema described in `ph/parking-lot/archive/contract.md` and MUST include:
+- `README.md` MUST follow the archived parking-lot schema described in `parking-lot/archive/contract.md` and MUST include:
   - `type: research`
   - `status: archived`
   - required archival metadata keys (`archived_at`, `archived_by_task`, `archived_by_sprint`)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,11 @@ from .clock import today as clock_today
 class DailyPaths:
     status_file: Path
     daily_dir: Path
+
+
+def relative_markdown_link(*, from_dir: Path, target: Path) -> str:
+    rel = os.path.relpath(str(target), str(from_dir))
+    return rel.replace(os.sep, "/")
 
 
 def _load_rules_or_default(*, ph_root: Path) -> dict[str, Any]:
@@ -154,6 +160,10 @@ def generate_daily_template(*, ph_root: Path, ph_data_root: Path, date: dt.date,
     sprint_id = get_current_sprint(ph_data_root=ph_data_root, env=env)
     tasks = collect_sprint_tasks(ph_data_root=ph_data_root, env=env)
 
+    paths = daily_paths_for_date(ph_data_root=ph_data_root, date=date)
+    sprint_plan = ph_data_root / "sprints" / "current" / "plan.md"
+    sprint_plan_rel = relative_markdown_link(from_dir=paths.status_file.parent, target=sprint_plan)
+
     weekday = date.weekday()
     is_monday = weekday == 0
     is_friday = weekday == 4
@@ -164,7 +174,7 @@ type: status-daily
 date: {date.strftime("%Y-%m-%d")}
 sprint: {sprint_id}
 tags: [status, daily]
-links: [../../../sprints/current.md]
+links: [{sprint_plan_rel}]
 ---
 
 # Daily Status - {date.strftime("%A, %B %d, %Y")}

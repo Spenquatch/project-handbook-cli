@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "generated_at": "2026-01-18T20:16:53Z",
+  "owner": "project-handbook",
+  "purpose": "Backlog of v1 CLI planning items that are not yet scheduled into cli_plan/tasks.json (or require contract/spec changes first).",
+  "status_values": ["todo", "in_progress", "done", "blocked", "deferred"],
+  "items": [
+    {
+      "id": "BL-0001",
+      "status": "todo",
+      "title": "Add first-class ADR commands + stronger ADR validation",
+      "description": "Elevate ADRs to a first-class CLI surface by adding a dedicated `ph adr ...` command family (at minimum `ph adr add`) and strengthening ADR validation beyond the current minimal checks.",
+      "scope": [
+        "Add `ph adr add` to scaffold a new ADR Markdown file under `PH_ROOT/adr/` with correct filename/id alignment and required front matter.",
+        "Add ADR-focused validation (either `ph adr validate` or expand `ph validate`) to enforce required headings/structure and stronger invariants (e.g. uniqueness, supersession consistency)."
+      ],
+      "notes": [
+        "This conflicts with the current v1 ADR contract statement: humans create/edit ADRs directly and there are no `ph adr ...` commands.",
+        "Implementation MUST preserve the v1 rule that `ph` does not execute repo-local code at runtime; ADR scaffolding/validation must be internal to the installed CLI."
+      ],
+      "requires_contract_changes": true,
+      "impacted_sources_of_truth": [
+        "cli_plan/v1_cli/CLI_CONTRACT.md (new `ph adr` surface)",
+        "cli_plan/ph_spec/ph/adr/contract.md (creation/ownership/validation rules update)",
+        "cli_plan/v0_make/MAKE_CONTRACT.md (parity note: v0 had no ADR target; this is a v1+ enhancement)"
+      ],
+      "acceptance_criteria": [
+        "`ph adr add --id ADR-#### --title <t> [--status draft] [--date YYYY-MM-DD] [--force]` creates a new ADR file that passes `ph validate`.",
+        "Validation enforces at least: `type: adr`, allowed `status`, filename/id alignment, unique ADR ids, and recommended required headings (configurable if needed).",
+        "CLI refuses to overwrite an existing ADR unless `--force` is provided."
+      ]
+    }
+  ]
+}

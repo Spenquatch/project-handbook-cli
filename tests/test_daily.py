@@ -23,6 +23,10 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
     )
     (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
+def _expected_sprint_plan_link(*, scope_root: Path, daily_file: Path) -> str:
+    target = scope_root / "sprints" / "current" / "plan.md"
+    return os.path.relpath(str(target), str(daily_file.parent)).replace(os.sep, "/")
+
 
 def test_daily_generate_skips_weekends_unless_forced(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
@@ -60,7 +64,10 @@ def test_daily_generate_writes_under_scope_root(tmp_path: Path) -> None:
         env=env,
     )
     assert project.returncode == 0
-    assert (tmp_path / "status" / "daily" / "2099" / "01" / "05.md").exists()
+    project_file = tmp_path / "status" / "daily" / "2099" / "01" / "05.md"
+    assert project_file.exists()
+    project_text = project_file.read_text(encoding="utf-8")
+    assert f"links: [{_expected_sprint_plan_link(scope_root=tmp_path, daily_file=project_file)}]" in project_text
 
     system = subprocess.run(
         ["ph", "--root", str(tmp_path), "--scope", "system", "--no-post-hook", "daily", "generate"],
@@ -69,4 +76,8 @@ def test_daily_generate_writes_under_scope_root(tmp_path: Path) -> None:
         env=env,
     )
     assert system.returncode == 0
-    assert (tmp_path / ".project-handbook" / "system" / "status" / "daily" / "2099" / "01" / "05.md").exists()
+    system_file = tmp_path / ".project-handbook" / "system" / "status" / "daily" / "2099" / "01" / "05.md"
+    assert system_file.exists()
+    system_text = system_file.read_text(encoding="utf-8")
+    system_root = tmp_path / ".project-handbook" / "system"
+    assert f"links: [{_expected_sprint_plan_link(scope_root=system_root, daily_file=system_file)}]" in system_text

@@ -6,6 +6,7 @@ tags: [cli, plan, execution, agent]
 links:
   - ./tasks.json
   - ./due-diligence.json
+  - ./backlog.json
   - ./session_logs.md
   - ./PARITY_CHECKLIST.md
   - ./v1_cli/ADR-CLI-0001-ph-cli-migration.md

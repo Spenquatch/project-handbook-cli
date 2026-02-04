@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/adr/
+title: PH Spec Contract — adr/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/adr/`
 - Summary: Human-authored Architecture Decision Records (ADRs) captured as individual Markdown files with required front matter.
 
 ## Ownership
@@ -22,7 +22,6 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates `ph/adr/` directory only).
   - Humans create/edit ADR Markdown files directly (no dedicated `ph adr ...` commands in v1).
 - Non-destructive:
   - The CLI MUST NOT overwrite ADR files (unless explicitly force-writing a new file that does not already exist).
@@ -52,7 +51,7 @@ tags: [ph, spec]
 - Filename/id alignment: if the filename begins with `NNNN-`, the front matter `id` MUST be `ADR-NNNN`.
 - Supersession consistency:
   - If `status: superseded`, `superseded_by` MUST be set to an ADR id.
-  - If `superseded_by` is set, the referenced ADR file SHOULD exist under `ph/adr/`.
+  - If `superseded_by` is set, the referenced ADR file SHOULD exist under `adr/`.
 
 ## Validation Rules
 - `ph validate` MUST enforce:

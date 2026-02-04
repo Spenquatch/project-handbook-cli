@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/releases/planning/
+title: PH Spec Contract — releases/planning/ (reserved)
 type: contract
 tags: [ph, spec]
 ---
@@ -7,8 +7,8 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
-- Summary: Optional staging area for draft/next release planning artifacts (not required for v1 command execution).
+- Path (handbook instance): `PH_ROOT/releases/planning/` (optional; may be absent)
+- Summary: Optional staging area for draft/next release planning artifacts. The legacy automation does not read/write here.
 
 ## Ownership
 - Owner: Project (human-authored).
@@ -21,7 +21,7 @@ tags: [ph, spec]
   - The CLI MUST NOT overwrite any files here.
 
 ## Creation
-- Created by: `ph init` (directory-only; may be empty).
+- Created by: manual (optional; not required by `pnpm make` targets).
 - Non-destructive: CLI MUST NOT overwrite any files here.
 
 ## Required Files and Directories
@@ -40,8 +40,8 @@ tags: [ph, spec]
     - `links: [<relative path>, ...]`
 
 ## Invariants
-- This directory MUST NOT be required for v1 command execution:
-  - `ph release *` commands MUST operate only on `ph/releases/current/` and `ph/releases/delivered/`.
+- This directory MUST NOT be required for legacy command execution:
+  - `make release-*` commands operate on `releases/vX.Y.Z/` and `releases/current`.
 
 ## Validation Rules
 - `ph validate` SHOULD:

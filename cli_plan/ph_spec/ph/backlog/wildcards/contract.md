@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/backlog/wildcards/
+title: PH Spec Contract — backlog/wildcards/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/backlog/wildcards/`
 - Summary: Active wildcard backlog entries (P0–P4), organized as one directory per wildcard item.
 
 ## Ownership
@@ -21,8 +21,7 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates directory structure).
-  - `ph backlog add --type wildcards ...` (creates a new wildcard item directory + `README.md`).
+  - `pnpm make -- backlog-add type=wildcards ...` (creates a new wildcard item directory + `README.md`).
 - Non-destructive:
   - `ph backlog add` MUST refuse to overwrite an existing `<WILD_DIR>/` unless `--force` is provided.
 
@@ -37,8 +36,9 @@ tags: [ph, spec]
 - `README.md` MUST include YAML front matter with at least:
   - `title: <string>`
   - `type: wildcards`
+  - `input_type: <string>` (legacy; typically `wildcards`)
   - `severity: P0|P1|P2|P3|P4`
-  - `status: open|closed`
+  - `status: <string>` (legacy default: `open`)
   - `created: YYYY-MM-DD`
   - `owner: <string>` (e.g. `unassigned` or `@handle`)
 - `README.md` MUST NOT include archival metadata keys (these are reserved for archived items under `ph/backlog/archive/wildcards/`):

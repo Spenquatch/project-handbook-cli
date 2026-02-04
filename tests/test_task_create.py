@@ -119,6 +119,16 @@ def test_task_create_creates_expected_files_and_prints_hint_block(
     assert "id: TASK-001" in task_yaml
     assert "status: todo" in task_yaml
 
+    feature_overview = base / "features" / "f" / "overview.md"
+    expected_feature_overview_rel = os.path.relpath(str(feature_overview), str(task_dirs[0])).replace(os.sep, "/")
+
+    readme = (task_dirs[0] / "README.md").read_text(encoding="utf-8")
+    assert f"links: [{expected_feature_overview_rel}]" in readme
+    assert f"**Feature**: [f]({expected_feature_overview_rel})" in readme
+
+    references = (task_dirs[0] / "references.md").read_text(encoding="utf-8")
+    assert f"[Feature overview]({expected_feature_overview_rel})" in references
+
 
 def test_task_create_guardrail_rejects_system_scoped_lanes_in_project_scope(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path, routing_rules={"task_lane_prefixes_for_system_scope": ["handbook/"]})

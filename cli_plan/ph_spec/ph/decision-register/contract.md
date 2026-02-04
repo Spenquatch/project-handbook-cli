@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/decision-register/
+title: PH Spec Contract — decision-register/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,8 +7,8 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
-- Summary: Cross-cutting Decision Register (DR) entries that span multiple features or change shared conventions; feature-scoped DRs live under `ph/features/<feature>/decision-register/`.
+- Path (handbook instance): `PH_ROOT/decision-register/`
+- Summary: Cross-cutting Decision Register (DR) entries that span multiple features or change shared conventions; feature-scoped DRs live under `features/<feature>/decision-register/`.
 
 ## Ownership
 - Owner: Project (human-directed).
@@ -22,7 +22,6 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates `ph/decision-register/` directory only).
   - Humans create/edit DR Markdown files directly (no dedicated `ph decision ...` commands in v1).
   - DR entries are typically created during `session=research-discovery` tasks and later referenced/promoted into ADRs or feature decision records (FDRs).
 - Non-destructive:

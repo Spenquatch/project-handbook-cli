@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/parking-lot/archive/external-requests/
+title: PH Spec Contract — parking-lot/archive/external-requests/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/parking-lot/archive/external-requests/`
 - Summary: Archived external request parking-lot items (immutable record), organized as one directory per item under the `external-requests/` archive category.
 
 ## Ownership
@@ -21,8 +21,7 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates directory structure).
-  - External-request items are archived by moving an existing `ph/parking-lot/external-requests/<EXT-...>/` directory into `ph/parking-lot/archive/external-requests/<EXT-...>/` (manual or future CLI command).
+  - External-request items are archived by moving an existing `parking-lot/external-requests/<EXT-...>/` directory into `parking-lot/archive/external-requests/<EXT-...>/` (manual).
 - Non-destructive:
   - Archiving MUST refuse to overwrite an existing destination directory unless `--force` is provided.
   - The CLI MUST NOT rewrite archived markdown bodies (read-only content).
@@ -35,7 +34,7 @@ tags: [ph, spec]
   - Examples MAY use an `EXAMPLE-` prefix.
 
 ## Schemas
-- `README.md` MUST follow the archived parking-lot schema described in `ph/parking-lot/archive/contract.md` and MUST include:
+- `README.md` MUST follow the archived parking-lot schema described in `parking-lot/archive/contract.md` and MUST include:
   - `type: external-requests`
   - `status: archived`
   - required archival metadata keys (`archived_at`, `archived_by_task`, `archived_by_sprint`)

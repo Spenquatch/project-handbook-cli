@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/backlog/archive/work-items/
+title: PH Spec Contract — backlog/archive/work-items/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/backlog/archive/work-items/`
 - Summary: Archived work-item backlog entries (immutable historical record), organized as one directory per work-item.
 
 ## Ownership
@@ -21,8 +21,7 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates directory structure).
-  - Work-items are archived by moving an existing `ph/backlog/work-items/<WORK-...>/` directory into `ph/backlog/archive/work-items/<WORK-...>/` (manual or future CLI command).
+  - Work-items are archived by moving an existing `backlog/work-items/<WORK-...>/` directory into `backlog/archive/work-items/<WORK-...>/` (manual or via task tooling).
 - Non-destructive:
   - Archiving MUST refuse to overwrite an existing destination directory unless `--force` is provided.
   - The CLI MUST NOT rewrite archived markdown bodies.
@@ -47,6 +46,7 @@ tags: [ph, spec]
   - `archived_by_sprint: <SPRINT-... | manual>`
 - Optional keys:
   - `input_type: <string>` (preserves the original intake classification; treated as an opaque string)
+  - `sprint: <SPRINT-... | null>` (assignment metadata; commonly present for archived work-items)
 - YAML front matter MAY include additional keys; unknown keys MUST be preserved as content.
 
 ## Invariants

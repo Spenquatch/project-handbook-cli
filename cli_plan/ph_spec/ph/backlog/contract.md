@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/backlog/
+title: PH Spec Contract — backlog/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/backlog/`
 - Summary: Primary backlog container for active backlog items (bugs, wildcards, work-items) plus a derived `index.json` catalog; also contains an `archive/` subtree for immutable historical records.
 
 ## Ownership
@@ -26,9 +26,10 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates directory structure and seeds an empty `index.json`).
-  - `ph backlog add ...` (creates new item directories and updates `index.json`).
-  - `ph backlog list` / `ph backlog stats` (MAY read `index.json`; MAY rebuild it from filesystem if missing/stale).
+  - `pnpm make -- backlog-add ...` (creates a new item directory under `backlog/<bugs|wildcards|work-items>/<ID>/` and updates `index.json`).
+  - `pnpm make -- backlog-list ...` / `pnpm make -- backlog-stats` (reads `index.json`; may rebuild it from filesystem if missing/stale).
+  - `pnpm make -- backlog-triage issue=<ID>` (may create `triage.md` for P0s; updates `index.json`).
+  - `pnpm make -- backlog-assign issue=<ID> [sprint=current|next|SPRINT-...]` (records `sprint:` in the item front matter; updates `index.json`).
   - Items are archived by moving item directories into `archive/` (manual or future CLI command).
 - Non-destructive:
   - The CLI MUST treat markdown content (`README.md`, `triage.md`) as project-owned source-of-truth and refuse to overwrite without explicit flags.
@@ -51,14 +52,17 @@ tags: [ph, spec]
   - `items: [ <item>... ]`
 - Each `items[]` entry MUST include (at minimum):
   - `id: <string>` (directory name, e.g. `BUG-P2-20260101-120000`)
-  - `path: <string>` (path relative to `PH_CONTENT_ROOT`, e.g. `backlog/bugs/<id>`)
+  - `path: <string>` (path relative to `PH_ROOT`, e.g. `backlog/bugs/<id>`)
   - `type: bugs|wildcards|work-items` (from `README.md` front matter)
   - `severity: P0|P1|P2|P3|P4` (from `README.md` front matter)
-  - `status: open|closed` (from `README.md` front matter)
+  - `status: <string>` (from `README.md` front matter; commonly `open`)
   - `created: YYYY-MM-DD` (from `README.md` front matter)
   - `owner: <string>` (from `README.md` front matter)
   - `title: <string>` (from `README.md` front matter)
   - `has_triage: <boolean>` (true iff `<item_dir>/triage.md` exists)
+- `items[]` SHOULD include (legacy):
+  - `input_type: <string>` (original intake classification; preserved in front matter)
+  - `sprint: <string>` (when assigned via `backlog-assign`; may be absent)
 - `items[]` MAY include additional keys copied from `README.md` front matter; unknown keys MUST be preserved.
 - `index.json` MUST catalog only non-archive items under:
   - `bugs/`
@@ -67,7 +71,7 @@ tags: [ph, spec]
 - `archive/**` items MUST NOT appear in `index.json` (they are immutable records and are handled by archive contracts).
 
 ## Invariants
-- `ph/backlog/` MUST contain only:
+- `backlog/` MUST contain only:
   - `index.json`
   - `bugs/`
   - `wildcards/`
@@ -82,10 +86,10 @@ tags: [ph, spec]
   - `index.json` exists and is valid JSON with the required top-level keys
   - `by_category` and `by_severity` are consistent with `items[]` (no missing/unknown IDs)
   - each item directory under `bugs/`, `wildcards/`, `work-items/` satisfies its category contract:
-    - `ph/backlog/bugs/contract.md`
-    - `ph/backlog/wildcards/contract.md`
-    - `ph/backlog/work-items/contract.md`
-  - `archive/` exists and satisfies `ph/backlog/archive/contract.md`
+    - `backlog/bugs/contract.md`
+    - `backlog/wildcards/contract.md`
+    - `backlog/work-items/contract.md`
+  - `archive/` exists and satisfies `backlog/archive/contract.md`
 
 ## Examples Mapping
 - `examples/bugs/EXAMPLE-BUG-P0-20250922-1144/` demonstrates a bug item directory (README + optional triage).

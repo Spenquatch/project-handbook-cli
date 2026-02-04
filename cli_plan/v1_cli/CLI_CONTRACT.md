@@ -7,7 +7,7 @@ links:
   - ./ADR-CLI-0001-ph-cli-migration.md
   - ./ADR-CLI-0003-ph-project-layout.md
   - ../v0_make/MAKE_CONTRACT.md
-  - ../../Makefile
+  - ../PARITY_CHECKLIST.md
 ---
 
 # Purpose
@@ -15,10 +15,10 @@ links:
 Define the authoritative `ph` CLI surface:
 
 - command tree and exact flags,
-- scope behavior and data roots,
+- root resolution and data roots,
 - pre/post hooks and skip rules,
 - “hints” and guidance printed after commands (must preserve current ergonomics),
-- destructive safety semantics (reset/migration).
+- destructive safety semantics (CLI-only maintenance utilities).
 
 This contract is intended to be implementable with zero ambiguity.
 
@@ -35,8 +35,8 @@ This contract is intended to be implementable with zero ambiguity.
 
 `ph` MUST resolve a single handbook root directory (`PH_ROOT`) for each invocation:
 
-- If `--root <path>` is provided, use it (must be a directory that contains `.ph/config.json`).
-- Else, walk up from `cwd` until a directory contains `.ph/config.json`.
+- If `--root <path>` is provided, use it (must be a directory that contains `project_handbook.config.json`).
+- Else, walk up from `cwd` until a directory contains `project_handbook.config.json`.
 - Else, exit non-zero with a message that includes an example `ph --root ...`.
 
 All filesystem operations MUST use absolute paths derived from `PH_ROOT`.
@@ -48,31 +48,31 @@ Exception:
 
 Within `PH_ROOT`, `ph` MUST use two distinct roots:
 
-- `PH_INTERNAL_ROOT = PH_ROOT/.ph` (CLI-owned internals)
-- `PH_CONTENT_ROOT = PH_ROOT/ph` (project handbook content)
+- `PH_INTERNAL_ROOT = PH_ROOT/.project-handbook` (automation internals; optional)
+- `PH_CONTENT_ROOT = PH_ROOT` (project handbook content root)
 
 Contract path convention:
 
-- Any path written as `.ph/<...>` is relative to `PH_ROOT` (internal root).
-- Any path written as `ph/<...>` is relative to `PH_ROOT` (content root).
-- Any path written without a `.ph/` or `ph/` prefix is relative to `PH_CONTENT_ROOT` (i.e. under `ph/`).
-  - Example: `sprints/current/plan.md` means `PH_ROOT/ph/sprints/current/plan.md`.
+- Any path written as `.project-handbook/<...>` is relative to `PH_ROOT` (internal root).
+- Any other relative path is relative to `PH_ROOT` (content root).
+  - Example: `sprints/current/plan.md` means `PH_ROOT/sprints/current/plan.md`.
 
 ## Repository asset contract (required files)
 
-For `PH_ROOT` to be considered valid, these files/directories MUST exist:
+For `PH_ROOT` to be considered a valid handbook repo root, this marker file MUST exist:
 
-- `.ph/config.json`
-- `.ph/process/checks/validation_rules.json`
-- `.ph/process/automation/reset_spec.json`
-- `.ph/process/sessions/templates/` (directory)
-- `ph/` (directory)
+- `project_handbook.config.json`
+
+For full CLI functionality (including post-command auto-validation and onboarding sessions), these paths MUST exist:
+
+- `process/checks/validation_rules.json`
+- `process/sessions/templates/` (directory)
 
 If any are missing, `ph` MUST exit non-zero and print remediation that includes the missing path(s).
 
 ## Repository schema/version compatibility
 
-`.ph/config.json` MUST contain:
+`project_handbook.config.json` MUST contain:
 
 - `handbook_schema_version`: integer, MUST be `1`
 - `requires_ph_version`: string, MUST be `>=0.1.0,<0.2.0`
@@ -80,7 +80,7 @@ If any are missing, `ph` MUST exit non-zero and print remediation that includes 
 
 On every invocation, `ph` MUST:
 
-1. Load `.ph/config.json`.
+1. Load `project_handbook.config.json`.
 2. Refuse to run if `handbook_schema_version != 1`.
 3. Refuse to run if installed `ph` version does not satisfy `requires_ph_version`.
 4. Print remediation including the exact command:
@@ -92,65 +92,23 @@ Command:
 - `ph init`
 
 Flags:
-- `--gitignore` / `--no-gitignore`
-  - default: `--gitignore`
-
 Behavior:
-- Purpose: initialize a new `ph` layout inside any project repo by creating `.ph/**` internals and `ph/**` content roots.
+- Purpose: initialize a new Project Handbook repo by creating the minimal config + process assets required by `ph`.
 - Root selection:
   - If `--root <path>` is provided, write under that directory.
   - Else, write under `cwd`.
 - Create these paths if missing (do not overwrite existing files):
-  - `.ph/config.json`
-  - `.ph/process/checks/validation_rules.json`
-  - `.ph/process/automation/reset_spec.json`
-  - `.ph/process/sessions/templates/` (directory)
-  - `ph/` (directory)
-  - `ph/adr/`
-  - `ph/backlog/`
-  - `ph/backlog/bugs/`
-  - `ph/backlog/wildcards/`
-  - `ph/backlog/work-items/`
-  - `ph/backlog/archive/`
-  - `ph/backlog/archive/bugs/`
-  - `ph/backlog/archive/wildcards/`
-  - `ph/backlog/archive/work-items/`
-  - `ph/contracts/`
-  - `ph/decision-register/`
-  - `ph/features/`
-  - `ph/features/archive/`
-  - `ph/parking-lot/`
-  - `ph/parking-lot/features/`
-  - `ph/parking-lot/technical-debt/`
-  - `ph/parking-lot/research/`
-  - `ph/parking-lot/external-requests/`
-  - `ph/parking-lot/archive/`
-  - `ph/parking-lot/archive/features/`
-  - `ph/parking-lot/archive/technical-debt/`
-  - `ph/parking-lot/archive/research/`
-  - `ph/parking-lot/archive/external-requests/`
-  - `ph/releases/`
-  - `ph/releases/planning/`
-  - `ph/releases/current/`
-  - `ph/releases/delivered/`
-  - `ph/roadmap/`
-  - `ph/roadmap/now-next-later.md` (seed file)
-  - `ph/sprints/`
-  - `ph/sprints/archive/`
-  - `ph/status/`
-  - `ph/status/daily/`
-  - `ph/status/evidence/`
-  - `ph/status/exports/`
+  - `project_handbook.config.json`
+  - `process/checks/validation_rules.json`
+  - `process/sessions/templates/` (directory)
 
-- If `--gitignore` (default):
-  - Update or create `PH_ROOT/.gitignore` and ensure it contains a line `.ph/` (idempotent; do not add duplicates).
-- If `--no-gitignore`:
-  - MUST NOT read or write `PH_ROOT/.gitignore`.
+Notes:
+- `ph init` does not scaffold the full content tree (`adr/`, `sprints/`, `features/`, etc.). Those are created via domain commands (`ph sprint plan`, `ph feature create`, etc.) and/or direct authoring.
 
 Stdout:
 - Always print exactly one line for the marker file:
-  - On create: `Created: .ph/config.json`
-  - If already exists: `Already exists: .ph/config.json`
+  - On create: `Created: project_handbook.config.json`
+  - If already exists: `Already exists: project_handbook.config.json`
 
 Exit codes:
 - `0` on success (created or already exists)
@@ -183,7 +141,7 @@ Behavior:
 
 After a successful command, `ph` MUST:
 
-1. Append history entry to: `PH_ROOT/.ph/history.log`
+1. Append history entry to: `PH_ROOT/.project-handbook/history.log`
    - format: `<timestamp> | <entry>`
    - `<timestamp>` format: `%Y-%m-%d %H:%M:%S`
    - `<entry>` MUST be a single-line string representing the user-visible command invocation (e.g. `ph sprint plan --sprint SPRINT-...`)
@@ -191,10 +149,10 @@ After a successful command, `ph` MUST:
 2. Run quick validation:
    - validation is implemented inside `ph` (no subprocess to repo-local Python)
    - inputs:
-     - rules: `PH_ROOT/.ph/process/checks/validation_rules.json`
+     - rules: `PH_ROOT/process/checks/validation_rules.json`
      - root: selected by root resolution above
    - outputs:
-     - `.ph/status/validation.json`
+     - `status/validation.json`
    - validation MUST NOT create a second history entry (it is an internal hook action)
 
 Skip conditions for auto validation:
@@ -278,7 +236,7 @@ Equivalent: `make validate`
 
 Behavior:
 - Run full validation.
-- Write report to: `.ph/status/validation.json`
+- Write report to: `status/validation.json`
 
 Flags:
 - `--quick` (equivalent to `make validate-quick`)
@@ -290,6 +248,26 @@ Hook notes:
 
 Hints (on success):
 - `validation: 0 error(s), 0 warning(s), report: <path>`
+
+## `ph pre-exec`
+
+Equivalent: `make pre-exec-lint`, `make pre-exec-audit`
+
+Commands:
+- `ph pre-exec lint`
+- `ph pre-exec audit [--sprint <SPRINT-...>] [--date <YYYY-MM-DD>] [--evidence-dir <path>]`
+
+Behavior:
+- `lint`:
+  - Strict task-doc lint gate for the active sprint (session↔purpose alignment + ambiguity language detection).
+  - MUST fail non-zero if any blocking findings are present.
+- `audit`:
+  - Capture an evidence bundle (command outputs + validation report), then run `lint` and tee its output into the bundle.
+  - Default evidence bundle location (when `--evidence-dir` is not provided):
+    - `status/evidence/PRE-EXEC/<SPRINT-...>/<YYYY-MM-DD>/`
+
+Hook notes:
+- Normal post-command hook runs.
 
 ## `ph dashboard`
 
@@ -456,16 +434,13 @@ Behavior:
 ### `ph task status --id <TASK-###> --status <todo|doing|review|done|blocked> [--force]`
 
 Behavior:
-- Update status with dependency checks (scope-local).
+- Update status with dependency checks (repo-local).
 
 ## `ph feature`
 
 Equivalent: `make feature-*`
 
 ### `ph feature create --name <name> [--epic] [--owner @x] [--stage <stage>]`
-
-Guardrails:
-- Feature names MUST NOT start with `handbook-` or `ph-` (reserved prefixes).
 
 Hints:
 - Print the created directory path.
@@ -478,7 +453,7 @@ Hints:
 ### `ph feature list`
 
 Behavior:
-- List features in selected scope.
+- List features.
 
 ### `ph feature status --name <name> --stage <stage>`
 
@@ -488,7 +463,7 @@ Behavior:
 ### `ph feature update-status`
 
 Behavior:
-- Recompute status.md files from sprint/task data (scope-local).
+- Recompute status.md files from sprint/task data.
 
 ### `ph feature summary`
 
@@ -498,14 +473,14 @@ Behavior:
 ### `ph feature archive --name <name> [--force]`
 
 Behavior:
-- Move to `features/archive/`.
+- Completeness check, then move to `features/implemented/<name>/`.
 
 ## `ph backlog`
 
 Equivalent: `make backlog-*`
 
 Commands:
-- `ph backlog add --type <bug|wildcards|work-items> --title <t> --severity <P0..P4> [--desc <d>] [--owner <o>] ...`
+- `ph backlog add --type <bug|bugs|wildcards|work-items> --title <t> --severity <P0..P4> [--desc <d>] [--owner <o>] ...`
 - `ph backlog list [--severity <...>] [--category <...>] [--format <...>]`
 - `ph backlog triage --issue <ID>`
 - `ph backlog assign --issue <ID> [--sprint current|<id>]`
@@ -557,7 +532,7 @@ Commands:
 - `ph onboarding session <topic>`
 
 Behavior:
-- Read session templates from `PH_ROOT/.ph/process/sessions/templates`.
+- Read session templates from `PH_ROOT/process/sessions/templates`.
 - `session list` MUST include every template name derived from template filenames (without `.md`), plus special topics:
   - `continue-session` (prints the latest session summary)
   - `list` (alias of `session list`)
@@ -576,10 +551,10 @@ Behavior:
   - `process/automation/rollout_parser.py`
 
 Outputs (project scope only):
-- Write a dated summary markdown file under `PH_ROOT/.ph/process/sessions/logs/`.
-- Write/overwrite `PH_ROOT/.ph/process/sessions/logs/latest_summary.md`.
-- Update `PH_ROOT/.ph/process/sessions/logs/manifest.json`.
-- When `--session-end-mode` is not `none`, write session_end artifacts under `PH_ROOT/.ph/process/sessions/session_end/` and update `PH_ROOT/.ph/process/sessions/session_end/session_end_index.json`.
+- Write a dated summary markdown file under `PH_ROOT/process/sessions/logs/`.
+- Write/overwrite `PH_ROOT/process/sessions/logs/latest_summary.md`.
+- Update `PH_ROOT/process/sessions/logs/manifest.json`.
+- When `--session-end-mode` is not `none`, write session_end artifacts under `PH_ROOT/process/sessions/session_end/` and update `PH_ROOT/process/sessions/session_end/session_end_index.json`.
 
 Flags (MUST match the existing script surface):
 - `--log <path>`
@@ -690,8 +665,12 @@ Files:
 Equivalent: `make release-*`
 
 Commands:
-- `ph release plan [--version <vX.Y.Z|next>] [--bump patch|minor|major] [--sprints N] [--start-sprint <SPRINT-...>] [--sprint-ids <csv>]`
+- `ph release plan [--version <vX.Y.Z|next>] [--bump patch|minor|major] [--sprints N] [--start-sprint <SPRINT-...>] [--sprint-ids <csv>] [--activate]`
+- `ph release activate --release <vX.Y.Z>`
+- `ph release clear`
 - `ph release status`
+- `ph release show`
+- `ph release progress`
 - `ph release add-feature --release <vX.Y.Z> --feature <name> [--epic] [--critical]`
 - `ph release suggest --version <vX.Y.Z>`
 - `ph release list`
@@ -699,9 +678,10 @@ Commands:
 
 Hints:
 - On `plan`, print exactly:
-  - `Release plan saved under releases/current/plan.md`
-  - `  - Review lanes/dependencies + feature priorities in releases/current/plan.md`
-  - `  - Confirm sprint alignment via 'ph release status'`
+  - `Release plan scaffold created under releases/<version>/plan.md`
+  - `  - Assign features via 'ph release add-feature --release <version> --feature <name>'`
+  - `  - Activate when ready via 'ph release activate --release <version>'`
+  - `  - Confirm sprint alignment via 'ph release status' (requires an active release)`
   - `  - Run 'ph validate --quick' before sharing externally`
 
 Defaulting:
@@ -712,37 +692,51 @@ Implementation mapping (MUST match Make semantics):
 
 Files:
 - Releases root: `releases/`
-- Active release directory: `releases/current/` (directory)
-- Delivered releases directory: `releases/delivered/<vX.Y.Z>/`
+- Versioned releases: `releases/vX.Y.Z/`
+- Active release pointer: `releases/current` (symlink to a `releases/vX.Y.Z/` directory)
+- Delivered releases directory: `releases/delivered/` (legacy-reserved; may exist but is not required for normal operation)
 
 `ph release plan`:
-- Ensure a release directory exists: `releases/current/` (and `releases/planning/` if used by implementation).
+- Ensure a version directory exists: `releases/<version>/`.
 - Ensure these files exist (create if missing):
-  - `releases/current/plan.md`
-  - `releases/current/progress.md`
-  - `releases/current/features.yaml`
+  - `releases/<version>/plan.md`
+  - `releases/<version>/progress.md`
+  - `releases/<version>/features.yaml`
+- If `--activate` is set, also set `releases/current` to point at `releases/<version>/`.
+
+`ph release activate`:
+- Set `releases/current` to point at `releases/<release>/` (must exist).
+
+`ph release clear`:
+- Remove `releases/current` if present.
 
 `ph release list`:
-- List every `releases/delivered/v*` directory (sorted by semantic version).
-- Mark the active one by the presence of `releases/current/`.
+- List every `releases/v*` directory (sorted by semantic version).
+- Mark the active one via the `releases/current` symlink.
 
 `ph release status`:
-- Print a status view for `releases/current`.
-- If `releases/current/` is missing or invalid, exit non-zero with remediation.
+- Print a status view for the active release (`releases/current`).
+- If `releases/current` is missing or invalid, exit non-zero with remediation.
+
+`ph release show`:
+- Print the active release plan (`releases/current/plan.md`) plus computed status.
+
+`ph release progress`:
+- Refresh (regenerate) `releases/current/progress.md`.
 
 `ph release add-feature`:
-- Update `releases/current/features.yaml` to include the referenced feature, preserving existing entries.
+- Update `releases/<release>/features.yaml` to include the referenced feature, preserving existing entries.
 
 `ph release close`:
-- Ensure `releases/current/changelog.md` exists (create/update).
-- Update front matter in `plan.md` to mark `status: delivered` and include delivered metadata:
+- Ensure `releases/<version>/changelog.md` exists (create/update).
+- Update front matter in `releases/<version>/plan.md` to mark `status: delivered` and include delivered metadata:
   - `delivered_sprint: <current sprint id>`
   - `delivered_date: <YYYY-MM-DD>`
-  - Move `releases/current/` to `releases/delivered/<version>/` (non-destructive; refuse if destination exists unless forced).
+- `ph release close` MUST NOT move release directories by default (parity with the reference Make-era behavior).
 
 ## `ph reset`
 
-Equivalent: `make reset`
+Not in reference Makefile (CLI-only).
 
 Modes:
 - `ph reset` (dry-run only)
@@ -750,11 +744,11 @@ Modes:
 
 Behavior:
 - Reset of project handbook content artifacts.
-- MUST preserve `.ph/**`.
+- MUST preserve `.project-handbook/**`.
 - Writes rewritten templates (roadmap, index.json stubs) as per reset spec.
 
 Hook notes:
-- On success, MUST skip the post-command hook entirely (no history, no auto-validation), matching Make’s `reset` / `reset-smoke` skip behavior.
+- On success, MUST skip the post-command hook entirely (no history, no auto-validation) to avoid additional side effects during destructive maintenance.
 - Must still be safe-by-default.
 
 Hints:
@@ -763,7 +757,7 @@ Hints:
 
 ## `ph reset-smoke`
 
-Equivalent: `make reset-smoke`
+Not in reference Makefile (CLI-only).
 
 Behavior:
 - Run the same deterministic smoke procedure currently documented in `docs/RESET_SMOKE.md`.
@@ -836,6 +830,8 @@ Parking (project):
 Validation + status:
 - `make validate` → `ph validate`
 - `make validate-quick` → `ph validate --quick`
+- `make pre-exec-lint` → `ph pre-exec lint`
+- `make pre-exec-audit` → `ph pre-exec audit`
 - `make status` → `ph status`
 
 Dashboards:
@@ -849,7 +845,11 @@ Roadmap (project only):
 
 Release (project only):
 - `make release-plan ...` → `ph release plan ...`
+- `make release-activate release=<vX.Y.Z>` → `ph release activate --release <vX.Y.Z>`
+- `make release-clear` → `ph release clear`
 - `make release-status` → `ph release status`
+- `make release-show` → `ph release show`
+- `make release-progress` → `ph release progress`
 - `make release-add-feature ...` → `ph release add-feature ...`
 - `make release-suggest version=<vX.Y.Z>` → `ph release suggest --version <vX.Y.Z>`
 - `make release-list` → `ph release list`
@@ -870,7 +870,6 @@ Utilities:
 - `make check-all` → `ph check-all`
 - `make test-system` → `ph test system`
 
-Destructive:
-- `make reset` → `ph reset`
-- `make reset confirm=RESET force=true` → `ph reset --confirm RESET --force true`
-- `make reset-smoke` → `ph reset-smoke`
+CLI-only (not in reference Makefile):
+- `ph reset`
+- `ph reset-smoke`

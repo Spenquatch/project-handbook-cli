@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/status/daily/
+title: PH Spec Contract — status/daily/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/status/daily/`
 - Summary: Daily status updates written as dated Markdown files under `daily/YYYY/MM/DD.md` (month partition, filename is the day number).
 
 ## Ownership
@@ -21,10 +21,9 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates `status/daily/`)
-  - `ph daily generate` (creates today’s daily status file; weekend-aware by default)
-  - `ph daily generate --force` (creates today’s daily status file even on weekends)
-  - `ph daily check --verbose` (read-only)
+  - `pnpm make -- daily` (creates today’s daily status file; weekend-aware by default)
+  - `pnpm make -- daily-force` (creates today’s daily status file even on weekends)
+  - `pnpm make -- daily-check` (read-only; warns if daily is missing/stale)
 - Non-destructive:
   - The CLI MUST NOT overwrite an existing daily status file without explicit `--force`.
 

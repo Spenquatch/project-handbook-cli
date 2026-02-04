@@ -9,8 +9,6 @@ from .root import find_root_marker
 
 REQUIRED_ASSET_PATHS: tuple[str, ...] = (
     "process/checks/validation_rules.json",
-    "process/automation/system_scope_config.json",
-    "process/automation/reset_spec.json",
     "process/sessions/templates",
 )
 

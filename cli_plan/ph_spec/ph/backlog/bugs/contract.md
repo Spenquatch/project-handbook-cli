@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/backlog/bugs/
+title: PH Spec Contract — backlog/bugs/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/backlog/bugs/`
 - Summary: Active bug backlog entries (P0–P4), organized as one directory per bug item.
 
 ## Ownership
@@ -21,9 +21,9 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates directory structure).
-  - `ph backlog add --type bug ...` (creates a new bug item directory + `README.md`).
-  - `ph backlog triage --issue <BUG-...>` (MAY create or update `triage.md` for analysis; primarily used for P0s).
+  - `pnpm make -- backlog-add type=bugs ...` (creates a new bug item directory + `README.md`).
+    - Compatibility: the underlying manager normalizes `bug|bugs` → `bugs`.
+  - `pnpm make -- backlog-triage issue=<BUG-...>` (MAY create `triage.md` for analysis; primarily used for P0s).
 - Non-destructive:
   - `ph backlog add` MUST refuse to overwrite an existing `<BUG_DIR>/` unless `--force` is provided.
   - `ph backlog triage` MUST refuse to overwrite an existing `triage.md` unless `--force` is provided.
@@ -41,8 +41,9 @@ tags: [ph, spec]
 - `README.md` MUST include YAML front matter with at least:
   - `title: <string>`
   - `type: bugs`
+  - `input_type: <string>` (legacy; typically `bugs`)
   - `severity: P0|P1|P2|P3|P4`
-  - `status: open|closed`
+  - `status: <string>` (legacy default: `open`)
   - `created: YYYY-MM-DD`
   - `owner: <string>` (e.g. `unassigned` or `@handle`)
 - `README.md` MUST NOT include archival metadata keys (these are reserved for archived items under `ph/backlog/archive/bugs/`):

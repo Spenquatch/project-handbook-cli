@@ -17,7 +17,7 @@ This checklist is the **exhaustive parity verification** for the Make-to-CLI map
 - Prefer running against a disposable copy of the handbook repo.
 - Use explicit root selection for determinism: `ph --root <PH_ROOT> ...`
 - Output paths are **PH_ROOT-relative** (POSIX style).
-- v1 has no system scope; this checklist covers project scope only.
+- This checklist targets the reference Make interface in `/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook` (invoked as `pnpm make -- <target>` or `make <target>`).
 
 ## Checklist (exhaustive)
 
@@ -136,7 +136,7 @@ This checklist is the **exhaustive parity verification** for the Make-to-CLI map
   - Command: `ph --root <PH_ROOT> feature list`
   - Outputs to verify: (none; stdout only)
 - [ ] `make feature-create name=<name>` → `ph feature create --name <name>`
-  - Preconditions: feature name must not start with `handbook-` or `ph-`
+  - Preconditions: none
   - Command: `ph --root <PH_ROOT> feature create --name <name>`
   - Outputs to verify: `features/<name>/`
 - [ ] `make feature-status name=<name> stage=<stage>` → `ph feature status --name <name> --stage <stage>`
@@ -212,6 +212,14 @@ This checklist is the **exhaustive parity verification** for the Make-to-CLI map
   - Preconditions: none
   - Command: `ph --root <PH_ROOT> validate --quick`
   - Outputs to verify: `status/validation.json`
+- [ ] `make pre-exec-lint` → `ph pre-exec lint`
+  - Preconditions: `sprints/current/tasks/` exists and contains tasks
+  - Command: `ph --root <PH_ROOT> pre-exec lint`
+  - Outputs to verify: (none; stdout only)
+- [ ] `make pre-exec-audit [sprint=SPRINT-...] [date=YYYY-MM-DD] [evidence_dir=<path>]` → `ph pre-exec audit [...]`
+  - Preconditions: `sprints/current/plan.md` exists (or `--sprint` is provided)
+  - Command: `ph --root <PH_ROOT> pre-exec audit [--sprint SPRINT-...] [--date YYYY-MM-DD] [--evidence-dir <path>]`
+  - Outputs to verify: `status/evidence/PRE-EXEC/<SPRINT-...>/<YYYY-MM-DD>/**` (when `--evidence-dir` is not provided)
 - [ ] `make status` → `ph status`
   - Preconditions: none
   - Command: `ph --root <PH_ROOT> status`
@@ -249,10 +257,26 @@ This checklist is the **exhaustive parity verification** for the Make-to-CLI map
   - Preconditions: none
   - Command: `ph --root <PH_ROOT> release plan [--version next] ...`
   - Outputs to verify: `releases/<version>/plan.md`, `releases/<version>/progress.md`, `releases/<version>/features.yaml`, `releases/current`
+- [ ] `make release-activate release=<vX.Y.Z>` → `ph release activate --release <vX.Y.Z>`
+  - Preconditions: `releases/<vX.Y.Z>/` exists
+  - Command: `ph --root <PH_ROOT> release activate --release <vX.Y.Z>`
+  - Outputs to verify: `releases/current`
+- [ ] `make release-clear` → `ph release clear`
+  - Preconditions: none
+  - Command: `ph --root <PH_ROOT> release clear`
+  - Outputs to verify: `releases/current` is absent
 - [ ] `make release-status` → `ph release status`
   - Preconditions: `releases/current` exists and points at a valid `releases/<version>/`
   - Command: `ph --root <PH_ROOT> release status`
   - Outputs to verify: (none; stdout only)
+- [ ] `make release-show` → `ph release show`
+  - Preconditions: `releases/current` exists and points at a valid `releases/<version>/`
+  - Command: `ph --root <PH_ROOT> release show`
+  - Outputs to verify: (none; stdout only)
+- [ ] `make release-progress` → `ph release progress`
+  - Preconditions: `releases/current` exists and points at a valid `releases/<version>/`
+  - Command: `ph --root <PH_ROOT> release progress`
+  - Outputs to verify: `releases/<version>/progress.md`
 - [ ] `make release-add-feature ...` → `ph release add-feature ...`
   - Preconditions: `releases/<version>/features.yaml` exists (created by `ph release plan`)
   - Command: `ph --root <PH_ROOT> release add-feature --release <vX.Y.Z> --feature <name> ...`
@@ -320,17 +344,7 @@ This checklist is the **exhaustive parity verification** for the Make-to-CLI map
   - Command: `ph --root <PH_ROOT> test system`
   - Outputs to verify: `status/validation.json`, `status/current.json`, `status/current_summary.md` (written by internal `ph validate` + `ph status`)
 
-### Destructive
+### CLI-only (not in reference Makefile)
 
-- [ ] `make reset` → `ph reset`
-  - Preconditions: none (dry-run)
-  - Command: `ph --root <PH_ROOT> reset`
-  - Outputs to verify: (none; dry-run prints delete set)
-- [ ] `make reset confirm=RESET force=true` → `ph reset --confirm RESET --force true`
-  - Preconditions: run on disposable copy of the repo
-  - Command: `ph --root <PH_ROOT> reset --confirm RESET --force true`
-  - Outputs to verify: `roadmap/now-next-later.md`, `backlog/index.json`, `parking-lot/index.json` (and project artifacts removed per spec; system artifacts preserved)
-- [ ] `make reset-smoke` → `ph reset-smoke`
-  - Preconditions: run on disposable copy of the repo (destructive to project scope)
-  - Command: `ph --root <PH_ROOT> reset-smoke`
-  - Outputs to verify: (procedure asserts filesystem conditions; see `docs/RESET_SMOKE.md`)
+- [ ] `ph reset` / `ph reset-smoke`
+  - Note: the reference Make interface does not define `reset*` targets.

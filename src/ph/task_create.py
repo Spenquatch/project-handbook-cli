@@ -107,6 +107,15 @@ def relative_markdown_link(*, from_dir: Path, target: Path) -> str:
     return rel.replace(os.sep, "/")
 
 
+def _feature_doc_links(*, ph_data_root: Path, task_dir: Path, feature: str) -> tuple[str, str]:
+    overview = ph_data_root / "features" / feature / "overview.md"
+    architecture = ph_data_root / "features" / feature / "architecture" / "ARCHITECTURE.md"
+    return (
+        relative_markdown_link(from_dir=task_dir, target=overview),
+        relative_markdown_link(from_dir=task_dir, target=architecture),
+    )
+
+
 def _load_validation_rules(*, ph_root: Path) -> dict[str, Any]:
     rules_path = ph_root / "process" / "checks" / "validation_rules.json"
     try:
@@ -249,6 +258,10 @@ def run_task_create(
     else:
         decision_link = f"`{decision}`"
 
+    feature_overview_rel, feature_architecture_rel = _feature_doc_links(
+        ph_data_root=ctx.ph_data_root, task_dir=task_dir, feature=feature
+    )
+
     cd_path = _task_cd_path_for_scope(ctx=ctx, task_dir_name=task_dir_name)
     ph_cmd = _scope_prefix_for_ph_command(ctx=ctx)
 
@@ -262,13 +275,13 @@ def run_task_create(
             f"feature: {feature}",
             f"session: {session}",
             f"tags: [task, {feature}]",
-            f"links: [../../../features/{feature}/overview.md]",
+            f"links: [{feature_overview_rel}]",
             "---",
             "",
             f"# Task {task_id}: {title}",
             "",
             "## Overview",
-            f"**Feature**: [{feature}](../../../features/{feature}/overview.md)",
+            f"**Feature**: [{feature}]({feature_overview_rel})",
             f"**Decision**: {decision_link}",
             f"**Story Points**: {story_points}",
             f"**Owner**: {owner}",
@@ -547,8 +560,8 @@ def run_task_create(
             "",
             "### Decision Context",
             f"- **Decision**: {decision_link}",
-            f"- **Feature**: [Feature overview](../../../features/{feature}/overview.md)",
-            f"- **Architecture**: [Feature architecture](../../../features/{feature}/architecture/ARCHITECTURE.md)",
+            f"- **Feature**: [Feature overview]({feature_overview_rel})",
+            f"- **Architecture**: [Feature architecture]({feature_architecture_rel})",
             "",
             "### Sprint Context",
             "- **Sprint Plan**: [Current sprint](../../plan.md)",

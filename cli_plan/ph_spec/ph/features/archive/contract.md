@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/features/archive/
+title: PH Spec Contract — features/implemented/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,8 +7,8 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
-- Summary: Archived feature directories (completed or paused work), preserved as an immutable record after being moved out of the active `ph/features/` tree.
+- Path (handbook instance): `PH_ROOT/features/implemented/`
+- Summary: Archived feature directories (completed or paused work), preserved as an immutable record after being moved out of the active `features/` tree.
 
 ## Ownership
 - Owner: Shared.
@@ -17,19 +17,18 @@ tags: [ph, spec]
 - Derived/internal artifacts (CLI-authored; safe to regenerate):
   - (none)
 - Overwrite rules:
-  - The CLI MAY move entire feature directories into/out of `ph/features/archive/`, but MUST refuse to overwrite an existing destination directory unless `--force` is provided.
+  - Tooling MAY move entire feature directories into/out of `features/implemented/`, but MUST refuse to overwrite an existing destination directory unless `--force`/`force=true` is provided.
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates `ph/features/archive/` if missing).
-  - `ph feature archive --name <name> [--force]` moves `ph/features/<name>/` into `ph/features/archive/<name>/`.
+  - `pnpm make -- feature-archive name=<name> [force=true]` moves `features/<name>/` into `features/implemented/<name>/`.
 - Non-destructive:
   - Archiving MUST refuse to overwrite an existing destination directory unless `--force` is provided.
   - The CLI MUST NOT rewrite archived feature markdown bodies (treat as read-only content).
 
 ## Required Files and Directories
 - Required:
-  - `ph/features/archive/` (directory)
+  - `features/implemented/` (directory)
 - Optional:
   - One directory per archived feature: `<feature_name>/`
   - Any files within each archived feature directory that were present at archive time (preserved as-is).
@@ -40,15 +39,15 @@ tags: [ph, spec]
 
 ## Invariants
 - Archived feature directories MUST be treated as immutable content:
-  - If a feature is present under `ph/features/archive/<name>/`, the CLI MUST NOT modify files within it.
+  - If a feature is present under `features/implemented/<name>/`, tooling MUST NOT modify files within it.
 - Name collision avoidance:
   - An archived feature name SHOULD NOT simultaneously exist as an active feature directory under `ph/features/<name>/` (validation MAY warn).
 
 ## Validation Rules
 - `ph validate` SHOULD enforce:
-  - `ph/features/archive/` exists
+  - `features/implemented/` exists
   - archived feature entries are directories (not files)
 - `ph feature` commands MUST NOT treat archived features as candidates for `list/status/update-status` unless explicitly requested by a future flag (default scope is active features).
 
 ## Examples Mapping
-- No `ph/features/archive/` fixtures are currently provided in `examples/`; archived features are created by moving an existing active feature directory via `ph feature archive`.
+- No `features/implemented/` fixtures are currently provided in `examples/`; archived features are created by moving an existing active feature directory via `make feature-archive`.

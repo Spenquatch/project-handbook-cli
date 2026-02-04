@@ -281,13 +281,25 @@ def validate_session_end_index(*, issues: list[dict], ph_root: Path) -> None:
 
 
 def _load_system_scope_routing(*, rules: dict, issues: list[dict], ph_root: Path) -> dict | None:
-    enforcement = rules.get("system_scope_enforcement") or {}
-    if isinstance(enforcement, dict) and enforcement.get("enabled") is False:
+    enforcement_raw = rules.get("system_scope_enforcement")
+    if enforcement_raw is None:
+        return None
+    if not isinstance(enforcement_raw, dict):
+        issues.append(
+            {
+                "path": "process/checks/validation_rules.json",
+                "code": "system_scope_enforcement_invalid",
+                "severity": "error",
+                "message": "system_scope_enforcement must be an object when present",
+            }
+        )
+        return None
+
+    if enforcement_raw.get("enabled") is False:
         return None
 
     config_rel = None
-    if isinstance(enforcement, dict):
-        config_rel = enforcement.get("config_path")
+    config_rel = enforcement_raw.get("config_path")
     if not isinstance(config_rel, str) or not config_rel.strip():
         config_rel = "process/automation/system_scope_config.json"
 

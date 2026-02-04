@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/features/
+title: PH Spec Contract — features/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,8 +7,8 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
-- Summary: Active feature directories (one directory per feature) containing the project’s feature specs, status, and supporting docs; archived features are moved to `ph/features/archive/`.
+- Path (handbook instance): `PH_ROOT/features/`
+- Summary: Active feature directories (one directory per feature) containing the project’s feature specs, status, and supporting docs; archived features are moved to `features/implemented/` (legacy naming).
 
 ## Ownership
 - Owner: Project (human-directed).
@@ -21,11 +21,11 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates `ph/features/` and `ph/features/archive/` directories only).
-  - `ph feature create --name <name> ...` (creates a new feature directory and seeds the standard feature doc set).
-  - `ph feature status --name <name> --stage <stage>` (updates stage in `status.md`).
-  - `ph feature update-status` (MAY recompute feature `status.md` files from sprint/task data; scope-local).
-  - `ph feature archive --name <name> [--force]` (moves the feature directory into `ph/features/archive/`).
+  - `pnpm make -- feature-create name=<name> [epic=true] [owner=@handle] [stage=<stage>]` (creates a new feature directory and seeds the standard feature doc set).
+  - `pnpm make -- feature-status name=<name> stage=<stage>` (updates stage in `status.md`).
+  - `pnpm make -- feature-update-status` (recomputes feature `status.md` files from sprint/task data).
+  - `pnpm make -- feature-summary` (prints an aggregate summary view).
+  - `pnpm make -- feature-archive name=<name> [force=true]` (moves the feature directory into `features/implemented/`).
 - Non-destructive:
   - `ph feature create` MUST refuse to overwrite an existing feature directory unless `--force` is provided.
   - `ph feature archive` MUST refuse to overwrite an existing destination directory unless `--force` is provided.
@@ -33,7 +33,8 @@ tags: [ph, spec]
 
 ## Required Files and Directories
 - Required:
-  - `ph/features/` (directory)
+  - `features/` (directory)
+  - `features/implemented/` (directory; legacy archive target)
 - Required layout for each active feature directory:
   - `<FEATURE_DIR>/overview.md`
   - `<FEATURE_DIR>/status.md`
@@ -46,8 +47,7 @@ tags: [ph, spec]
   - `<FEATURE_DIR>/testing/TESTING.md`
   - `<FEATURE_DIR>/decision-register/DR-XXXX-<slug>.md` (feature-scoped DR entries)
 - Allowed feature directory names:
-  - `<name>` SHOULD be lowercase snake_case (recommended; treated as an opaque identifier by the filesystem).
-  - Feature names MUST NOT start with `handbook-` or `ph-` (reserved prefixes; enforced by `ph feature create`).
+  - `<name>` is an opaque identifier; in practice kebab-case is common (legacy).
 
 ## Schemas
 - All Markdown files in feature directories MUST include YAML front matter (global `ph/` rule).
@@ -68,7 +68,7 @@ tags: [ph, spec]
   - `feature: <feature_name>`
   - `date: YYYY-MM-DD`
 - `status.md` body MUST include a single stage line:
-  - `Stage: <stage>` (stage is an opaque string token; recommended values include `draft`, `proposed`, `approved`, `in-progress`, `done`)
+  - `Stage: <stage>` (recommended values: `proposed`, `approved`, `developing`, `complete`, `live`, `deprecated`)
 - `changelog.md` front matter MUST include at least:
   - `title: <string>`
   - `type: changelog`
@@ -82,7 +82,7 @@ tags: [ph, spec]
 - Additional YAML keys are allowed; unknown keys MUST be preserved.
 
 ## Invariants
-- Active features live under `ph/features/<name>/`; archived features live under `ph/features/archive/<name>/` (see `ph/features/archive/contract.md`).
+- Active features live under `features/<name>/`; archived features live under `features/implemented/<name>/` (see `features/implemented/contract.md`).
 - Each active feature directory MUST contain exactly one `overview.md` and one `status.md`.
 
 ## Validation Rules

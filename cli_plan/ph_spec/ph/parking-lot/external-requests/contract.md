@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/parking-lot/external-requests/
+title: PH Spec Contract — parking-lot/external-requests/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/parking-lot/external-requests/`
 - Summary: Active external request parking-lot items (not yet promoted into roadmap/backlog), organized as one directory per item.
 
 ## Ownership
@@ -21,8 +21,7 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates directory structure).
-  - `ph parking add --type external-requests ...` (creates a new item directory + `README.md` and updates `ph/parking-lot/index.json`).
+  - `pnpm make -- parking-add type=external-requests title="..." ...` (creates a new item directory + `README.md` and updates `parking-lot/index.json`).
 - Non-destructive:
   - `ph parking add` MUST refuse to overwrite an existing `<ITEM_DIR>/` unless `--force` is provided.
   - The CLI MUST NOT overwrite item `README.md` content without explicit `--force`.
@@ -35,7 +34,7 @@ tags: [ph, spec]
   - Examples MAY use an `EXAMPLE-` prefix.
 
 ## Schemas
-- `README.md` MUST follow the parking-lot item schema described in `ph/parking-lot/contract.md` and MUST include:
+- `README.md` MUST follow the parking-lot item schema described in `parking-lot/contract.md` and MUST include:
   - `type: external-requests`
   - `status: parking-lot`
 - YAML front matter MAY include additional keys; unknown keys MUST be preserved as content.

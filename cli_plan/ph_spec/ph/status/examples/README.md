@@ -149,7 +149,7 @@ cat ph/status/current.json
 
 ## Configuration
 
-Status/validation behavior is controlled by `.ph/process/checks/validation_rules.json`:
+Status/validation behavior is controlled by `process/checks/validation_rules.json`:
 
 ```json
 "daily_status": {

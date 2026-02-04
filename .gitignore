@@ -10,3 +10,4 @@ site/
 .ruff_cache/
 uv.lock
 legacy-reference
+.DS_Store

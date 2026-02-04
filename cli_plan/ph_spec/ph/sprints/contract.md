@@ -1,5 +1,5 @@
 ---
-title: PH Spec Contract — ph/sprints/
+title: PH Spec Contract — sprints/
 type: contract
 tags: [ph, spec]
 ---
@@ -7,7 +7,7 @@ tags: [ph, spec]
 # Contract
 
 ## Directory Purpose
-- Path: (directory containing this `contract.md`)
+- Path (handbook instance): `PH_ROOT/sprints/`
 - Summary: Active sprint workspaces (by sprint id) plus a `sprints/current` pointer to the currently-open sprint.
 
 ## Ownership
@@ -25,10 +25,9 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - `ph init` (creates `sprints/` and `sprints/archive/`)
-  - `ph sprint plan` (creates a new sprint directory and seed `plan.md`)
-  - `ph sprint open` (updates `sprints/current` pointer)
-- Non-destructive: `ph sprint plan` MUST NOT overwrite an existing sprint directory unless `--force` is provided.
+  - `pnpm make -- sprint-plan [sprint=SPRINT-...]` (creates a new sprint directory and seeds `plan.md`, updates `sprints/current`)
+  - `pnpm make -- sprint-open sprint=SPRINT-...` (updates `sprints/current` pointer)
+- Non-destructive: sprint scaffolding MUST NOT overwrite an existing sprint directory or its `plan.md` unless an explicit force mode is provided by the caller.
 
 ## Required Files and Directories
 - Required directories:
@@ -39,9 +38,14 @@ tags: [ph, spec]
     - Windows: directory junction (preferred) or symlink (if permitted)
     - If neither is possible, `ph sprint plan|open` MUST fail with remediation (see CLI contract).
 - Sprint directory layout (canonical):
-  - `YYYY/SPRINT-<...>/`
-    - `plan.md`
-    - `tasks/`
+  - Date/ISO-week ids:
+    - `YYYY/SPRINT-<...>/`
+      - `plan.md`
+      - `tasks/`
+  - Sequence ids (legacy `id_scheme=sequence`):
+    - `SEQ/SPRINT-SEQ-####/`
+      - `plan.md`
+      - `tasks/`
 
 ## Schemas
 - `YYYY/SPRINT-*/plan.md` MUST be Markdown with YAML front matter containing at least:
@@ -53,6 +57,7 @@ tags: [ph, spec]
 - Sprint plan front matter MAY include:
   - `tags: [sprint, planning, ...]`
   - `release: <string|null>`
+  - `release_sprint_slot: <int|null>` (when using sprint-slot releases)
   - `start: YYYY-MM-DD` (required when `mode: timeboxed`)
   - `end: YYYY-MM-DD` (required when `mode: timeboxed`)
 - Task directories under `YYYY/SPRINT-*/tasks/` (created by `ph task create`) MUST have this shape:
@@ -63,18 +68,23 @@ tags: [ph, spec]
     - `commands.md`
     - `checklist.md`
     - `validation.md`
+    - `references.md` (legacy; optional but commonly scaffolded)
     - `source/` (optional; for attachments/snippets; never executed by `ph`)
 - `task.yaml` MUST be YAML and include at least:
   - `id: TASK-###`
   - `title: <string>`
   - `feature: <string>`
+  - `lane: <string|null>` (legacy)
   - `decision: <string>` (ADR-/DR-/FDR- id)
+  - `session: <string>` (legacy; e.g. `task-execution`, `research-discovery`)
   - `owner: <string>`
   - `status: <string>`
   - `story_points: <int>`
   - `depends_on: [<TASK-###|FIRST_TASK>, ...]`
   - `prio: P0|P1|P2|P3|P4`
   - `due: YYYY-MM-DD`
+  - `release: <vX.Y.Z | current | null>` (legacy)
+  - `release_gate: <boolean>` (legacy)
   - `acceptance: [<string>, ...]`
   - `links: [<string>, ...]`
 - Task Markdown files (`README.md`, `steps.md`, `commands.md`, `checklist.md`, `validation.md`) MUST include YAML front matter with at least:
@@ -86,7 +96,7 @@ tags: [ph, spec]
 
 ## Invariants
 - If `sprints/current` exists, it MUST resolve to an existing sprint directory.
-- The sprint directory year partition `YYYY/` MUST equal the year segment in the sprint id (`SPRINT-YYYY-...`).
+- For date/ISO-week ids, the sprint directory year partition `YYYY/` MUST equal the year segment in the sprint id (`SPRINT-YYYY-...`).
 - A sprint directory MUST contain:
   - `plan.md`
   - `tasks/` (may be empty)
