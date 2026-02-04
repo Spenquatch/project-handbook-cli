@@ -24,8 +24,9 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
     (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 def _expected_sprint_plan_link(*, scope_root: Path, daily_file: Path) -> str:
-    target = scope_root / "sprints" / "current" / "plan.md"
-    return os.path.relpath(str(target), str(daily_file.parent)).replace(os.sep, "/")
+    target = scope_root / "sprints" / "current.md"
+    year_dir = daily_file.parent.parent
+    return os.path.relpath(str(target), str(year_dir)).replace(os.sep, "/")
 
 
 def test_daily_generate_skips_weekends_unless_forced(tmp_path: Path) -> None:

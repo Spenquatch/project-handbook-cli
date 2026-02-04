@@ -142,6 +142,79 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-04 22:43 UTC — V1P-0010 — Parity: `make daily` → `ph daily generate`
+
+Agent: GPT-5.2 (Codex CLI background agent via Orchestrator)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable PH_ROOT(s) (rsync copies of legacy repo into mktemp)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0010)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- src/ph/cli.py
+- src/ph/config.py
+- src/ph/daily.py
+- tests/test_daily.py
+- tests/test_daily_make_parity.py
+
+Goal:
+- Achieve strict parity for legacy `pnpm make -- daily` vs `ph --root <PH_ROOT> daily generate` (stdout + `status/daily/YYYY/MM/DD.md`).
+
+Work performed (ordered):
+1. Created disposable PH_ROOT copies of the legacy handbook repo, then captured legacy stdout + the generated daily file for `pnpm make -- daily`.
+2. Captured `ph daily generate` stdout + daily file output and diffed against legacy (initial mismatch).
+3. Updated daily generation to match legacy daily file content and legacy-style stdout.
+4. Adjusted config parsing/validation to accept legacy-like config values observed during parity runs.
+5. Added a deterministic pytest that locks the daily stdout + file output parity using `PH_FAKE_TODAY=2026-02-04`.
+6. Re-ran diffs + ruff/pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- PH_ROOT_LEGACY=\"$(mktemp -d -t ph-parity-V1P-0010-legacy-XXXXXXXX)\"
+- PH_ROOT_PH=\"$(mktemp -d -t ph-parity-V1P-0010-ph-XXXXXXXX)\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT_LEGACY/\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT_PH/\"
+- (cd \"$PH_ROOT_LEGACY\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT_PH\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT_LEGACY\" && pnpm make -- daily) > /tmp/legacy-daily-stdout.txt
+- LEGACY_DAILY_FILE=$(ls -1 \"$PH_ROOT_LEGACY\"/status/daily/*/*/*.md | sort | tail -n 1)
+- cp \"$LEGACY_DAILY_FILE\" /tmp/legacy-daily.md
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp uv run ph --root \"$PH_ROOT_PH\" daily generate > /tmp/ph-daily-stdout.txt
+- PH_DAILY_FILE=$(ls -1 \"$PH_ROOT_PH\"/status/daily/*/*/*.md | sort | tail -n 1)
+- cp \"$PH_DAILY_FILE\" /tmp/ph-daily.md
+- diff -u /tmp/legacy-daily-stdout.txt /tmp/ph-daily-stdout.txt
+- diff -u /tmp/legacy-daily.md /tmp/ph-daily.md
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/cli.py
+- src/ph/config.py
+- src/ph/daily.py
+- tests/test_daily.py
+- tests/test_daily_make_parity.py
+
+Verification:
+- Daily file diff: `diff -u /tmp/legacy-daily.md /tmp/ph-daily.md` returned no diff (byte-for-byte match).
+- Ruff: `uv run ruff check .` (pass)
+- Pytest: `uv run pytest -q` (pass)
+- Note: when comparing stdout across *different* disposable roots, the only expected difference is the embedded absolute root path.
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> daily generate` now matches legacy daily file content and legacy-style stdout; parity locked via pytest.
+
+Next task:
+- V1P-0011
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-04 22:30 UTC — V1P-0009 — Parity: `make help utilities` → `ph help utilities`
 
 Agent: GPT-5.2 (Codex CLI background agent via Orchestrator)

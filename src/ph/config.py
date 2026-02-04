@@ -8,6 +8,9 @@ from packaging.specifiers import InvalidSpecifier, SpecifierSet
 
 from . import __version__
 
+DEFAULT_SCHEMA_VERSION = 1
+DEFAULT_REQUIRES_PH_VERSION = ">=0.1.0,<0.2.0"
+
 
 @dataclass(frozen=True)
 class HandbookConfig:
@@ -47,7 +50,14 @@ def load_handbook_config(ph_root: Path) -> HandbookConfig:
         raise ConfigError(_config_error_message(f"Missing config: {config_paths[0]}"))
 
     handbook_schema_version = raw.get("handbook_schema_version")
+    if isinstance(handbook_schema_version, str) and handbook_schema_version.strip().isdigit():
+        handbook_schema_version = int(handbook_schema_version.strip())
+    if handbook_schema_version is None:
+        handbook_schema_version = DEFAULT_SCHEMA_VERSION
+
     requires_ph_version = raw.get("requires_ph_version")
+    if requires_ph_version is None:
+        requires_ph_version = DEFAULT_REQUIRES_PH_VERSION
     repo_root = raw.get("repo_root")
 
     if not isinstance(handbook_schema_version, int):
@@ -69,8 +79,6 @@ def validate_handbook_config(config: HandbookConfig) -> None:
         raise ConfigError(
             _config_error_message(f"Unsupported handbook_schema_version: {config.handbook_schema_version} (expected 1)")
         )
-    if config.repo_root != ".":
-        raise ConfigError(_config_error_message(f"Invalid repo_root: {config.repo_root!r} (expected '.')"))
 
     try:
         spec = SpecifierSet(config.requires_ph_version)

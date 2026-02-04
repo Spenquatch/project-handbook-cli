@@ -969,6 +969,7 @@ def main(argv: list[str] | None = None) -> int:
                     print("Usage: ph daily <generate|check>\n", file=sys.stderr, end="")
                     exit_code = 2
                 elif args.daily_command == "generate":
+                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["daily"]))
                     created = create_daily_status(
                         ph_root=ph_root,
                         ph_data_root=ctx.ph_data_root,
