@@ -161,3 +161,32 @@ def test_daily_generate_force_stdout_matches_make_daily_force(tmp_path: Path) ->
     out_path = tmp_path / "status" / "daily" / "2026" / "02" / "04.md"
     assert out_path.exists()
     assert out_path.read_text(encoding="utf-8") == EXPECTED_DAILY_STATUS_2026_02_04
+
+
+def test_daily_check_verbose_stdout_matches_make_daily_check(tmp_path: Path) -> None:
+    _write_legacy_like_config(tmp_path)
+    _write_legacy_like_package_json(tmp_path)
+
+    env = dict(os.environ)
+    env["PH_FAKE_TODAY"] = "2026-02-04"
+
+    result = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "daily", "check", "--verbose"],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 2
+
+    resolved = tmp_path.resolve()
+    script = (resolved / "process" / "automation" / "daily_status_check.py").resolve()
+    expected_stdout = (
+        "\n"
+        f"> project-handbook@0.0.0 make {resolved}\n"
+        "> make -- daily-check\n"
+        "\n"
+        "⚠️  No daily status found!\n"
+        f"Run: python3 {script} --generate\n"
+        "\u2009ELIFECYCLE\u2009 Command failed with exit code 2.\n"
+    )
+    assert result.stdout == expected_stdout

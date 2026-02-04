@@ -979,12 +979,18 @@ def main(argv: list[str] | None = None) -> int:
                     )
                     exit_code = 0 if created else 1
                 elif args.daily_command == "check":
+                    if bool(getattr(args, "verbose", False)):
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["daily-check"]))
+
                     exit_code = check_daily_status(
                         ph_root=ph_root,
                         ph_data_root=ctx.ph_data_root,
                         verbose=bool(args.verbose),
                         env=os.environ,
                     )
+                    if bool(getattr(args, "verbose", False)) and exit_code != 0:
+                        sys.stdout.write("\u2009ELIFECYCLE\u2009 Command failed with exit code 2.\n")
+                        exit_code = 2
                 else:
                     print("Usage: ph daily <generate|check>\n", file=sys.stderr, end="")
                     exit_code = 2

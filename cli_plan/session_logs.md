@@ -142,6 +142,66 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-04 23:26 UTC — V1P-0012 — Parity: `make daily-check` → `ph daily check --verbose`
+
+Agent: GPT-5.2 (Codex CLI background agent via Orchestrator)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable PH_ROOT (rsync copy of legacy repo into mktemp)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0012)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- src/ph/cli.py
+- src/ph/daily.py
+- tests/test_daily_make_parity.py
+
+Goal:
+- Achieve strict parity for legacy `pnpm make -- daily-check` vs `ph --root <PH_ROOT> daily check --verbose` (stdout-only).
+
+Work performed (ordered):
+1. Created a disposable PH_ROOT from the legacy handbook repo and captured legacy stdout for `pnpm make -- daily-check`.
+2. Captured `ph daily check --verbose` stdout against the same PH_ROOT and diffed outputs (initial mismatch).
+3. Updated daily check verbose-mode to match legacy stdout, including the pnpm/make preamble, failure footer, and remediation guidance.
+4. Added a deterministic pytest locking verbose daily-check stdout parity.
+5. Re-ran legacy vs `ph` capture + diff; verified byte-for-byte match.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- PH_ROOT=\"$(mktemp -d -t ph-parity-V1P-0012-XXXXXXXX)\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT\" && pnpm make -- daily-check) > /tmp/legacy-daily-check.txt
+- uv run ph --root \"$PH_ROOT\" daily check --verbose > /tmp/ph-daily-check.txt
+- diff -u /tmp/legacy-daily-check.txt /tmp/ph-daily-check.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/cli.py
+- src/ph/daily.py
+- tests/test_daily_make_parity.py
+
+Verification:
+- `diff -u /tmp/legacy-daily-check.txt /tmp/ph-daily-check.txt` returned no diff (byte-for-byte match).
+- Exit codes match: legacy `2`, `ph` `2`.
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> daily check --verbose` now matches legacy `pnpm make -- daily-check` stdout byte-for-byte; parity locked via pytest.
+
+Next task:
+- V1P-0013
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-04 23:16 UTC — V1P-0011 — Parity: `make daily-force` → `ph daily generate --force`
 
 Agent: GPT-5.2 (Codex CLI background agent via Orchestrator)

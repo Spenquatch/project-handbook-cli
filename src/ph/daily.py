@@ -326,10 +326,26 @@ def get_last_daily_status(*, ph_data_root: Path) -> tuple[Path | None, dt.date |
 
 
 def hours_since_last_daily(*, ph_data_root: Path, env: dict[str, str]) -> float:
-    _path, last_date = get_last_daily_status(ph_data_root=ph_data_root)
-    if not last_date:
+    """
+    Return hours since the last daily status.
+
+    NOTE: This intentionally mirrors legacy v0 behavior from
+    `process/automation/daily_status_check.py`, which attempts to parse the
+    date from the filename stem as `%Y-%m-%d`. In the canonical handbook layout,
+    daily files are named `DD.md`, so this parse fails and the legacy script
+    reports "No daily status found!" even when files exist.
+    """
+
+    files = _iter_daily_files(ph_data_root=ph_data_root)
+    if not files:
         return float("inf")
-    last_dt = dt.datetime.combine(last_date, dt.time.min)
+
+    last_status = sorted(files, reverse=True)[0]
+    try:
+        last_dt = dt.datetime.strptime(last_status.stem, "%Y-%m-%d")
+    except Exception:
+        return float("inf")
+
     delta = clock_now(env=env) - last_dt
     return delta.total_seconds() / 3600
 
@@ -346,7 +362,8 @@ def check_status(*, ph_root: Path, ph_data_root: Path, verbose: bool, env: dict[
             print("⚠️  No daily status found!")
         else:
             print(f"⚠️  Daily status is {int(hours)} hours old!")
-        print("Run: ph daily generate")
+        script = (ph_root / "process" / "automation" / "daily_status_check.py").resolve()
+        print(f"Run: python3 {script} --generate")
         return 1
 
     if verbose:
