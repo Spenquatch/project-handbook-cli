@@ -81,10 +81,10 @@ TOPICS: dict[str, str] = {
   make backlog-stats             - Metrics grouped by severity/category
 """,
     "parking": """Parking lot workflow commands
-  ph parking add --type features --title 'Idea' --desc 'Y' [--owner @alice] [--tags 'foo,bar']
-  ph parking list [--category labs] [--format table]
-  ph parking review            - Guided quarterly review session
-  ph parking promote --item FEAT-001 --target later
+  make parking-add type=features title='Idea' desc='Y' [owner=@alice] [tags='foo,bar']
+  make parking-list [category=labs] [format=table]
+  make parking-review            - Guided quarterly review session
+  make parking-promote item=FEAT-001 target=later
 """,
     "validation": """Validation, status, and test commands
   ph validate --quick            - Fast lint (runs automatically after every ph)
