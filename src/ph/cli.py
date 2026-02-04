@@ -515,7 +515,8 @@ def main(argv: list[str] | None = None) -> int:
         exit_code = result.exit_code
     else:
         try:
-            _build_ctx()
+            if args.command != "help":
+                _build_ctx()
 
             if args.command is None:
                 parser.print_help()

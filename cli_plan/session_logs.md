@@ -5226,3 +5226,64 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-04 19:08 UTC — V1P-0001 — Parity: `make help` → `ph help`
+
+Agent: Orchestrator GPT-5.2 (Codex app) + delegated background agent ($coding-agent)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: Disposable temp copy of `/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook` (rsync → `PH_ROOT`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0001)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `make help` → `ph help` (stdout behavior).
+
+Work performed (ordered):
+1. Selected the next runnable parity task via the deterministic selection algorithm.
+2. Ran a legacy vs `ph` stdout diff on a disposable `PH_ROOT` and confirmed mismatch + `ph` refusing to run due to strict config schema validation.
+3. Updated `ph help` output text to match legacy `make help` byte-for-byte (removed scope hint; switched examples back to `make ...`).
+4. Updated CLI execution so `ph help` bypasses config validation/context build (so it can run against legacy repos that don’t match the strict `project_handbook.config.json` schema).
+5. Locked the exact stdout with a deterministic pytest assertion.
+6. Adjusted post-command hook planning for successful `help` to append history but skip auto-validation (matching observed legacy behavior), and updated tests.
+
+Commands executed (exact):
+- LEGACY=/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook
+- TMP=$(mktemp -d)
+- PH_ROOT="$TMP/ph-root"
+- mkdir -p "$PH_ROOT"
+- rsync -a --delete --exclude .git --exclude node_modules --exclude .DS_Store "$LEGACY/" "$PH_ROOT/"
+- (cd "$PH_ROOT" && make help) > "$TMP/legacy_help.txt"
+- UV_CACHE_DIR="$TMP/uv-cache" XDG_CACHE_HOME="$TMP/xdg-cache" uv run ph --root "$PH_ROOT" help > "$TMP/ph_help.txt"
+- diff -u "$TMP/legacy_help.txt" "$TMP/ph_help.txt" || true
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ruff check .
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/tasks_v1_parity.json
+- cli_plan/session_logs.md
+- src/ph/cli.py
+- src/ph/help_text.py
+- src/ph/hooks.py
+- tests/test_help_topics.py
+- tests/test_hooks_plan.py
+
+Verification:
+- `diff -u "$TMP/legacy_help.txt" "$TMP/ph_help.txt"` produced no output (byte-for-byte match).
+- `make help` and `ph help` both append a history entry under `PH_ROOT/.project-handbook/history.log`; `ph help` skips auto-validation (no `.project-handbook/status/validation.json` created in the disposable root during the check).
+- `uv run ruff check .` passed.
+- `uv run pytest -q` passed (131 tests).
+
+Outcome:
+- status: done
+- summary: `ph help` now matches legacy `make help` stdout exactly and runs successfully against a disposable legacy repo copy; help’s post-hook behavior aligns with legacy (history yes, auto-validate no).
+
+Next task:
+- V1P-0002
+
+Blockers (if blocked):
+- (none)

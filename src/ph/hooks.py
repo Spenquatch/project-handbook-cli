@@ -37,6 +37,9 @@ def plan_post_command_hook(
     if exit_code == 0 and command in {"reset", "reset-smoke"}:
         return PostCommandHookPlan(append_history=False, run_validation=False)
 
+    if exit_code == 0 and command == "help":
+        return PostCommandHookPlan(append_history=not no_history, run_validation=False)
+
     append = not no_history
 
     if exit_code != 0:

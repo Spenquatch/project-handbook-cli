@@ -1,24 +1,23 @@
 from __future__ import annotations
 
 DEFAULT_HELP = """Project Handbook quick help
-System scope: use --scope system to operate under .project-handbook/system.
 
 Most-used flows:
-  • Daily briefing          : ph daily generate | ph onboarding session continue-session
-  • Sprint lifecycle        : ph sprint plan / ph sprint status / ph sprint close
-  • Task execution          : ph task create / ph task status
-  • Feature + release work  : ph feature create / ph release plan
-  • Validation & status     : ph validate --quick | ph status
+  • Daily briefing          : make daily | make onboarding session continue-session
+  • Sprint lifecycle        : make sprint-plan / sprint-status / sprint-close
+  • Task execution          : make task-create / task-status
+  • Feature + release work  : make feature-create / release-plan
+  • Validation & status     : make validate-quick | make status
 
 Need the full command list for a workflow?
-  ph help sprint      # sprint planning & health
-  ph help task        # sprint tasks
-  ph help feature     # feature lifecycle
-  ph help release     # release coordination
-  ph help backlog     # issue backlog & triage
-  ph help parking     # parking lot ideas
-  ph help validation  # validation / status / test
-  ph help utilities   # daily tools, onboarding, cleanup
+  make help sprint      # sprint planning & health
+  make help task        # sprint tasks
+  make help feature     # feature lifecycle
+  make help release     # release coordination
+  make help backlog     # issue backlog & triage
+  make help parking     # parking lot ideas
+  make help validation  # validation / status / test
+  make help utilities   # daily tools, onboarding, cleanup
 
 Tip: most workflows print next-step guidance after they run.
 """

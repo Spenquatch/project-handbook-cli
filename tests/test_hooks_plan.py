@@ -42,6 +42,19 @@ def test_plan_validate_command_skips_auto_validation() -> None:
     assert plan.run_validation is False
 
 
+def test_plan_help_success_appends_history_and_skips_validation() -> None:
+    plan = plan_post_command_hook(
+        command="help",
+        exit_code=0,
+        no_post_hook=False,
+        no_history=False,
+        no_validate=False,
+        env={},
+    )
+    assert plan.append_history is True
+    assert plan.run_validation is False
+
+
 def test_plan_reset_success_skips_hook_entirely() -> None:
     plan = plan_post_command_hook(
         command="reset",
