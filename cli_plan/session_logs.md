@@ -7056,3 +7056,64 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 11:45 UTC — V1P-0029 — Parity: `make feature-summary` → `ph feature summary`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created under `$TMPDIR`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0029)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict stdout parity for legacy `pnpm make -- feature-summary` vs `ph --root <PH_ROOT> feature summary`.
+
+Work performed (ordered):
+1. Created a disposable PH_ROOT from the legacy handbook repo and captured legacy stdout for `feature-summary`.
+2. Captured `ph` stdout for `feature summary` against the same PH_ROOT and diffed outputs (initial mismatch: missing pnpm/make preamble for this command).
+3. Updated the `ph` CLI to print the pnpm/make preamble for `feature summary` and added deterministic pytest coverage for the preamble + header.
+4. Re-ran legacy vs `ph` capture + diff; verified byte-for-byte match.
+5. Ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- TMP_ROOT=\"$(mktemp -d -t ph-parity-V1P-0029-root-real-XXXXXXXX)\"
+- PH_ROOT=\"$TMP_ROOT/project-handbook\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT\" && tar -cf /tmp/ph-parity-V1P-0029-base.tar .)
+- (cd \"$PH_ROOT\" && pnpm make -- feature-summary) > /tmp/V1P-0029.legacy.stdout.txt
+- rm -rf \"$PH_ROOT\" && mkdir -p \"$PH_ROOT\" && tar -xf /tmp/ph-parity-V1P-0029-base.tar -C \"$PH_ROOT\"
+- export UV_CACHE_DIR=/tmp/uv-cache; mkdir -p \"$UV_CACHE_DIR\"
+- uv run ph --root \"$PH_ROOT\" feature summary > /tmp/V1P-0029.ph.stdout.txt
+- diff -u /tmp/V1P-0029.legacy.stdout.txt /tmp/V1P-0029.ph.stdout.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0029.done
+- src/ph/cli.py
+- tests/test_feature_summary_parity_v1p0029.py
+
+Verification:
+- `diff -u /tmp/V1P-0029.legacy.stdout.txt /tmp/V1P-0029.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 161 tests)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> feature summary` now matches legacy `pnpm make -- feature-summary` stdout byte-for-byte; parity locked via pytest.
+
+Next task:
+- V1P-0030
+
+Blockers (if blocked):
+- (none)
