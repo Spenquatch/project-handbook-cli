@@ -7258,3 +7258,64 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 12:38 UTC — V1P-0032 — Parity: make backlog-list → ph backlog list
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created under `$TMPDIR`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0032)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict stdout parity for legacy `pnpm make -- backlog-list` vs `ph --root <PH_ROOT> backlog list`.
+
+Work performed (ordered):
+1. Created a disposable PH_ROOT from the legacy handbook repo and captured legacy stdout for `backlog-list`, freezing legacy wall-clock time via `PYTHONPATH` + `sitecustomize.py`.
+2. Captured `ph` stdout for `backlog list` under the same frozen time (`PH_FAKE_NOW`) and diffed (initial mismatch: missing pnpm/make preamble for table output).
+3. Updated `ph backlog list` to print the pnpm/make preamble for table output (non-JSON) and added deterministic pytest coverage.
+4. Re-ran legacy vs `ph` capture + diff; verified byte-for-byte match.
+5. Ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"
+- TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0032-root-real-XXXXXXXX)"
+- PH_ROOT="$TMP_ROOT/project-handbook"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"
+- (cd "$PH_ROOT" && pnpm install --frozen-lockfile)
+- (cd "$PH_ROOT" && tar -cf /tmp/ph-parity-V1P-0032-base.tar .)
+- FAKETIME_DIR="/tmp/ph-faketime-v1p0032"; rm -rf "$FAKETIME_DIR"; mkdir -p "$FAKETIME_DIR"; cat >"$FAKETIME_DIR/sitecustomize.py" <<'PY' ... PY
+- export PH_FAKE_NOW="2099-01-01T09:00:00Z"; (cd "$PH_ROOT" && PYTHONPATH="$FAKETIME_DIR" pnpm make -- backlog-list) > /tmp/V1P-0032.legacy.stdout.txt
+- rm -rf "$PH_ROOT" && mkdir -p "$PH_ROOT" && tar -xf /tmp/ph-parity-V1P-0032-base.tar -C "$PH_ROOT"
+- export UV_CACHE_DIR=/tmp/uv-cache; mkdir -p "$UV_CACHE_DIR"; PH_FAKE_NOW="2099-01-01T09:00:00Z" uv run ph --root "$PH_ROOT" backlog list > /tmp/V1P-0032.ph.stdout.txt
+- diff -u /tmp/V1P-0032.legacy.stdout.txt /tmp/V1P-0032.ph.stdout.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0032.done
+- src/ph/cli.py
+- tests/test_backlog_list_parity_v1p0032.py
+
+Verification:
+- `diff -u /tmp/V1P-0032.legacy.stdout.txt /tmp/V1P-0032.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 163 tests)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> backlog list` now matches legacy `pnpm make -- backlog-list` stdout byte-for-byte; parity locked via pytest.
+
+Next task:
+- V1P-0033
+
+Blockers (if blocked):
+- (none)

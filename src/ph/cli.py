@@ -954,6 +954,8 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 elif args.backlog_command == "list":
+                    if ctx.scope == "project" and str(args.format) != "json":
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["backlog-list"]))
                     exit_code = run_backlog_list(
                         ctx=ctx,
                         severity=getattr(args, "severity", None),
