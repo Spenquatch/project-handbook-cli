@@ -582,6 +582,7 @@ def main(argv: list[str] | None = None) -> int:
                     if session_topic == "list":
                         topics = list_session_topics(ph_root=ph_root)
                         print(SessionList(topics=topics).render(), end="")
+                        print("make[1]: Nothing to be done for `list'.")
                         exit_code = 0
                     elif session_topic == "continue-session":
                         print(read_latest_session_summary(ph_root=ph_root), end="")

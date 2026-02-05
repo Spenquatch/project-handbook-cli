@@ -45,13 +45,31 @@ def test_onboarding_session_list_sorts_topics(tmp_path: Path) -> None:
         text=True,
     )
     assert result.returncode == 0
-    assert result.stdout == (
-        "Available onboarding topics:\n"
-        "  - a-topic\n"
-        "  - b-topic\n"
-        "Special topics:\n"
-        "  - continue-session (print the latest session summary)\n"
-    )
+    static_topics = {
+        "close-sprint",
+        "discovery",
+        "execution",
+        "implement",
+        "implementation",
+        "planning",
+        "quality-gate",
+        "research",
+        "research-discovery",
+        "retro",
+        "retrospective",
+        "sprint-close",
+        "sprint-closing",
+        "sprint-planning",
+        "task-execution",
+        "testing",
+    }
+    expected_topics = sorted(static_topics | {"a-topic", "b-topic"})
+    expected = "Available onboarding topics:\n"
+    expected += "".join(f"  - {topic}\n" for topic in expected_topics)
+    expected += "Special topics:\n"
+    expected += "  - continue-session (print the latest session summary)\n"
+    expected += "make[1]: Nothing to be done for `list'.\n"
+    assert result.stdout == expected
 
 
 def test_onboarding_session_renders_template(tmp_path: Path) -> None:

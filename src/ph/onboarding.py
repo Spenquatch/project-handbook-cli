@@ -8,6 +8,28 @@ class OnboardingError(RuntimeError):
     pass
 
 
+STATIC_SESSION_TOPIC_MAP: dict[str, str | None] = {
+    "sprint-planning": "sprint-planning.md",
+    "planning": "sprint-planning.md",
+    "sprint-closing": "sprint-closing.md",
+    "sprint-close": "sprint-closing.md",
+    "close-sprint": "sprint-closing.md",
+    "retrospective": "sprint-closing.md",
+    "retro": "sprint-closing.md",
+    "task-execution": "task-execution.md",
+    "execution": "task-execution.md",
+    "implement": "task-execution.md",
+    "implementation": "task-execution.md",
+    "research-discovery": "research-discovery.md",
+    "research": "research-discovery.md",
+    "discovery": "research-discovery.md",
+    "quality-gate": "quality-gate.md",
+    "testing": "quality-gate.md",
+    "continue-session": None,
+    "next-steps": None,
+}
+
+
 def _extract_frontmatter_title(markdown: str) -> str | None:
     if not markdown.startswith("---\n"):
         return None
@@ -59,15 +81,28 @@ def render_onboarding(*, ph_root: Path) -> str:
     return f"{header}\n{underline}\n{markdown}\n"
 
 
-def list_session_topics(*, ph_root: Path) -> list[str]:
+def build_session_topic_map(*, ph_root: Path) -> dict[str, str | None]:
+    topic_map: dict[str, str | None] = dict(STATIC_SESSION_TOPIC_MAP)
     templates_dir = ph_root / "process" / "sessions" / "templates"
-    if not templates_dir.exists():
-        return []
-    return sorted(p.stem for p in templates_dir.glob("*.md") if p.is_file())
+    if templates_dir.exists():
+        for template_path in templates_dir.glob("*.md"):
+            if template_path.is_file():
+                topic_map.setdefault(template_path.stem, template_path.name)
+    return topic_map
+
+
+def list_session_topics(*, ph_root: Path) -> list[str]:
+    topic_map = build_session_topic_map(ph_root=ph_root)
+    return sorted({topic for topic, template_name in topic_map.items() if template_name is not None})
 
 
 def read_session_template(*, ph_root: Path, topic: str) -> str:
-    path = ph_root / "process" / "sessions" / "templates" / f"{topic}.md"
+    topic_map = build_session_topic_map(ph_root=ph_root)
+    template_name = topic_map.get(topic)
+    if template_name is None:
+        raise OnboardingError(f"Unknown session topic: {topic}\nUse: ph onboarding session list\n")
+
+    path = ph_root / "process" / "sessions" / "templates" / template_name
     try:
         return path.read_text(encoding="utf-8")
     except FileNotFoundError as exc:

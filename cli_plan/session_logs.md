@@ -9040,3 +9040,57 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 21:49 UTC — V1P-0062 — Parity: `make onboarding session list` → `ph onboarding session list`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created via `mktemp`; see Commands executed)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0062)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- onboarding session list` → `ph onboarding session list` (stdout only).
+
+Work performed (ordered):
+1. Ran legacy-vs-`ph` capture + diff for `onboarding session list` (stdout + exit code) on a disposable handbook instance using a baseline-restore workflow.
+2. Updated `ph onboarding session list` output to match legacy Make output (including aliases + footer guidance) byte-for-byte.
+3. Updated deterministic pytest coverage and re-ran parity diffs + `ruff` + `pytest`.
+
+Commands executed (exact):
+- export TMPDIR=/tmp; LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0062-root-XXXXXXXX)"; PH_ROOT="$TMP_ROOT/project-handbook"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"; (cd "$PH_ROOT" && pnpm install --frozen-lockfile >/dev/null); tar -C "$TMP_ROOT" -czf /tmp/V1P-0062.baseline.tgz project-handbook
+- set +e; (cd "$PH_ROOT" && npm_config_reporter=silent pnpm make -- onboarding session list) > /tmp/V1P-0062.legacy.stdout.txt; echo $? > /tmp/V1P-0062.legacy.status.txt; set -e
+- rm -rf "$PH_ROOT"; tar -C "$TMP_ROOT" -xzf /tmp/V1P-0062.baseline.tgz
+- set +e; UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache npm_config_reporter=silent uv run ph --root "$PH_ROOT" onboarding session list > /tmp/V1P-0062.ph.stdout.txt; echo $? > /tmp/V1P-0062.ph.status.txt; set -e
+- diff -u /tmp/V1P-0062.legacy.status.txt /tmp/V1P-0062.ph.status.txt
+- diff -u /tmp/V1P-0062.legacy.stdout.txt /tmp/V1P-0062.ph.stdout.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0062.done
+- src/ph/cli.py
+- src/ph/onboarding.py
+- tests/test_onboarding.py
+
+Verification:
+- Parity diffs: both `diff -u /tmp/V1P-0062.*` comparisons returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> onboarding session list` matches legacy `pnpm make -- onboarding session list` for stdout + exit code; parity locked via pytest.
+
+Next task:
+- V1P-0063
+
+Blockers (if blocked):
+- (none)
