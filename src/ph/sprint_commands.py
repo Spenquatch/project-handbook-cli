@@ -13,33 +13,59 @@ def sprint_plan(*, ph_root: Path, ctx: Context, sprint_id: str | None, force: bo
     (sprint_dir / "tasks").mkdir(exist_ok=True)
 
     plan_file = sprint_dir / "plan.md"
-    if not plan_file.exists() or force:
-        plan_file.write_text(
-            create_sprint_plan_template(
-                ph_root=ph_root,
-                ph_data_root=ctx.ph_data_root,
-                scope=ctx.scope,
-                sprint_id=resolved_id,
-                env=env,
-            ),
-            encoding="utf-8",
-        )
-
-    update_current_symlink(ph_data_root=ctx.ph_data_root, sprint_id=resolved_id)
-
     if ctx.scope == "system":
+        if not plan_file.exists() or force:
+            plan_file.write_text(
+                create_sprint_plan_template(
+                    ph_root=ph_root,
+                    ph_data_root=ctx.ph_data_root,
+                    scope=ctx.scope,
+                    sprint_id=resolved_id,
+                    env=env,
+                ),
+                encoding="utf-8",
+            )
+
+        update_current_symlink(ph_data_root=ctx.ph_data_root, sprint_id=resolved_id)
         print("System-scope sprint scaffold ready:")
         print("  1. Edit .project-handbook/system/sprints/current/plan.md with goals, lanes, and integration tasks")
         print("  2. Seed tasks via 'ph --scope system task create --title ... --feature ... --decision ADR-###'")
         print("  3. Re-run 'ph --scope system sprint status' to confirm health + next-up ordering")
         print("  4. Run 'ph --scope system validate --quick' before handing off to another agent")
     else:
+        if plan_file.exists() and not force:
+            print(f"⚠️  Sprint plan already exists (not overwriting): {plan_file}")
+            print("Re-run with --force to regenerate the template.")
+        else:
+            plan_file.write_text(
+                create_sprint_plan_template(
+                    ph_root=ph_root,
+                    ph_data_root=ctx.ph_data_root,
+                    scope=ctx.scope,
+                    sprint_id=resolved_id,
+                    env=env,
+                ),
+                encoding="utf-8",
+            )
+            print(f"Created sprint plan: {plan_file}")
+
+        print("Sprint structure seeded:")
+        print(f"  📁 {sprint_dir}/")
+        print(f"  📁 {sprint_dir}/tasks/ (ready for task creation)")
+        print("Next steps:")
+        print("  1. Edit plan.md with goals, lanes, and integration tasks")
+        print("  2. Create tasks via `make task-create ...`")
+        print("  3. Review `status/current_summary.md` after generating status")
+        print("  4. Re-run `make onboarding session sprint-planning` for facilitation tips")
+
+        update_current_symlink(ph_data_root=ctx.ph_data_root, sprint_id=resolved_id)
+
         print("Sprint scaffold ready:")
         print("  1. Edit sprints/current/plan.md with goals, lanes, and integration tasks")
-        print("  2. Seed tasks via 'ph task create --title ... --feature ... --decision ADR-###'")
-        print("  3. Re-run 'ph sprint status' to confirm health + next-up ordering")
-        print("  4. Run 'ph validate --quick' before handing off to another agent")
-        print("  5. Need facilitation tips? 'ph onboarding session sprint-planning'")
+        print("  2. Seed tasks via 'make task-create title=... feature=... decision=ADR-###'")
+        print("  3. Re-run 'make sprint-status' to confirm health + next-up ordering")
+        print("  4. Run 'make validate-quick' before handing off to another agent")
+        print("  5. Need facilitation tips? 'make onboarding session sprint-planning'")
 
     return 0
 

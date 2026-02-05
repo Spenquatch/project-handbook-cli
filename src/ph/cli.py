@@ -674,6 +674,8 @@ def main(argv: list[str] | None = None) -> int:
                     )
                     exit_code = 2
                 elif args.sprint_command == "plan":
+                    if ctx.scope == "project":
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["sprint-plan"]))
                     exit_code = sprint_plan(
                         ph_root=ph_root,
                         ctx=ctx,

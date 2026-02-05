@@ -202,6 +202,74 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-04 23:41 UTC — V1P-0013 — Parity: `make sprint-plan` → `ph sprint plan`
+
+Agent: GPT-5.2 (Codex CLI background agent via Orchestrator)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable PH_ROOT (rsync copy of legacy repo into `.../project-handbook/`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0013)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- src/ph/sprint.py
+- src/ph/sprint_commands.py
+- src/ph/cli.py
+- tests/test_sprint_plan_open.py
+
+Goal:
+- Achieve strict parity for legacy `pnpm make -- sprint-plan` vs `ph --root <PH_ROOT> sprint plan` (stdout + `sprints/<year>/<SPRINT-...>/plan.md` and `sprints/current`).
+
+Work performed (ordered):
+1. Created a disposable PH_ROOT from the canonical legacy repo (ensuring the directory name is `project-handbook`) and captured legacy stdout + filesystem outputs for `pnpm make -- sprint-plan`.
+2. Captured `ph sprint plan` stdout + filesystem outputs against a clean baseline of the same PH_ROOT and diffed outputs (initial mismatch).
+3. Updated `ph sprint plan` to mirror legacy scaffolding (stdout hints + sprint directory layout + symlink semantics).
+4. Added/updated deterministic pytest coverage for sprint plan/open behaviors.
+5. Re-ran legacy vs `ph` capture + diffs; verified stdout, plan.md content, and `sprints/current` match.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- TMP_ROOT=\"$(mktemp -d -t ph-parity-V1P-0013-root-real-XXXXXXXX)\"
+- PH_ROOT=\"$TMP_ROOT/project-handbook\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- python -c 'import json; from pathlib import Path; p=Path(\"'$PH_ROOT'\")/\"project_handbook.config.json\"; raw=json.loads(p.read_text()); raw[\"repo_root\"]=\".\"; p.write_text(json.dumps(raw, indent=2)+\"\\n\")'
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT\" && tar -cf /tmp/ph-parity-V1P-0013-real-base.tar .)
+- (cd \"$PH_ROOT\" && pnpm make -- sprint-plan) > /tmp/legacy-sprint-plan-stdout.txt
+- uv run ph --root \"$PH_ROOT\" sprint plan > /tmp/ph-sprint-plan-stdout.txt
+- diff -u /tmp/legacy-sprint-plan-stdout.txt /tmp/ph-sprint-plan-stdout.txt
+- diff -u /tmp/legacy-sprint-plan.md /tmp/ph-sprint-plan.md
+- diff -u /tmp/legacy-sprints-current.txt /tmp/ph-sprints-current.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/cli.py
+- src/ph/sprint.py
+- src/ph/sprint_commands.py
+- tests/test_sprint_plan_open.py
+
+Verification:
+- `diff -u /tmp/legacy-sprint-plan-stdout.txt /tmp/ph-sprint-plan-stdout.txt` returned no diff (byte-for-byte match).
+- `diff -u /tmp/legacy-sprint-plan.md /tmp/ph-sprint-plan.md` returned no diff.
+- `diff -u /tmp/legacy-sprints-current.txt /tmp/ph-sprints-current.txt` returned no diff.
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> sprint plan` now matches legacy `pnpm make -- sprint-plan` (stdout + plan.md + sprints/current); parity locked via pytest.
+
+Next task:
+- V1P-0014
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-04 23:16 UTC — V1P-0011 — Parity: `make daily-force` → `ph daily generate --force`
 
 Agent: GPT-5.2 (Codex CLI background agent via Orchestrator)
