@@ -115,12 +115,14 @@ def test_task_list_and_show_match_v0_formatting_rules(tmp_path: Path, scope: str
     assert shown.returncode == 0
     assert shown.stdout.splitlines()[:2] == ["📋 TASK DETAILS: TASK-001", "=" * 50]
     assert any(line.startswith("Title: First task") for line in shown.stdout.splitlines())
+    assert "Release: v9.9.9" in shown.stdout.splitlines()
 
-    expected_location = (
-        ".project-handbook/system/sprints/current/tasks/TASK-001-first"
-        if scope == "system"
-        else "sprints/current/tasks/TASK-001-first"
-    )
+    if scope == "system":
+        expected_location = ".project-handbook/system/sprints/current/tasks/TASK-001-first"
+    else:
+        expected_location = str(
+            (tmp_path / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / "TASK-001-first").resolve()
+        )
     assert f"Location: {expected_location}" in shown.stdout.splitlines()
 
     cmd = ["ph", "--root", str(tmp_path)]
@@ -130,3 +132,30 @@ def test_task_list_and_show_match_v0_formatting_rules(tmp_path: Path, scope: str
     missing = subprocess.run(cmd, capture_output=True, text=True, env=env)
     assert missing.returncode == 1
     assert missing.stdout.strip() == "❌ Task TASK-999 not found"
+
+
+def test_task_show_project_scope_emits_pnpm_make_preamble_when_package_json_present(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _seed_current_sprint_with_tasks(ph_root=tmp_path, scope="project")
+
+    (tmp_path / "package.json").write_text(
+        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
+        encoding="utf-8",
+    )
+
+    env = dict(os.environ)
+    cmd = ["ph", "--root", str(tmp_path), "--no-post-hook", "task", "show", "--id", "TASK-001"]
+    shown = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    assert shown.returncode == 0
+
+    root_display = str(tmp_path.resolve())
+    expected_prefix = "\n".join(
+        [
+            "",
+            f"> project-handbook@0.0.0 make {root_display}",
+            "> make -- task-show id\\=TASK-001",
+            "",
+            "📋 TASK DETAILS: TASK-001",
+        ]
+    )
+    assert shown.stdout.startswith(expected_prefix)
