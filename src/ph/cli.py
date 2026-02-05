@@ -1016,6 +1016,27 @@ def main(argv: list[str] | None = None) -> int:
                     print("Usage: ph parking <add|list|review|promote>\n", file=sys.stderr, end="")
                     exit_code = 2
                 elif args.parking_command == "add":
+                    if ctx.scope == "project":
+                        def _make_var_token(key: str, value: str) -> str:
+                            raw = f"{key}={value}"
+                            if any(ch.isspace() for ch in raw):
+                                return f"'{raw}'"
+                            return raw.replace("=", "\\=", 1)
+
+                        make_args = [
+                            "parking-add",
+                            _make_var_token("type", str(args.parking_type)),
+                            _make_var_token("title", str(args.title)),
+                        ]
+                        if "--desc" in invocation_args and str(getattr(args, "desc", "") or "") != "":
+                            make_args.append(_make_var_token("desc", str(args.desc)))
+                        if "--owner" in invocation_args and str(getattr(args, "owner", "") or "") != "":
+                            make_args.append(_make_var_token("owner", str(args.owner)))
+                        if "--tags" in invocation_args and str(getattr(args, "tags", "") or "") != "":
+                            make_args.append(_make_var_token("tags", str(args.tags)))
+
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
+
                     exit_code = run_parking_add(
                         ctx=ctx,
                         item_type=str(args.parking_type),

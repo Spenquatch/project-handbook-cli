@@ -27,9 +27,9 @@ def run_parking_add(
         return 1
 
     if ctx.scope == "project":
-        print("Parking lot updated → review via 'ph parking list' or 'ph parking review'")
-        print("  - Capture owner/priority inside parking-lot/<type>/ entries if missing")
-        print("  - Promote items with 'ph parking promote' once they graduate to roadmap")
+        print("Parking lot updated → review via 'make parking-list' or 'make parking-review'")
+        print(f"  - Capture owner/priority inside parking-lot/{item_type}/ entries if missing")
+        print("  - Promote items with 'make parking-promote' once they graduate to roadmap")
 
     return 0
 
