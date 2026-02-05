@@ -702,6 +702,8 @@ def main(argv: list[str] | None = None) -> int:
                         sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["sprint-tasks"]))
                     exit_code = run_sprint_tasks(ctx=ctx, sprint=getattr(args, "sprint", None))
                 elif args.sprint_command == "burndown":
+                    if ctx.scope == "project":
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["burndown"]))
                     exit_code = run_sprint_burndown(
                         ph_root=ph_root,
                         ctx=ctx,

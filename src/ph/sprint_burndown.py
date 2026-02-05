@@ -116,5 +116,5 @@ def run_sprint_burndown(*, ph_root: Path, ctx: Context, sprint: str | None, env:
         ),
         encoding="utf-8",
     )
-    print(f"Saved to: {burndown_file}")
+    print(f"\nSaved to: {burndown_file}")
     return 0

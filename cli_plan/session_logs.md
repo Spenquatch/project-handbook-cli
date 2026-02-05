@@ -142,6 +142,75 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 02:04 UTC — V1P-0017 — Parity: `make burndown` → `ph sprint burndown`
+
+Agent: GPT-5.2 (Codex CLI Orchestrator) + background Codex exec
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable PH_ROOT (rsync copy of legacy repo into mktemp)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0017)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- /Users/spensermcconnell/.codex/skills/coding-agent/SKILL.md
+- src/ph/cli.py
+- src/ph/sprint_burndown.py
+- tests/test_sprint_burndown_capacity.py
+
+Goal:
+- Achieve strict parity for legacy `pnpm make -- burndown` vs `ph --root <PH_ROOT> sprint burndown` (stdout + `sprints/<year>/<SPRINT-...>/burndown.md`).
+
+Work performed (ordered):
+1. Spawned a background coding agent scoped to V1P-0017 and ran legacy-vs-`ph` comparisons against a disposable PH_ROOT.
+2. Fixed mismatch: `ph sprint burndown` stdout spacing and preamble did not match legacy; updated burndown stdout to include the legacy blank line before `Saved to:`.
+3. Added deterministic pytest coverage locking the pnpm/make preamble and `Saved to:` spacing, and verified `burndown.md` matches legacy byte-for-byte.
+4. Re-ran legacy vs `ph` capture + diffs; verified byte-for-byte match; ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- TMP_ROOT=\"$(mktemp -d -t ph-parity-V1P-0017-root-real-XXXXXXXX)\"
+- PH_ROOT=\"$TMP_ROOT/project-handbook\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- python - \"$PH_ROOT\" <<'PY'\nimport json\nimport sys\nfrom pathlib import Path\np=Path(sys.argv[1]) / \"project_handbook.config.json\"\nraw=json.loads(p.read_text())\nraw[\"repo_root\"] = \".\"\np.write_text(json.dumps(raw, indent=2) + \"\\n\")\nPY
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT\" && tar -cf /tmp/ph-parity-V1P-0017-base.tar .)
+- (cd \"$PH_ROOT\" && pnpm make -- burndown) > /tmp/legacy-burndown-stdout.txt
+- LEGACY_BURNDOWN_FILE=$(find \"$PH_ROOT/sprints\" -name burndown.md | sort | tail -n 1)
+- cp \"$LEGACY_BURNDOWN_FILE\" /tmp/legacy-burndown.md
+- rm -rf \"$PH_ROOT\" && mkdir -p \"$PH_ROOT\" && tar -xf /tmp/ph-parity-V1P-0017-base.tar -C \"$PH_ROOT\"
+- UV_CACHE_DIR=\"/tmp/uv-cache\" XDG_CACHE_HOME=\"/tmp/xdg-cache\" uv run ph --root \"$PH_ROOT\" sprint burndown > /tmp/ph-burndown-stdout.txt
+- PH_BURNDOWN_FILE=$(find \"$PH_ROOT/sprints\" -name burndown.md | sort | tail -n 1)
+- cp \"$PH_BURNDOWN_FILE\" /tmp/ph-burndown.md
+- diff -u /tmp/legacy-burndown-stdout.txt /tmp/ph-burndown-stdout.txt
+- diff -u /tmp/legacy-burndown.md /tmp/ph-burndown.md
+- UV_CACHE_DIR=\"/tmp/uv-cache\" XDG_CACHE_HOME=\"/tmp/xdg-cache\" uv run ruff check .
+- UV_CACHE_DIR=\"/tmp/uv-cache\" XDG_CACHE_HOME=\"/tmp/xdg-cache\" uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/cli.py
+- src/ph/sprint_burndown.py
+- tests/test_sprint_burndown_capacity.py
+
+Verification:
+- `diff -u /tmp/legacy-burndown-stdout.txt /tmp/ph-burndown-stdout.txt` returned no diff (byte-for-byte match).
+- `diff -u /tmp/legacy-burndown.md /tmp/ph-burndown.md` returned no diff.
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> sprint burndown` now matches legacy `pnpm make -- burndown` (stdout + burndown.md); parity locked via pytest.
+
+Next task:
+- V1P-0018
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-05 01:42 UTC — V1P-0016 — Parity: `make sprint-tasks` → `ph sprint tasks`
 
 Agent: GPT-5.2 (Codex CLI Orchestrator) + background Codex exec

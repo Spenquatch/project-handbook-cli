@@ -367,7 +367,10 @@
       "phase_id": "PHASE-P03",
       "order": 5,
       "title": "Parity: `make burndown` \u2192 `ph sprint burndown`",
-      "status": "todo",
+      "status": "done",
+      "started_at": "2026-02-05T02:04:23Z",
+      "completed_at": "2026-02-05T02:13:55Z",
+      "next_task_id": "V1P-0018",
       "depends_on": [],
       "work_location": "cli_repo",
       "kickoff_prompt": "Goal: strict parity for: `make burndown` \u2192 `ph sprint burndown`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Sprint (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `sprints/current` exists\n- Command: `ph --root <PH_ROOT> sprint burndown`\n- Outputs to verify: `sprints/<year>/<SPRINT-...>/burndown.md`\n"

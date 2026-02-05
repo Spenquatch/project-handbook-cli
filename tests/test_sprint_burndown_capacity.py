@@ -26,6 +26,13 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
     (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
+def _write_package_json(ph_root: Path) -> None:
+    (ph_root / "package.json").write_text(
+        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
+        encoding="utf-8",
+    )
+
+
 @pytest.mark.parametrize(
     ("scope", "base_rel"),
     [
@@ -62,3 +69,26 @@ def test_sprint_burndown_writes_burndown_md_under_scope(tmp_path: Path, scope: s
     capacity = subprocess.run(cmd, capture_output=True, text=True, env=env)
     assert capacity.returncode == 0
     assert capacity.stdout.strip()
+
+
+def test_sprint_burndown_stdout_matches_make_preamble_and_spacing(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _write_package_json(tmp_path)
+    env = dict(os.environ)
+    env["PH_FAKE_TODAY"] = "2099-01-02"
+
+    cmd = ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "plan", "--sprint", "SPRINT-2099-01-01"]
+    planned = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    assert planned.returncode == 0
+
+    cmd = ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "burndown"]
+    result = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    assert result.returncode == 0
+
+    expected_prefix = (
+        f"\n> project-handbook@0.0.0 make {tmp_path.resolve()}\n> make -- burndown\n\n"
+    )
+    assert result.stdout.startswith(expected_prefix)
+
+    saved_path = (tmp_path / "sprints" / "2099" / "SPRINT-2099-01-01" / "burndown.md").resolve()
+    assert result.stdout.endswith(f"\n\nSaved to: {saved_path}\n")
