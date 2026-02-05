@@ -904,6 +904,10 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 elif args.feature_command == "update-status":
+                    if ctx.scope == "project":
+                        sys.stdout.write(
+                            _format_pnpm_make_preamble(ph_root=ph_root, make_args=["feature-update-status"])
+                        )
                     exit_code = run_feature_update_status(ctx=ctx, env=os.environ)
                 elif args.feature_command == "summary":
                     exit_code = run_feature_summary(ctx=ctx, env=os.environ)

@@ -76,7 +76,7 @@ def collect_all_sprint_tasks(*, sprints_dir: Path) -> dict[str, list[dict[str, o
     return tasks_by_feature
 
 
-def calculate_feature_metrics(*, tasks: list[dict[str, object]], env: dict[str, str]) -> dict[str, object]:
+def calculate_feature_metrics(*, tasks: list[dict[str, object]]) -> dict[str, object]:
     if not tasks:
         return {}
 
@@ -115,26 +115,24 @@ def calculate_feature_metrics(*, tasks: list[dict[str, object]], env: dict[str, 
 
     remaining_points = total_points - completed_points
     avg_velocity = 21
-    estimated_sprints = max(1, remaining_points // avg_velocity)
-
-    today = clock_today(env=env)
-    week_num = today.isocalendar()[1]
-    estimated_completion_week = week_num + estimated_sprints
-    year = today.year
-    estimated_sprint = f"SPRINT-{year}-W{estimated_completion_week:02d}"
+    if remaining_points <= 0:
+        estimated_completion: object = "Complete"
+    else:
+        estimated_sprints = max(1, (remaining_points + avg_velocity - 1) // avg_velocity)
+        estimated_completion = f"~{estimated_sprints} sprint(s)"
 
     return {
         "total_points": total_points,
         "completed_points": completed_points,
         "completion_percentage": completion_percentage,
         "remaining_points": remaining_points,
-        "estimated_completion": estimated_sprint,
+        "estimated_completion": estimated_completion,
         "avg_velocity": avg_velocity,
         "by_status": by_status,
     }
 
 
-def get_current_sprint(*, ph_data_root: Path, env: dict[str, str]) -> str:
+def get_current_sprint(*, ph_data_root: Path) -> str:
     current_path = ph_data_root / "sprints" / "current"
     try:
         if current_path.exists():
@@ -144,10 +142,19 @@ def get_current_sprint(*, ph_data_root: Path, env: dict[str, str]) -> str:
     except Exception:
         pass
 
-    today = clock_today(env=env)
-    week_num = today.isocalendar()[1]
-    year = today.year
-    return f"SPRINT-{year}-W{week_num:02d}"
+    best_sprint: str | None = None
+    best_mtime = -1.0
+    for sprint_dir in iter_sprint_dirs(sprints_dir=ph_data_root / "sprints"):
+        plan_path = sprint_dir / "plan.md"
+        try:
+            mtime = plan_path.stat().st_mtime if plan_path.exists() else sprint_dir.stat().st_mtime
+        except Exception:
+            continue
+        if mtime > best_mtime:
+            best_mtime = mtime
+            best_sprint = sprint_dir.name
+
+    return best_sprint or "UNKNOWN"
 
 
 def format_active_work_section(
@@ -158,7 +165,7 @@ def format_active_work_section(
     metrics: dict[str, object],
     env: dict[str, str],
 ) -> str:
-    current_sprint = get_current_sprint(ph_data_root=ph_data_root, env=env)
+    current_sprint = get_current_sprint(ph_data_root=ph_data_root)
 
     current_tasks = [t for t in tasks if t.get("sprint") == current_sprint]
     recent_completed = [t for t in tasks if t.get("status") == "done"][-5:]
@@ -235,7 +242,7 @@ def update_feature_status_file(
 
     try:
         content = status_file.read_text(encoding="utf-8")
-        metrics = calculate_feature_metrics(tasks=tasks, env=env)
+        metrics = calculate_feature_metrics(tasks=tasks)
 
         manual_lines: list[str] = []
         for line in content.splitlines():
@@ -291,9 +298,9 @@ def show_feature_summary(*, ph_data_root: Path, env: dict[str, str]) -> int:
         if feature == "unknown":
             continue
 
-        metrics = calculate_feature_metrics(tasks=tasks, env=env)
+        metrics = calculate_feature_metrics(tasks=tasks)
 
-        current_sprint = get_current_sprint(ph_data_root=ph_data_root, env=env)
+        current_sprint = get_current_sprint(ph_data_root=ph_data_root)
         current_tasks = len([t for t in tasks if t.get("sprint") == current_sprint])
 
         if metrics["completion_percentage"] >= 90:

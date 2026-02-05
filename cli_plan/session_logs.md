@@ -142,6 +142,93 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 11:24 UTC — V1P-0028 — Parity: `make feature-update-status` → `ph feature update-status`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created under `$TMPDIR`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0028)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `make feature-update-status` → `ph feature update-status` (stdout + updated feature status artifacts under `features/**/status.md`).
+
+Work performed (ordered):
+1. Captured legacy stdout + `features/**/status.md` outputs for `pnpm make -- feature-update-status` against a disposable `PH_ROOT`.
+2. Captured `ph` stdout + `features/**/status.md` outputs for `uv run ph --root <PH_ROOT> feature update-status` against the same baseline and diffed (initial mismatch: status updater logic drift + missing pnpm/make preamble).
+3. Updated the `ph` implementation to match legacy and added deterministic pytest coverage for the output preamble + status updater behavior (estimated completion strings + current sprint fallback).
+4. Re-ran legacy-vs-`ph` capture + diff; verified byte-for-byte match for stdout and for the sha256 lists of all `features/**/status.md`.
+5. Ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- TMP_ROOT=\"$(mktemp -d -t ph-parity-V1P-0028-root-real-XXXXXXXX)\"
+- PH_ROOT=\"$TMP_ROOT/project-handbook\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT\" && tar -cf /tmp/ph-parity-V1P-0028-base.tar .)
+- (cd \"$PH_ROOT\" && pnpm make -- feature-update-status) > /tmp/V1P-0028.legacy.stdout.txt
+- python - <<PY
+import hashlib
+from pathlib import Path
+root = Path(\"$PH_ROOT\")
+paths = sorted(p.relative_to(root).as_posix() for p in root.glob('features/**/status.md'))
+out = []
+for rel in paths:
+    data = (root / rel).read_bytes()
+    out.append(f\"{rel}\\t{hashlib.sha256(data).hexdigest()}\")
+Path('/tmp/V1P-0028.legacy.features-status.sha256.txt').write_text(\"\\n\".join(out) + (\"\\n\" if out else \"\"))
+PY
+- rm -rf \"$PH_ROOT\" && mkdir -p \"$PH_ROOT\" && tar -xf /tmp/ph-parity-V1P-0028-base.tar -C \"$PH_ROOT\"
+- export UV_CACHE_DIR=/tmp/uv-cache
+- mkdir -p \"$UV_CACHE_DIR\"
+- uv run ph --root \"$PH_ROOT\" feature update-status > /tmp/V1P-0028.ph.stdout.txt
+- python - <<PY
+import hashlib
+from pathlib import Path
+root = Path(\"$PH_ROOT\")
+paths = sorted(p.relative_to(root).as_posix() for p in root.glob('features/**/status.md'))
+out = []
+for rel in paths:
+    data = (root / rel).read_bytes()
+    out.append(f\"{rel}\\t{hashlib.sha256(data).hexdigest()}\")
+Path('/tmp/V1P-0028.ph.features-status.sha256.txt').write_text(\"\\n\".join(out) + (\"\\n\" if out else \"\"))
+PY
+- diff -u /tmp/V1P-0028.legacy.stdout.txt /tmp/V1P-0028.ph.stdout.txt
+- diff -u /tmp/V1P-0028.legacy.features-status.sha256.txt /tmp/V1P-0028.ph.features-status.sha256.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0028.done
+- src/ph/cli.py
+- src/ph/feature_status_updater.py
+- tests/test_feature_update_status_parity_v1p0028.py
+
+Verification:
+- `diff -u /tmp/V1P-0028.legacy.stdout.txt /tmp/V1P-0028.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `diff -u /tmp/V1P-0028.legacy.features-status.sha256.txt /tmp/V1P-0028.ph.features-status.sha256.txt` returned no diff (all `features/**/status.md` hashes match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 160 tests)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> feature update-status` now matches legacy `pnpm make -- feature-update-status` for stdout and for `features/**/status.md`; parity locked via pytest.
+
+Next task:
+- V1P-0029
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-05 05:12 UTC — V1P-0027 — Parity: `make feature-status` → `ph feature status`
 
 Agent: GPT-5.2 (Orchestrator + background Codex CLI)
