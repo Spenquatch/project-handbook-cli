@@ -1164,13 +1164,24 @@ def main(argv: list[str] | None = None) -> int:
                     sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["pre-exec-lint"]))
                     exit_code = run_pre_exec_lint(ctx=ctx)
                 elif args.pre_exec_command == "audit":
+                    make_args = ["pre-exec-audit"]
+                    sprint = getattr(args, "sprint", None)
+                    date = getattr(args, "date", None)
+                    evidence_dir = getattr(args, "evidence_dir", None)
+                    if sprint:
+                        make_args.append(f"sprint\\={sprint}")
+                    if date:
+                        make_args.append(f"date\\={date}")
+                    if evidence_dir:
+                        make_args.append(f"evidence_dir\\={evidence_dir}")
+                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
                     try:
                         exit_code = run_pre_exec_audit(
                             ph_root=ph_root,
                             ctx=ctx,
-                            sprint=getattr(args, "sprint", None),
-                            date=getattr(args, "date", None),
-                            evidence_dir=getattr(args, "evidence_dir", None),
+                            sprint=sprint,
+                            date=date,
+                            evidence_dir=evidence_dir,
                         )
                     except PreExecError as exc:
                         print(f"\n❌ PRE-EXEC AUDIT FAILED: {exc}")

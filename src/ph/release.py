@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 from pathlib import Path
+from typing import Any
 
 from .clock import today as clock_today
 from .context import Context
@@ -103,6 +104,16 @@ def calculate_sprint_range(*, start_sprint: str, sprint_count: int, explicit: li
 
     parts = start_sprint.split("-")
     sprint_ids: list[str] = []
+
+    if len(parts) == 3 and parts[1] == "SEQ" and parts[2].isdigit():
+        base = int(parts[2])
+        width = len(parts[2])
+        for i in range(sprint_count):
+            if i == 0:
+                sprint_ids.append(start_sprint)
+            else:
+                sprint_ids.append(f"SPRINT-SEQ-{base + i:0{width}d}")
+        return sprint_ids
 
     if len(parts) >= 3 and parts[2].startswith("W"):
         year = int(parts[1])
@@ -537,6 +548,434 @@ def parse_plan_front_matter(*, plan_path: Path) -> dict[str, object]:
     return meta
 
 
+def parse_int(value: object) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        raw = value.strip()
+        if not raw:
+            return None
+        if raw.isdigit():
+            try:
+                return int(raw)
+            except Exception:
+                return None
+    return None
+
+
+def parse_slot_list(value: object, fallback_count: int) -> list[int]:
+    """Return a stable 1-based list of sprint slots for a release timeline."""
+    if isinstance(value, list) and value:
+        slots: list[int] = []
+        for item in value:
+            parsed = parse_int(item)
+            if parsed is not None:
+                slots.append(parsed)
+        if slots:
+            return slots
+    count = max(0, int(fallback_count or 0))
+    return list(range(1, count + 1))
+
+
+def parse_sprint_plan_front_matter(*, plan_path: Path) -> dict[str, object]:
+    return parse_plan_front_matter(plan_path=plan_path)
+
+
+def sprint_plan_release_slot(*, sprint_dir: Path) -> int | None:
+    meta = parse_sprint_plan_front_matter(plan_path=sprint_dir / "plan.md")
+    return parse_int(meta.get("release_sprint_slot"))
+
+
+def normalize_version(version: str) -> str:
+    if not version:
+        return version
+    return version if version.startswith("v") else f"v{version}"
+
+
+def sprint_plan_release_version(*, sprint_dir: Path) -> str | None:
+    meta = parse_sprint_plan_front_matter(plan_path=sprint_dir / "plan.md")
+    raw = meta.get("release")
+    if not isinstance(raw, str):
+        return None
+    value = raw.strip()
+    if not value or value.lower() in {"null", "none"}:
+        return None
+    return normalize_version(value)
+
+
+def iter_sprint_dirs(*, sprints_dir: Path) -> list[Path]:
+    dirs: list[Path] = []
+    if not sprints_dir.exists():
+        return dirs
+
+    for year_dir in sprints_dir.iterdir():
+        if not year_dir.is_dir() or year_dir.name == "current":
+            continue
+
+        if year_dir.name == "archive":
+            for archived_year_dir in year_dir.iterdir():
+                if not archived_year_dir.is_dir():
+                    continue
+                for sprint_dir in archived_year_dir.iterdir():
+                    if sprint_dir.is_dir() and sprint_dir.name.startswith("SPRINT-"):
+                        dirs.append(sprint_dir)
+            continue
+
+        for sprint_dir in year_dir.iterdir():
+            if sprint_dir.is_dir() and sprint_dir.name.startswith("SPRINT-"):
+                dirs.append(sprint_dir)
+
+    dirs.sort(key=lambda p: p.name)
+    return dirs
+
+
+def is_sprint_archived(*, ph_root: Path, sprint_id: str) -> bool:
+    archive_dir = ph_root / "sprints" / "archive"
+    if not archive_dir.exists():
+        return False
+    for path in archive_dir.rglob(sprint_id):
+        if path.is_dir() and path.name == sprint_id:
+            return True
+    return False
+
+
+def parse_task_yaml(*, task_yaml: Path) -> dict[str, Any]:
+    try:
+        content = task_yaml.read_text(encoding="utf-8")
+    except Exception:
+        return {}
+
+    data: dict[str, Any] = {}
+    current_key: str | None = None
+    collecting_list = False
+    for raw in content.splitlines():
+        line = raw.rstrip()
+        if not line.strip() or line.strip().startswith("#"):
+            continue
+        if collecting_list and current_key and line.strip().startswith("-"):
+            data.setdefault(current_key, []).append(line.strip()[1:].strip())
+            continue
+        collecting_list = False
+        if ":" not in line or line.strip().startswith("-"):
+            continue
+        key, value = line.split(":", 1)
+        key = key.strip()
+        value = value.strip()
+        current_key = key
+        if value == "":
+            data[key] = []
+            collecting_list = True
+            continue
+        if value.startswith("[") and value.endswith("]"):
+            inner = value[1:-1].strip()
+            if not inner:
+                data[key] = []
+            else:
+                items = [item.strip().strip("\"'") for item in inner.split(",")]
+                data[key] = [item for item in items if item]
+            continue
+        if value.lower() in {"true", "false"}:
+            data[key] = value.lower() == "true"
+            continue
+        if value.isdigit():
+            data[key] = int(value)
+            continue
+        data[key] = value
+    return data
+
+
+def task_matches_release(*, task: dict[str, Any], version: str) -> bool:
+    version = normalize_version(version)
+
+    val = task.get("release")
+    if isinstance(val, str):
+        raw = val.strip()
+        if raw.lower() in {"", "null", "none"}:
+            return False
+        if raw.lower() == "current":
+            return True
+        return normalize_version(raw) == version
+    if isinstance(val, list):
+        for item in val:
+            if not isinstance(item, str):
+                continue
+            raw = item.strip()
+            if not raw or raw.lower() in {"null", "none"}:
+                continue
+            if raw.lower() == "current":
+                return True
+            if normalize_version(raw) == version:
+                return True
+    return False
+
+
+def collect_release_tagged_tasks(*, ph_root: Path, version: str) -> list[dict[str, Any]]:
+    version = normalize_version(version)
+    tagged: list[dict[str, Any]] = []
+
+    for sprint_dir in iter_sprint_dirs(sprints_dir=ph_root / "sprints"):
+        tasks_dir = sprint_dir / "tasks"
+        if not tasks_dir.exists():
+            continue
+
+        for task_dir in tasks_dir.iterdir():
+            if not task_dir.is_dir():
+                continue
+            task_yaml = task_dir / "task.yaml"
+            if not task_yaml.exists():
+                continue
+
+            task = parse_task_yaml(task_yaml=task_yaml)
+            task.setdefault("id", task_dir.name.split("-", 1)[0])
+            task.setdefault("title", task_dir.name)
+            task.setdefault("feature", "unknown")
+            task["sprint"] = sprint_dir.name
+            task["directory"] = task_dir.name
+
+            if task_matches_release(task=task, version=version):
+                tagged.append(task)
+
+    def sort_key(t: dict[str, Any]) -> tuple[str, str]:
+        return (str(t.get("sprint", "")), str(t.get("id", "")))
+
+    tagged.sort(key=sort_key)
+    return tagged
+
+
+def summarize_tagged_tasks(*, tasks: list[dict[str, Any]], sprint_timeline: list[str] | None = None) -> dict[str, Any]:
+    sprint_set = set(sprint_timeline or [])
+    points_total = 0
+    points_done = 0
+    by_status: dict[str, int] = {"todo": 0, "doing": 0, "review": 0, "done": 0, "blocked": 0, "other": 0}
+    features: set[str] = set()
+    in_timeline = 0
+    out_of_timeline = 0
+
+    gates_total = 0
+    gates_done = 0
+    gates_in_timeline = 0
+    gates_done_in_timeline = 0
+
+    for task in tasks:
+        status = str(task.get("status", "todo")).strip().lower()
+        if status not in by_status:
+            by_status["other"] += 1
+        else:
+            by_status[status] += 1
+
+        try:
+            points = int(task.get("story_points", 0) or 0)
+        except Exception:
+            points = 0
+        points_total += points
+        if status in {"done", "completed"}:
+            points_done += points
+
+        feature = str(task.get("feature", "unknown")).strip()
+        if feature:
+            features.add(feature)
+
+        sprint = str(task.get("sprint", "")).strip()
+        is_in_timeline = bool(sprint and sprint_set and sprint in sprint_set)
+        if sprint_set:
+            if is_in_timeline:
+                in_timeline += 1
+            else:
+                out_of_timeline += 1
+
+        is_gate = bool(task.get("release_gate") is True) or str(task.get("release_gate", "")).strip().lower() in {
+            "true",
+            "yes",
+            "1",
+        }
+        if is_gate:
+            gates_total += 1
+            if status in {"done", "completed"}:
+                gates_done += 1
+            if is_in_timeline:
+                gates_in_timeline += 1
+                if status in {"done", "completed"}:
+                    gates_done_in_timeline += 1
+
+    completion = int(points_done * 100 / points_total) if points_total > 0 else 0
+    return {
+        "tasks_total": len(tasks),
+        "points_total": points_total,
+        "points_done": points_done,
+        "completion": completion,
+        "by_status": by_status,
+        "features_touched": sorted(features),
+        "in_timeline": in_timeline,
+        "out_of_timeline": out_of_timeline,
+        "gates_total": gates_total,
+        "gates_done": gates_done,
+        "gates_in_timeline": gates_in_timeline,
+        "gates_done_in_timeline": gates_done_in_timeline,
+    }
+
+
+def calculate_release_readiness(*, progress: dict[str, object]) -> str:
+    avg = progress.get("avg_completion", 0) or 0
+    critical_path_complete = bool(progress.get("critical_path_complete", False))
+
+    try:
+        avg_int = int(avg)  # type: ignore[arg-type]
+    except Exception:
+        avg_int = 0
+
+    if avg_int >= 90 and critical_path_complete:
+        return "🟢 GREEN - Ready to ship"
+    if critical_path_complete:
+        return "🟡 YELLOW - Not ready yet (scope remaining)"
+    return "🔴 RED - Critical path incomplete"
+
+
+def calculate_release_trajectory(
+    *, progress: dict[str, object], current_sprint_index: int | None, sprint_count: int
+) -> tuple[str, tuple[int, int] | None]:
+    """
+    Trajectory is timeline-aware (sprint index), not "are we already done?".
+    Returns (label, expected_range).
+    """
+    avg = progress.get("avg_completion", 0) or 0
+    critical_path_started = bool(progress.get("critical_path_started", True))
+
+    try:
+        avg_int = int(avg)  # type: ignore[arg-type]
+    except Exception:
+        avg_int = 0
+
+    if not current_sprint_index or sprint_count <= 0:
+        return ("🟡 YELLOW - No timeline position (current sprint not in release timeline)", None)
+
+    expected_min = int(100 * (current_sprint_index - 1) / sprint_count)
+    expected_max = int(100 * current_sprint_index / sprint_count)
+
+    if current_sprint_index >= 2 and not critical_path_started:
+        return (f"🔴 RED - Critical path not started by Sprint {current_sprint_index}", (expected_min, expected_max))
+
+    if avg_int < expected_min - 10:
+        return (f"🔴 RED - Behind expected completion for Sprint {current_sprint_index}", (expected_min, expected_max))
+    if avg_int < expected_min:
+        return (
+            f"🟡 YELLOW - Slightly behind expected completion for Sprint {current_sprint_index}",
+            (expected_min, expected_max),
+        )
+    if avg_int > expected_max + 10:
+        return (
+            f"🟢 GREEN - Ahead of expected completion for Sprint {current_sprint_index}",
+            (expected_min, expected_max),
+        )
+    return (f"🟢 GREEN - On track for Sprint {current_sprint_index}", (expected_min, expected_max))
+
+
+def get_release_timeline_info(*, ph_root: Path, version: str) -> dict[str, object]:
+    """Return release timeline + current sprint position (if available)."""
+    version = normalize_version(version)
+    release_dir = ph_root / "releases" / version
+    plan_file = release_dir / "plan.md"
+
+    sprint_count_default = 3
+    current_sprint = _resolve_current_sprint_id(ph_root=ph_root, fallback="UNKNOWN")
+    start_sprint_default = current_sprint
+
+    plan_meta = parse_plan_front_matter(plan_path=plan_file)
+    planned_sprints = sprint_count_default
+    if plan_meta:
+        maybe = parse_int(plan_meta.get("planned_sprints"))
+        if maybe is not None and maybe > 0:
+            planned_sprints = maybe
+
+    timeline_mode: str | None = None
+    if plan_meta:
+        raw_mode = plan_meta.get("timeline_mode")
+        if isinstance(raw_mode, str):
+            timeline_mode = raw_mode.strip().lower()
+
+    has_slot_config = bool(
+        plan_meta and ("sprint_slots" in plan_meta or timeline_mode in {"slots", "sprint-slots", "sprint_slots"})
+    )
+    if has_slot_config:
+        slots = parse_slot_list(plan_meta.get("sprint_slots") if plan_meta else None, planned_sprints)
+
+        assignments: dict[int, str] = {}
+        duplicates: dict[int, list[str]] = {}
+
+        for sprint_dir in iter_sprint_dirs(sprints_dir=ph_root / "sprints"):
+            sprint_release = sprint_plan_release_version(sprint_dir=sprint_dir)
+            if sprint_release != version:
+                continue
+            slot = sprint_plan_release_slot(sprint_dir=sprint_dir)
+            if slot is None:
+                continue
+            sprint_id = sprint_dir.name
+            if slot in assignments and assignments[slot] != sprint_id:
+                duplicates.setdefault(slot, [assignments[slot]]).append(sprint_id)
+                continue
+            assignments[slot] = sprint_id
+
+        sprint_ids: list[str] = [assignments[slot] for slot in slots if slot in assignments]
+
+        current_slot: int | None = None
+        for slot, sprint_id in assignments.items():
+            if sprint_id == current_sprint:
+                current_slot = slot
+                break
+
+        current_index: int | None = None
+        if current_slot is not None and current_slot in slots:
+            current_index = slots.index(current_slot) + 1
+
+        return {
+            "timeline_mode": "sprint_slots",
+            "planned_sprints": len(slots),
+            "sprint_slots": slots,
+            "slot_assignments": assignments,
+            "slot_duplicates": duplicates,
+            "sprint_ids": sprint_ids,
+            "current_sprint": current_sprint,
+            "current_sprint_slot": current_slot,
+            "current_sprint_index": current_index,
+        }
+
+    start_sprint = start_sprint_default
+    sprint_timeline: list[str] = []
+    if plan_meta:
+        raw = plan_meta.get("start_sprint")
+        if isinstance(raw, str) and raw.strip():
+            start_sprint = raw.strip()
+        explicit_timeline = plan_meta.get("sprint_ids")
+        if isinstance(explicit_timeline, list) and explicit_timeline:
+            sprint_timeline = calculate_sprint_range(
+                start_sprint=start_sprint,
+                sprint_count=len(explicit_timeline),
+                explicit=[str(item) for item in explicit_timeline if str(item)],
+            )
+            planned_sprints = len(sprint_timeline)
+        else:
+            sprint_timeline = calculate_sprint_range(
+                start_sprint=start_sprint,
+                sprint_count=planned_sprints,
+                explicit=None,
+            )
+    else:
+        sprint_timeline = calculate_sprint_range(start_sprint=start_sprint, sprint_count=planned_sprints, explicit=None)
+
+    current_index = None
+    if current_sprint in sprint_timeline:
+        current_index = sprint_timeline.index(current_sprint) + 1
+
+    return {
+        "timeline_mode": "sprint_ids",
+        "planned_sprints": planned_sprints,
+        "sprint_ids": sprint_timeline,
+        "current_sprint": current_sprint,
+        "current_sprint_index": current_index,
+    }
+
+
 def load_release_features(*, ph_root: Path, version: str) -> dict[str, dict[str, object]]:
     if not version.startswith("v"):
         version = f"v{version}"
@@ -597,22 +1036,29 @@ def calculate_release_progress(
     tasks_by_feature = collect_all_sprint_tasks(sprints_dir=ph_root / "sprints")
 
     feature_completions: dict[str, int] = {}
+    feature_started: dict[str, bool] = {}
     for feature_name in features.keys():
         tasks = tasks_by_feature.get(feature_name)
         if tasks:
-            metrics = calculate_feature_metrics(tasks=tasks, env=env)
+            metrics = calculate_feature_metrics(tasks=tasks)
             raw = metrics.get("completion_percentage", 0)
             try:
                 feature_completions[feature_name] = int(raw)  # type: ignore[arg-type]
             except Exception:
                 feature_completions[feature_name] = 0
+            by_status = metrics.get("by_status") or {}
+            started = bool(by_status.get("done") or by_status.get("doing") or by_status.get("review"))  # type: ignore[truthy-bool]
+            feature_started[feature_name] = started
         else:
             feature_completions[feature_name] = 0
+            feature_started[feature_name] = False
 
     total_features = len(features)
     completed_features = 0
     total_completion = 0
     critical_path_complete = True
+    critical_path_started = True
+    started_features = 0
 
     for feature_name, feature_data in features.items():
         completion = feature_completions.get(feature_name, 0)
@@ -624,23 +1070,20 @@ def calculate_release_progress(
         if bool(feature_data.get("critical_path")) and completion < 90:
             critical_path_complete = False
 
-    avg_completion = total_completion // total_features if total_features > 0 else 0
+        if feature_started.get(feature_name, False):
+            started_features += 1
+        if bool(feature_data.get("critical_path")) and not feature_started.get(feature_name, False):
+            critical_path_started = False
 
-    if avg_completion >= 90 and critical_path_complete:
-        health = "🟢 GREEN - Ready for release"
-    elif avg_completion >= 70 and critical_path_complete:
-        health = "🟡 YELLOW - On track"
-    elif critical_path_complete:
-        health = "🟡 YELLOW - Some features behind"
-    else:
-        health = "🔴 RED - Critical path at risk"
+    avg_completion = total_completion // total_features if total_features > 0 else 0
 
     return {
         "total_features": total_features,
         "completed_features": completed_features,
         "avg_completion": avg_completion,
         "critical_path_complete": critical_path_complete,
-        "health": health,
+        "critical_path_started": critical_path_started,
+        "started_features": started_features,
         "feature_completions": feature_completions,
     }
 
@@ -694,45 +1137,94 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
 
     features = load_release_features(ph_root=ctx.ph_root, version=version)
     progress = calculate_release_progress(ph_root=ctx.ph_root, version=version, features=features, env=env)
+    readiness = calculate_release_readiness(progress=progress)
 
-    plan_file = release_dir / "plan.md"
-    sprint_count = 3
-    start_sprint = _resolve_current_sprint_id(ph_root=ctx.ph_root, fallback=f"SPRINT-{clock_today(env=env):%Y-%m-%d}")
+    timeline = get_release_timeline_info(ph_root=ctx.ph_root, version=version)
+    sprint_count = int(timeline.get("planned_sprints") or 3)
+    sprint_timeline = timeline.get("sprint_ids") or []
+    if not isinstance(sprint_timeline, list):
+        sprint_timeline = []
+    sprint_timeline = [str(item) for item in sprint_timeline if str(item)]
+    current_sprint = str(
+        timeline.get("current_sprint") or _resolve_current_sprint_id(ph_root=ctx.ph_root, fallback="UNKNOWN")
+    )
+    current_sprint_index = timeline.get("current_sprint_index")
+    if not isinstance(current_sprint_index, int):
+        current_sprint_index = None
+    timeline_mode = str(timeline.get("timeline_mode") or "sprint_ids").strip().lower()
 
-    plan_meta = parse_plan_front_matter(plan_path=plan_file)
-    if plan_meta:
-        try:
-            sprint_count = int(plan_meta.get("planned_sprints", sprint_count))  # type: ignore[arg-type]
-        except Exception:
-            pass
-        start_sprint = str(plan_meta.get("start_sprint", start_sprint))
-        explicit_timeline = plan_meta.get("sprint_ids")
-        if isinstance(explicit_timeline, list):
-            sprint_timeline = calculate_sprint_range(
-                start_sprint=start_sprint,
-                sprint_count=len(explicit_timeline),
-                explicit=[str(item) for item in explicit_timeline if str(item)],
-            )
-            sprint_count = len(sprint_timeline)
-        else:
-            sprint_timeline = calculate_sprint_range(
-                start_sprint=start_sprint, sprint_count=sprint_count, explicit=None
-            )
+    if timeline_mode == "sprint_slots":
+        current_slot = timeline.get("current_sprint_slot")
+        slot_suffix = f" (slot {current_slot})" if current_slot else ""
+        current_sprint_label = (
+            f"{current_sprint_index} of {sprint_count}{slot_suffix}"
+            if current_sprint_index
+            else f"n/a of {sprint_count}"
+        )
+        target = f"Slot {sprint_count}"
     else:
-        sprint_timeline = calculate_sprint_range(start_sprint=start_sprint, sprint_count=sprint_count, explicit=None)
+        current_sprint_label = (
+            f"{current_sprint_index} of {sprint_count}" if current_sprint_index else f"n/a of {sprint_count}"
+        )
+        target = sprint_timeline[-1] if sprint_timeline else "TBD"
 
-    current_sprint = _resolve_current_sprint_id(ph_root=ctx.ph_root, fallback=start_sprint)
-    try:
-        current_sprint_index = sprint_timeline.index(current_sprint) + 1
-    except ValueError:
-        current_sprint_index = 1
+    trajectory, expected_range = calculate_release_trajectory(
+        progress=progress, current_sprint_index=current_sprint_index, sprint_count=sprint_count
+    )
+
+    tagged_tasks = collect_release_tagged_tasks(ph_root=ctx.ph_root, version=version)
+    tagged_summary = summarize_tagged_tasks(tasks=tagged_tasks, sprint_timeline=sprint_timeline)
+    tagged_progress: dict[str, object] = {
+        "avg_completion": tagged_summary.get("completion", 0),
+        "critical_path_started": True,
+    }
+    tagged_trajectory, tagged_expected_range = calculate_release_trajectory(
+        progress=tagged_progress, current_sprint_index=current_sprint_index, sprint_count=sprint_count
+    )
 
     print(f"📦 RELEASE STATUS: {version}")
     print("=" * 60)
-    print(f"Sprint: {current_sprint_index} of {sprint_count} ({current_sprint})")
-    print(f"Overall Progress: {progress.get('avg_completion', 0)}% complete")
-    print(f"Target: {sprint_timeline[-1] if sprint_timeline else 'TBD'}")
-    print(f"Release Health: {progress.get('health', 'Unknown')}")
+    print(f"Sprint: {current_sprint_label} ({current_sprint})")
+    print(
+        f"Overall Progress: {progress.get('avg_completion', 0)}% complete "
+        f"({progress.get('started_features', 0)}/{progress.get('total_features', 0)} features started)"
+    )
+    print(f"Target: {target}")
+    print(f"Release Trajectory: {trajectory}")
+    if expected_range and current_sprint_index:
+        print(
+            f"  Expected completion band: {expected_range[0]}–{expected_range[1]}% "
+            f"by end of Sprint {current_sprint_index}/{sprint_count}"
+        )
+    if tagged_summary.get("tasks_total"):
+        features_touched = tagged_summary.get("features_touched") or []
+        features_count = len(features_touched)
+        print(
+            "Tagged Workstream: "
+            f"{tagged_summary.get('completion', 0)}% "
+            f"({tagged_summary.get('points_done', 0)}/{tagged_summary.get('points_total', 0)} pts) "
+            f"across {tagged_summary.get('tasks_total', 0)} tasks ({features_count} features)"
+        )
+        print(f"Tagged Trajectory: {tagged_trajectory}")
+        if tagged_expected_range and current_sprint_index:
+            print(
+                f"  Expected completion band: {tagged_expected_range[0]}–{tagged_expected_range[1]}% "
+                f"by end of Sprint {current_sprint_index}/{sprint_count}"
+            )
+        if sprint_timeline:
+            out_of_timeline = int(tagged_summary.get("out_of_timeline") or 0)
+            if out_of_timeline:
+                print(f"  ⚠️  {out_of_timeline} tagged task(s) are outside the release sprint timeline")
+        gates_total = int(tagged_summary.get("gates_total") or 0)
+        if gates_total:
+            gates_done = int(tagged_summary.get("gates_done") or 0)
+            if sprint_timeline:
+                gates_done_in = int(tagged_summary.get("gates_done_in_timeline") or 0)
+                gates_in = int(tagged_summary.get("gates_in_timeline") or 0)
+                print(f"Gate Burn-up: {gates_done}/{gates_total} complete (in timeline: {gates_done_in}/{gates_in})")
+            else:
+                print(f"Gate Burn-up: {gates_done}/{gates_total} complete")
+    print(f"Release Readiness: {readiness}")
     print()
 
     if features:
@@ -744,15 +1236,80 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
             print(f"{status_emoji} {feature_name:<20} {completion:3d}% complete{critical_indicator}")
         print()
 
+    if tagged_tasks:
+        print("🏷️ Release-Tagged Tasks:")
+
+        def _is_gate(task: dict[str, Any]) -> bool:
+            return bool(task.get("release_gate") is True) or str(task.get("release_gate", "")).strip().lower() in {
+                "true",
+                "yes",
+                "1",
+            }
+
+        tagged_tasks = sorted(
+            tagged_tasks,
+            key=lambda task: (
+                0 if _is_gate(task) else 1,
+                str(task.get("id") or ""),
+            ),
+        )
+        show_n = 12
+        for task in tagged_tasks[:show_n]:
+            status = str(task.get("status", "todo")).strip().lower()
+            if status == "completed":
+                status = "done"
+            status_emoji = {
+                "todo": "⭕",
+                "doing": "🔄",
+                "review": "👀",
+                "done": "✅",
+                "blocked": "🚫",
+            }.get(status, "❓")
+            gate = _is_gate(task)
+            gate_suffix = " [gate]" if gate else ""
+            try:
+                points = int(task.get("story_points", 0) or 0)
+            except Exception:
+                points = 0
+            print(
+                f"{status_emoji} {task.get('id')}: {task.get('title')} ({points}pts) "
+                f"[{task.get('feature')}] {task.get('sprint')}{gate_suffix}"
+            )
+        remaining = len(tagged_tasks) - show_n
+        if remaining > 0:
+            print(f"...and {remaining} more")
+        print()
+
     print("📅 Sprint Breakdown:")
-    for i, sprint_id in enumerate(sprint_timeline, 1):
-        if sprint_id == current_sprint:
-            status = "🔄 In progress"
-        elif i < current_sprint_index:
-            status = "✅ Complete"
-        else:
-            status = "⭕ Planned"
-        print(f"{status} {sprint_id} (Sprint {i} of {sprint_count})")
+    if timeline_mode == "sprint_slots":
+        slots = timeline.get("sprint_slots") or list(range(1, sprint_count + 1))
+        if not isinstance(slots, list):
+            slots = list(range(1, sprint_count + 1))
+        slots = [int(slot) for slot in slots if isinstance(slot, int) or (isinstance(slot, str) and slot.isdigit())]
+        assignments = timeline.get("slot_assignments") or {}
+        if not isinstance(assignments, dict):
+            assignments = {}
+        for i, slot in enumerate(slots, 1):
+            sprint_id = assignments.get(slot)
+            label = sprint_id if sprint_id else "(unassigned)"
+            if sprint_id == current_sprint:
+                status = "🔄 In progress"
+            elif sprint_id and is_sprint_archived(ph_root=ctx.ph_root, sprint_id=str(sprint_id)):
+                status = "✅ Complete"
+            elif current_sprint_index and sprint_id and i < int(current_sprint_index):
+                status = "✅ Complete"
+            else:
+                status = "⭕ Planned"
+            print(f"{status} Slot {slot}: {label} (Sprint {i} of {sprint_count})")
+    else:
+        for i, sprint_id in enumerate(sprint_timeline, 1):
+            if sprint_id == current_sprint:
+                status = "🔄 In progress"
+            elif current_sprint_index and i < int(current_sprint_index):
+                status = "✅ Complete"
+            else:
+                status = "⭕ Planned"
+            print(f"{status} {sprint_id} (Sprint {i} of {sprint_count})")
     return 0
 
 

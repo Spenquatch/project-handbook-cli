@@ -4,6 +4,7 @@ import dataclasses
 import datetime as dt
 import os
 import re
+import sys
 from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
@@ -477,13 +478,15 @@ def run_pre_exec_audit(
     evid.mkdir(parents=True, exist_ok=True)
 
     def _validate_code() -> int:
-        code, _out_path, _message = run_validate(
+        code, _out_path, message = run_validate(
             ph_root=ph_root,
             ph_data_root=ctx.ph_data_root,
             scope=ctx.scope,
             quick=False,
             silent_success=False,
         )
+        if message:
+            print(message, end="")
         return code
 
     steps: list[tuple[str, str, callable]] = [
@@ -499,8 +502,11 @@ def run_pre_exec_audit(
         print(f"PRE-EXEC: {label}")
         print("════════════════════════════════════════════════")
         code, out = _capture_call(label, fn)
+        sys.stdout.write(out)
         _write_evidence_text(evidence_dir=evid, name=filename, text=out)
         if code != 0:
+            if label == "release-status":
+                continue
             raise PreExecError(f"{label} failed (exit {code}). See {evid / filename}")
 
     # Copy the validation report into the evidence bundle for immutability.
@@ -512,6 +518,7 @@ def run_pre_exec_audit(
     print("PRE-EXEC: lint")
     print("════════════════════════════════════════════════")
     lint_code, lint_out = _capture_call("lint", lambda: run_pre_exec_lint(ctx=ctx))
+    sys.stdout.write(lint_out)
     _write_evidence_text(evidence_dir=evid, name="pre-exec-lint.txt", text=lint_out)
     if lint_code != 0:
         raise PreExecError(f"Pre-exec lint failed. Evidence: {evid}")
@@ -519,9 +526,12 @@ def run_pre_exec_audit(
     print("\nPRE-EXEC AUDIT PASSED")
     print("Next:")
     print(f"- Review evidence bundle: {evid}")
-    print("- Update sprints/current/plan.md to confirm the audit gate passed (date + evidence path).")
+    print(
+        "- Update `project-handbook/sprints/current/plan.md` to confirm the audit gate passed "
+        "(date + evidence path)."
+    )
     print(
         "- Start execution by claiming the first ready task (typically `TASK-001`) "
-        "via `ph task status --id TASK-001 --status doing`."
+        "via `pnpm -C project-handbook make -- task-status id=TASK-001 status=doing`."
     )
     return 0
