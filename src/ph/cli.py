@@ -694,6 +694,8 @@ def main(argv: list[str] | None = None) -> int:
                         )
                     exit_code = sprint_open(ph_root=ph_root, ctx=ctx, sprint_id=sprint_id)
                 elif args.sprint_command == "status":
+                    if ctx.scope == "project":
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["sprint-status"]))
                     exit_code = run_sprint_status(ph_root=ph_root, ctx=ctx, sprint=getattr(args, "sprint", None))
                 elif args.sprint_command == "tasks":
                     exit_code = run_sprint_tasks(ctx=ctx, sprint=getattr(args, "sprint", None))

@@ -142,6 +142,64 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 01:30 UTC — V1P-0015 — Parity: `make sprint-status` → `ph sprint status`
+
+Agent: GPT-5.2 (Codex CLI Orchestrator) + background Codex exec
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable PH_ROOT (rsync copy of legacy repo into mktemp)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0015)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- /Users/spensermcconnell/.codex/skills/coding-agent/SKILL.md
+- src/ph/cli.py
+- src/ph/sprint_status.py
+- tests/test_sprint_status_and_tasks.py
+
+Goal:
+- Achieve strict parity for legacy `pnpm make -- sprint-status` vs `ph --root <PH_ROOT> sprint status` (stdout-only).
+
+Work performed (ordered):
+1. Spawned a background coding agent scoped to V1P-0015 and ran legacy-vs-`ph` comparisons against a disposable PH_ROOT.
+2. Fixed mismatch: `ph sprint status` was missing the pnpm/make preamble and the legacy tip line in project scope.
+3. Added deterministic pytest coverage locking the exact legacy-matching stdout.
+4. Re-ran legacy vs `ph` capture + diff; verified byte-for-byte match; ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"; TMP_ROOT=\"$(mktemp -d -t ph-parity-V1P-0015-root-real-XXXXXXXX)\"; PH_ROOT=\"$TMP_ROOT/project-handbook\"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- python - \"$PH_ROOT\" <<'PY'\nimport json\nimport sys\nfrom pathlib import Path\np=Path(sys.argv[1]) / \"project_handbook.config.json\"\nraw=json.loads(p.read_text())\nraw[\"repo_root\"] = \".\"\np.write_text(json.dumps(raw, indent=2) + \"\\n\")\nPY
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT\" && pnpm make -- sprint-status) > /tmp/legacy-sprint-status-stdout.txt
+- UV_CACHE_DIR=\"/tmp/uv-cache\" XDG_CACHE_HOME=\"/tmp/xdg-cache\" uv run ph --root \"$PH_ROOT\" sprint status > /tmp/ph-sprint-status-stdout.txt
+- diff -u /tmp/legacy-sprint-status-stdout.txt /tmp/ph-sprint-status-stdout.txt
+- UV_CACHE_DIR=\"/tmp/uv-cache\" XDG_CACHE_HOME=\"/tmp/xdg-cache\" uv run ruff check .
+- UV_CACHE_DIR=\"/tmp/uv-cache\" XDG_CACHE_HOME=\"/tmp/xdg-cache\" uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/cli.py
+- src/ph/sprint_status.py
+- tests/test_sprint_status_and_tasks.py
+
+Verification:
+- `diff -u /tmp/legacy-sprint-status-stdout.txt /tmp/ph-sprint-status-stdout.txt` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> sprint status` now matches legacy `pnpm make -- sprint-status` stdout byte-for-byte; parity locked via pytest.
+
+Next task:
+- V1P-0016
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-05 01:07 UTC — V1P-0014 — Parity: `make sprint-open sprint=SPRINT-...` → `ph sprint open --sprint SPRINT-...`
 
 Agent: GPT-5.2 (Codex CLI Orchestrator) + background Codex exec

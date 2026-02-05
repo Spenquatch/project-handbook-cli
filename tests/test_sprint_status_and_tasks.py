@@ -77,6 +77,30 @@ def test_sprint_status_and_tasks_non_empty_project_scope(tmp_path: Path) -> None
     assert status.stdout.strip()
 
 
+def test_sprint_status_project_scope_includes_make_preamble_and_tip(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    (tmp_path / "package.json").write_text(
+        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
+        encoding="utf-8",
+    )
+    _seed_sprint_with_task(ph_root=tmp_path, scope="project")
+
+    status = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "status"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert status.returncode == 0
+    assert status.stdout.startswith(
+        f"\n> project-handbook@0.0.0 make {tmp_path.resolve()}\n> make -- sprint-status\n\n"
+    )
+    assert (
+        "Tip: use `make onboarding session task-execution` (alias: `implement`) for detailed hand-off guidance.\n"
+        in status.stdout
+    )
+
+
 def test_sprint_status_and_tasks_non_empty_system_scope(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     _seed_sprint_with_task(ph_root=tmp_path, scope="system")
