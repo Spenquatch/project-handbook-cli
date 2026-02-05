@@ -86,8 +86,15 @@ def test_release_add_feature_updates_yaml_and_suggest_lists_feature(tmp_path: Pa
         env=env,
     )
     assert suggest.returncode == 0
-    assert suggest.stdout.splitlines()[0] == "💡 SUGGESTED FEATURES FOR v1.2.3"
-    assert "feat-a" in suggest.stdout
+    expected = "\n".join(
+        [
+            "💡 SUGGESTED FEATURES FOR v1.2.3",
+            "=" * 50,
+            f"📦 {'feat-a':<20} Stage: developing - Good candidate",
+            "",
+        ]
+    )
+    assert suggest.stdout == expected
 
 
 def test_release_add_feature_rejects_system_scope(tmp_path: Path) -> None:

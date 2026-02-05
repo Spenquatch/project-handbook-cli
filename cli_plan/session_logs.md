@@ -8826,3 +8826,55 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 21:19 UTC — V1P-0058 — Parity: `make release-suggest version=<vX.Y.Z>` → `ph release suggest --version <vX.Y.Z>`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created via `mktemp`; see Commands executed)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0058)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- release-suggest version=<vX.Y.Z>` → `ph release suggest --version <vX.Y.Z>` (stdout only).
+
+Work performed (ordered):
+1. Ran legacy-vs-`ph` capture + diff for `release-suggest` (stdout + exit code) on a disposable handbook instance using a baseline-restore workflow.
+2. Tightened deterministic pytest expectations for `ph release suggest` stdout shape to match legacy output exactly.
+3. Re-ran parity diffs + `ruff` + `pytest`.
+
+Commands executed (exact):
+- export TMPDIR=/tmp; LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0058-root-XXXXXXXX)"; PH_ROOT="$TMP_ROOT/project-handbook"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"; (cd "$PH_ROOT" && pnpm install --frozen-lockfile >/dev/null); tar -C "$TMP_ROOT" -czf /tmp/V1P-0058.baseline.tgz project-handbook; VERSION=$(readlink "$PH_ROOT/releases/current")
+- set +e; (cd "$PH_ROOT" && npm_config_reporter=silent pnpm make -- release-suggest version=$VERSION) > /tmp/V1P-0058.legacy.stdout.txt; echo $? > /tmp/V1P-0058.legacy.status.txt; set -e
+- rm -rf "$PH_ROOT"; tar -C "$TMP_ROOT" -xzf /tmp/V1P-0058.baseline.tgz
+- set +e; UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache npm_config_reporter=silent uv run ph --root "$PH_ROOT" release suggest --version "$VERSION" > /tmp/V1P-0058.ph.stdout.txt; echo $? > /tmp/V1P-0058.ph.status.txt; set -e
+- diff -u /tmp/V1P-0058.legacy.status.txt /tmp/V1P-0058.ph.status.txt
+- diff -u /tmp/V1P-0058.legacy.stdout.txt /tmp/V1P-0058.ph.stdout.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0058.done
+- tests/test_release_add_feature_suggest.py
+
+Verification:
+- Parity diffs: both `diff -u /tmp/V1P-0058.*` comparisons returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 188 passed)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> release suggest --version <vX.Y.Z>` matches legacy `pnpm make -- release-suggest version=<vX.Y.Z>` for stdout + exit code; parity locked via pytest.
+
+Next task:
+- V1P-0059
+
+Blockers (if blocked):
+- (none)
