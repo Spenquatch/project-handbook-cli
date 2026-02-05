@@ -122,3 +122,72 @@ def test_sprint_status_and_tasks_non_empty_system_scope(tmp_path: Path) -> None:
     )
     assert status.returncode == 0
     assert status.stdout.strip()
+
+
+def test_sprint_tasks_project_scope_includes_make_preamble_and_release_tags(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    (tmp_path / "package.json").write_text(
+        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
+        encoding="utf-8",
+    )
+
+    cmd = ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "plan", "--sprint", "SPRINT-2099-01-01"]
+    res = subprocess.run(cmd, capture_output=True, text=True, env=dict(os.environ))
+    assert res.returncode == 0
+
+    task_root = tmp_path / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
+    task_a = task_root / "TASK-001-rel"
+    task_a.mkdir(parents=True, exist_ok=True)
+    (task_a / "task.yaml").write_text(
+        "\n".join(
+            [
+                "id: TASK-001",
+                "title: Rel task",
+                "lane: ci/evidence",
+                "session: task-execution",
+                "status: done",
+                "story_points: 3",
+                "depends_on: [FIRST_TASK]",
+                "release: v0.6.0",
+                "release_gate: false",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    task_b = task_root / "TASK-002-gate"
+    task_b.mkdir(parents=True, exist_ok=True)
+    (task_b / "task.yaml").write_text(
+        "\n".join(
+            [
+                "id: TASK-002",
+                "title: Gate task",
+                "lane: ci/evidence",
+                "session: task-execution",
+                "status: done",
+                "story_points: 1",
+                "depends_on: [TASK-001]",
+                "release: null",
+                "release_gate: true",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    tasks = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "tasks"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert tasks.returncode == 0
+    assert tasks.stdout == (
+        f"\n> project-handbook@0.0.0 make {tmp_path.resolve()}\n> make -- sprint-tasks\n\n"
+        "📋 SPRINT TASKS: SPRINT-2099-01-01\n"
+        + "=" * 60
+        + "\n"
+        "✅ TASK-001: Rel task  [ci/evidence] (task-execution) [rel:v0.6.0] [3pts] (depends: FIRST_TASK)\n"
+        "✅ TASK-002: Gate task  [ci/evidence] (task-execution) [gate] [1pts] (depends: TASK-001)\n"
+    )

@@ -698,6 +698,8 @@ def main(argv: list[str] | None = None) -> int:
                         sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["sprint-status"]))
                     exit_code = run_sprint_status(ph_root=ph_root, ctx=ctx, sprint=getattr(args, "sprint", None))
                 elif args.sprint_command == "tasks":
+                    if ctx.scope == "project":
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["sprint-tasks"]))
                     exit_code = run_sprint_tasks(ctx=ctx, sprint=getattr(args, "sprint", None))
                 elif args.sprint_command == "burndown":
                     exit_code = run_sprint_burndown(

@@ -95,9 +95,27 @@ def run_sprint_tasks(*, ctx: Context, sprint: str | None) -> int:
         session = task.get("session")
         session_info = f" ({session})" if session else ""
 
+        release = task.get("release")
+        release_value = str(release).strip() if release is not None else ""
+        release_info = ""
+        if release_value and release_value.lower() not in {"null", "none"}:
+            release_info = f" [rel:{release_value}]"
+
+        gate_raw = task.get("release_gate")
+        gate_value = False
+        if isinstance(gate_raw, bool):
+            gate_value = gate_raw
+        elif gate_raw is not None:
+            gate_str = str(gate_raw).strip().lower()
+            gate_value = gate_str in {"true", "1", "yes"}
+        gate_info = " [gate]" if gate_value else ""
+
+        points = task.get("story_points")
+        points_value = str(points).strip() if points is not None else "?"
+
         print(
             f"{status_emoji} {task.get('id')}: {task.get('title')} "
-            f"{lane_info}{session_info} [{task.get('story_points')}pts]{dep_info}"
+            f"{lane_info}{session_info}{release_info}{gate_info} [{points_value}pts]{dep_info}"
         )
 
     return 0
