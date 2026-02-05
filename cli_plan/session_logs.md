@@ -142,6 +142,56 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 18:03 UTC — V1P-0048 — Parity: `make roadmap-show` → `ph roadmap show`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI via coding-agent)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (PH_ROOT=/private/var/folders/2x/5mqqp02j36v079m96nx8fjs00000gn/T/ph-parity-V1P-0048-root-real-XXXXXXXX.olFXbAmmQN/project-handbook)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0048)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md (section: Removed Make placeholders)
+
+Goal:
+- Validate the `make roadmap-show` mapping behavior and record any intentional deltas per contract.
+
+Work performed (ordered):
+1. Captured legacy stdout for `pnpm make -- roadmap-show` and `ph` stdout for `ph roadmap show` on the same disposable handbook instance.
+2. Confirmed legacy `roadmap-show` is a Make placeholder/no-op (prints “Nothing to be done”), and confirmed this is an intentional delta permitted by `CLI_CONTRACT.md` (“Removed Make placeholders” maps both `make roadmap` and `make roadmap-show` to `ph roadmap show`).
+3. Added a marker file and created a single atomic commit for this task; ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"; TMP_ROOT=\"$(mktemp -d -t ph-parity-V1P-0048-root-real-XXXXXXXX)\"; PH_ROOT=\"$TMP_ROOT/project-handbook\"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"; (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile >/dev/null)
+- test -f \"$PH_ROOT/roadmap/now-next-later.md\" || (cd \"$PH_ROOT\" && pnpm make -- roadmap-create >/dev/null)
+- (cd \"$PH_ROOT\" && pnpm make -- roadmap-show) > /tmp/V1P-0048.legacy.stdout.txt
+- uv run ph --root \"$PH_ROOT\" --no-post-hook roadmap show > /tmp/V1P-0048.ph.stdout.txt
+- diff -u /tmp/V1P-0048.legacy.stdout.txt /tmp/V1P-0048.ph.stdout.txt || true
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0048.done
+
+Verification:
+- Legacy stdout contains:\n  - `> make -- roadmap-show`\n  - `make[1]: Nothing to be done for \`roadmap-show'.`\n- `ph` stdout contains:\n  - `> make -- roadmap`\n  - `🗺️  PROJECT ROADMAP`\n- This mismatch is intentional and documented in `cli_plan/v1_cli/CLI_CONTRACT.md` (“Removed Make placeholders”). `ph` MUST NOT implement Make placeholders as commands.
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: Confirmed `make roadmap-show` is a legacy placeholder/no-op; per contract, it is mapped to `ph roadmap show` and is intentionally not emulated; recorded via marker + session log.
+
+Next task:
+- V1P-0049
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-05 17:51 UTC — V1P-0047 — Parity: `make roadmap` → `ph roadmap show`
 
 Agent: GPT-5.2 (Orchestrator + background Codex CLI via coding-agent)
