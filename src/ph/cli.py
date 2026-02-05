@@ -668,6 +668,9 @@ def main(argv: list[str] | None = None) -> int:
                 if status_result.feature_update_message:
                     print(status_result.feature_update_message)
             elif args.command == "dashboard":
+                if ctx.scope == "project":
+                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["dashboard"]))
+                    sys.stdout.flush()
                 exit_code = run_dashboard(ph_root=ph_root, ctx=ctx)
             elif args.command == "check-all":
                 exit_code = run_check_all(ph_root=ph_root, ctx=ctx, env=os.environ)

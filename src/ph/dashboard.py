@@ -42,8 +42,6 @@ def run_dashboard(*, ph_root: Path, ctx: Context) -> int:
     if recent:
         for entry in recent:
             print(entry)
-    else:
-        print("  No daily status files yet")
     print()
 
     print("Validation:")

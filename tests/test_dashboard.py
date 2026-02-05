@@ -102,4 +102,27 @@ def test_dashboard_prints_empty_daily_message_when_none_exist(tmp_path: Path) ->
         env=dict(os.environ),
     )
     assert result.returncode == 0
-    assert _daily_section_lines(result.stdout) == ["  No daily status files yet"]
+    assert _daily_section_lines(result.stdout) == []
+
+
+def test_dashboard_prints_pnpm_make_preamble_when_package_json_present(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    (tmp_path / "package.json").write_text(
+        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "dashboard"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert result.returncode == 0
+    lines = result.stdout.splitlines()
+    assert lines[:4] == [
+        "",
+        f"> project-handbook@0.0.0 make {tmp_path.resolve()}",
+        "> make -- dashboard",
+        "",
+    ]

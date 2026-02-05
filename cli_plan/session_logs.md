@@ -142,6 +142,60 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 17:34 UTC — V1P-0046 — Parity: `make dashboard` → `ph dashboard`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI; terminated when off-course)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (PH_ROOT=/private/var/folders/2x/5mqqp02j36v079m96nx8fjs00000gn/T/ph-parity-V1P-0046-root-real-XXXXXXXX.Z8QiaBRFbp/project-handbook)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0046)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- dashboard` → `ph dashboard` (stdout).
+
+Work performed (ordered):
+1. Spawned a background Codex CLI agent to run legacy-vs-`ph` dashboard capture + diff; terminated it after it tried to change daily-section semantics away from legacy.
+2. Updated `ph dashboard` to print the pnpm/make preamble (matching legacy `pnpm make -- dashboard` stdout).
+3. Confirmed “Recent Daily Status” empty behavior: legacy Makefile does not print the fallback line due to pipeline exit-code semantics; preserved that behavior in `ph dashboard` and tests.
+4. Re-ran capture + diff; verified byte-for-byte match for stdout; ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0046-root-real-XXXXXXXX)"; PH_ROOT="$TMP_ROOT/project-handbook"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"; (cd "$PH_ROOT" && pnpm install --frozen-lockfile >/dev/null)
+- tar -C "$(dirname "$PH_ROOT")" -czf /tmp/V1P-0046.baseline.tgz "$(basename "$PH_ROOT")"
+- (cd "$PH_ROOT" && pnpm make -- dashboard) > /tmp/V1P-0046.legacy.stdout.txt
+- rm -rf "$PH_ROOT"; tar -C "$(dirname "$PH_ROOT")" -xzf /tmp/V1P-0046.baseline.tgz; uv run ph --root "$PH_ROOT" dashboard > /tmp/V1P-0046.ph.stdout.txt
+- diff -u /tmp/V1P-0046.legacy.stdout.txt /tmp/V1P-0046.ph.stdout.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0046.done
+- src/ph/cli.py
+- tests/test_dashboard.py
+
+Verification:
+- `diff -u /tmp/V1P-0046.legacy.stdout.txt /tmp/V1P-0046.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> dashboard` now matches legacy `pnpm make -- dashboard` for stdout; parity locked via pytest.
+
+Next task:
+- V1P-0047
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-05 11:57 UTC — V1P-0030 — Parity: `make feature-archive` → `ph feature archive`
 
 Agent: GPT-5.2 (Orchestrator + background Codex CLI)
