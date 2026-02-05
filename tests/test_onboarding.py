@@ -30,7 +30,7 @@ def test_onboarding_prints_onboarding_md(tmp_path: Path) -> None:
 
     result = subprocess.run(["ph", "onboarding", "--root", str(tmp_path)], capture_output=True, text=True)
     assert result.returncode == 0
-    assert result.stdout == "---\ntitle: Onboarding\n---\n# Hello\n"
+    assert result.stdout == "ONBOARDING\n==========\n---\ntitle: Onboarding\n---\n# Hello\n\n"
 
 
 def test_onboarding_session_list_sorts_topics(tmp_path: Path) -> None:

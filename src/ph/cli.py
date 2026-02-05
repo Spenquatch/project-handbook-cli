@@ -36,8 +36,8 @@ from .onboarding import (
     SessionList,
     list_session_topics,
     read_latest_session_summary,
-    read_onboarding_markdown,
     read_session_template,
+    render_onboarding,
 )
 from .orchestration import run_check_all, run_test_system
 from .parking import run_parking_add, run_parking_list, run_parking_promote, run_parking_review
@@ -575,7 +575,7 @@ def main(argv: list[str] | None = None) -> int:
                     sys.stdout.write(text)
             elif args.command == "onboarding":
                 if args.onboarding_command is None:
-                    print(read_onboarding_markdown(ph_root=ph_root), end="")
+                    sys.stdout.write(render_onboarding(ph_root=ph_root))
                     exit_code = 0
                 elif args.onboarding_command == "session":
                     session_topic = str(args.session_topic).strip() if args.session_topic is not None else ""

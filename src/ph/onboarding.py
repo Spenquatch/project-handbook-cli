@@ -8,6 +8,27 @@ class OnboardingError(RuntimeError):
     pass
 
 
+def _extract_frontmatter_title(markdown: str) -> str | None:
+    if not markdown.startswith("---\n"):
+        return None
+
+    lines = markdown.splitlines()
+    if len(lines) < 3:
+        return None
+
+    if lines[0].strip() != "---":
+        return None
+
+    for i in range(1, len(lines)):
+        if lines[i].strip() == "---":
+            break
+        if lines[i].startswith("title:"):
+            title = lines[i].split(":", 1)[1].strip()
+            return title or None
+
+    return None
+
+
 @dataclass(frozen=True)
 class SessionList:
     topics: list[str]
@@ -28,6 +49,14 @@ def read_onboarding_markdown(*, ph_root: Path) -> str:
         return path.read_text(encoding="utf-8")
     except FileNotFoundError as exc:
         raise OnboardingError(f"Missing onboarding file: {path}\n") from exc
+
+
+def render_onboarding(*, ph_root: Path) -> str:
+    markdown = read_onboarding_markdown(ph_root=ph_root)
+    title = _extract_frontmatter_title(markdown) or "Project Handbook Onboarding"
+    header = title.upper()
+    underline = "=" * len(header)
+    return f"{header}\n{underline}\n{markdown}\n"
 
 
 def list_session_topics(*, ph_root: Path) -> list[str]:
