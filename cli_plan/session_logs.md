@@ -649,6 +649,86 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 02:36 UTC — V1P-0019 — Parity: `make sprint-archive ...` → `ph sprint archive ...`
+
+Agent: GPT-5.2 (Codex CLI Orchestrator) + background Codex exec
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable PH_ROOT (rsync copy of legacy repo into mktemp; PH_ROOT ended with `/project-handbook/` for legacy parity)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0019)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook/process/automation/sprint_manager.py
+- src/ph/cli.py
+- src/ph/clock.py
+- src/ph/sprint_archive.py
+- tests/test_sprint_archive.py
+
+Goal:
+- Achieve strict parity for legacy `pnpm make -- sprint-archive sprint=SPRINT-...` vs `ph --root <PH_ROOT> sprint archive --sprint SPRINT-...` (stdout + `sprints/archive/**`, `sprints/archive/index.json`).
+
+Work performed (ordered):
+1. Created a disposable PH_ROOT from the legacy handbook repo and captured legacy stdout + the archived sprint outputs (`sprints/archive/index.json` + archived sprint directory).
+2. Extracted the legacy `archived_at` timestamp for the archived sprint and used it to freeze `ph` time (`PH_FAKE_NOW`) so outputs could be compared byte-for-byte.
+3. Restored the same PH_ROOT path to a pristine baseline, then ran `ph sprint archive --sprint ...` and diffed stdout + outputs against legacy (initial mismatch).
+4. Updated `ph sprint archive` implementation to match legacy stdout preamble + archive/index behaviors (including timezone-derived “today” semantics used by legacy for bounded sprints).
+5. Added a deterministic pytest locking stdout + index.json parity for a `SEQ/SPRINT-SEQ-0004` sprint.
+6. Re-ran diffs + ruff/pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- PH_MONO=\"$(mktemp -d -t ph-parity-V1P-0019-XXXXXXXX)\"
+- PH_ROOT=\"$PH_MONO/project-handbook\" && mkdir -p \"$PH_ROOT\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- SPRINT=\"$(basename \"$(readlink \"$PH_ROOT/sprints/current\")\")\" && export SPRINT
+- (cd \"$PH_ROOT\" && pnpm make -- sprint-archive sprint=\"$SPRINT\") > /tmp/legacy-sprint-archive-stdout.txt
+- cp \"$PH_ROOT/sprints/archive/index.json\" /tmp/legacy-sprint-archive-index.json
+- ARCH_PATH=$(cd \"$PH_ROOT\" && python - <<'PY'\nimport json, os\nfrom pathlib import Path\nsprint=os.environ[\"SPRINT\"]\nidx=json.loads(Path(\"sprints/archive/index.json\").read_text())\nentry=next((e for e in idx.get(\"sprints\",[]) if e.get(\"sprint\")==sprint), None)\nprint(entry[\"path\"] if entry else \"\")\nPY\n)
+- rm -rf /tmp/legacy-sprint-archive-dir && mkdir -p /tmp/legacy-sprint-archive-dir
+- rsync -a --delete \"$PH_ROOT/$ARCH_PATH/\" /tmp/legacy-sprint-archive-dir/
+- LEGACY_ARCHIVED_AT=$(python - <<'PY'\nimport json, os\nfrom pathlib import Path\nsprint=os.environ[\"SPRINT\"]\nidx=json.loads(Path(\"/tmp/legacy-sprint-archive-index.json\").read_text())\nentry=next((e for e in idx.get(\"sprints\",[]) if e.get(\"sprint\")==sprint), None)\nprint(entry[\"archived_at\"] if entry else \"\")\nPY\n)
+- LEGACY_TODAY=\"${LEGACY_ARCHIVED_AT%%T*}\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache PH_FAKE_NOW=\"$LEGACY_ARCHIVED_AT\" PH_FAKE_TODAY=\"$LEGACY_TODAY\" uv run ph --root \"$PH_ROOT\" sprint archive --sprint \"$SPRINT\" > /tmp/ph-sprint-archive-stdout.txt
+- cp \"$PH_ROOT/sprints/archive/index.json\" /tmp/ph-sprint-archive-index.json
+- ARCH_PATH=$(python - <<'PY'\nimport json, os\nfrom pathlib import Path\nsprint=os.environ[\"SPRINT\"]\nidx=json.loads(Path(\"/tmp/ph-sprint-archive-index.json\").read_text())\nentry=next((e for e in idx.get(\"sprints\",[]) if e.get(\"sprint\")==sprint), None)\nprint(entry[\"path\"] if entry else \"\")\nPY\n)
+- rm -rf /tmp/ph-sprint-archive-dir && mkdir -p /tmp/ph-sprint-archive-dir
+- rsync -a --delete \"$PH_ROOT/$ARCH_PATH/\" /tmp/ph-sprint-archive-dir/
+- diff -u /tmp/legacy-sprint-archive-stdout.txt /tmp/ph-sprint-archive-stdout.txt
+- diff -u /tmp/legacy-sprint-archive-index.json /tmp/ph-sprint-archive-index.json
+- diff -ruN /tmp/legacy-sprint-archive-dir /tmp/ph-sprint-archive-dir
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ruff check .
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/cli.py
+- src/ph/clock.py
+- src/ph/sprint_archive.py
+- tests/test_sprint_archive.py
+
+Verification:
+- `diff -u /tmp/legacy-sprint-archive-stdout.txt /tmp/ph-sprint-archive-stdout.txt` returned no diff (byte-for-byte match).
+- `diff -u /tmp/legacy-sprint-archive-index.json /tmp/ph-sprint-archive-index.json` returned no diff (byte-for-byte match).
+- `diff -ruN /tmp/legacy-sprint-archive-dir /tmp/ph-sprint-archive-dir` returned no diff (byte-for-byte match).
+- Ruff: `uv run ruff check .` (pass)
+- Pytest: `uv run pytest -q` (pass; 152 tests)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> sprint archive --sprint SPRINT-...` now matches legacy stdout + archive outputs; parity locked via pytest (SEQ sprint coverage + timezone-derived “today” behavior for bounded sprints).
+
+Next task:
+- V1P-0020
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-04 22:43 UTC — V1P-0010 — Parity: `make daily` → `ph daily generate`
 
 Agent: GPT-5.2 (Codex CLI background agent via Orchestrator)

@@ -5,6 +5,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from .clock import local_today_from_now as clock_local_today_from_now
 from .clock import now as clock_now
 from .context import Context
 from .sprint import get_sprint_dates, sprint_dir_from_id
@@ -59,7 +60,7 @@ def _record_sprint_archive_entry(*, ph_data_root: Path, sprint_id: str, target: 
         except Exception:
             entries = []
 
-    entries = [e for e in entries if isinstance(e, dict) and e.get("sprint") != sprint_id]
+    entries = [e for e in entries if e.get("sprint") != sprint_id]
 
     meta = _read_plan_meta(sprint_dir=target)
     mode = (meta.get("mode") or "").strip().lower()
@@ -69,12 +70,11 @@ def _record_sprint_archive_entry(*, ph_data_root: Path, sprint_id: str, target: 
     end_str = meta.get("end")
 
     if mode == "bounded":
+        today_str = clock_local_today_from_now(env=env).isoformat()
         if not start_str:
-            start_str = meta.get("date") or meta.get("created")
-        if not start_str:
-            start_str = clock_now(env=env).date().isoformat()
+            start_str = today_str
         if not end_str:
-            end_str = clock_now(env=env).date().isoformat()
+            end_str = today_str
     else:
         if not start_str or not end_str:
             start_date, end_date = get_sprint_dates(sprint_id)
@@ -89,7 +89,7 @@ def _record_sprint_archive_entry(*, ph_data_root: Path, sprint_id: str, target: 
         "end": end_str,
     }
     entries.append(entry)
-    entries.sort(key=lambda e: str(e.get("archived_at", "")))
+    entries.sort(key=lambda e: e["archived_at"])
     index_path.write_text(json.dumps({"sprints": entries}, indent=2) + "\n", encoding="utf-8")
 
 
@@ -109,12 +109,9 @@ def archive_sprint_directory(*, ctx: Context, sprint_dir: Path, env: dict[str, s
     current_link = ctx.ph_data_root / "sprints" / "current"
     if current_link.exists() or current_link.is_symlink():
         try:
-            if current_link.resolve() == target:
-                current_link.unlink()
+            current_link.unlink()
         except FileNotFoundError:
-            current_link.unlink()
-        except Exception:
-            current_link.unlink()
+            pass
 
     _record_sprint_archive_entry(ph_data_root=ctx.ph_data_root, sprint_id=sprint_id, target=target, env=env)
     return target
@@ -123,10 +120,21 @@ def archive_sprint_directory(*, ctx: Context, sprint_dir: Path, env: dict[str, s
 def run_sprint_archive(*, ph_root: Path, ctx: Context, sprint: str | None, env: dict[str, str]) -> int:
     _ = ph_root  # reserved for future parity (link rewriting); v1 must not run repo-local scripts
 
-    sprint_dir = _resolve_sprint_dir(ctx=ctx, sprint=sprint)
-    if sprint_dir is None or not sprint_dir.exists():
-        print("No active sprint")
-        return 1
+    sprint_raw = sprint.strip() if sprint is not None else None
+    if sprint_raw is None or sprint_raw in {"", "current"}:
+        sprint_dir = _get_current_sprint_path(ph_data_root=ctx.ph_data_root)
+        if sprint_dir is None:
+            print("❌ No active sprint (sprints/current is not set).")
+            print("Set one via `make sprint-plan` / `make sprint-open`, or pass `--sprint SPRINT-...`.")
+            return 1
+        sprint_id = sprint_dir.name
+    else:
+        sprint_id = sprint_raw
+        sprint_dir = sprint_dir_from_id(ph_data_root=ctx.ph_data_root, sprint_id=sprint_id)
+
+    if not sprint_dir.exists():
+        print(f"⚠️  Sprint directory {sprint_dir} not found; nothing to archive.")
+        return 0
 
     try:
         target = archive_sprint_directory(ctx=ctx, sprint_dir=sprint_dir, env=env)
@@ -134,5 +142,5 @@ def run_sprint_archive(*, ph_root: Path, ctx: Context, sprint: str | None, env: 
         print(f"⚠️  {exc}")
         return 1
 
-    print(f"📦 Archived sprint {sprint_dir.name} to {target}")
+    print(f"📦 Archived sprint {sprint_id} to {target}")
     return 0

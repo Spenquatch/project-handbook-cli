@@ -722,6 +722,12 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 elif args.sprint_command == "archive":
+                    if ctx.scope == "project":
+                        make_args = ["sprint-archive"]
+                        sprint_arg = getattr(args, "sprint", None)
+                        if sprint_arg is not None:
+                            make_args.append(f"sprint\\={sprint_arg}")
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
                     exit_code = run_sprint_archive(
                         ph_root=ph_root,
                         ctx=ctx,
