@@ -102,44 +102,48 @@ def _compile_patterns() -> dict[str, list[tuple[str, re.Pattern[str]]]]:
 
     universal = [
         ("TBD", cs(r"\bTBD\b")),
-        ("TODO", cs(r"\bTODO\b")),
-        ("FIXME", cs(r"\bFIXME\b")),
+        ("TBC", cs(r"\bTBC\b")),
+        ("TODO", ci(r"\bTODO\b")),
         ("WIP", cs(r"\bWIP\b")),
+        ("FIXME", cs(r"\bFIXME\b")),
+        ("OPEN_QUESTION", ci(r"\bopen question(s)?\b")),
+        ("TO_BE_DETERMINED", ci(r"\bto be determined\b")),
+        ("DEPENDS_LOCAL_SETUP", ci(r"\bdepends on (local|your) setup\b")),
+        ("DEPENDS_ENVIRONMENT", ci(r"\bdepends on (your )?environment\b")),
+        ("LOCAL_SETUP", ci(r"\blocal setup\b")),
+        ("OPTIONAL", ci(r"\boptional\b")),
+        ("NICE_TO_HAVE", ci(r"\bnice to have\b")),
+        ("IF_TIME", ci(r"\bif time\b")),
+        ("IF_POSSIBLE", ci(r"\bif possible\b")),
         ("MAYBE", ci(r"\bmaybe\b")),
-        ("PROBABLY", ci(r"\bprobably\b")),
-        ("SOMEHOW", ci(r"\bsomehow\b")),
-        ("SOMETIME", ci(r"\bsometime\b")),
-        ("LATER", ci(r"\blater\b")),
-        ("EVENTUALLY", ci(r"\beventually\b")),
-        ("ASAP", ci(r"\basap\b")),
-        ("TBD_DATE", cs(r"\b20\d{2}-\d{2}-\d{2}\b.*\bTBD\b")),
+        ("UNSURE", ci(r"\bnot sure\b")),
+        ("UNCLEAR_HOW", ci(r"\bunclear (how|whether|what|when|where)\b")),
+        ("UNKNOWN_HOW", ci(r"\bunknown (how|whether|what|when|where)\b")),
+        ("FIGURE_OUT", ci(r"\bfigure out\b")),
+        ("WE_WILL_DECIDE", ci(r"\bwe('?| wi)ll decide\b")),
     ]
 
     execution = [
-        ("DECIDE", ci(r"\bdecide\b|\bdecision\b")),
-        ("RESEARCH", ci(r"\bresearch\b|\binvestigate\b|\bexplore\b")),
-        ("FIGURE_OUT", ci(r"\bfigure out\b|\bwork out\b")),
+        ("IMPLEMENTATION_DECISION", ci(r"\bimplementation decision(s)?\b")),
+        ("IMPLEMENTATION_DETAILS_TBD", ci(r"\bimplementation detail(s)?\b.*\b(TBD|to be determined)\b")),
+        ("CHOOSE_BETWEEN", ci(r"\bchoose between\b")),
+        ("PICK_APPROACH", ci(r"\bpick (an )?(approach|strategy)\b")),
+        ("DECIDE_APPROACH", ci(r"\bdecide (on|between)\b.*\b(approach|strategy|implementation)\b")),
+        ("TUNE_LATER", ci(r"\b(tune|decide|choose|pick)\b.*\blater\b")),
+        ("BEST_EFFORT", ci(r"\bbest[- ]effort\b")),
     ]
 
     discovery = [
-        ("UNCLEAR", ci(r"\bunclear\b|\bnot sure\b")),
-        ("MAYBE", ci(r"\bmaybe\b|\bpossibly\b")),
+        ("DISCOVERY_AMBIGUITY_BEST_EFFORT", ci(r"\bbest[- ]effort\b")),
     ]
 
     return {"universal": universal, "execution": execution, "discovery": discovery}
 
 
 def _should_ignore_pattern(session: str, name: str, line: str) -> bool:
-    # Allow deliberate/structured uses.
-    if name in {"TODO", "TBD", "FIXME"}:
-        if line.strip().startswith("- [ ]"):
-            return True
-    # Don't flag YAML defaults like `status: todo`.
-    if re.match(r"^status:\s*todo\s*$", line.strip(), flags=re.IGNORECASE):
-        return True
-    # In discovery sessions, "maybe" can appear inside explicitly enumerated options.
-    if session == "research-discovery" and name in {"MAYBE"}:
-        if re.search(r"\bOption [AB]\b", line):
+    if name == "TODO":
+        # Avoid false positives on task.yaml status values like `status: todo`.
+        if re.match(r"^status:\s*todo\s*$", line.strip(), flags=re.IGNORECASE):
             return True
     return False
 

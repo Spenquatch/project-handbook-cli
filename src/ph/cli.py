@@ -1161,6 +1161,7 @@ def main(argv: list[str] | None = None) -> int:
                     print("Usage: ph pre-exec <lint|audit>\n", file=sys.stderr, end="")
                     exit_code = 2
                 elif args.pre_exec_command == "lint":
+                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["pre-exec-lint"]))
                     exit_code = run_pre_exec_lint(ctx=ctx)
                 elif args.pre_exec_command == "audit":
                     try:

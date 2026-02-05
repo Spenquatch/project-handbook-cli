@@ -7979,3 +7979,58 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 15:57 UTC — V1P-0043 — Parity: `make pre-exec-lint` → `ph pre-exec lint`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (PH_ROOT=/private/var/folders/2x/5mqqp02j36v079m96nx8fjs00000gn/T/ph-parity-V1P-0043-root-real-XXXXXXXX.oa1LaCCnTf/project-handbook)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0043)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- pre-exec-lint` → `ph pre-exec lint` (stdout).
+
+Work performed (ordered):
+1. Spawned a background Codex CLI agent to run legacy-vs-`ph` parity capture + diff for `pre-exec-lint` (stdout).
+2. Updated `ph pre-exec lint` to print the pnpm/make preamble and align lint behavior with legacy.
+3. Added deterministic pytest coverage for `pre-exec lint` stdout parity.
+4. Re-ran capture + diff; verified byte-for-byte match for stdout; ran ruff + pytest and committed (imported the background agent patch and amended the commit to include bookkeeping).
+
+Commands executed (exact):
+- LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0043-root-real-XXXXXXXX)"; PH_ROOT="$TMP_ROOT/project-handbook"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"; (cd "$PH_ROOT" && pnpm install --frozen-lockfile)
+- tar -C "$(dirname "$PH_ROOT")" -czf /tmp/V1P-0043.baseline.tgz "$(basename "$PH_ROOT")"
+- (cd "$PH_ROOT" && pnpm make -- pre-exec-lint) > /tmp/V1P-0043.legacy.stdout.txt
+- rm -rf "$PH_ROOT"; tar -C "$(dirname "$PH_ROOT")" -xzf /tmp/V1P-0043.baseline.tgz; uv run ph --root "$PH_ROOT" pre-exec lint > /tmp/V1P-0043.ph.stdout.txt
+- diff -u /tmp/V1P-0043.legacy.stdout.txt /tmp/V1P-0043.ph.stdout.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0043.done
+- src/ph/cli.py
+- src/ph/pre_exec.py
+- tests/test_pre_exec_lint_parity_v1p0043.py
+
+Verification:
+- `diff -u /tmp/V1P-0043.legacy.stdout.txt /tmp/V1P-0043.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> pre-exec lint` now matches legacy `pnpm make -- pre-exec-lint` for stdout; parity locked via pytest.
+
+Next task:
+- V1P-0044
+
+Blockers (if blocked):
+- (none)
