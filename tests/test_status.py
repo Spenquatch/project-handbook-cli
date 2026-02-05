@@ -23,10 +23,21 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
     )
     (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
+    (ph_root / "package.json").write_text(
+        "{\n"
+        '  "name": "project-handbook",\n'
+        '  "private": true,\n'
+        '  "version": "0.0.0",\n'
+        '  "scripts": { "make": "make" }\n'
+        "}\n",
+        encoding="utf-8",
+    )
+
 
 def test_status_writes_outputs_and_prints_expected_format(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     env = dict(os.environ)
+    env["PH_FAKE_NOW"] = "2026-01-01T00:00:00Z"
 
     expected_json = (tmp_path / "status" / "current.json").resolve()
     expected_summary = (tmp_path / "status" / "current_summary.md").resolve()
@@ -41,10 +52,18 @@ def test_status_writes_outputs_and_prints_expected_format(tmp_path: Path) -> Non
     assert expected_json.exists()
     assert expected_summary.exists()
 
+    expected_preamble = (
+        "\n"
+        f"> project-handbook@0.0.0 make {tmp_path.resolve()}\n"
+        "> make -- status\n"
+        "\n"
+    )
+    assert result.stdout.startswith(expected_preamble)
     assert f"Generated: {expected_json}\n" in result.stdout
     assert f"Updated: {expected_summary}\n" in result.stdout
     assert "\n\n===== status/current_summary.md =====\n\n" in result.stdout
     assert "\n\n====================================\n" in result.stdout
+    assert "Updated feature status files\n" in result.stdout
 
 
 def test_status_writes_outputs_under_system_scope(tmp_path: Path) -> None:

@@ -648,11 +648,15 @@ def main(argv: list[str] | None = None) -> int:
                 print("Cleaned Python cache files\n", end="")
                 exit_code = 0
             elif args.command == "status":
-                out_json, out_summary = run_status(ph_root=ph_root, ph_data_root=ctx.ph_data_root)
-                print(f"Generated: {out_json.resolve()}")
-                print(f"Updated: {out_summary.resolve()}")
+                if ctx.scope == "project":
+                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["status"]))
+                    sys.stdout.flush()
 
-                summary_text = out_summary.read_text(encoding="utf-8").rstrip("\n")
+                status_result = run_status(ph_root=ph_root, ph_data_root=ctx.ph_data_root, env=os.environ)
+                print(f"Generated: {status_result.json_path.resolve()}")
+                print(f"Updated: {status_result.summary_path.resolve()}")
+
+                summary_text = status_result.summary_path.read_text(encoding="utf-8").rstrip("\n")
                 if summary_text.strip():
                     print()
                     print("===== status/current_summary.md =====")
@@ -661,6 +665,8 @@ def main(argv: list[str] | None = None) -> int:
                     print()
                     print("====================================")
                     print()
+                if status_result.feature_update_message:
+                    print(status_result.feature_update_message)
             elif args.command == "dashboard":
                 exit_code = run_dashboard(ph_root=ph_root, ctx=ctx)
             elif args.command == "check-all":

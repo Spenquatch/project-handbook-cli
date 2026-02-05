@@ -43,11 +43,11 @@ class DefaultCommandRunner:
             return exit_code
 
         if command == "status":
-            out_json, out_summary = run_status(ph_root=self.ph_root, ph_data_root=self.ctx.ph_data_root)
-            print(f"Generated: {out_json.resolve()}")
-            print(f"Updated: {out_summary.resolve()}")
+            status_result = run_status(ph_root=self.ph_root, ph_data_root=self.ctx.ph_data_root, env=self.env)
+            print(f"Generated: {status_result.json_path.resolve()}")
+            print(f"Updated: {status_result.summary_path.resolve()}")
 
-            summary_text = out_summary.read_text(encoding="utf-8").rstrip("\n")
+            summary_text = status_result.summary_path.read_text(encoding="utf-8").rstrip("\n")
             if summary_text.strip():
                 print()
                 print("===== status/current_summary.md =====")
@@ -56,6 +56,8 @@ class DefaultCommandRunner:
                 print()
                 print("====================================")
                 print()
+            if status_result.feature_update_message:
+                print(status_result.feature_update_message)
             return 0
 
         if command == "daily" and args[:1] == ["check"]:
