@@ -7729,3 +7729,68 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 14:41 UTC — V1P-0039 — Parity: `make parking-review` → `ph parking review`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (PH_ROOT=/private/var/folders/2x/5mqqp02j36v079m96nx8fjs00000gn/T/ph-parity-V1P-0039-root-real-XXXXXXXX.8jsaBjIr4Q/project-handbook)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0039)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- parking-review` → `ph parking review` (stdout only).
+
+Work performed (ordered):
+1. Spawned a background Codex CLI agent to run legacy-vs-`ph` parity capture + diff for `parking-review`.
+2. Updated `ph parking review` to match legacy’s interactive review output (including the non-interactive stdin EOF failure mode).
+3. Added deterministic pytest coverage to lock stdout parity for the non-interactive review path.
+4. Re-ran legacy vs `ph` capture + diff; verified byte-for-byte stdout parity.
+5. Ran ruff + pytest and committed.
+
+Commands executed (exact):
+- LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"
+- TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0039-root-real-XXXXXXXX)"
+- PH_ROOT="$TMP_ROOT/project-handbook"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"
+- (cd "$PH_ROOT" && pnpm install --frozen-lockfile)
+- (cd "$PH_ROOT" && tar -cf /tmp/ph-parity-V1P-0039-base.tar .)
+- (cd "$PH_ROOT" && pnpm make -- parking-review) > /tmp/V1P-0039.legacy.stdout.txt || true
+- rm -rf "$PH_ROOT" && mkdir -p "$PH_ROOT" && tar -xf /tmp/ph-parity-V1P-0039-base.tar -C "$PH_ROOT"
+- export UV_CACHE_DIR=/tmp/uv-cache; mkdir -p "$UV_CACHE_DIR"
+- uv run ph --root "$PH_ROOT" parking review > /tmp/V1P-0039.ph.stdout.txt || true
+- diff -u /tmp/V1P-0039.legacy.stdout.txt /tmp/V1P-0039.ph.stdout.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0039.done
+- src/ph/cli.py
+- src/ph/parking.py
+- src/ph/parking_lot_manager.py
+- tests/test_parking_list_review.py
+- tests/test_parking_review_parity_v1p0039.py
+
+Verification:
+- `diff -u /tmp/V1P-0039.legacy.stdout.txt /tmp/V1P-0039.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `wc -c /tmp/V1P-0039.legacy.stdout.txt /tmp/V1P-0039.ph.stdout.txt` showed both files are `952` bytes.
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> parking review` now matches legacy `pnpm make -- parking-review` for stdout (including the non-interactive stdin EOF failure mode); parity locked via pytest.
+
+Next task:
+- V1P-0040
+
+Blockers (if blocked):
+- (none)

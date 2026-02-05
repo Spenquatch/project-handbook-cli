@@ -86,7 +86,7 @@ def test_parking_list_json_table_and_review_outputs(tmp_path: Path) -> None:
         "parking",
         "review",
     ]
-    review = subprocess.run(review_cmd, capture_output=True, text=True, env=env)
+    review = subprocess.run(review_cmd, capture_output=True, text=True, env=env, input="q\n")
     assert review.returncode == 0
     assert "🔍 PARKING LOT QUARTERLY REVIEW" in review.stdout
 

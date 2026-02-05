@@ -1056,7 +1056,11 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 elif args.parking_command == "review":
+                    if ctx.scope == "project":
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["parking-review"]))
                     exit_code = run_parking_review(ctx=ctx, env=os.environ)
+                    if exit_code == 2:
+                        sys.stdout.write("\u2009ELIFECYCLE\u2009 Command failed with exit code 2.\n")
                 elif args.parking_command == "promote":
                     exit_code = run_parking_promote(
                         ctx=ctx,

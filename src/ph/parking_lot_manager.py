@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -223,15 +224,15 @@ _Note any technical, resource, or timing considerations_
         print(f"\nTotal items: {index_data['total_items']}")
         print(f"Last updated: {index_data.get('last_updated', 'never')}")
 
-    def review_items(self) -> None:
-        """Non-interactive review summary of parking lot items."""
+    def review_items(self) -> int:
+        """Interactive review of parking lot items for quarterly planning."""
         if not self.index_file.exists():
             self.update_index()
 
         index_data = json.loads(self.index_file.read_text(encoding="utf-8"))
         if index_data["total_items"] == 0:
             print("No items to review")
-            return
+            return 0
 
         print("\n🔍 PARKING LOT QUARTERLY REVIEW")
         print("=" * 80)
@@ -240,6 +241,8 @@ _Note any technical, resource, or timing considerations_
         print("  [d]elete/archive")
         print("  [s]kip (keep in parking lot)")
         print("  [q]uit review\n")
+
+        decisions: list[dict[str, Any]] = []
 
         for item in index_data["items"]:
             print("-" * 40)
@@ -252,6 +255,83 @@ _Note any technical, resource, or timing considerations_
             desc = item.get("description", "")
             if desc:
                 print(f"Description: {desc[:200]}..." if len(desc) > 200 else f"Description: {desc}")
+
+            while True:
+                try:
+                    action = input("\nAction ([p]romote/[d]elete/[s]kip/[v]iew full/[q]uit): ").lower().strip()
+                except EOFError:
+                    return 2
+
+                if action == "q":
+                    break
+                if action == "v":
+                    item_path = self.project_root / item["path"] / "README.md"
+                    if item_path.exists():
+                        print("\n--- Full Content ---")
+                        print(item_path.read_text(encoding="utf-8"), end="")
+                        print("--- End Content ---\n")
+                    continue
+                if action in {"p", "d", "s"}:
+                    decisions.append({"item": item, "action": action})
+                    break
+                print("Invalid action. Please choose p/d/s/v/q")
+
+            if action == "q":
+                break
+
+        print("\n" + "=" * 40)
+        print("REVIEW SUMMARY")
+        print("=" * 40)
+
+        promoted = [d for d in decisions if d["action"] == "p"]
+        deleted = [d for d in decisions if d["action"] == "d"]
+        kept = [d for d in decisions if d["action"] == "s"]
+
+        if promoted:
+            print(f"\n✅ Items to promote ({len(promoted)}):")
+            for d in promoted:
+                item = d["item"]
+                print(f"  • {item['id']}: {item.get('title', 'Untitled')}")
+
+        if deleted:
+            print(f"\n🗑️  Items to delete ({len(deleted)}):")
+            for d in deleted:
+                item = d["item"]
+                print(f"  • {item['id']}: {item.get('title', 'Untitled')}")
+
+        if kept:
+            print(f"\n⏸️  Items to keep ({len(kept)}):")
+            for d in kept:
+                item = d["item"]
+                print(f"  • {item['id']}: {item.get('title', 'Untitled')}")
+
+        if promoted or deleted:
+            try:
+                confirm = input("\nProceed with these actions? (y/n): ").lower().strip()
+            except EOFError:
+                return 2
+
+            if confirm == "y":
+                for d in promoted:
+                    self._promote_item(d["item"])
+                for d in deleted:
+                    self._delete_item(d["item"])
+
+                self.update_index()
+                print("✅ Review actions completed")
+            else:
+                print("❌ Review cancelled")
+
+        return 0
+
+    def _promote_item(self, item: Mapping[str, Any]) -> None:
+        print(f"  → Would promote {item.get('id', 'unknown')} to roadmap/later/")
+
+    def _delete_item(self, item: Mapping[str, Any]) -> None:
+        item_path = self.project_root / str(item.get("path", ""))
+        if item_path.exists():
+            shutil.rmtree(item_path)
+            print(f"  → Deleted {item.get('id', 'unknown')}")
 
     def _generate_item_id(self, item_type: str, title: str) -> str:
         """Generate a clean ID from type and title."""

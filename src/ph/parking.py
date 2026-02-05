@@ -48,8 +48,7 @@ def run_parking_list(
 
 def run_parking_review(*, ctx: Context, env: dict[str, str]) -> int:
     manager = ParkingLotManager(project_root=ctx.ph_data_root, env=env)
-    manager.review_items()
-    return 0
+    return int(manager.review_items())
 
 
 def run_parking_promote(*, ctx: Context, item_id: str, target: str, env: dict[str, str]) -> int:
