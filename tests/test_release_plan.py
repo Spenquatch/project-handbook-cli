@@ -42,8 +42,6 @@ def test_release_plan_creates_files_and_hints(tmp_path: Path) -> None:
             "v1.2.3",
             "--sprints",
             "2",
-            "--start-sprint",
-            "SPRINT-2099-01-01",
         ],
         capture_output=True,
         text=True,
@@ -63,16 +61,40 @@ def test_release_plan_creates_files_and_hints(tmp_path: Path) -> None:
 
     plan_text = plan_path.read_text(encoding="utf-8")
     assert "date: 2099-01-01" in plan_text
+    assert "timeline_mode: sprint_slots" in plan_text
+    assert "planned_sprints: 2" in plan_text
+    assert "sprint_slots: [1, 2]" in plan_text
 
-    expected_hints = [
-        "Release plan scaffold created under releases/v1.2.3/plan.md",
-        "  - Assign features via 'ph release add-feature --release <version> --feature <name>'",
-        "  - Activate when ready via 'ph release activate --release <version>'",
-        "  - Confirm sprint alignment via 'ph release status' (requires an active release)",
-        "  - Run 'ph validate --quick' before sharing externally",
-    ]
-    for line in expected_hints:
-        assert line in result.stdout
+    features_text = features_path.read_text(encoding="utf-8")
+    assert "timeline_mode: sprint_slots" in features_text
+    assert "start_sprint_slot: 1" in features_text
+    assert "end_sprint_slot: 2" in features_text
+
+    progress_text = progress_path.read_text(encoding="utf-8")
+    assert "- **Slot 1**: ⭕ Planned" in progress_text
+    assert "- **Slot 2**: ⭕ Planned" in progress_text
+
+    resolved_release_dir = (tmp_path / "releases" / "v1.2.3").resolve()
+    resolved_plan_path = (tmp_path / "releases" / "v1.2.3" / "plan.md").resolve()
+    expected_stdout = "\n".join(
+        [
+            "✅ Created release plan: v1.2.3",
+            f"📁 Location: {resolved_release_dir}",
+            "📅 Timeline: 2 sprint slot(s) (decoupled from calendar dates)",
+            "📝 Next steps:",
+            f"   1. Edit {resolved_plan_path} to define release goals",
+            "   2. Add features: make release-add-feature release=v1.2.3 feature=feature-name",
+            "   3. Activate when ready: make release-activate release=v1.2.3",
+            "   4. Review timeline and adjust if needed",
+            "Release plan scaffold created under releases/<version>/plan.md",
+            "  - Assign features via 'make release-add-feature release=<version> feature=<name>'",
+            "  - Activate when ready via 'make release-activate release=<version>'",
+            "  - Confirm sprint alignment via 'make release-status' (requires an active release)",
+            "  - Run 'make validate-quick' before sharing externally",
+            "",
+        ]
+    )
+    assert result.stdout == expected_stdout
 
 
 def test_release_plan_activate_sets_current(tmp_path: Path) -> None:

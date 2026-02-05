@@ -10,13 +10,13 @@ from .feature_status_updater import calculate_feature_metrics, collect_all_sprin
 
 _SYSTEM_SCOPE_REMEDIATION = "Releases are project-scope only. Use: ph --scope project release ..."
 
-def _plan_hint_lines(*, version: str) -> tuple[str, ...]:
+def _plan_hint_lines() -> tuple[str, ...]:
     return (
-        f"Release plan scaffold created under releases/{version}/plan.md",
-        "  - Assign features via 'ph release add-feature --release <version> --feature <name>'",
-        "  - Activate when ready via 'ph release activate --release <version>'",
-        "  - Confirm sprint alignment via 'ph release status' (requires an active release)",
-        "  - Run 'ph validate --quick' before sharing externally",
+        "Release plan scaffold created under releases/<version>/plan.md",
+        "  - Assign features via 'make release-add-feature release=<version> feature=<name>'",
+        "  - Activate when ready via 'make release-activate release=<version>'",
+        "  - Confirm sprint alignment via 'make release-status' (requires an active release)",
+        "  - Run 'make validate-quick' before sharing externally",
     )
 
 _ADD_FEATURE_SUCCESS_PREFIX = "✅ Added"
@@ -160,8 +160,9 @@ def _ensure_release_files_exist(
     *,
     ph_root: Path,
     version: str,
+    timeline_mode: str,
     sprint_count: int,
-    start_sprint: str,
+    start_sprint: str | None,
     sprint_ids: list[str] | None,
     env: dict[str, str],
 ) -> Path:
@@ -172,13 +173,105 @@ def _ensure_release_files_exist(
     release_dir = releases_dir / version
     release_dir.mkdir(parents=True, exist_ok=True)
 
-    timeline = calculate_sprint_range(start_sprint=start_sprint, sprint_count=sprint_count, explicit=sprint_ids)
-    end_sprint = timeline[-1]
     today = clock_today(env=env).strftime("%Y-%m-%d")
 
     plan_path = release_dir / "plan.md"
     if not plan_path.exists():
-        plan_content = f"""---
+        normalized_mode = (timeline_mode or "").strip().lower()
+        if normalized_mode == "sprint_slots":
+            slots = list(range(1, sprint_count + 1))
+            slots_csv = ", ".join(str(slot) for slot in slots)
+            plan_content = f"""---
+title: Release {version} Plan
+type: release-plan
+version: {version}
+timeline_mode: sprint_slots
+planned_sprints: {sprint_count}
+sprint_slots: [{slots_csv}]
+status: planned
+date: {today}
+tags: [release, planning]
+links: []
+---
+
+
+# Release {version}
+
+## Release Summary
+Brief description of what this release delivers.
+
+## Release Goals
+1. **Primary Goal**: Main feature or capability
+2. **Secondary Goal**: Supporting features
+3. **Stretch Goal**: Nice-to-have if time permits
+
+## Release Type & Scope
+- **Type**: minor (2 sprints) / standard (3 sprints) / major (4 sprints)
+- **In scope (must-have)**:
+  - TBD
+- **Out of scope (explicitly not in this release)**:
+  - TBD
+- **Scope flexibility**:
+  - Locked: TBD
+  - Flexible: TBD
+
+## Sprint Timeline
+This release uses **sprint slots** (not calendar dates). Assign a concrete sprint to a slot by setting
+`release: {version}` and `release_sprint_slot: <n>` in the sprint plan front matter.
+
+- **Slot 1** (Sprint 1 of {sprint_count}): Sprint theme/focus
+"""
+            for slot in range(2, sprint_count + 1):
+                plan_content += f"- **Slot {slot}** (Sprint {slot} of {sprint_count}): Sprint theme/focus\n"
+
+            plan_content += f"""
+
+## Release Gates (Burn-up)
+Define a small set of explicit gates (smoke/demo/contract-lock) as **sprint tasks** and tag them to this release:
+```bash
+make task-create title="Gate: <name>" feature=<feature> decision=ADR-XXX points=3 release={version} gate=true
+```
+
+## Feature Assignments
+*Use `make release-add-feature` to assign features to this release*
+
+## Scope Control
+- **Scope lock**: TBD (slot or criteria)
+- **Change control**:
+  - Default: new requests go to the next release
+  - Exceptions: TBD (who decides, criteria, and how to document)
+
+## Communication Plan
+### Internal
+- Announcement: TBD
+- Progress cadence: weekly release health check
+- Escalation path: TBD
+
+### Stakeholders
+- Update cadence: TBD
+- Demo date(s): TBD
+- Release notes owner: TBD
+
+## Success Criteria
+- [ ] All assigned features complete
+- [ ] Performance benchmarks met
+- [ ] Quality gates passed
+- [ ] Documentation updated
+
+## Risk Management
+- Critical path: (Identify critical features)
+- Dependencies: (External dependencies)
+- Capacity: (Team availability considerations)
+
+## Release Notes Draft
+*Auto-generated from completed tasks and features*
+"""
+        else:
+            if not start_sprint:
+                raise ValueError("start_sprint is required when timeline_mode != sprint_slots")
+            timeline = calculate_sprint_range(start_sprint=start_sprint, sprint_count=sprint_count, explicit=sprint_ids)
+            end_sprint = timeline[-1]
+            plan_content = f"""---
 title: Release {version} Plan
 type: release-plan
 version: {version}
@@ -214,10 +307,10 @@ Brief description of what this release delivers.
 
 ## Sprint Timeline
 """
-        for i, sprint_id in enumerate(timeline, 1):
-            plan_content += f"- **{sprint_id}** (Sprint {i} of {sprint_count}): Sprint theme/focus\n"
+            for i, sprint_id in enumerate(timeline, 1):
+                plan_content += f"- **{sprint_id}** (Sprint {i} of {sprint_count}): Sprint theme/focus\n"
 
-        plan_content += """
+            plan_content += """
 
 ## Feature Assignments
 *Use `make release-add-feature` to assign features to this release*
@@ -258,7 +351,34 @@ Brief description of what this release delivers.
 
     features_path = release_dir / "features.yaml"
     if not features_path.exists():
-        features_content = f"""# Feature assignments for {version}
+        normalized_mode = (timeline_mode or "").strip().lower()
+        if normalized_mode == "sprint_slots":
+            features_content = f"""# Feature assignments for {version}
+# Auto-managed by release commands
+
+version: {version}
+timeline_mode: sprint_slots
+start_sprint_slot: 1
+end_sprint_slot: {sprint_count}
+planned_sprints: {sprint_count}
+
+
+features:
+  # Features will be added with: make release-add-feature
+  # Example:
+  # auth-system:
+  #   type: epic
+  #   priority: P0
+  #   status: planned
+  #   completion: 0
+  #   critical_path: true
+"""
+        else:
+            if not start_sprint:
+                raise ValueError("start_sprint is required when timeline_mode != sprint_slots")
+            timeline = calculate_sprint_range(start_sprint=start_sprint, sprint_count=sprint_count, explicit=sprint_ids)
+            end_sprint = timeline[-1]
+            features_content = f"""# Feature assignments for {version}
 # Auto-managed by release commands
 
 version: {version}
@@ -280,6 +400,7 @@ features:
 
     progress_path = release_dir / "progress.md"
     if not progress_path.exists():
+        normalized_mode = (timeline_mode or "").strip().lower()
         progress_content = f"""---
 title: Release {version} Progress
 type: release-progress
@@ -296,10 +417,22 @@ links: []
 ## Sprint Progress
 """
 
-        current_active = _resolve_current_sprint_id(ph_root=ph_root, fallback=start_sprint)
-        for i, sprint_id in enumerate(timeline, 1):
-            status = "✅ Complete" if i == 1 else ("🔄 In Progress" if sprint_id == current_active else "⭕ Planned")
-            progress_content += f"- **{sprint_id}**: {status}\n"
+        if normalized_mode == "sprint_slots":
+            for slot in range(1, sprint_count + 1):
+                progress_content += f"- **Slot {slot}**: ⭕ Planned\n"
+        else:
+            if not start_sprint:
+                raise ValueError("start_sprint is required when timeline_mode != sprint_slots")
+            timeline = calculate_sprint_range(start_sprint=start_sprint, sprint_count=sprint_count, explicit=sprint_ids)
+            current_active = _resolve_current_sprint_id(ph_root=ph_root, fallback=start_sprint)
+            for i, sprint_id in enumerate(timeline, 1):
+                if i == 1:
+                    status = "✅ Complete"
+                elif sprint_id == current_active:
+                    status = "🔄 In Progress"
+                else:
+                    status = "⭕ Planned"
+                progress_content += f"- **{sprint_id}**: {status}\n"
 
         progress_content += """
 
@@ -335,16 +468,20 @@ def run_release_plan(
     raw_version = (version or "next").strip()
     raw_bump = (bump or "patch").strip()
 
+    user_provided_start_sprint = start_sprint is not None
     explicit_sprint_ids = _parse_sprint_ids_csv(sprint_ids)
-    if not start_sprint and explicit_sprint_ids:
-        start_sprint = explicit_sprint_ids[0]
 
     sprint_count = int(sprints) if sprints else 3
     if explicit_sprint_ids:
         sprint_count = len(explicit_sprint_ids)
 
-    if start_sprint is None:
-        start_sprint = f"SPRINT-{clock_today(env=env):%Y-%m-%d}"
+    timeline_mode = "sprint_slots"
+    if user_provided_start_sprint or explicit_sprint_ids:
+        timeline_mode = "sprint_ids"
+        if not start_sprint and explicit_sprint_ids:
+            start_sprint = explicit_sprint_ids[0]
+        if start_sprint is None:
+            start_sprint = f"SPRINT-{clock_today(env=env):%Y-%m-%d}"
 
     if raw_version in {"next", "auto"}:
         current = get_current_release(ph_root=ctx.ph_root)
@@ -355,9 +492,10 @@ def run_release_plan(
     if not raw_version.startswith("v"):
         raw_version = f"v{raw_version}"
 
-    _ensure_release_files_exist(
+    release_dir = _ensure_release_files_exist(
         ph_root=ctx.ph_root,
         version=raw_version,
+        timeline_mode=timeline_mode,
         sprint_count=sprint_count,
         start_sprint=start_sprint,
         sprint_ids=explicit_sprint_ids,
@@ -369,7 +507,17 @@ def run_release_plan(
         if not ok:
             print(f"⚠️  Failed to activate current release (symlink): releases/current → {raw_version}")
 
-    for line in _plan_hint_lines(version=raw_version):
+    resolved_release_dir = release_dir.resolve()
+    resolved_plan_path = (resolved_release_dir / "plan.md").resolve()
+    print(f"✅ Created release plan: {raw_version}")
+    print(f"📁 Location: {resolved_release_dir}")
+    print(f"📅 Timeline: {sprint_count} sprint slot(s) (decoupled from calendar dates)")
+    print("📝 Next steps:")
+    print(f"   1. Edit {resolved_plan_path} to define release goals")
+    print(f"   2. Add features: make release-add-feature release={raw_version} feature=feature-name")
+    print(f"   3. Activate when ready: make release-activate release={raw_version}")
+    print("   4. Review timeline and adjust if needed")
+    for line in _plan_hint_lines():
         print(line)
     return 0
 
