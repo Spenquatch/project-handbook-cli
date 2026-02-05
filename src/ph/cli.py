@@ -999,6 +999,10 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 elif args.backlog_command == "rubric":
+                    if ctx.scope == "project":
+                        sys.stdout.write(
+                            _format_pnpm_make_preamble(ph_root=ph_root, make_args=["backlog-rubric"])
+                        )
                     exit_code = run_backlog_rubric(ctx=ctx, env=os.environ)
                 elif args.backlog_command == "stats":
                     exit_code = run_backlog_stats(ctx=ctx, env=os.environ)

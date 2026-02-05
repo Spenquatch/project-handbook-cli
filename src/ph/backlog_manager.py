@@ -579,7 +579,7 @@ _Add investigation findings here_
         print("  • P1 issues are addressed in the next sprint")
         print("  • P2-P3 issues queue in the backlog")
         print("  • P4 issues are candidates for the parking lot")
-        print("  • Use 'ph backlog triage' for P0 decision support")
+        print("  • Use 'make backlog-triage' for P0 decision support")
 
     def _normalize_issue_type(self, value: str) -> str:
         normalized = (value or "").strip().lower()
