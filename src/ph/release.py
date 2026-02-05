@@ -638,13 +638,23 @@ def run_release_show(*, ctx: Context, env: dict[str, str]) -> int:
         return 1
 
     plan_path = ctx.ph_root / "releases" / version / "plan.md"
-    if not plan_path.exists():
-        print(f"❌ Missing release plan: {plan_path}")
-        return 1
+    if plan_path.exists():
+        print(f"📘 RELEASE PLAN: {version}")
+        print("=" * 60)
+        print(plan_path.read_text(encoding="utf-8").rstrip())
+        print()
+    else:
+        print(f"⚠️  Missing release plan: {plan_path}")
 
-    print(plan_path.read_text(encoding="utf-8"), end="")
-    print("")
-    return run_release_status(ctx=ctx, env=env)
+    print("---")
+    print()
+
+    exit_code = run_release_status(ctx=ctx, env=env)
+
+    progress_path = write_release_progress(ph_root=ctx.ph_root, version=version, env=env)
+    print()
+    print(f"📝 Updated: {progress_path.resolve()}")
+    return exit_code
 
 
 def _read_current_release_target(*, ph_root: Path) -> str | None:
