@@ -142,6 +142,73 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 11:57 UTC — V1P-0030 — Parity: `make feature-archive` → `ph feature archive`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created under `$TMPDIR`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0030)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `make feature-archive name=<name> force=true` → `ph feature archive --name <name> --force` (stdout + moved `features/implemented/<name>/`).
+
+Work performed (ordered):
+1. Created a disposable PH_ROOT from the legacy handbook repo and selected a feature name from baseline.
+2. Captured legacy stdout + archived feature dir for `pnpm make -- feature-archive name=... force=true`.
+3. Captured `ph` stdout + archived feature dir for `uv run ph --root <PH_ROOT> feature archive --name ... --force` and diffed (initial mismatch: missing pnpm/make preamble for this command).
+4. Updated the `ph` CLI to print the pnpm/make preamble for `feature archive --force` and added deterministic pytest coverage.
+5. Re-ran legacy vs `ph` capture + diff; verified stdout parity; confirmed directory diffs are limited to a legacy wall-clock timestamp field.
+6. Ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- TMP_ROOT=\"$(mktemp -d -t ph-parity-V1P-0030-root-real-XXXXXXXX)\"
+- PH_ROOT=\"$TMP_ROOT/project-handbook\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT\" && tar -cf /tmp/ph-parity-V1P-0030-base.tar .)
+- FEATURE_NAME=\"$(ls -1 \"$PH_ROOT/features\" | rg -v '^(implemented|archive)$' | head -n 1)\"
+- (cd \"$PH_ROOT\" && pnpm make -- feature-archive name=\"$FEATURE_NAME\" force=true) > /tmp/V1P-0030.legacy.stdout.txt
+- rsync -a --delete \"$PH_ROOT/features/implemented/$FEATURE_NAME/\" /tmp/V1P-0030.legacy.feature/
+- rm -rf \"$PH_ROOT\" && mkdir -p \"$PH_ROOT\" && tar -xf /tmp/ph-parity-V1P-0030-base.tar -C \"$PH_ROOT\"
+- export UV_CACHE_DIR=/tmp/uv-cache; mkdir -p \"$UV_CACHE_DIR\"
+- uv run ph --root \"$PH_ROOT\" feature archive --name \"$FEATURE_NAME\" --force > /tmp/V1P-0030.ph.stdout.txt
+- rsync -a --delete \"$PH_ROOT/features/implemented/$FEATURE_NAME/\" /tmp/V1P-0030.ph.feature/
+- diff -u /tmp/V1P-0030.legacy.stdout.txt /tmp/V1P-0030.ph.stdout.txt
+- diff -ru /tmp/V1P-0030.legacy.feature /tmp/V1P-0030.ph.feature
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0030.done
+- src/ph/cli.py
+- tests/test_feature_archive.py
+
+Verification:
+- `diff -u /tmp/V1P-0030.legacy.stdout.txt /tmp/V1P-0030.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `diff -ru /tmp/V1P-0030.legacy.feature /tmp/V1P-0030.ph.feature` differs only in `implemented_on` inside `metadata.json` and `archive_report.json` (legacy uses wall-clock `datetime.now()` per run).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 162 tests)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> feature archive --name <name> --force` matches legacy stdout and output structure; the only cross-run diff is the legacy time-dependent `implemented_on` value in archive metadata (expected).
+
+Next task:
+- V1P-0031
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-05 11:24 UTC — V1P-0028 — Parity: `make feature-update-status` → `ph feature update-status`
 
 Agent: GPT-5.2 (Orchestrator + background Codex CLI)

@@ -914,6 +914,17 @@ def main(argv: list[str] | None = None) -> int:
                         sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["feature-summary"]))
                     exit_code = run_feature_summary(ctx=ctx, env=os.environ)
                 elif args.feature_command == "archive":
+                    if ctx.scope == "project":
+                        def _make_var_token(key: str, value: str) -> str:
+                            raw = f"{key}={value}"
+                            if any(ch.isspace() for ch in raw):
+                                return f"'{raw}'"
+                            return raw.replace("=", "\\=", 1)
+
+                        make_args = ["feature-archive", _make_var_token("name", str(args.name))]
+                        if bool(getattr(args, "force", False)):
+                            make_args.append(_make_var_token("force", "true"))
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
                     exit_code = run_feature_archive(
                         ctx=ctx,
                         name=str(args.name),

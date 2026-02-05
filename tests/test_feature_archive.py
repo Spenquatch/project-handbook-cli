@@ -75,6 +75,29 @@ def test_feature_archive_success_moves_directory(tmp_path: Path) -> None:
     assert (tmp_path / "features" / "implemented" / "feat-archive").exists()
 
 
+def test_feature_archive_prints_pnpm_make_preamble_when_forced(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    (tmp_path / "package.json").write_text(
+        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
+        encoding="utf-8",
+    )
+    _seed_complete_feature(base=tmp_path, name="feat-dev", stage="developing")
+
+    cmd = _archive_cmd(ph_root=tmp_path, scope="project", name="feat-dev", force=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, env=dict(os.environ))
+    assert result.returncode == 0
+
+    expected_root = str(tmp_path.resolve())
+    assert result.stdout.splitlines() == [
+        "",
+        f"> project-handbook@0.0.0 make {expected_root}",
+        "> make -- feature-archive name\\=feat-dev force\\=true",
+        "",
+        "✅ Completeness check passed (all critical docs present and filled).",
+        "📦 Moved feature 'feat-dev' to features/implemented/",
+    ]
+
+
 def test_feature_archive_blocks_on_non_completed_stage(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     feature_dir = tmp_path / "features" / "feat-blocked"
