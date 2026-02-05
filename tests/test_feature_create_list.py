@@ -37,7 +37,7 @@ def _write_minimal_ph_root(ph_root: Path, *, routing_rules: dict | None = None) 
                 "Next steps for features/feat-a/:",
                 "  1. Flesh out overview.md + status.md with owner, goals, and risks",
                 "  2. Draft architecture/implementation/testing docs before assigning sprint work",
-                "  3. Run 'ph validate --quick' so docs stay lint-clean",
+                "  3. Run 'make validate-quick' so docs stay lint-clean",
             ],
         ),
         (
@@ -152,4 +152,27 @@ def test_feature_list_prints_pnpm_make_preamble_when_package_json_present(tmp_pa
         "",
         "📁 No features found",
         "💡 Create one with: ph feature create --name my-feature",
+    ]
+
+
+def test_feature_create_prints_pnpm_make_preamble_when_package_json_present(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    (tmp_path / "package.json").write_text(
+        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
+        encoding="utf-8",
+    )
+
+    env = dict(os.environ)
+    env["PH_FAKE_TODAY"] = "2099-01-01"
+
+    cmd = ["ph", "--root", str(tmp_path), "--no-post-hook", "feature", "create", "--name", "feat-a"]
+    created = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    assert created.returncode == 0
+
+    expected_root = str(tmp_path.resolve())
+    assert created.stdout.splitlines()[:4] == [
+        "",
+        f"> project-handbook@0.0.0 make {expected_root}",
+        "> make -- feature-create name\\=feat-a",
+        "",
     ]

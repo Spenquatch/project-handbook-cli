@@ -142,6 +142,70 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 05:04 UTC — V1P-0026 — Parity: `make feature-create` → `ph feature create`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created under `$TMPDIR`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0026)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `make feature-create name=<name>` → `ph feature create --name <name>` (stdout + generated feature directory contents).
+
+Work performed (ordered):
+1. Captured legacy stdout + generated `features/<name>/` output from `pnpm make -- feature-create name=...` and diffed against `uv run ph ... feature create --name ...` (initial mismatches: pnpm/make preamble + feature create hints/template drift).
+2. Updated `ph feature create` to match legacy stdout and generated feature directory contents byte-for-byte (including pnpm/make preamble emission).
+3. Extended deterministic pytest coverage for feature create/list parity.
+4. Re-ran legacy-vs-`ph` capture + diff; verified byte-for-byte match; ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- TMP_ROOT=\"$(mktemp -d -t ph-parity-V1P-0026-root-real-XXXXXXXX)\"
+- PH_ROOT=\"$TMP_ROOT/project-handbook\"
+- FEATURE_NAME=\"parity-feature-create\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT\" && tar -cf /tmp/ph-parity-V1P-0026-base.tar .)
+- (cd \"$PH_ROOT\" && pnpm make -- feature-create name=\"$FEATURE_NAME\") > /tmp/V1P-0026.legacy.stdout.txt
+- rsync -a --delete \"$PH_ROOT/features/$FEATURE_NAME/\" /tmp/V1P-0026.legacy.feature/
+- rm -rf \"$PH_ROOT\" && mkdir -p \"$PH_ROOT\" && tar -xf /tmp/ph-parity-V1P-0026-base.tar -C \"$PH_ROOT\"
+- uv run ph --root \"$PH_ROOT\" feature create --name \"$FEATURE_NAME\" > /tmp/V1P-0026.ph.stdout.txt
+- rsync -a --delete \"$PH_ROOT/features/$FEATURE_NAME/\" /tmp/V1P-0026.ph.feature/
+- diff -u /tmp/V1P-0026.legacy.stdout.txt /tmp/V1P-0026.ph.stdout.txt
+- diff -ru /tmp/V1P-0026.legacy.feature /tmp/V1P-0026.ph.feature
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/tasks_v1_parity.json
+- cli_plan/session_logs.md
+- src/ph/cli.py
+- src/ph/feature.py
+- tests/test_feature_create_list.py
+
+Verification:
+- `diff -u /tmp/V1P-0026.legacy.stdout.txt /tmp/V1P-0026.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `diff -ru /tmp/V1P-0026.legacy.feature /tmp/V1P-0026.ph.feature` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 155 tests)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> feature create --name <name>` matches legacy stdout and generated `features/<name>/` byte-for-byte; parity locked via pytest.
+
+Next task:
+- V1P-0027
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-05 04:54 UTC — V1P-0025 — Parity: `make feature-list` → `ph feature list`
 
 Agent: GPT-5.2 (Orchestrator + background Codex CLI)

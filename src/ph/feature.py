@@ -60,7 +60,7 @@ def _feature_hint_block(*, ctx: Context, name: str) -> list[str]:
         f"Next steps for features/{name}/:",
         "  1. Flesh out overview.md + status.md with owner, goals, and risks",
         "  2. Draft architecture/implementation/testing docs before assigning sprint work",
-        "  3. Run 'ph validate --quick' so docs stay lint-clean",
+        "  3. Run 'make validate-quick' so docs stay lint-clean",
     ]
 
 
@@ -303,7 +303,10 @@ links: []
     print("📝 Next steps:")
     print(f"   1. Edit {feature_dir}/overview.md to define the feature")
     print(f"   2. Update {feature_dir}/status.md with current status")
-    print("   3. Run 'ph validate' to check structure")
+    if ctx.scope == "system":
+        print("   3. Run 'ph --scope system validate' to check structure")
+    else:
+        print("   3. Run 'make validate' to check structure")
 
     for line in _feature_hint_block(ctx=ctx, name=name):
         print(line)
