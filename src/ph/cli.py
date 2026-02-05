@@ -880,6 +880,23 @@ def main(argv: list[str] | None = None) -> int:
                 elif args.feature_command == "list":
                     exit_code = run_feature_list(ctx=ctx)
                 elif args.feature_command == "status":
+                    if ctx.scope == "project":
+                        def _make_var_token(key: str, value: str) -> str:
+                            raw = f"{key}={value}"
+                            if any(ch.isspace() for ch in raw):
+                                return f"'{raw}'"
+                            return raw.replace("=", "\\=", 1)
+
+                        sys.stdout.write(
+                            _format_pnpm_make_preamble(
+                                ph_root=ph_root,
+                                make_args=[
+                                    "feature-status",
+                                    _make_var_token("name", str(args.name)),
+                                    _make_var_token("stage", str(args.stage)),
+                                ],
+                            )
+                        )
                     exit_code = run_feature_status(
                         ctx=ctx,
                         name=str(args.name),

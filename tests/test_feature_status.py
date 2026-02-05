@@ -72,3 +72,89 @@ def test_feature_status_not_found(tmp_path: Path, scope: str) -> None:
     missing = subprocess.run(cmd, capture_output=True, text=True, env=env)
     assert missing.returncode == 1
     assert missing.stdout.strip() == "❌ Feature 'missing' not found"
+
+
+def test_feature_status_project_scope_emits_pnpm_make_preamble_when_package_json_present(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    (tmp_path / "package.json").write_text(
+        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
+        encoding="utf-8",
+    )
+
+    create_env = dict(os.environ)
+    create_env["PH_FAKE_TODAY"] = "2099-01-02"
+    created = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "feature", "create", "--name", "feat-a"],
+        capture_output=True,
+        text=True,
+        env=create_env,
+    )
+    assert created.returncode == 0
+
+    status_env = dict(os.environ)
+    status_env["PH_FAKE_TODAY"] = "2099-01-01"
+    updated = subprocess.run(
+        [
+            "ph",
+            "--root",
+            str(tmp_path),
+            "--no-post-hook",
+            "feature",
+            "status",
+            "--name",
+            "feat-a",
+            "--stage",
+            "developing",
+        ],
+        capture_output=True,
+        text=True,
+        env=status_env,
+    )
+    assert updated.returncode == 0
+
+    expected_root = str(tmp_path.resolve())
+    assert updated.stdout.splitlines() == [
+        "",
+        f"> project-handbook@0.0.0 make {expected_root}",
+        "> make -- feature-status name\\=feat-a stage\\=developing",
+        "",
+        "✅ Updated 'feat-a' stage to 'developing'",
+    ]
+
+
+def test_feature_status_not_found_emits_pnpm_make_preamble_when_package_json_present(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    (tmp_path / "package.json").write_text(
+        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
+        encoding="utf-8",
+    )
+
+    env = dict(os.environ)
+    env["PH_FAKE_TODAY"] = "2099-01-01"
+    missing = subprocess.run(
+        [
+            "ph",
+            "--root",
+            str(tmp_path),
+            "--no-post-hook",
+            "feature",
+            "status",
+            "--name",
+            "missing",
+            "--stage",
+            "developing",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert missing.returncode == 1
+
+    expected_root = str(tmp_path.resolve())
+    assert missing.stdout.splitlines() == [
+        "",
+        f"> project-handbook@0.0.0 make {expected_root}",
+        "> make -- feature-status name\\=missing stage\\=developing",
+        "",
+        "❌ Feature 'missing' not found",
+    ]
