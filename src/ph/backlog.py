@@ -83,9 +83,9 @@ def run_backlog_list(
     return 0
 
 
-def run_backlog_triage(*, ctx: Context, issue_id: str, env: dict[str, str]) -> int:
+def run_backlog_triage(*, ctx: Context, issue_id: str, env: dict[str, str], print_index_summary: bool) -> int:
     manager = BacklogManager(project_root=ctx.ph_data_root, env=env)
-    ok = manager.triage_issue(issue_id)
+    ok = manager.triage_issue(issue_id, print_index_summary=print_index_summary)
     return 0 if ok else 1
 
 

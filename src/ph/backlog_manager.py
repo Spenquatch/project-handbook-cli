@@ -267,7 +267,7 @@ _Add investigation findings here_
 
         print(f"\nLast updated: {index_data.get('last_updated', 'never')}")
 
-    def triage_issue(self, issue_id: str) -> bool:
+    def triage_issue(self, issue_id: str, *, print_index_summary: bool = False) -> bool:
         """Generate or display triage analysis for an issue (ported from v0)."""
         self.update_index(print_summary=False)
 
@@ -283,13 +283,18 @@ _Add investigation findings here_
             print(f"Error: Issue '{issue_id}' not found")
             return False
 
+        if print_index_summary:
+            print(f"📊 Updated backlog index: {index_data['total_items']} items")
+            print()
+
         issue_path = self.project_root / issue["path"]
         triage_path = issue_path / "triage.md"
 
         if triage_path.exists():
-            print(f"\n🎯 TRIAGE ANALYSIS: {issue_id}")
+            print(f"🎯 TRIAGE ANALYSIS: {issue_id}")
             print("=" * 80)
             print(triage_path.read_text(encoding="utf-8"), end="")
+            print()
             return True
 
         print(f"No triage analysis found for {issue_id}")

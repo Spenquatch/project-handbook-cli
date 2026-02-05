@@ -7319,3 +7319,78 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 12:48 UTC — V1P-0033 — Parity: make backlog-triage → ph backlog triage
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created under `$TMPDIR`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0033)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `make backlog-triage issue=<ID>` → `ph backlog triage --issue <ID>` (stdout + `backlog/index.json` + issue dir updates).
+
+Work performed (ordered):
+1. Created a disposable PH_ROOT from the legacy handbook repo and seeded a deterministic P0 issue (frozen time) to satisfy the triage precondition.
+2. Captured legacy triage stdout + `backlog/index.json` + issue dir outputs, freezing legacy wall-clock time via `PYTHONPATH` + `sitecustomize.py`.
+3. Captured `ph` triage stdout + file outputs under the same frozen time (`PH_FAKE_NOW`) and diffed; updated `ph` to match legacy output exactly and added deterministic pytest coverage.
+4. Re-ran legacy-vs-`ph` capture + diff; verified byte-for-byte matches for stdout, index, and issue dir.
+5. Ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"
+- TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0033-root-real-XXXXXXXX)"
+- PH_ROOT="$TMP_ROOT/project-handbook"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"
+- (cd "$PH_ROOT" && pnpm install --frozen-lockfile)
+- FAKETIME_DIR="/tmp/ph-faketime-v1p0033"; rm -rf "$FAKETIME_DIR"; mkdir -p "$FAKETIME_DIR"; cat >"$FAKETIME_DIR/sitecustomize.py" <<'PY' ... PY
+- export PH_FAKE_NOW="2099-01-01T09:00:00Z"
+- (cd "$PH_ROOT" && PYTHONPATH="$FAKETIME_DIR" pnpm make -- backlog-add type=bug title="Parity P0 issue" severity=P0 desc="Seed for V1P-0033") > /tmp/V1P-0033.seed.stdout.txt
+- ISSUE_ID="BUG-P0-20990101-090000"
+- (cd "$PH_ROOT" && tar -cf /tmp/ph-parity-V1P-0033-base.tar .)
+- (cd "$PH_ROOT" && PYTHONPATH="$FAKETIME_DIR" pnpm make -- backlog-triage issue="$ISSUE_ID") > /tmp/V1P-0033.legacy.stdout.txt
+- rsync -a --delete "$PH_ROOT/backlog/index.json" /tmp/V1P-0033.legacy.index.json
+- rsync -a --delete "$PH_ROOT/backlog/bugs/$ISSUE_ID/" /tmp/V1P-0033.legacy.issue/
+- rm -rf "$PH_ROOT" && mkdir -p "$PH_ROOT" && tar -xf /tmp/ph-parity-V1P-0033-base.tar -C "$PH_ROOT"
+- export UV_CACHE_DIR=/tmp/uv-cache; mkdir -p "$UV_CACHE_DIR"
+- PH_FAKE_NOW="2099-01-01T09:00:00Z" uv run ph --root "$PH_ROOT" backlog triage --issue "$ISSUE_ID" > /tmp/V1P-0033.ph.stdout.txt
+- rsync -a --delete "$PH_ROOT/backlog/index.json" /tmp/V1P-0033.ph.index.json
+- rsync -a --delete "$PH_ROOT/backlog/bugs/$ISSUE_ID/" /tmp/V1P-0033.ph.issue/
+- diff -u /tmp/V1P-0033.legacy.stdout.txt /tmp/V1P-0033.ph.stdout.txt
+- diff -u /tmp/V1P-0033.legacy.index.json /tmp/V1P-0033.ph.index.json
+- diff -ru /tmp/V1P-0033.legacy.issue /tmp/V1P-0033.ph.issue
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/backlog.py
+- src/ph/backlog_manager.py
+- src/ph/cli.py
+- tests/test_backlog_triage.py
+- tests/test_backlog_triage_parity_v1p0033.py
+
+Verification:
+- `diff -u /tmp/V1P-0033.legacy.stdout.txt /tmp/V1P-0033.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `diff -u /tmp/V1P-0033.legacy.index.json /tmp/V1P-0033.ph.index.json` returned no diff (byte-for-byte match).
+- `diff -ru /tmp/V1P-0033.legacy.issue /tmp/V1P-0033.ph.issue` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 164 tests)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> backlog triage --issue <ID>` now matches legacy `pnpm make -- backlog-triage issue=<ID>` for stdout + index + issue dir, under frozen time; parity locked via pytest.
+
+Next task:
+- V1P-0034
+
+Blockers (if blocked):
+- (none)

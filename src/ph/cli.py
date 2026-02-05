@@ -964,7 +964,20 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 elif args.backlog_command == "triage":
-                    exit_code = run_backlog_triage(ctx=ctx, issue_id=str(args.issue_id), env=os.environ)
+                    issue_id = str(args.issue_id)
+                    if ctx.scope == "project":
+                        sys.stdout.write(
+                            _format_pnpm_make_preamble(
+                                ph_root=ph_root,
+                                make_args=["backlog-triage", f"issue\\={issue_id}"],
+                            )
+                        )
+                    exit_code = run_backlog_triage(
+                        ctx=ctx,
+                        issue_id=issue_id,
+                        env=os.environ,
+                        print_index_summary=ctx.scope == "project",
+                    )
                 elif args.backlog_command == "assign":
                     exit_code = run_backlog_assign(
                         ctx=ctx,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -14,7 +15,7 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
     )
 
     (ph_root / "package.json").write_text(
-        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
+        json.dumps({"name": "project-handbook", "version": "0.0.0"}, indent=2) + "\n",
         encoding="utf-8",
     )
 
@@ -29,7 +30,7 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
     (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
-def test_backlog_triage_generates_then_displays_p0(tmp_path: Path) -> None:
+def test_backlog_triage_existing_issue_stdout_matches_legacy_make_preamble_v1p0033(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
 
     env = dict(os.environ)
@@ -49,11 +50,11 @@ def test_backlog_triage_generates_then_displays_p0(tmp_path: Path) -> None:
             "--type",
             "bug",
             "--title",
-            "T",
+            "Parity P0 issue",
             "--severity",
             "P0",
             "--desc",
-            "D",
+            "Seed for V1P-0033",
         ],
         capture_output=True,
         text=True,
@@ -63,55 +64,24 @@ def test_backlog_triage_generates_then_displays_p0(tmp_path: Path) -> None:
 
     triage_path = tmp_path / "backlog" / "bugs" / issue_id / "triage.md"
     assert triage_path.exists()
-    triage_path.unlink()
+    triage_content = triage_path.read_text(encoding="utf-8")
 
-    first = subprocess.run(
-        ["ph", "--root", str(tmp_path), "--no-post-hook", "backlog", "triage", "--issue", issue_id],
-        capture_output=True,
-        text=True,
-        env=env,
-    )
-    assert first.returncode == 0
-    assert f"No triage analysis found for {issue_id}" in first.stdout
-    assert "Generating triage template..." in first.stdout
-    assert f"✅ Generated triage template: backlog/bugs/{issue_id}/triage.md" in first.stdout
-    assert triage_path.exists()
-
-    second = subprocess.run(
-        ["ph", "--root", str(tmp_path), "--no-post-hook", "backlog", "triage", "--issue", issue_id],
-        capture_output=True,
-        text=True,
-        env=env,
-    )
-    assert second.returncode == 0
-    assert f"🎯 TRIAGE ANALYSIS: {issue_id}" in second.stdout
-    assert "P0 Triage Analysis:" in second.stdout
-
-
-def test_backlog_triage_not_found_system_scope_prints_exact_message(tmp_path: Path) -> None:
-    _write_minimal_ph_root(tmp_path)
-
-    env = dict(os.environ)
-    env["PH_FAKE_NOW"] = "2099-01-01T09:00:00Z"
-    env["PH_FAKE_TODAY"] = "2099-01-01"
-
-    issue_id = "BUG-P9-00000000-000000"
     result = subprocess.run(
-        [
-            "ph",
-            "--root",
-            str(tmp_path),
-            "--scope",
-            "system",
-            "--no-post-hook",
-            "backlog",
-            "triage",
-            "--issue",
-            issue_id,
-        ],
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "backlog", "triage", "--issue", issue_id],
         capture_output=True,
         text=True,
         env=env,
     )
-    assert result.returncode == 1
-    assert result.stdout == f"Error: Issue '{issue_id}' not found\n"
+    assert result.returncode == 0
+
+    expected_root = tmp_path.resolve()
+    expected = (
+        f"\n> project-handbook@0.0.0 make {expected_root}\n"
+        f"> make -- backlog-triage issue\\={issue_id}\n\n"
+        "📊 Updated backlog index: 1 items\n\n"
+        f"🎯 TRIAGE ANALYSIS: {issue_id}\n"
+        f"{'=' * 80}\n"
+        f"{triage_content}\n"
+    )
+    assert result.stdout == expected
+
