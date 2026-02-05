@@ -8553,3 +8553,58 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 19:50 UTC — V1P-0053 — Parity: `make release-clear` → `ph release clear`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created via `mktemp`; see Commands executed)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0053)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- release-clear` → `ph release clear` (stdout + exit code + `releases/current` removal).
+
+Work performed (ordered):
+1. Captured legacy stdout/exit and verified `releases/current` becomes absent on `make release-clear` under `npm_config_reporter=silent`.
+2. Captured `ph` stdout/exit on the same baseline via restore workflow and verified byte-for-byte parity for stdout and `releases/current` removal.
+3. Added deterministic pytest coverage to lock exact stdout and removal semantics; ran ruff + pytest.
+
+Commands executed (exact):
+- export TMPDIR=/tmp; LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0053-root-XXXXXXXX)"; PH_ROOT="$TMP_ROOT/project-handbook"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"; (cd "$PH_ROOT" && pnpm install --frozen-lockfile >/dev/null); tar -C "$TMP_ROOT" -czf /tmp/V1P-0053.baseline.tgz project-handbook
+- set +e; (cd "$PH_ROOT" && npm_config_reporter=silent pnpm make -- release-clear) > /tmp/V1P-0053.legacy.stdout.txt; echo $? > /tmp/V1P-0053.legacy.status.txt; set -e
+- if [ -e "$PH_ROOT/releases/current" ]; then echo present; else echo absent; fi > /tmp/V1P-0053.legacy.current_presence.txt
+- rm -rf "$PH_ROOT"; tar -C "$TMP_ROOT" -xzf /tmp/V1P-0053.baseline.tgz
+- set +e; UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache npm_config_reporter=silent uv run ph --root "$PH_ROOT" release clear > /tmp/V1P-0053.ph.stdout.txt; echo $? > /tmp/V1P-0053.ph.status.txt; set -e
+- if [ -e "$PH_ROOT/releases/current" ]; then echo present; else echo absent; fi > /tmp/V1P-0053.ph.current_presence.txt
+- diff -u /tmp/V1P-0053.legacy.status.txt /tmp/V1P-0053.ph.status.txt
+- diff -u /tmp/V1P-0053.legacy.stdout.txt /tmp/V1P-0053.ph.stdout.txt
+- diff -u /tmp/V1P-0053.legacy.current_presence.txt /tmp/V1P-0053.ph.current_presence.txt
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ruff check .
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0053.done
+- tests/test_release_clear_parity_v1p0053.py
+
+Verification:
+- Parity diffs: all three `diff -u ...` comparisons returned no diff (byte-for-byte match); `releases/current` was `absent` for both legacy and `ph`.
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> release clear` matches legacy `pnpm make -- release-clear` for stdout + exit code + `releases/current` removal; parity locked via pytest.
+
+Next task:
+- V1P-0054
+
+Blockers (if blocked):
+- (none)
