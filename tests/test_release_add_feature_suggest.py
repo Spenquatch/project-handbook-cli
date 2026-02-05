@@ -77,7 +77,7 @@ def test_release_add_feature_updates_yaml_and_suggest_lists_feature(tmp_path: Pa
     features_yaml = (tmp_path / "releases" / "v1.2.3" / "features.yaml").read_text(encoding="utf-8")
     assert "  feat-a:" in features_yaml
     assert "    type: regular" in features_yaml
-    assert "    critical_path: false" in features_yaml
+    assert "    critical_path: False" in features_yaml
 
     suggest = subprocess.run(
         ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "suggest", "--version", "v1.2.3"],
@@ -113,3 +113,109 @@ def test_release_add_feature_rejects_system_scope(tmp_path: Path) -> None:
     )
     assert result.returncode == 1
     assert result.stdout.strip() == "Releases are project-scope only. Use: ph --scope project release ..."
+
+
+def test_release_add_feature_matches_legacy_duplication_bug(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+
+    (tmp_path / "releases" / "v0.0.1").mkdir(parents=True, exist_ok=True)
+    features_path = tmp_path / "releases" / "v0.0.1" / "features.yaml"
+    features_path.write_text(
+        "\n".join(
+            [
+                "# Feature assignments for v0.0.1",
+                "# Auto-managed by release commands",
+                "",
+                "version: v0.0.1",
+                "timeline_mode: sprint_slots",
+                "start_sprint_slot: 1",
+                "end_sprint_slot: 2",
+                "planned_sprints: 2",
+                "",
+                "features:",
+                "  feat-one:",
+                "    type: regular",
+                "    priority: P1",
+                "    status: planned",
+                "    completion: 0",
+                "    critical_path: False",
+                "",
+                "  feat-two:",
+                "    type: regular",
+                "    priority: P1",
+                "    status: planned",
+                "    completion: 0",
+                "    critical_path: True",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    env = dict(os.environ)
+    add_feature = subprocess.run(
+        [
+            "ph",
+            "--root",
+            str(tmp_path),
+            "--no-post-hook",
+            "release",
+            "add-feature",
+            "--release",
+            "v0.0.1",
+            "--feature",
+            "feat-new",
+            "--epic",
+            "--critical",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert add_feature.returncode == 0
+    assert add_feature.stdout.strip() == "✅ Added feat-new to release v0.0.1"
+
+    expected = "\n".join(
+        [
+            "# Feature assignments for v0.0.1",
+            "# Auto-managed by release commands",
+            "",
+            "version: v0.0.1",
+            "timeline_mode: sprint_slots",
+            "start_sprint_slot: 1",
+            "end_sprint_slot: 2",
+            "planned_sprints: 2",
+            "",
+            "features:",
+            "  feat-one:",
+            "    type: regular",
+            "    priority: P1",
+            "    status: planned",
+            "    completion: 0",
+            "    critical_path: False",
+            "",
+            "  feat-two:",
+            "    type: regular",
+            "    priority: P1",
+            "    status: planned",
+            "    completion: 0",
+            "    critical_path: True",
+            "",
+            "  feat-new:",
+            "    type: epic",
+            "    priority: P1",
+            "    status: planned",
+            "    completion: 0",
+            "    critical_path: True",
+            "",
+            "  feat-two:",
+            "    type: regular",
+            "    priority: P1",
+            "    status: planned",
+            "    completion: 0",
+            "    critical_path: True",
+        ]
+    )
+    actual_bytes = features_path.read_bytes()
+    assert not actual_bytes.endswith(b"\n")
+    assert actual_bytes.decode("utf-8") == expected

@@ -8770,3 +8770,59 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 20:58 UTC — V1P-0057 — Parity: `make release-add-feature ...` → `ph release add-feature ...`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created via `mktemp`; see Commands executed)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0057)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- release-add-feature ...` → `ph release add-feature ...` (stdout + `releases/<version>/features.yaml`).
+
+Work performed (ordered):
+1. Ran legacy-vs-`ph` capture + diff for `release-add-feature` (stdout + `releases/<version>/features.yaml`) on a disposable handbook instance using a baseline-restore workflow.
+2. Updated `ph release add-feature` YAML-update semantics (including legacy duplication + final-newline behavior) to match legacy byte-for-byte.
+3. Added deterministic pytest coverage and re-ran parity diffs + `ruff` + `pytest`.
+
+Commands executed (exact):
+- export TMPDIR=/tmp; LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0057-root-XXXXXXXX)"; PH_ROOT="$TMP_ROOT/project-handbook"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"; (cd "$PH_ROOT" && pnpm install --frozen-lockfile >/dev/null); tar -C "$TMP_ROOT" -czf /tmp/V1P-0057.baseline.tgz project-handbook; RELEASE_VERSION=$(readlink "$PH_ROOT/releases/current"); FEATURE_NAME="v1p0057_parity_demo"
+- set +e; (cd "$PH_ROOT" && npm_config_reporter=silent pnpm make -- release-add-feature release=$RELEASE_VERSION feature=$FEATURE_NAME epic=true critical=true) > /tmp/V1P-0057.legacy.stdout.txt; echo $? > /tmp/V1P-0057.legacy.status.txt; set -e
+- cp "$PH_ROOT/releases/$RELEASE_VERSION/features.yaml" /tmp/V1P-0057.legacy.features.yaml
+- rm -rf "$PH_ROOT"; tar -C "$TMP_ROOT" -xzf /tmp/V1P-0057.baseline.tgz
+- set +e; UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache npm_config_reporter=silent uv run ph --root "$PH_ROOT" release add-feature --release "$RELEASE_VERSION" --feature "$FEATURE_NAME" --epic --critical > /tmp/V1P-0057.ph.stdout.txt; echo $? > /tmp/V1P-0057.ph.status.txt; set -e
+- cp "$PH_ROOT/releases/$RELEASE_VERSION/features.yaml" /tmp/V1P-0057.ph.features.yaml
+- diff -u /tmp/V1P-0057.legacy.status.txt /tmp/V1P-0057.ph.status.txt
+- diff -u /tmp/V1P-0057.legacy.stdout.txt /tmp/V1P-0057.ph.stdout.txt
+- diff -u /tmp/V1P-0057.legacy.features.yaml /tmp/V1P-0057.ph.features.yaml
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0057.done
+- src/ph/release.py
+- tests/test_release_add_feature_suggest.py
+
+Verification:
+- Parity diffs: all `diff -u /tmp/V1P-0057.*` comparisons returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 188 passed)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> release add-feature ...` matches legacy `pnpm make -- release-add-feature ...` for stdout + exit code + `releases/<version>/features.yaml`; parity locked via pytest.
+
+Next task:
+- V1P-0058
+
+Blockers (if blocked):
+- (none)

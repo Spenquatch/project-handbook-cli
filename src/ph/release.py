@@ -1539,70 +1539,6 @@ def _release_features_yaml_path(*, ph_root: Path, version: str) -> Path:
     return ph_root / "releases" / version / "features.yaml"
 
 
-def _upsert_feature_block(
-    *, lines: list[str], feature: str, updates: dict[str, str], insert_if_missing: bool
-) -> list[str]:
-    if not lines:
-        return lines
-
-    try:
-        features_start = next(i for i, line in enumerate(lines) if line.strip() == "features:")
-    except StopIteration:
-        return lines
-
-    feature_headers: list[tuple[str, int]] = []
-    for i in range(features_start + 1, len(lines)):
-        line = lines[i]
-        if line.startswith("  ") and not line.startswith("    ") and ":" in line:
-            stripped = line.strip()
-            if stripped.startswith("#") or not stripped:
-                continue
-            name = stripped.split(":", 1)[0].strip()
-            if name:
-                feature_headers.append((name, i))
-
-    block_ranges: dict[str, tuple[int, int]] = {}
-    for idx, (name, start_i) in enumerate(feature_headers):
-        end_i = feature_headers[idx + 1][1] if idx + 1 < len(feature_headers) else len(lines)
-        block_ranges[name] = (start_i, end_i)
-
-    if feature not in block_ranges:
-        if not insert_if_missing:
-            return lines
-        ensured = list(lines)
-        ensured.append(f"  {feature}:\n")
-        for key, value in updates.items():
-            ensured.append(f"    {key}: {value}\n")
-        ensured.append("\n")
-        return ensured
-
-    start_i, end_i = block_ranges[feature]
-    out = list(lines)
-
-    key_line_index: dict[str, int] = {}
-    for i in range(start_i + 1, end_i):
-        line = out[i]
-        if line.startswith("    ") and ":" in line and not line.strip().startswith("#"):
-            key = line.strip().split(":", 1)[0].strip()
-            if key:
-                key_line_index[key] = i
-
-    for key, value in updates.items():
-        if key in key_line_index:
-            out[key_line_index[key]] = f"    {key}: {value}\n"
-        else:
-            insert_at = end_i
-            while insert_at > start_i and not out[insert_at - 1].strip():
-                insert_at -= 1
-            out.insert(insert_at, f"    {key}: {value}\n")
-            for k, existing_i in list(key_line_index.items()):
-                if existing_i >= insert_at:
-                    key_line_index[k] = existing_i + 1
-            end_i += 1
-
-    return out
-
-
 def run_release_add_feature(
     *,
     ctx: Context,
@@ -1624,20 +1560,49 @@ def run_release_add_feature(
         print(f"❌ Release {version} not found. Create with: ph release plan")
         return 1
 
+    features = load_release_features(ph_root=ctx.ph_root, version=version)
+
     feature_type = "epic" if epic else "regular"
-    updates = {
+    features[feature] = {
         "type": feature_type,
         "priority": "P1",
         "status": "planned",
-        "completion": "0",
-        "critical_path": "true" if critical else "false",
+        "completion": 0,
+        "critical_path": critical,
     }
 
-    existing_lines = features_file.read_text(encoding="utf-8").splitlines(keepends=True)
-    updated_lines = _upsert_feature_block(
-        lines=existing_lines, feature=feature, updates=updates, insert_if_missing=True
-    )
-    features_file.write_text("".join(updated_lines), encoding="utf-8")
+    # Match legacy `make release-add-feature` behavior byte-for-byte.
+    content = features_file.read_text(encoding="utf-8")
+    lines = content.splitlines()
+
+    new_lines: list[str] = []
+    in_features = False
+    for line in lines:
+        if line.strip().startswith("features:"):
+            new_lines.append(line)
+            in_features = True
+
+            for feat_name, feat_data in features.items():
+                new_lines.append(f"  {feat_name}:")
+                for key, value in feat_data.items():
+                    if isinstance(value, list):
+                        value_str = "[" + ", ".join(str(item) for item in value) + "]"
+                    else:
+                        value_str = str(value)
+                    new_lines.append(f"    {key}: {value_str}")
+                new_lines.append("")
+            continue
+
+        if in_features and (line.startswith("features:") or not line.startswith(" ")):
+            in_features = False
+            if line.strip():
+                new_lines.append(line)
+            continue
+
+        if not in_features:
+            new_lines.append(line)
+
+    features_file.write_text("\n".join(new_lines), encoding="utf-8")
 
     print(f"{_ADD_FEATURE_SUCCESS_PREFIX} {feature} to release {version}")
     return 0
