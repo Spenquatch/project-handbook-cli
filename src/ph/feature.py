@@ -7,6 +7,27 @@ from .clock import today as clock_today
 from .context import Context
 
 
+def _maybe_print_pnpm_make_preamble(*, ctx: Context, make_args: str) -> None:
+    package_json_path = ctx.ph_root / "package.json"
+    if not package_json_path.exists():
+        return
+
+    try:
+        package_json = json.loads(package_json_path.read_text(encoding="utf-8"))
+    except Exception:
+        return
+
+    name = str(package_json.get("name") or "").strip()
+    version = str(package_json.get("version") or "").strip()
+    if not name or not version:
+        return
+
+    print()
+    print(f"> {name}@{version} make {ctx.ph_root}")
+    print(f"> make -- {make_args}")
+    print()
+
+
 def _feature_name_prefixes_for_system_scope(*, ph_root: Path) -> list[str]:
     config_path = ph_root / "process" / "automation" / "system_scope_config.json"
     try:
@@ -291,6 +312,8 @@ links: []
 
 
 def run_feature_list(*, ctx: Context) -> int:
+    _maybe_print_pnpm_make_preamble(ctx=ctx, make_args="feature-list")
+
     features_dir, _implemented_dir = _ensure_feature_roots(ph_data_root=ctx.ph_data_root)
     feature_dirs = [d for d in features_dir.iterdir() if d.is_dir() and d.name != "implemented"]
 
