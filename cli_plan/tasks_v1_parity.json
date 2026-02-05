@@ -458,7 +458,10 @@
       "phase_id": "PHASE-P04",
       "order": 4,
       "title": "Parity: `make task-status id=TASK-### status=doing [force=true]` \u2192 `ph task status --id TASK-### --status doing [--force]`",
-      "status": "todo",
+      "status": "done",
+      "started_at": "2026-02-05T04:38:19Z",
+      "completed_at": "2026-02-05T04:52:58Z",
+      "next_task_id": "V1P-0025",
       "depends_on": [],
       "work_location": "cli_repo",
       "kickoff_prompt": "Goal: strict parity for: `make task-status id=TASK-### status=doing [force=true]` \u2192 `ph task status --id TASK-### --status doing [--force]`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Task (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `sprints/**/tasks/TASK-###-*/task.yaml` exists\n- Command: `ph --root <PH_ROOT> task status --id TASK-### --status doing [--force]`\n- Outputs to verify: `sprints/**/tasks/TASK-###-*/task.yaml`\n"

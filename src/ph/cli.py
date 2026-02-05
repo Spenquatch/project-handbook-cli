@@ -823,6 +823,17 @@ def main(argv: list[str] | None = None) -> int:
                         )
                     exit_code = run_task_show(ctx=ctx, task_id=str(args.id))
                 elif args.task_command == "status":
+                    if ctx.scope == "project":
+                        make_args = [
+                            "task-status",
+                            f"id\\={args.id}",
+                            f"status\\={args.status}",
+                        ]
+                        if "--force" in invocation_args and bool(getattr(args, "force", False)):
+                            make_args.append("force\\=true")
+
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
+
                     exit_code = run_task_status(
                         ctx=ctx,
                         task_id=str(args.id),

@@ -205,3 +205,79 @@ def test_task_status_dependency_enforcement_and_archiving(tmp_path: Path, scope:
     parking_readme = archived_parking.read_text(encoding="utf-8")
     assert "archived_by_task: TASK-001" in parking_readme
     assert "archived_by_sprint: SPRINT-2099-01-01" in parking_readme
+
+
+def test_task_status_project_scope_emits_pnpm_make_preamble_when_package_json_present(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    tasks_dir = _seed_current_sprint(ph_root=tmp_path, scope="project")
+
+    _write_task(
+        tasks_dir=tasks_dir,
+        directory="TASK-001-first",
+        content="\n".join(
+            [
+                "id: TASK-001",
+                "title: First task",
+                "feature: feat-a",
+                "decision: ADR-0001",
+                "owner: @owner",
+                "status: todo",
+                "story_points: 3",
+                "depends_on: [FIRST_TASK]",
+                "prio: P2",
+                "due: 2099-01-08",
+                "links: []",
+                "",
+            ]
+        ),
+    )
+
+    (tmp_path / "package.json").write_text(
+        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
+        encoding="utf-8",
+    )
+
+    env = dict(os.environ)
+    cmd = [
+        "ph",
+        "--root",
+        str(tmp_path),
+        "--no-post-hook",
+        "task",
+        "status",
+        "--id",
+        "TASK-001",
+        "--status",
+        "doing",
+    ]
+    updated = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    assert updated.returncode == 0
+
+    root_display = str(tmp_path.resolve())
+    expected_prefix = "\n".join(
+        [
+            "",
+            f"> project-handbook@0.0.0 make {root_display}",
+            "> make -- task-status id\\=TASK-001 status\\=doing",
+            "",
+            "✅ Updated TASK-001 status: doing",
+        ]
+    )
+    assert updated.stdout.startswith(expected_prefix)
+
+    task_yaml = tasks_dir / "TASK-001-first" / "task.yaml"
+    assert "status: doing\n" in task_yaml.read_text(encoding="utf-8")
+
+    cmd_force = cmd + ["--force"]
+    forced = subprocess.run(cmd_force, capture_output=True, text=True, env=env)
+    assert forced.returncode == 0
+    expected_force_prefix = "\n".join(
+        [
+            "",
+            f"> project-handbook@0.0.0 make {root_display}",
+            "> make -- task-status id\\=TASK-001 status\\=doing force\\=true",
+            "",
+            "✅ Updated TASK-001 status: doing",
+        ]
+    )
+    assert forced.stdout.startswith(expected_force_prefix)

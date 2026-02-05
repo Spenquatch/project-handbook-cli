@@ -142,6 +142,75 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 04:38 UTC — V1P-0024 — Parity: `make task-status` → `ph task status`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created under `$TMPDIR`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0024)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `make task-status id=TASK-### status=doing [force=true]` → `ph task status --id TASK-### --status doing [--force]` (stdout + updated `task.yaml`).
+
+Work performed (ordered):
+1. Captured legacy stdout + updated `task.yaml` for `pnpm make -- task-status id=... status=doing` and diffed against `uv run ph ... task status --id ... --status doing` (initial mismatch: missing pnpm/make preamble).
+2. Updated project-scope `ph task status` to emit the pnpm/make preamble that legacy `pnpm make` prints (including `force=true` when `--force` is used).
+3. Added deterministic pytest coverage for task status preamble output (with and without `--force`), and verified `task.yaml` updates.
+4. Re-ran legacy-vs-`ph` capture + diff; verified byte-for-byte match; ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- TMP_ROOT=\"$(mktemp -d -t ph-parity-V1P-0024-root-real-XXXXXXXX)\"
+- PH_ROOT=\"$TMP_ROOT/project-handbook\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT\" && tar -cf /tmp/ph-parity-V1P-0024-base.tar .)
+- TASK_DIR_NAME=\"$(ls -1 \"$PH_ROOT/sprints/current/tasks\" | rg '^TASK-[0-9]+' | head -n 1)\"
+- TASK_ID=\"$(echo \"$TASK_DIR_NAME\" | rg -o '^TASK-[0-9]+' | head -n 1)\"
+- TASK_DIR_PATH=\"$(ls -1d \"$PH_ROOT/sprints/current/tasks/${TASK_ID}-\"* | head -n 1)\"
+- TASK_YAML=\"$TASK_DIR_PATH/task.yaml\"
+- (cd \"$PH_ROOT\" && pnpm make -- task-status id=\"$TASK_ID\" status=doing) > /tmp/V1P-0024.legacy.stdout.txt
+- cp \"$TASK_YAML\" /tmp/V1P-0024.legacy.task.yaml
+- rm -rf \"$PH_ROOT\" && mkdir -p \"$PH_ROOT\" && tar -xf /tmp/ph-parity-V1P-0024-base.tar -C \"$PH_ROOT\"
+- TASK_DIR_PATH=\"$(ls -1d \"$PH_ROOT/sprints/current/tasks/${TASK_ID}-\"* | head -n 1)\"
+- TASK_YAML=\"$TASK_DIR_PATH/task.yaml\"
+- uv run ph --root \"$PH_ROOT\" task status --id \"$TASK_ID\" --status doing > /tmp/V1P-0024.ph.stdout.txt
+- cp \"$TASK_YAML\" /tmp/V1P-0024.ph.task.yaml
+- diff -u /tmp/V1P-0024.legacy.stdout.txt /tmp/V1P-0024.ph.stdout.txt
+- diff -u /tmp/V1P-0024.legacy.task.yaml /tmp/V1P-0024.ph.task.yaml
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/tasks_v1_parity.json
+- cli_plan/session_logs.md
+- src/ph/cli.py
+- tests/test_task_status.py
+
+Verification:
+- `diff -u /tmp/V1P-0024.legacy.stdout.txt /tmp/V1P-0024.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `diff -u /tmp/V1P-0024.legacy.task.yaml /tmp/V1P-0024.ph.task.yaml` returned no diff (byte-for-byte match).
+- Note: `ph task status` exits non-zero when post-hook validation finds errors; legacy `pnpm make -- task-status ...` exits `0` for the same stdout.
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 153 tests)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> task status --id TASK-### --status doing` now matches legacy stdout and updated `task.yaml` byte-for-byte; parity locked via pytest.
+
+Next task:
+- V1P-0025
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-05 04:23 UTC — V1P-0023 — Parity: `make task-show` → `ph task show`
 
 Agent: GPT-5.2 (Orchestrator + background Codex CLI)
