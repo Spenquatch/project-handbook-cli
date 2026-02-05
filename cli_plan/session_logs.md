@@ -7794,3 +7794,76 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 14:58 UTC — V1P-0040 — Parity: `make parking-promote ...` → `ph parking promote ...`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (PH_ROOT=/private/var/folders/2x/5mqqp02j36v079m96nx8fjs00000gn/T/ph-parity-V1P-0040-root-real-XXXXXXXX.hGpo5iQOwK/project-handbook)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0040)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- parking-promote item=<ID> target=later` → `ph parking promote --item <ID> --target later` (stdout + `parking-lot/index.json` + item dir updates).
+
+Work performed (ordered):
+1. Spawned a background Codex CLI agent to run a frozen-time legacy-vs-`ph` parity capture for `parking-promote` (stdout + index + moved item dir under `roadmap/<target>/`).
+2. Updated `ph` to print the pnpm/make preamble for `parking promote` in project scope.
+3. Added deterministic pytest coverage to lock `parking promote` stdout behavior.
+4. Verified byte-for-byte diffs for stdout, `parking-lot/index.json`, and the moved item directory.
+5. Ran ruff + pytest and committed.
+
+Commands executed (exact):
+- LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"
+- TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0040-root-real-XXXXXXXX)"
+- PH_ROOT="$TMP_ROOT/project-handbook"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"
+- (cd "$PH_ROOT" && pnpm install --frozen-lockfile)
+- FAKETIME_DIR="/tmp/ph-faketime-v1p0040"; rm -rf "$FAKETIME_DIR"; mkdir -p "$FAKETIME_DIR"; cat >"$FAKETIME_DIR/sitecustomize.py" <<'PY' ... PY
+- export PH_FAKE_NOW="2099-01-01T09:00:00Z"
+- (cd "$PH_ROOT" && PYTHONPATH="$FAKETIME_DIR" pnpm make -- parking-add type=technical-debt title="Parity promote item" desc="Seed for V1P-0040") > /tmp/V1P-0040.seed.stdout.txt
+- ID="DEBT-20990101-parity-promote-item"
+- (cd "$PH_ROOT" && tar -cf /tmp/ph-parity-V1P-0040-base.tar .)
+- (cd "$PH_ROOT" && PYTHONPATH="$FAKETIME_DIR" pnpm make -- parking-promote item="$ID" target=later) > /tmp/V1P-0040.legacy.stdout.txt
+- rsync -a --delete "$PH_ROOT/parking-lot/index.json" /tmp/V1P-0040.legacy.index.json
+- rsync -a --delete "$PH_ROOT/roadmap/later/$ID/" /tmp/V1P-0040.legacy.item/
+- rm -rf "$PH_ROOT" && mkdir -p "$PH_ROOT" && tar -xf /tmp/ph-parity-V1P-0040-base.tar -C "$PH_ROOT"
+- export UV_CACHE_DIR=/tmp/uv-cache; mkdir -p "$UV_CACHE_DIR"
+- PH_FAKE_NOW="2099-01-01T09:00:00Z" uv run ph --root "$PH_ROOT" parking promote --item "$ID" --target later > /tmp/V1P-0040.ph.stdout.txt
+- rsync -a --delete "$PH_ROOT/parking-lot/index.json" /tmp/V1P-0040.ph.index.json
+- rsync -a --delete "$PH_ROOT/roadmap/later/$ID/" /tmp/V1P-0040.ph.item/
+- diff -u /tmp/V1P-0040.legacy.stdout.txt /tmp/V1P-0040.ph.stdout.txt
+- diff -u /tmp/V1P-0040.legacy.index.json /tmp/V1P-0040.ph.index.json
+- diff -ru /tmp/V1P-0040.legacy.item /tmp/V1P-0040.ph.item
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0040.done
+- src/ph/cli.py
+- tests/test_parking_promote_parity_v1p0040.py
+
+Verification:
+- `diff -u /tmp/V1P-0040.legacy.stdout.txt /tmp/V1P-0040.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `diff -u /tmp/V1P-0040.legacy.index.json /tmp/V1P-0040.ph.index.json` returned no diff (byte-for-byte match).
+- `diff -ru /tmp/V1P-0040.legacy.item /tmp/V1P-0040.ph.item` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 172 tests)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> parking promote --item <ID> --target later` now matches legacy `pnpm make -- parking-promote item=<ID> target=later` for stdout + index + moved item dir; parity locked via pytest. Note: legacy behavior moves the item into `roadmap/<target>/<ID>/` and removes it from `parking-lot/` (checklist output-path note appears stale).
+
+Next task:
+- V1P-0041
+
+Blockers (if blocked):
+- (none)
