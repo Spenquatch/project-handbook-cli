@@ -1092,6 +1092,14 @@ def main(argv: list[str] | None = None) -> int:
                     print("Usage: ph parking <add|list|review|promote>\n", file=sys.stderr, end="")
                     exit_code = 2
             elif args.command == "roadmap":
+                if ctx.scope == "project":
+                    if getattr(args, "roadmap_command", None) in (None, "show"):
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["roadmap"]))
+                    elif args.roadmap_command == "create":
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["roadmap-create"]))
+                    elif args.roadmap_command == "validate":
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["roadmap-validate"]))
+
                 if args.roadmap_command is None:
                     exit_code = run_roadmap_show(ctx=ctx)
                 elif args.roadmap_command == "show":

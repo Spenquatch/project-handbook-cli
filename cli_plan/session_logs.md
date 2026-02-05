@@ -142,6 +142,60 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 17:51 UTC — V1P-0047 — Parity: `make roadmap` → `ph roadmap show`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI via coding-agent)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (PH_ROOT=/var/folders/2x/5mqqp02j36v079m96nx8fjs00000gn/T/ph-parity-V1P-0047-root-real-XXXXXXXX.vUC90NjA9C/project-handbook)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0047)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook/Makefile
+- /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook/process/automation/roadmap_manager.py
+
+Goal:
+- Achieve strict parity for `pnpm make -- roadmap` → `ph roadmap show` (stdout only).
+
+Work performed (ordered):
+1. Added pnpm/make preamble printing for `ph roadmap show` (and aligned roadmap subcommands to their Make target names) so the emitted stdout matches `pnpm make -- roadmap`.
+2. Added a deterministic pytest to lock `ph roadmap show` stdout (including the pnpm/make preamble) for a minimal `roadmap/now-next-later.md` fixture.
+3. Ran legacy-vs-`ph` parity capture on a disposable handbook instance and verified byte-for-byte stdout match; ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"; TMP_ROOT=\"$(mktemp -d -t ph-parity-V1P-0047-root-real-XXXXXXXX)\"; PH_ROOT=\"$TMP_ROOT/project-handbook\"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"; (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile >/dev/null)
+- test -f \"$PH_ROOT/roadmap/now-next-later.md\" || (cd \"$PH_ROOT\" && pnpm make -- roadmap-create >/dev/null)
+- (cd \"$PH_ROOT\" && pnpm make -- roadmap) > /tmp/V1P-0047.legacy.stdout.txt
+- uv run ph --root \"$PH_ROOT\" --no-post-hook roadmap show > /tmp/V1P-0047.ph.stdout.txt
+- diff -u /tmp/V1P-0047.legacy.stdout.txt /tmp/V1P-0047.ph.stdout.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0047.done
+- src/ph/cli.py
+- tests/test_roadmap_show_parity_v1p0047.py
+
+Verification:
+- `diff -u /tmp/V1P-0047.legacy.stdout.txt /tmp/V1P-0047.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> roadmap show` matches legacy `pnpm make -- roadmap` for stdout; parity locked via pytest.
+
+Next task:
+- V1P-0048
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-05 17:34 UTC — V1P-0046 — Parity: `make dashboard` → `ph dashboard`
 
 Agent: GPT-5.2 (Orchestrator + background Codex CLI; terminated when off-course)
