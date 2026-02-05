@@ -1145,6 +1145,7 @@ def main(argv: list[str] | None = None) -> int:
                     )
                     exit_code = 2
             elif args.command == "validate":
+                make_args = ["validate-quick"] if bool(args.quick) else ["validate"]
                 exit_code, _out_path, message = run_validate(
                     ph_root=ph_root,
                     ph_data_root=ctx.ph_data_root,
@@ -1153,6 +1154,7 @@ def main(argv: list[str] | None = None) -> int:
                     silent_success=bool(args.silent_success),
                 )
                 if message:
+                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
                     print(message, end="")
             elif args.command == "pre-exec":
                 if getattr(args, "pre_exec_command", None) is None:

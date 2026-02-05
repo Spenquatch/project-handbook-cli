@@ -7867,3 +7867,60 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 15:15 UTC — V1P-0041 — Parity: `make validate` → `ph validate`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (PH_ROOT=/private/var/folders/2x/5mqqp02j36v079m96nx8fjs00000gn/T/ph-parity-V1P-0041-root-real-XXXXXXXX.ra9kayjYOq/project-handbook)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0041)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- validate` → `ph validate` (stdout + `status/validation.json`).
+
+Work performed (ordered):
+1. Spawned a background Codex CLI agent to run legacy-vs-`ph` parity capture + diff for `validate` (stdout + `status/validation.json`).
+2. Updated `ph validate` to print the pnpm/make preamble (matching legacy’s `pnpm make -- validate` stdout).
+3. Added deterministic pytest coverage for `validate` stdout + report content.
+4. Re-ran capture + diff; verified byte-for-byte matches for stdout and `status/validation.json`.
+5. Ran ruff + pytest and committed.
+
+Commands executed (exact):
+- LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0041-root-real-XXXXXXXX)"; PH_ROOT="$TMP_ROOT/project-handbook"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"; (cd "$PH_ROOT" && pnpm install --frozen-lockfile)
+- tar -C "$(dirname "$PH_ROOT")" -czf /tmp/V1P-0041.baseline.tgz "$(basename "$PH_ROOT")"
+- (cd "$PH_ROOT" && pnpm make -- validate) > /tmp/V1P-0041.legacy.stdout.txt; rsync -a --delete "$PH_ROOT/status/validation.json" /tmp/V1P-0041.legacy.validation.json
+- rm -rf "$PH_ROOT"; tar -C "$(dirname "$PH_ROOT")" -xzf /tmp/V1P-0041.baseline.tgz; uv run ph --root "$PH_ROOT" validate > /tmp/V1P-0041.ph.stdout.txt; rsync -a --delete "$PH_ROOT/status/validation.json" /tmp/V1P-0041.ph.validation.json
+- diff -u /tmp/V1P-0041.legacy.stdout.txt /tmp/V1P-0041.ph.stdout.txt
+- diff -u /tmp/V1P-0041.legacy.validation.json /tmp/V1P-0041.ph.validation.json
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0041.done
+- src/ph/cli.py
+- tests/test_validate_parity_v1p0041.py
+
+Verification:
+- `diff -u /tmp/V1P-0041.legacy.stdout.txt /tmp/V1P-0041.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `diff -u /tmp/V1P-0041.legacy.validation.json /tmp/V1P-0041.ph.validation.json` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> validate` now matches legacy `pnpm make -- validate` for stdout + `status/validation.json`; parity locked via pytest.
+
+Next task:
+- V1P-0042
+
+Blockers (if blocked):
+- (none)
