@@ -54,11 +54,11 @@ def test_roadmap_show_missing_then_create_and_show(tmp_path: Path) -> None:
     updated: list[str] = []
     for line in lines:
         updated.append(line)
-        if line == "## Now":
+        if line.startswith("## Now"):
             updated.append("- now-item")
-        elif line == "## Next":
+        elif line.startswith("## Next"):
             updated.append("- next-item")
-        elif line == "## Later":
+        elif line.startswith("## Later"):
             updated.append("- later-item")
     roadmap_path.write_text("\n".join(updated) + "\n", encoding="utf-8")
 

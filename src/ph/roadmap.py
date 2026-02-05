@@ -1,29 +1,45 @@
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
+from . import clock
 from .context import Context
 
 _SYSTEM_SCOPE_REMEDIATION = "Roadmap is project-scope only. Use: ph --scope project roadmap ..."
 _MISSING_ROADMAP_MESSAGE = "❌ No roadmap found. Run 'ph roadmap create' to create one."
 
-_ROADMAP_TEMPLATE = """---
-title: Now / Next / Later Roadmap
-type: roadmap
-date: 2025-09-18
-tags: [roadmap]
-links: []
----
-
-# Now / Next / Later Roadmap
-
-## Now
-
-## Next
-
-## Later
-"""
+def _roadmap_template(*, env: dict[str, str] | None = None) -> str:
+    date_text = clock.today(env=env).isoformat()
+    return (
+        "\n".join(
+            [
+                "---",
+                "title: Now / Next / Later Roadmap",
+                "type: roadmap",
+                f"date: {date_text}",
+                "tags: [roadmap]",
+                "links: []",
+                "---",
+                "",
+                "# Project Roadmap",
+                "",
+                "## Now (Current Sprint)",
+                "- feature-1: Brief description [link](../features/feature-1/status.md)",
+                "",
+                "## Next (1-2 Sprints)",
+                "- feature-2: Brief description [link](../features/feature-2/status.md)",
+                "",
+                "## Later (3+ Sprints)",
+                "- feature-3: Future work [link](../features/feature-3/status.md)",
+                "",
+                "## Completed",
+                "- ✅ Initial project setup",
+            ]
+        )
+        + "\n"
+    )
 
 
 def _roadmap_path(*, ph_root: Path) -> Path:
@@ -36,11 +52,9 @@ def run_roadmap_create(*, ctx: Context) -> int:
         return 1
 
     roadmap_path = _roadmap_path(ph_root=ctx.ph_root)
-    if roadmap_path.exists():
-        return 0
-
     roadmap_path.parent.mkdir(parents=True, exist_ok=True)
-    roadmap_path.write_text(_ROADMAP_TEMPLATE, encoding="utf-8")
+    roadmap_path.write_text(_roadmap_template(env=os.environ), encoding="utf-8")
+    print(f"📋 Created roadmap template: {roadmap_path.resolve()}")
     return 0
 
 

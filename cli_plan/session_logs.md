@@ -142,6 +142,56 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 18:21 UTC — V1P-0049 — Parity: `make roadmap-create` → `ph roadmap create`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (PH_ROOT=/tmp/ph-parity-V1P-0049-legacy-XXXXXXXX.z5041dqwNO/project-handbook)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0049)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- roadmap-create` → `ph roadmap create` (stdout + `roadmap/now-next-later.md`).
+
+Work performed (ordered):
+1. Ran legacy-vs-`ph` capture + diff for `roadmap-create` (stdout + `roadmap/now-next-later.md`) using disposable roots.
+2. Updated `ph roadmap create` to match legacy file content semantics (including how the template handles “Now/Next/Later” sections).
+3. Added deterministic pytest coverage to lock parity for stdout + `roadmap/now-next-later.md`; ran ruff + pytest; re-verified byte-for-byte parity on a shared disposable root.
+
+Commands executed (exact):
+- export TMPDIR=/tmp; LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; PH_ROOT_LEGACY="$(mktemp -d -t ph-parity-V1P-0049-legacy-XXXXXXXX)/project-handbook"; PH_ROOT_PH="$(mktemp -d -t ph-parity-V1P-0049-ph-XXXXXXXX)/project-handbook"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT_LEGACY/"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT_PH/"; (cd "$PH_ROOT_LEGACY" && pnpm install --frozen-lockfile >/dev/null); (cd "$PH_ROOT_PH" && pnpm install --frozen-lockfile >/dev/null); rm -f "$PH_ROOT_LEGACY/roadmap/now-next-later.md" || true; rm -f "$PH_ROOT_PH/roadmap/now-next-later.md" || true; (cd "$PH_ROOT_LEGACY" && pnpm make -- roadmap-create) > /tmp/V1P-0049.legacy.stdout.txt; cp "$PH_ROOT_LEGACY/roadmap/now-next-later.md" /tmp/V1P-0049.legacy.now-next-later.md; UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp uv run ph --root "$PH_ROOT_PH" roadmap create > /tmp/V1P-0049.ph.stdout.txt; cp "$PH_ROOT_PH/roadmap/now-next-later.md" /tmp/V1P-0049.ph.now-next-later.md; diff -u /tmp/V1P-0049.legacy.stdout.txt /tmp/V1P-0049.ph.stdout.txt || true; diff -u /tmp/V1P-0049.legacy.now-next-later.md /tmp/V1P-0049.ph.now-next-later.md || true
+- export UV_CACHE_DIR=/tmp/uv-cache; uv run ruff check .
+- export UV_CACHE_DIR=/tmp/uv-cache; uv run pytest -q
+- PH_ROOT="/tmp/ph-parity-V1P-0049-legacy-XXXXXXXX.z5041dqwNO/project-handbook"; rm -f "$PH_ROOT/roadmap/now-next-later.md" || true; (cd "$PH_ROOT" && pnpm make -- roadmap-create) > /tmp/V1P-0049.legacy3.stdout.txt; cp "$PH_ROOT/roadmap/now-next-later.md" /tmp/V1P-0049.legacy3.now-next-later.md; rm -f "$PH_ROOT/roadmap/now-next-later.md" || true; XDG_CACHE_HOME=/tmp UV_CACHE_DIR=/tmp/uv-cache uv run ph --root "$PH_ROOT" roadmap create > /tmp/V1P-0049.ph3.stdout.txt; cp "$PH_ROOT/roadmap/now-next-later.md" /tmp/V1P-0049.ph3.now-next-later.md; diff -u /tmp/V1P-0049.legacy3.stdout.txt /tmp/V1P-0049.ph3.stdout.txt; diff -u /tmp/V1P-0049.legacy3.now-next-later.md /tmp/V1P-0049.ph3.now-next-later.md
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/roadmap.py
+- tests/test_roadmap_create_show.py
+- tests/test_roadmap_create_parity_v1p0049.py
+
+Verification:
+- diff -u /tmp/V1P-0049.legacy3.stdout.txt /tmp/V1P-0049.ph3.stdout.txt (no diff; byte-for-byte match)
+- diff -u /tmp/V1P-0049.legacy3.now-next-later.md /tmp/V1P-0049.ph3.now-next-later.md (no diff; byte-for-byte match)
+- uv run ruff check . (pass)
+- uv run pytest -q (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> roadmap create` matches legacy `pnpm make -- roadmap-create` for stdout + `roadmap/now-next-later.md`; parity locked via deterministic pytest.
+
+Next task:
+- V1P-0050
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-05 18:03 UTC — V1P-0048 — Parity: `make roadmap-show` → `ph roadmap show`
 
 Agent: GPT-5.2 (Orchestrator + background Codex CLI via coding-agent)
