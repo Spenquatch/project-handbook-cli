@@ -178,6 +178,35 @@ def test_sprint_plan_prints_pnpm_make_preamble_when_package_json_present(tmp_pat
     ]
 
 
+def test_sprint_open_prints_pnpm_make_preamble_when_package_json_present(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    (tmp_path / "package.json").write_text(
+        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
+        encoding="utf-8",
+    )
+    env = dict(os.environ)
+
+    sprint_id = "SPRINT-2099-01-02"
+    sprint_dir = tmp_path / "sprints" / "2099" / sprint_id
+    sprint_dir.mkdir(parents=True, exist_ok=True)
+
+    result = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "open", "--sprint", sprint_id],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0
+    lines = result.stdout.splitlines()
+    assert lines[0:4] == [
+        "",
+        f"> project-handbook@0.0.0 make {tmp_path.resolve()}",
+        f"> make -- sprint-open sprint\\={sprint_id}",
+        "",
+    ]
+    assert lines[4:] == [f"✅ Current sprint set to: {sprint_id}"]
+
+
 def test_sprint_plan_and_open_work_in_system_scope(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     env = dict(os.environ)
@@ -235,3 +264,28 @@ def test_sprint_plan_and_open_work_in_system_scope(tmp_path: Path) -> None:
     assert opened.returncode == 0
     assert opened.stdout.strip() == "✅ Current sprint set to: SPRINT-2099-01-02"
     assert (tmp_path / ".project-handbook" / "system" / "sprints" / "current").resolve() == sprint_dir.resolve()
+
+
+def test_sprint_open_updates_current_symlink_and_prints_exact_stdout(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    env = dict(os.environ)
+
+    sprint_id = "SPRINT-2099-01-02"
+    sprint_dir = tmp_path / "sprints" / "2099" / sprint_id
+    sprint_dir.mkdir(parents=True, exist_ok=True)
+
+    opened = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "open", "--sprint", sprint_id],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert opened.returncode == 0
+    assert opened.stdout == f"✅ Current sprint set to: {sprint_id}\n"
+
+    current_link = tmp_path / "sprints" / "current"
+    assert current_link.exists()
+    assert current_link.resolve() == sprint_dir.resolve()
+
+    if current_link.is_symlink():
+        assert current_link.readlink() == Path("2099") / sprint_id

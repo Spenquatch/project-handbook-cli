@@ -142,6 +142,73 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 01:07 UTC — V1P-0014 — Parity: `make sprint-open sprint=SPRINT-...` → `ph sprint open --sprint SPRINT-...`
+
+Agent: GPT-5.2 (Codex CLI Orchestrator) + background Codex exec
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable PH_ROOT (rsync copy of legacy repo into mktemp)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0014)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- /Users/spensermcconnell/.codex/skills/coding-agent/SKILL.md
+- src/ph/cli.py
+- src/ph/sprint_commands.py
+- tests/test_sprint_plan_open.py
+
+Goal:
+- Achieve strict parity for legacy `pnpm make -- sprint-open sprint=SPRINT-...` vs `ph --root <PH_ROOT> sprint open --sprint SPRINT-...` (stdout + `sprints/current`).
+
+Work performed (ordered):
+1. Captured legacy `pnpm make -- sprint-open sprint=SPRINT-SEQ-0004` stdout + `sprints/current` link target against a disposable PH_ROOT.
+2. Captured `ph sprint open --sprint SPRINT-SEQ-0004` stdout + `sprints/current` against the same baseline and diffed outputs (initial mismatch: `ph` missing pnpm/make preamble).
+3. Updated `ph sprint open` (project scope) to print the legacy-matching pnpm/make preamble (including `sprint\\=...` formatting).
+4. Added deterministic pytest coverage for sprint-open preamble and `sprints/current` symlink semantics.
+5. Re-ran legacy vs `ph` capture + diffs; verified byte-for-byte parity; ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- TMP_ROOT=\"$(mktemp -d -t ph-parity-V1P-0014-root-real-XXXXXXXX)\"
+- PH_ROOT=\"$TMP_ROOT/project-handbook\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- python - \"$PH_ROOT\" <<'PY'\nimport json\nimport sys\nfrom pathlib import Path\np=Path(sys.argv[1]) / \"project_handbook.config.json\"\nraw=json.loads(p.read_text())\nraw[\"repo_root\"] = \".\"\np.write_text(json.dumps(raw, indent=2) + \"\\n\")\nPY
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT\" && tar -cf /tmp/ph-parity-V1P-0014-base.tar .)
+- (cd \"$PH_ROOT\" && pnpm make -- sprint-open sprint=\"SPRINT-SEQ-0004\") > /tmp/legacy-sprint-open-stdout.txt
+- python - \"$PH_ROOT\" <<'PY' > /tmp/legacy-sprints-current.txt\nfrom pathlib import Path\nimport os, sys\nroot=Path(sys.argv[1])\np=root/\"sprints\"/\"current\"\nif p.is_symlink():\n  print(os.readlink(p))\nelif p.exists():\n  print(p.read_text())\nelse:\n  print(\"(missing)\")\nPY
+- rm -rf \"$PH_ROOT\" && mkdir -p \"$PH_ROOT\" && tar -xf /tmp/ph-parity-V1P-0014-base.tar -C \"$PH_ROOT\"
+- uv run ph --root \"$PH_ROOT\" sprint open --sprint \"SPRINT-SEQ-0004\" > /tmp/ph-sprint-open-stdout.txt
+- python - \"$PH_ROOT\" <<'PY' > /tmp/ph-sprints-current.txt\nfrom pathlib import Path\nimport os, sys\nroot=Path(sys.argv[1])\np=root/\"sprints\"/\"current\"\nif p.is_symlink():\n  print(os.readlink(p))\nelif p.exists():\n  print(p.read_text())\nelse:\n  print(\"(missing)\")\nPY
+- diff -u /tmp/legacy-sprint-open-stdout.txt /tmp/ph-sprint-open-stdout.txt
+- diff -u /tmp/legacy-sprints-current.txt /tmp/ph-sprints-current.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/cli.py
+- tests/test_sprint_plan_open.py
+
+Verification:
+- `diff -u /tmp/legacy-sprint-open-stdout.txt /tmp/ph-sprint-open-stdout.txt` returned no diff (byte-for-byte match).
+- `diff -u /tmp/legacy-sprints-current.txt /tmp/ph-sprints-current.txt` returned no diff.
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> sprint open --sprint SPRINT-...` now matches legacy `pnpm make -- sprint-open sprint=SPRINT-...` stdout and `sprints/current`; parity locked via pytest.
+
+Next task:
+- V1P-0015
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-04 23:26 UTC — V1P-0012 — Parity: `make daily-check` → `ph daily check --verbose`
 
 Agent: GPT-5.2 (Codex CLI background agent via Orchestrator)
