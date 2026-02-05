@@ -23,10 +23,10 @@ Context:
 - This was observed during parity work for V1P-0024 and logged in `cli_plan/session_logs.md`.
 
 Current choice (2026-02-05):
-- Keep the `ph` behavior (non-zero exit on post-hook validation errors) for now.
+- Keep **strict parity** with the legacy Make workflow: post-hook quick validation MUST NOT change the command’s exit code.
 
 Why this matters:
-- It’s more CI-friendly (fails fast when repo state is invalid), but it is a behavioral drift from Make-era parity.
+- Strict parity is not “conventionally correct” for CLIs/CI (it hides validation failures in exit status), but it matches Make-era behavior.
 
 Options:
 1. **Strict parity:** keep printing the validation summary + writing `status/validation.json`, but do **not** let post-hook validation change the command’s exit code.
