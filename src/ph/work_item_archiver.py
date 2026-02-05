@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import datetime as dt
+import os
 import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
 from .backlog_manager import BacklogManager
+from .clock import now as clock_now
 from .parking_lot_manager import ParkingLotManager
 
 
@@ -143,6 +145,7 @@ def archive_work_items_for_task(
     task_dir: Path,
     ph_data_root: Path,
     strict: bool,
+    env: dict[str, str] | None = None,
     dry_run: bool = False,
 ) -> tuple[list[WorkItemRef], list[str]]:
     archived: list[WorkItemRef] = []
@@ -152,7 +155,13 @@ def archive_work_items_for_task(
     if not refs:
         return archived, errors
 
-    archived_at = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    use_env = env or os.environ
+    raw_fake_now = (use_env.get("PH_FAKE_NOW") or "").strip()
+    if raw_fake_now:
+        base = clock_now(env=use_env)
+    else:
+        base = dt.datetime.now(dt.timezone.utc).replace(tzinfo=None)
+    archived_at = base.replace(microsecond=0).isoformat() + "Z"
 
     for ref in refs:
         source_dir = ref.source_dir(ph_data_root=ph_data_root)
@@ -203,13 +212,62 @@ def archive_work_items_for_task(
     return archived, errors
 
 
-def refresh_indexes(*, ph_data_root: Path) -> None:
+def refresh_indexes(*, ph_data_root: Path, env: dict[str, str] | None = None) -> None:
     try:
-        BacklogManager(project_root=ph_data_root).update_index()
+        BacklogManager(project_root=ph_data_root, env=env).update_index()
     except Exception as exc:
         print(f"⚠️  backlog index refresh failed: {exc}")
 
     try:
-        ParkingLotManager(project_root=ph_data_root).update_index()
+        ParkingLotManager(project_root=ph_data_root, env=env).update_index()
     except Exception as exc:
         print(f"⚠️  parking-lot index refresh failed: {exc}")
+
+
+def archive_done_tasks_in_sprint(
+    *,
+    sprint_dir: Path,
+    sprint_id: str,
+    ph_data_root: Path,
+    strict: bool,
+    env: dict[str, str] | None = None,
+) -> list[str]:
+    """
+    Archive work-items referenced by tasks marked `done` within a sprint directory.
+    Returns a list of errors (empty if success).
+    """
+    errors: list[str] = []
+    tasks_dir = sprint_dir / "tasks"
+    if not tasks_dir.exists():
+        return errors
+
+    for task_dir in sorted(tasks_dir.iterdir()):
+        if not task_dir.is_dir():
+            continue
+        task_yaml = task_dir / "task.yaml"
+        if not task_yaml.exists():
+            continue
+        meta = _read_text(task_yaml)
+        task_id_match = re.search(r"^id:\\s*(TASK-[0-9]+)\\s*$", meta, flags=re.MULTILINE)
+        status_match = re.search(r"^status:\\s*([a-zA-Z_]+)\\s*$", meta, flags=re.MULTILINE)
+        if not task_id_match or not status_match:
+            continue
+        task_id = task_id_match.group(1)
+        status = status_match.group(1).strip().lower()
+        if status != "done":
+            continue
+
+        _, task_errors = archive_work_items_for_task(
+            task_id=task_id,
+            sprint_id=sprint_id,
+            task_dir=task_dir,
+            ph_data_root=ph_data_root,
+            strict=strict,
+            env=env,
+            dry_run=False,
+        )
+        errors.extend(task_errors)
+
+    if not errors:
+        refresh_indexes(ph_data_root=ph_data_root, env=env)
+    return errors

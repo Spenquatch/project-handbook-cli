@@ -401,16 +401,19 @@
     "work_location": "cli_repo",
     "kickoff_prompt": "Goal: strict parity for: `make sprint-archive [sprint=SPRINT-...]` \u2192 `ph sprint archive [--sprint SPRINT-...]`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Sprint (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: sprint exists (`sprints/<year>/<SPRINT-...>/`)\n- Command: `ph --root <PH_ROOT> sprint archive [--sprint SPRINT-...]`\n- Outputs to verify: `sprints/archive/**`, `sprints/archive/index.json`\n"
   },
-    {
-      "id": "V1P-0020",
-      "phase_id": "PHASE-P03",
-      "order": 8,
-      "title": "Parity: `make sprint-close` \u2192 `ph sprint close`",
-      "status": "todo",
-      "depends_on": [],
-      "work_location": "cli_repo",
-      "kickoff_prompt": "Goal: strict parity for: `make sprint-close` \u2192 `ph sprint close`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Sprint (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `sprints/current` exists\n- Command: `ph --root <PH_ROOT> sprint close`\n- Outputs to verify: `sprints/<year>/<SPRINT-...>/retrospective.md`, `sprints/archive/**`, `sprints/archive/index.json`\n"
-    },
+  {
+    "id": "V1P-0020",
+    "phase_id": "PHASE-P03",
+    "order": 8,
+    "title": "Parity: `make sprint-close` \u2192 `ph sprint close`",
+    "status": "done",
+    "started_at": "2026-02-05T03:04:16Z",
+    "completed_at": "2026-02-05T03:24:19Z",
+    "next_task_id": "V1P-0021",
+    "depends_on": [],
+    "work_location": "cli_repo",
+    "kickoff_prompt": "Goal: strict parity for: `make sprint-close` \u2192 `ph sprint close`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Sprint (project))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: `sprints/current` exists\n- Command: `ph --root <PH_ROOT> sprint close`\n- Outputs to verify: `sprints/<year>/<SPRINT-...>/retrospective.md`, `sprints/archive/**`, `sprints/archive/index.json`\n"
+  },
     {
       "id": "V1P-0021",
       "phase_id": "PHASE-P04",

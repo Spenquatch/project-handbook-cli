@@ -649,6 +649,94 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 03:04 UTC — V1P-0020 — Parity: `make sprint-close` → `ph sprint close`
+
+Agent: GPT-5.2 (Codex CLI Orchestrator) + background Codex exec
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable PH_ROOT (rsync copy of legacy repo into mktemp; PH_ROOT ended with `/project-handbook/` for legacy parity)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0020)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook/process/automation/sprint_manager.py
+- /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook/process/automation/work_item_archiver.py
+- src/ph/cli.py
+- src/ph/release.py
+- src/ph/sprint_close.py
+- src/ph/work_item_archiver.py
+- tests/test_sprint_close.py
+
+Goal:
+- Achieve strict parity for legacy `pnpm make -- sprint-close` vs `ph --root <PH_ROOT> sprint close` (stdout + `sprints/<year>/<SPRINT-...>/retrospective.md`, `sprints/archive/**`, `sprints/archive/index.json`).
+
+Work performed (ordered):
+1. Created a disposable PH_ROOT from the legacy handbook repo (monorepo path ending in `/project-handbook/`) and captured legacy stdout + outputs for `pnpm make -- sprint-close` (archive index, archived sprint dir, retrospective).
+2. Restored the same PH_ROOT path to a pristine baseline, then ran `ph sprint close` with `PH_FAKE_NOW`/`PH_FAKE_TODAY` derived from the legacy archive index so outputs could be compared byte-for-byte.
+3. Updated `ph sprint close` implementation to match legacy stdout and side effects (work-item archiving + index refresh output, retrospective date semantics, release progress refresh, sprint archive/index updates).
+4. Added a deterministic pytest locking sprint-close stdout + outputs parity.
+5. Re-ran diffs + ruff/pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- PH_MONO=\"$(mktemp -d -t ph-parity-V1P-0020-XXXXXXXX)\"
+- PH_ROOT=\"$PH_MONO/project-handbook\" && mkdir -p \"$PH_ROOT\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- SPRINT=\"$(basename \"$(readlink \"$PH_ROOT/sprints/current\")\")\" && export SPRINT
+- (cd \"$PH_ROOT\" && pnpm make -- sprint-close) > /tmp/legacy-sprint-close-stdout.txt
+- cp \"$PH_ROOT/sprints/archive/index.json\" /tmp/legacy-sprint-close-index.json
+- LEGACY_ARCHIVED_AT=$(python - <<'PY'\nimport json, os\nfrom pathlib import Path\nsprint=os.environ[\"SPRINT\"]\nidx=json.loads(Path('/tmp/legacy-sprint-close-index.json').read_text())\nentry=next((e for e in idx.get('sprints',[]) if e.get('sprint')==sprint), None)\nprint(entry.get('archived_at','') if entry else '')\nPY\n)
+- LEGACY_TODAY=\"${LEGACY_ARCHIVED_AT%%T*}\"
+- ARCH_PATH=$(cd \"$PH_ROOT\" && python - <<'PY'\nimport json, os\nfrom pathlib import Path\nsprint=os.environ[\"SPRINT\"]\nidx=json.loads(Path('sprints/archive/index.json').read_text())\nentry=next((e for e in idx.get('sprints',[]) if e.get('sprint')==sprint), None)\nprint(entry['path'] if entry else '')\nPY\n)
+- rm -rf /tmp/legacy-sprint-close-archived-dir && mkdir -p /tmp/legacy-sprint-close-archived-dir
+- rsync -a --delete \"$PH_ROOT/$ARCH_PATH/\" /tmp/legacy-sprint-close-archived-dir/
+- LEGACY_RETRO=$(find \"$PH_ROOT/sprints\" -type f -name retrospective.md -print | sort | tail -n 1 || true)
+- if [ -n \"$LEGACY_RETRO\" ]; then cp \"$LEGACY_RETRO\" /tmp/legacy-sprint-close-retrospective.md; else : > /tmp/legacy-sprint-close-retrospective.md; fi
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache PH_FAKE_NOW=\"$LEGACY_ARCHIVED_AT\" PH_FAKE_TODAY=\"$LEGACY_TODAY\" uv run ph --root \"$PH_ROOT\" sprint close > /tmp/ph-sprint-close-stdout.txt
+- cp \"$PH_ROOT/sprints/archive/index.json\" /tmp/ph-sprint-close-index.json
+- ARCH_PATH=$(cd \"$PH_ROOT\" && python - <<'PY'\nimport json, os\nfrom pathlib import Path\nsprint=os.environ[\"SPRINT\"]\nidx=json.loads(Path('sprints/archive/index.json').read_text())\nentry=next((e for e in idx.get('sprints',[]) if e.get('sprint')==sprint), None)\nprint(entry['path'] if entry else '')\nPY\n)
+- rm -rf /tmp/ph-sprint-close-archived-dir && mkdir -p /tmp/ph-sprint-close-archived-dir
+- rsync -a --delete \"$PH_ROOT/$ARCH_PATH/\" /tmp/ph-sprint-close-archived-dir/
+- PH_RETRO=$(find \"$PH_ROOT/sprints\" -type f -name retrospective.md -print | sort | tail -n 1 || true)
+- if [ -n \"$PH_RETRO\" ]; then cp \"$PH_RETRO\" /tmp/ph-sprint-close-retrospective.md; else : > /tmp/ph-sprint-close-retrospective.md; fi
+- diff -u /tmp/legacy-sprint-close-stdout.txt /tmp/ph-sprint-close-stdout.txt
+- diff -u /tmp/legacy-sprint-close-index.json /tmp/ph-sprint-close-index.json
+- diff -ruN /tmp/legacy-sprint-close-archived-dir /tmp/ph-sprint-close-archived-dir
+- diff -u /tmp/legacy-sprint-close-retrospective.md /tmp/ph-sprint-close-retrospective.md
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ruff check .
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/cli.py
+- src/ph/release.py
+- src/ph/sprint_close.py
+- src/ph/work_item_archiver.py
+- tests/test_sprint_close.py
+
+Verification:
+- `diff -u /tmp/legacy-sprint-close-stdout.txt /tmp/ph-sprint-close-stdout.txt` returned no diff (byte-for-byte match).
+- `diff -u /tmp/legacy-sprint-close-index.json /tmp/ph-sprint-close-index.json` returned no diff (byte-for-byte match).
+- `diff -ruN /tmp/legacy-sprint-close-archived-dir /tmp/ph-sprint-close-archived-dir` returned no diff (byte-for-byte match).
+- `diff -u /tmp/legacy-sprint-close-retrospective.md /tmp/ph-sprint-close-retrospective.md` returned no diff (byte-for-byte match).
+- Ruff: `uv run ruff check .` (pass)
+- Pytest: `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> sprint close` now matches legacy `pnpm make -- sprint-close` stdout + outputs (retrospective, archive index, archived sprint dir); parity locked via pytest.
+
+Next task:
+- V1P-0021
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-05 02:36 UTC — V1P-0019 — Parity: `make sprint-archive ...` → `ph sprint archive ...`
 
 Agent: GPT-5.2 (Codex CLI Orchestrator) + background Codex exec

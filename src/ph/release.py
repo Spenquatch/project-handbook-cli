@@ -403,26 +403,47 @@ def run_release_progress(*, ctx: Context, env: dict[str, str]) -> int:
         print("💡 Activate one with: ph release activate --release vX.Y.Z")
         return 1
 
-    release_dir = ctx.ph_root / "releases" / version
-    if not release_dir.exists():
+    try:
+        path = write_release_progress(ph_root=ctx.ph_root, version=version, env=env)
+    except FileNotFoundError:
         print(f"❌ Release {version} not found")
         return 1
+    print(f"📝 Updated: {path}")
+    return 0
 
-    features = load_release_features(ph_root=ctx.ph_root, version=version)
-    progress = calculate_release_progress(ph_root=ctx.ph_root, version=version, features=features, env=env)
+
+def write_release_progress(*, ph_root: Path, version: str, env: dict[str, str]) -> Path:
+    """
+    Write `releases/<version>/progress.md` and return the path.
+
+    This is used by both `ph release progress` (current release) and sprint-close parity,
+    where legacy runs `process/automation/release_manager.py --progress <version>`.
+    """
+    resolved = (version or "").strip()
+    if not resolved:
+        raise ValueError("missing version")
+    if not resolved.startswith("v"):
+        resolved = f"v{resolved}"
+
+    release_dir = ph_root / "releases" / resolved
+    if not release_dir.exists():
+        raise FileNotFoundError(resolved)
+
+    features = load_release_features(ph_root=ph_root, version=resolved)
+    progress = calculate_release_progress(ph_root=ph_root, version=resolved, features=features, env=env)
     today = clock_today(env=env).strftime("%Y-%m-%d")
 
     lines: list[str] = []
     lines.append("---")
-    lines.append(f"title: Release {version} Progress")
+    lines.append(f"title: Release {resolved} Progress")
     lines.append("type: release-progress")
-    lines.append(f"version: {version}")
+    lines.append(f"version: {resolved}")
     lines.append(f"date: {today}")
     lines.append("tags: [release, progress]")
     lines.append("links: []")
     lines.append("---")
     lines.append("")
-    lines.append(f"# Release {version} Progress")
+    lines.append(f"# Release {resolved} Progress")
     lines.append("")
     lines.append("*This file is auto-generated. Do not edit manually.*")
     lines.append("")
@@ -443,8 +464,7 @@ def run_release_progress(*, ctx: Context, env: dict[str, str]) -> int:
 
     path = release_dir / "progress.md"
     path.write_text("\n".join(lines), encoding="utf-8")
-    print(f"📝 Updated: {path}")
-    return 0
+    return path
 
 
 def run_release_show(*, ctx: Context, env: dict[str, str]) -> int:
