@@ -180,10 +180,11 @@ def validate_front_matter(*, issues: list[dict], rules: dict, root: Path, ph_roo
         rel_path = md.relative_to(root)
         if rel_path.as_posix() == "status/current_summary.md":
             continue
+        rel_str = rel_path.as_posix()
         if rules.get("validation", {}).get("skip_docs_directory", True):
-            if "docs/" in str(md.relative_to(root)):
+            if "docs/" in rel_str:
                 continue
-        if "backlog/" in str(md.relative_to(root)) and md.name == "triage.md":
+        if "backlog/" in rel_str and md.name == "triage.md":
             continue
 
         fm, _, _ = parse_front_matter(read(md))

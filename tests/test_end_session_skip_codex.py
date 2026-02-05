@@ -32,6 +32,7 @@ def test_end_session_skip_codex_writes_summary_and_manifest(tmp_path: Path) -> N
     rollout_path = tmp_path / "rollout.jsonl"
     session_meta = {
         "type": "session_meta",
+        "timestamp": "2026-01-14T00:00:00Z",
         "payload": {
             "id": "sess-1",
             "timestamp": "2026-01-14T00:00:00Z",
@@ -42,6 +43,7 @@ def test_end_session_skip_codex_writes_summary_and_manifest(tmp_path: Path) -> N
     }
     response_item = {
         "type": "response_item",
+        "timestamp": "2026-01-14T00:00:00Z",
         "payload": {
             "type": "message",
             "role": "user",
@@ -61,11 +63,25 @@ def test_end_session_skip_codex_writes_summary_and_manifest(tmp_path: Path) -> N
     assert result.returncode == 0, (result.stdout, result.stderr)
 
     logs_dir = ph_root / "process" / "sessions" / "logs"
-    summary_files = sorted(p for p in logs_dir.glob("*_summary.md") if p.name != "latest_summary.md")
-    assert len(summary_files) == 1
+    manifest_path = logs_dir / "manifest.json"
     assert (logs_dir / "latest_summary.md").exists()
-    assert (logs_dir / "manifest.json").exists()
+    assert manifest_path.exists()
 
-    manifest = json.loads((logs_dir / "manifest.json").read_text(encoding="utf-8"))
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert manifest["sessions"][0]["session_id"] == "sess-1"
-    assert manifest["sessions"][0]["summary_path"] == str(summary_files[0].relative_to(ph_root))
+
+    expected_summary = (
+        Path("process")
+        / "sessions"
+        / "logs"
+        / "2026"
+        / "01"
+        / "14"
+        / "sess-1"
+        / "000000_summary.md"
+    )
+    assert manifest["sessions"][0]["summary_path"] == expected_summary.as_posix()
+    assert (ph_root / expected_summary).exists()
+    summary_text = (ph_root / expected_summary).read_text(encoding="utf-8")
+    assert "[Tue Jan 13 - 07:00 PM] USER :: Hello from fixture" in summary_text
+    assert "- Hello from fixture (?) – no file changes" in summary_text

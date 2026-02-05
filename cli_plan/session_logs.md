@@ -9207,3 +9207,75 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 22:27 UTC — V1P-0065 — Parity: `make end-session ...` → `ph end-session ...`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI via coding-agent)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created via `mktemp`; see Commands executed)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0065)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook/Makefile
+
+Goal:
+- Achieve strict parity for `make end-session ...` → `ph end-session ...` (stdout + session-summary artifacts).
+
+Work performed (ordered):
+1. Ran canonical legacy-vs-`ph` parity capture on a disposable handbook copy for `end-session` using `--skip-codex --force --session-end-mode continue-task` and a deterministic rollout fixture.
+2. Completed `end_session` parity implementation: restored legacy-equivalent post-hook validation behavior, added chapter/timeline synthesis in session summaries, and aligned transcript rendering semantics.
+3. Added deterministic pytest assertions for summary content shape and reran parity diffs; verified all deterministic outputs match byte-for-byte, with only expected runtime timestamps (`generated_at`/`created_at`) differing.
+4. Ran full quality gates (`ruff`, full `pytest`) and finalized task marker/bookkeeping.
+
+Commands executed (exact):
+- `LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0065-root-XXXXXXXX)"; PH_ROOT="$TMP_ROOT/project-handbook"; ROLLOUT="$TMP_ROOT/rollout-v1p0065.jsonl"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"; (cd "$PH_ROOT" && pnpm install --frozen-lockfile >/dev/null)`
+- `python -c 'rewrite copied PH_ROOT/project_handbook.config.json repo_root to "." for disposable-root parity execution'`
+- `python -c 'write deterministic rollout fixture (session_meta + one user response item) to $ROLLOUT'`
+- `tar -C "$TMP_ROOT" -czf /tmp/V1P-0065.baseline.tgz project-handbook`
+- `set +e; (cd "$PH_ROOT" && npm_config_reporter=silent pnpm make -- end-session skip_codex=true force=true session_end_mode=continue-task log="$ROLLOUT") > /tmp/V1P-0065.legacy.stdout.txt; printf "%s\n" "$?" > /tmp/V1P-0065.legacy.status.txt; set -e`
+- `python -c 'extract legacy artifacts to /tmp/V1P-0065.legacy.* (latest_summary, manifest, summary file, session_end index/summary/prompt)'`
+- `rm -rf "$PH_ROOT"; tar -C "$TMP_ROOT" -xzf /tmp/V1P-0065.baseline.tgz`
+- `set +e; UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache npm_config_reporter=silent uv run ph --root "$PH_ROOT" end-session --skip-codex --force --session-end-mode continue-task --log "$ROLLOUT" > /tmp/V1P-0065.ph.stdout.txt; printf "%s\n" "$?" > /tmp/V1P-0065.ph.status.txt; set -e`
+- `python -c 'extract ph artifacts to /tmp/V1P-0065.ph.* (latest_summary, manifest, summary file, session_end index/summary/prompt)'`
+- `diff -u /tmp/V1P-0065.legacy.status.txt /tmp/V1P-0065.ph.status.txt`
+- `diff -u /tmp/V1P-0065.legacy.stdout.txt /tmp/V1P-0065.ph.stdout.txt`
+- `diff -u /tmp/V1P-0065.legacy.latest_summary.md /tmp/V1P-0065.ph.latest_summary.md`
+- `diff -u /tmp/V1P-0065.legacy.summary.md /tmp/V1P-0065.ph.summary.md`
+- `diff -u /tmp/V1P-0065.legacy.session_end_summary.md /tmp/V1P-0065.ph.session_end_summary.md`
+- `diff -u /tmp/V1P-0065.legacy.session_end_prompt.txt /tmp/V1P-0065.ph.session_end_prompt.txt`
+- `python -c 'normalize /tmp/V1P-0065.* manifest/index by removing generated_at/created_at for deterministic comparison'`
+- `diff -u /tmp/V1P-0065.legacy.manifest.norm.json /tmp/V1P-0065.ph.manifest.norm.json`
+- `diff -u /tmp/V1P-0065.legacy.session_end_index.norm.json /tmp/V1P-0065.ph.session_end_index.norm.json`
+- `UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ruff check .`
+- `UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run pytest -q`
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0065.done
+- src/ph/cli.py
+- src/ph/end_session.py
+- src/ph/validate_docs.py
+- tests/test_end_session_session_end_artifacts.py
+- tests/test_end_session_skip_codex.py
+
+Verification:
+- Parity diffs returned no diff for: status, stdout, `latest_summary.md`, summary markdown, session_end summary markdown, session_end prompt.
+- `manifest.json` and `session_end_index.json` matched after normalization that removes runtime timestamps (`generated_at`, `created_at`), with all semantic fields and paths identical.
+- `UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ruff check .` (pass)
+- `UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run pytest -q` (pass; 190 passed)
+- Expected nondeterminism note: raw `manifest.json` and `session_end_index.json` differ only in runtime-generated timestamps between separate legacy/ph invocations.
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> end-session --skip-codex --force --session-end-mode continue-task --log <rollout.jsonl>` now matches legacy `pnpm make -- end-session ...` for deterministic stdout + session-summary artifacts; parity is locked with pytest, with only expected runtime timestamp-field variance.
+
+Next task:
+- V1P-0066
+
+Blockers (if blocked):
+- (none)

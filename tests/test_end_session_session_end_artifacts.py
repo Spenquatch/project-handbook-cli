@@ -32,6 +32,7 @@ def test_end_session_skip_codex_writes_session_end_artifacts(tmp_path: Path) -> 
     rollout_path = tmp_path / "rollout.jsonl"
     session_meta = {
         "type": "session_meta",
+        "timestamp": "2026-01-14T00:00:00Z",
         "payload": {
             "id": "sess-2",
             "timestamp": "2026-01-14T00:00:00Z",
@@ -42,6 +43,7 @@ def test_end_session_skip_codex_writes_session_end_artifacts(tmp_path: Path) -> 
     }
     response_item = {
         "type": "response_item",
+        "timestamp": "2026-01-14T00:00:00Z",
         "payload": {
             "type": "message",
             "role": "user",
@@ -83,6 +85,7 @@ def test_end_session_skip_codex_writes_session_end_artifacts(tmp_path: Path) -> 
     index = json.loads(index_path.read_text(encoding="utf-8"))
     assert index["records"], "Expected session_end index to contain at least one record"
     record = index["records"][0]
+    assert record["summary_id"] == "20260114T000000_sess-2_continue_task"
     summary_rel = Path(record["summary_path"])
     prompt_rel = Path(record["prompt_path"])
     assert (ph_root / summary_rel).exists()

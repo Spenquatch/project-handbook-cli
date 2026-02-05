@@ -624,9 +624,7 @@ def main(argv: list[str] | None = None) -> int:
                     print("Usage: ph migrate <system-scope>\n", file=sys.stderr, end="")
                     exit_code = 2
             elif args.command == "end-session":
-                _ = args.force  # parsed for parity; skip-codex mode does not enforce cwd matching
                 _ = args.session_id  # parsed for parity; log selection is explicit in v1
-                _ = args.task_ref  # parsed for parity; session_end artifacts are minimal in v1
                 _ = args.session_end_codex  # parsed for parity; not exercised in tests
                 _ = args.session_end_codex_model  # parsed for parity; not exercised in tests
 
@@ -642,8 +640,10 @@ def main(argv: list[str] | None = None) -> int:
                     run_end_session_skip_codex(
                         ph_root=ph_root,
                         log_path=Path(args.log),
+                        force=bool(args.force),
                         session_end_mode=str(args.session_end_mode),
                         workstream=getattr(args, "workstream", None),
+                        task_ref=getattr(args, "task_ref", None),
                     )
                     exit_code = 0
                 else:
@@ -652,8 +652,10 @@ def main(argv: list[str] | None = None) -> int:
                         log_path=Path(args.log),
                         model=getattr(args, "codex_model", None),
                         overrides=overrides,
+                        force=bool(args.force),
                         session_end_mode=str(args.session_end_mode),
                         workstream=getattr(args, "workstream", None),
+                        task_ref=getattr(args, "task_ref", None),
                     )
                     exit_code = 0
             elif args.command == "clean":
