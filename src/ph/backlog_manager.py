@@ -353,7 +353,12 @@ _Add investigation findings here_
 
         print(f"\n✅ Recorded assignment: {issue_id} → {resolved_sprint}")
         print("Next steps:")
-        task_create_cmd = "ph --scope system task create" if scope == "system" else "ph task create"
+        if scope == "project":
+            task_create_cmd = "make task-create"
+        elif scope == "system":
+            task_create_cmd = "ph --scope system task create"
+        else:
+            task_create_cmd = "ph task create"
         print(
             "1. Create/assign the actual sprint task via "
             f"'{task_create_cmd} ...' (feature + decision required; discovery tasks may use "

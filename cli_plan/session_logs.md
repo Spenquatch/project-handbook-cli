@@ -7394,3 +7394,80 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 13:01 UTC — V1P-0034 — Parity: make backlog-assign → ph backlog assign
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created under `$TMPDIR`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0034)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `make backlog-assign issue=<ID> sprint=current` → `ph backlog assign --issue <ID> --sprint current` (stdout + `backlog/index.json` + issue dir updates).
+
+Work performed (ordered):
+1. Created a disposable PH_ROOT from the legacy handbook repo and seeded a deterministic P2 issue (frozen time) to satisfy the assign precondition.
+2. Seeded a deterministic `sprints/current` pointer before snapshotting the baseline tar.
+3. Captured legacy assign stdout + `backlog/index.json` + issue dir outputs, freezing legacy wall-clock time via `PYTHONPATH` + `sitecustomize.py`.
+4. Captured `ph` assign stdout + file outputs under the same frozen time (`PH_FAKE_NOW`) and diffed; updated `ph` to match legacy output exactly and added deterministic pytest coverage.
+5. Re-ran legacy-vs-`ph` capture + diff; verified byte-for-byte matches for stdout, index, and issue dir.
+6. Ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"
+- TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0034-root-real-XXXXXXXX)"
+- PH_ROOT="$TMP_ROOT/project-handbook"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"
+- (cd "$PH_ROOT" && pnpm install --frozen-lockfile)
+- FAKETIME_DIR="/tmp/ph-faketime-v1p0034"; rm -rf "$FAKETIME_DIR"; mkdir -p "$FAKETIME_DIR"; cat >"$FAKETIME_DIR/sitecustomize.py" <<'PY' ... PY
+- export PH_FAKE_NOW="2099-01-02T09:00:00Z"
+- (cd "$PH_ROOT" && PYTHONPATH="$FAKETIME_DIR" pnpm make -- backlog-add type=bug title="Parity assign issue" severity=P2 desc="Seed for V1P-0034") > /tmp/V1P-0034.seed.stdout.txt
+- ISSUE_ID="BUG-P2-20990102-090000"
+- SPRINT_DIR="$PH_ROOT/sprints/2099/SPRINT-2099-01-01"; mkdir -p "$SPRINT_DIR"
+- mkdir -p "$PH_ROOT/sprints"; ln -sfn "2099/SPRINT-2099-01-01" "$PH_ROOT/sprints/current"
+- (cd "$PH_ROOT" && tar -cf /tmp/ph-parity-V1P-0034-base.tar .)
+- (cd "$PH_ROOT" && PYTHONPATH="$FAKETIME_DIR" pnpm make -- backlog-assign issue="$ISSUE_ID" sprint=current) > /tmp/V1P-0034.legacy.stdout.txt
+- rsync -a --delete "$PH_ROOT/backlog/index.json" /tmp/V1P-0034.legacy.index.json
+- rsync -a --delete "$PH_ROOT/backlog/bugs/$ISSUE_ID/" /tmp/V1P-0034.legacy.issue/
+- rm -rf "$PH_ROOT" && mkdir -p "$PH_ROOT" && tar -xf /tmp/ph-parity-V1P-0034-base.tar -C "$PH_ROOT"
+- export UV_CACHE_DIR=/tmp/uv-cache; mkdir -p "$UV_CACHE_DIR"
+- PH_FAKE_NOW="2099-01-02T09:00:00Z" uv run ph --root "$PH_ROOT" backlog assign --issue "$ISSUE_ID" --sprint current > /tmp/V1P-0034.ph.stdout.txt
+- rsync -a --delete "$PH_ROOT/backlog/index.json" /tmp/V1P-0034.ph.index.json
+- rsync -a --delete "$PH_ROOT/backlog/bugs/$ISSUE_ID/" /tmp/V1P-0034.ph.issue/
+- diff -u /tmp/V1P-0034.legacy.stdout.txt /tmp/V1P-0034.ph.stdout.txt
+- diff -u /tmp/V1P-0034.legacy.index.json /tmp/V1P-0034.ph.index.json
+- diff -ru /tmp/V1P-0034.legacy.issue /tmp/V1P-0034.ph.issue
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0034.done
+- src/ph/backlog_manager.py
+- src/ph/cli.py
+- tests/test_backlog_assign_parity_v1p0034.py
+
+Verification:
+- `diff -u /tmp/V1P-0034.legacy.stdout.txt /tmp/V1P-0034.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `diff -u /tmp/V1P-0034.legacy.index.json /tmp/V1P-0034.ph.index.json` returned no diff (byte-for-byte match).
+- `diff -ru /tmp/V1P-0034.legacy.issue /tmp/V1P-0034.ph.issue` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 165 tests)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> backlog assign --issue <ID> --sprint current` now matches legacy `pnpm make -- backlog-assign issue=<ID> sprint=current` for stdout + index + issue dir, under frozen time; parity locked via pytest.
+
+Next task:
+- V1P-0035
+
+Blockers (if blocked):
+- (none)

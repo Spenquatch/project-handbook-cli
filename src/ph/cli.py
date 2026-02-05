@@ -979,10 +979,23 @@ def main(argv: list[str] | None = None) -> int:
                         print_index_summary=ctx.scope == "project",
                     )
                 elif args.backlog_command == "assign":
+                    issue_id = str(args.issue_id)
+                    sprint = str(getattr(args, "sprint", "current") or "current")
+                    if ctx.scope == "project":
+                        sys.stdout.write(
+                            _format_pnpm_make_preamble(
+                                ph_root=ph_root,
+                                make_args=[
+                                    "backlog-assign",
+                                    f"issue\\={issue_id}",
+                                    f"sprint\\={sprint}",
+                                ],
+                            )
+                        )
                     exit_code = run_backlog_assign(
                         ctx=ctx,
-                        issue_id=str(args.issue_id),
-                        sprint=str(getattr(args, "sprint", "current") or "current"),
+                        issue_id=issue_id,
+                        sprint=sprint,
                         env=os.environ,
                     )
                 elif args.backlog_command == "rubric":
