@@ -8440,10 +8440,10 @@ Blockers (if blocked):
 
 ## 2026-02-05 19:10 UTC — V1P-0051 — Parity: `make release-plan ...` → `ph release plan ...`
 
-Agent:
-Environment:
-Handbook instance repo:
-CLI repo:
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created via `mktemp`; see Commands executed)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
 
 Inputs reviewed:
 - cli_plan/AI_AGENT_START_HERE.md
@@ -8452,6 +8452,7 @@ Inputs reviewed:
 - cli_plan/v1_cli/CLI_CONTRACT.md
 
 Goal:
+- Achieve strict parity for `pnpm make -- release-activate release=v0.5.2` → `ph release activate --release v0.5.2` (stdout + exit code + `releases/current`).
 
 Work performed (ordered):
 1. Ran legacy-vs-`ph` capture + diff for `release-plan` using a disposable handbook instance and a baseline-restore workflow for deterministic comparisons.
@@ -8492,6 +8493,63 @@ Outcome:
 
 Next task:
 - V1P-0052
+
+Blockers (if blocked):
+- (none)
+
+## 2026-02-05 19:35 UTC — V1P-0052 — Parity: `make release-activate release=<vX.Y.Z>` → `ph release activate --release <vX.Y.Z>`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created via `mktemp`; see Commands executed)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0052)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- release-activate release=v0.5.2` → `ph release activate --release v0.5.2` (stdout + exit code + `releases/current`).
+
+Work performed (ordered):
+1. Captured legacy stdout/exit + `releases/current` for `release-activate release=v0.5.2` under `npm_config_reporter=silent` on a disposable handbook instance; restored baseline for a clean `ph` run.
+2. Updated `ph release activate` output + control-flow to match legacy byte-for-byte (including the post-activate status output).
+3. Updated pytest coverage and re-ran parity diffs + `ruff` + `pytest`.
+
+Commands executed (exact):
+- export TMPDIR=/tmp; LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0052-root-XXXXXXXX)"; PH_ROOT="$TMP_ROOT/project-handbook"; RELEASE="v0.5.2"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"; (cd "$PH_ROOT" && pnpm install --frozen-lockfile >/dev/null); tar -C "$TMP_ROOT" -czf /tmp/V1P-0052.baseline.tgz project-handbook
+- set +e; (cd "$PH_ROOT" && npm_config_reporter=silent pnpm make -- release-activate release="$RELEASE") > /tmp/V1P-0052.legacy.stdout.txt; echo $? > /tmp/V1P-0052.legacy.status.txt; set -e
+- readlink "$PH_ROOT/releases/current" > /tmp/V1P-0052.legacy.current.txt
+- rm -rf "$PH_ROOT"; tar -C "$TMP_ROOT" -xzf /tmp/V1P-0052.baseline.tgz
+- set +e; UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache npm_config_reporter=silent uv run ph --root "$PH_ROOT" release activate --release "$RELEASE" > /tmp/V1P-0052.ph.stdout.txt; echo $? > /tmp/V1P-0052.ph.status.txt; set -e
+- readlink "$PH_ROOT/releases/current" > /tmp/V1P-0052.ph.current.txt
+- diff -u /tmp/V1P-0052.legacy.status.txt /tmp/V1P-0052.ph.status.txt
+- diff -u /tmp/V1P-0052.legacy.stdout.txt /tmp/V1P-0052.ph.stdout.txt
+- diff -u /tmp/V1P-0052.legacy.current.txt /tmp/V1P-0052.ph.current.txt
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ruff check .
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0052.done
+- src/ph/cli.py
+- src/ph/release.py
+- tests/test_release_activate_clear_show_progress.py
+
+Verification:
+- Parity diffs: `diff -u /tmp/V1P-0052.*` comparisons returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> release activate --release v0.5.2` matches legacy `pnpm make -- release-activate release=v0.5.2` for stdout + exit code + `releases/current`; parity locked via pytest.
+
+Next task:
+- V1P-0053
 
 Blockers (if blocked):
 - (none)

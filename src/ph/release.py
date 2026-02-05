@@ -522,7 +522,7 @@ def run_release_plan(
     return 0
 
 
-def run_release_activate(*, ctx: Context, release: str) -> int:
+def run_release_activate(*, ctx: Context, release: str, env: dict[str, str]) -> int:
     if ctx.scope == "system":
         print(_SYSTEM_SCOPE_REMEDIATION)
         return 1
@@ -539,7 +539,7 @@ def run_release_activate(*, ctx: Context, release: str) -> int:
         return 1
 
     print(f"⭐ Current release set to: {version}")
-    return 0
+    return run_release_status(ctx=ctx, env=env)
 
 
 def run_release_clear(*, ctx: Context) -> int:
@@ -1026,7 +1026,7 @@ def get_release_timeline_info(*, ph_root: Path, version: str) -> dict[str, objec
     plan_file = release_dir / "plan.md"
 
     sprint_count_default = 3
-    current_sprint = _resolve_current_sprint_id(ph_root=ph_root, fallback="UNKNOWN")
+    current_sprint = _resolve_current_sprint_id(ph_root=ph_root, fallback="SPRINT-SEQ-0001")
     start_sprint_default = current_sprint
 
     plan_meta = parse_plan_front_matter(plan_path=plan_file)
@@ -1294,7 +1294,7 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
         sprint_timeline = []
     sprint_timeline = [str(item) for item in sprint_timeline if str(item)]
     current_sprint = str(
-        timeline.get("current_sprint") or _resolve_current_sprint_id(ph_root=ctx.ph_root, fallback="UNKNOWN")
+        timeline.get("current_sprint") or _resolve_current_sprint_id(ph_root=ctx.ph_root, fallback="SPRINT-SEQ-0001")
     )
     current_sprint_index = timeline.get("current_sprint_index")
     if not isinstance(current_sprint_index, int):

@@ -36,6 +36,8 @@ def test_release_activate_and_clear(tmp_path: Path) -> None:
         env=env,
     )
     assert result.returncode == 0
+    assert "⭐ Current release set to: v1.0.0" in result.stdout
+    assert "📦 RELEASE STATUS: v1.0.0" in result.stdout
     current_link = tmp_path / "releases" / "current"
     assert current_link.is_symlink()
     assert current_link.readlink().name == "v1.0.0"
@@ -84,4 +86,3 @@ def test_release_progress_and_show(tmp_path: Path) -> None:
     assert result3.returncode == 0
     assert "# Release v1.2.3" in result3.stdout
     assert "📦 RELEASE STATUS: v1.2.3" in result3.stdout
-

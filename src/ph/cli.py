@@ -1139,7 +1139,7 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 elif args.release_command == "activate":
-                    exit_code = run_release_activate(ctx=ctx, release=str(getattr(args, "release")))
+                    exit_code = run_release_activate(ctx=ctx, release=str(getattr(args, "release")), env=os.environ)
                 elif args.release_command == "clear":
                     exit_code = run_release_clear(ctx=ctx)
                 elif args.release_command == "list":
