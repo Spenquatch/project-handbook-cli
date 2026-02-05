@@ -86,6 +86,25 @@ def test_onboarding_session_renders_template(tmp_path: Path) -> None:
     assert result.stdout == "---\ntitle: Sprint\n---\n# Sprint\n"
 
 
+def test_onboarding_continue_session_renders_header_and_make_line(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    logs_dir = tmp_path / "process" / "sessions" / "logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    summary = "---\ntitle: Latest\n---\n# Latest\n"
+    (logs_dir / "latest_summary.md").write_text(summary, encoding="utf-8")
+
+    result = subprocess.run(
+        ["ph", "onboarding", "session", "continue-session", "--root", str(tmp_path)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    expected = "SESSION CONTINUITY SUMMARY\n==========================\n"
+    expected += summary
+    expected += "\nmake[1]: Nothing to be done for `continue-session'.\n"
+    assert result.stdout == expected
+
+
 def test_onboarding_continue_session_missing_has_remediation(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     result = subprocess.run(

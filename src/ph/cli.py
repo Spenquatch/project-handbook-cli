@@ -585,7 +585,11 @@ def main(argv: list[str] | None = None) -> int:
                         print("make[1]: Nothing to be done for `list'.")
                         exit_code = 0
                     elif session_topic == "continue-session":
-                        print(read_latest_session_summary(ph_root=ph_root), end="")
+                        summary = read_latest_session_summary(ph_root=ph_root)
+                        header = "SESSION CONTINUITY SUMMARY"
+                        underline = "=" * len(header)
+                        sys.stdout.write(f"{header}\n{underline}\n{summary}\n")
+                        sys.stdout.write("make[1]: Nothing to be done for `continue-session'.\n")
                         exit_code = 0
                     else:
                         print(read_session_template(ph_root=ph_root, topic=session_topic), end="")
