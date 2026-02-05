@@ -1047,6 +1047,8 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 elif args.parking_command == "list":
+                    if ctx.scope == "project" and str(args.format) != "json":
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["parking-list"]))
                     exit_code = run_parking_list(
                         ctx=ctx,
                         category=getattr(args, "category", None),
