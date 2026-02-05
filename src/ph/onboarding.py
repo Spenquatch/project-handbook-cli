@@ -109,6 +109,13 @@ def read_session_template(*, ph_root: Path, topic: str) -> str:
         raise OnboardingError(f"Unknown session topic: {topic}\nUse: ph onboarding session list\n") from exc
 
 
+def render_session_template(*, ph_root: Path, topic: str) -> str:
+    body = read_session_template(ph_root=ph_root, topic=topic)
+    header = f"ONBOARDING TOPIC: {topic}"
+    underline = "=" * len(header)
+    return f"{header}\n{underline}\n{body}\n"
+
+
 def read_latest_session_summary(*, ph_root: Path) -> str:
     path = ph_root / "process" / "sessions" / "logs" / "latest_summary.md"
     try:

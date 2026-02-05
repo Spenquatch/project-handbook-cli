@@ -83,7 +83,10 @@ def test_onboarding_session_renders_template(tmp_path: Path) -> None:
         text=True,
     )
     assert result.returncode == 0
-    assert result.stdout == "---\ntitle: Sprint\n---\n# Sprint\n"
+    header = "ONBOARDING TOPIC: sprint-planning"
+    underline = "=" * len(header)
+    expected = f"{header}\n{underline}\n---\ntitle: Sprint\n---\n# Sprint\n\n"
+    assert result.stdout == expected
 
 
 def test_onboarding_continue_session_renders_header_and_make_line(tmp_path: Path) -> None:

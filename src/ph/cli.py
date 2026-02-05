@@ -36,8 +36,8 @@ from .onboarding import (
     SessionList,
     list_session_topics,
     read_latest_session_summary,
-    read_session_template,
     render_onboarding,
+    render_session_template,
 )
 from .orchestration import run_check_all, run_test_system
 from .parking import run_parking_add, run_parking_list, run_parking_promote, run_parking_review
@@ -592,7 +592,7 @@ def main(argv: list[str] | None = None) -> int:
                         sys.stdout.write("make[1]: Nothing to be done for `continue-session'.\n")
                         exit_code = 0
                     else:
-                        print(read_session_template(ph_root=ph_root, topic=session_topic), end="")
+                        sys.stdout.write(render_session_template(ph_root=ph_root, topic=session_topic))
                         exit_code = 0
             elif args.command == "hooks":
                 if args.hooks_command == "install":
