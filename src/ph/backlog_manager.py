@@ -109,7 +109,7 @@ class BacklogManager:
 
         # Create README.md with front matter
         readme_path = issue_dir / "README.md"
-        created = clock.today(env=self.env).strftime("%Y-%m-%d")
+        created = clock.now(env=self.env).strftime("%Y-%m-%d")
         front_matter = {
             "title": title,
             "type": issue_type,

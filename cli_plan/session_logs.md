@@ -7184,3 +7184,77 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 12:22 UTC — V1P-0031 — Parity: make backlog-add → ph backlog add
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created under `$TMPDIR`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0031)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `make backlog-add ...` → `ph backlog add ...` (stdout + `backlog/index.json` + created issue dir).
+
+Work performed (ordered):
+1. Ran legacy `pnpm make -- backlog-add ...` and captured stdout + `backlog/index.json` + created issue dir, freezing legacy time via `PYTHONPATH` + `sitecustomize.py`.
+2. Ran `ph backlog add ...` with the same frozen time (`PH_FAKE_NOW`) and captured stdout + file outputs; diffed and fixed mismatches.
+3. Updated `ph` to match legacy output exactly (pnpm/make preamble + hint lines with `make ... <ID>` placeholder), and updated deterministic pytest coverage.
+4. Re-ran legacy-vs-`ph` capture + diff; verified byte-for-byte matches for stdout, index, and issue dir.
+5. Ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"
+- TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0031-root-real-XXXXXXXX)"
+- PH_ROOT="$TMP_ROOT/project-handbook"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"
+- (cd "$PH_ROOT" && pnpm install --frozen-lockfile)
+- (cd "$PH_ROOT" && tar -cf /tmp/ph-parity-V1P-0031-base.tar .)
+- FAKETIME_DIR="/tmp/ph-faketime-v1p0031"; rm -rf "$FAKETIME_DIR"; mkdir -p "$FAKETIME_DIR"
+- cat >"$FAKETIME_DIR/sitecustomize.py" <<'PY' ... PY
+- export PH_FAKE_NOW="2099-01-01T09:00:00Z"
+- (cd "$PH_ROOT" && PYTHONPATH="$FAKETIME_DIR" pnpm make -- backlog-add type=bug title="Parity backlog issue" severity=P2 desc="Created for V1P-0031") > /tmp/V1P-0031.legacy.stdout.txt
+- ISSUE_ID="BUG-P2-20990101-090000"
+- rsync -a --delete "$PH_ROOT/backlog/index.json" /tmp/V1P-0031.legacy.index.json
+- rsync -a --delete "$PH_ROOT/backlog/bugs/$ISSUE_ID/" /tmp/V1P-0031.legacy.issue/
+- rm -rf "$PH_ROOT" && mkdir -p "$PH_ROOT" && tar -xf /tmp/ph-parity-V1P-0031-base.tar -C "$PH_ROOT"
+- export UV_CACHE_DIR=/tmp/uv-cache; mkdir -p "$UV_CACHE_DIR"
+- PH_FAKE_NOW="2099-01-01T09:00:00Z" uv run ph --root "$PH_ROOT" backlog add --type bugs --title "Parity backlog issue" --severity P2 --desc "Created for V1P-0031" > /tmp/V1P-0031.ph.stdout.txt
+- rsync -a --delete "$PH_ROOT/backlog/index.json" /tmp/V1P-0031.ph.index.json
+- rsync -a --delete "$PH_ROOT/backlog/bugs/$ISSUE_ID/" /tmp/V1P-0031.ph.issue/
+- diff -u /tmp/V1P-0031.legacy.stdout.txt /tmp/V1P-0031.ph.stdout.txt
+- diff -u /tmp/V1P-0031.legacy.index.json /tmp/V1P-0031.ph.index.json
+- diff -ru /tmp/V1P-0031.legacy.issue /tmp/V1P-0031.ph.issue
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0031.done
+- src/ph/backlog.py
+- src/ph/backlog_manager.py
+- tests/test_backlog_add.py
+
+Verification:
+- `diff -u /tmp/V1P-0031.legacy.stdout.txt /tmp/V1P-0031.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `diff -u /tmp/V1P-0031.legacy.index.json /tmp/V1P-0031.ph.index.json` returned no diff (byte-for-byte match).
+- `diff -ru /tmp/V1P-0031.legacy.issue /tmp/V1P-0031.ph.issue` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 162 tests)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> backlog add ...` now matches legacy `pnpm make -- backlog-add ...` for stdout + `backlog/index.json` + created issue dir, under frozen time.
+
+Next task:
+- V1P-0032
+
+Blockers (if blocked):
+- (none)

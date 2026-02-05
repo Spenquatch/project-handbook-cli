@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from .backlog_manager import BacklogManager
 from .context import Context
 
@@ -16,9 +18,39 @@ def run_backlog_add(
     workaround: str,
     env: dict[str, str],
 ) -> int:
+    legacy_issue_type = issue_type
+    normalized_issue_type = (issue_type or "").strip().lower()
+    if normalized_issue_type == "bugs":
+        legacy_issue_type = "bug"
+    elif normalized_issue_type == "wildcards":
+        legacy_issue_type = "wildcard"
+
+    if ctx.scope == "project":
+        package_json_path = ctx.ph_root / "package.json"
+        package_name = "project-handbook"
+        package_version = "0.0.0"
+        if package_json_path.exists():
+            try:
+                package_data = json.loads(package_json_path.read_text(encoding="utf-8"))
+                package_name = str(package_data.get("name") or package_name)
+                package_version = str(package_data.get("version") or package_version)
+            except Exception:
+                pass
+
+        print()
+        print(f"> {package_name}@{package_version} make {ctx.ph_root}")
+        print(
+            "> make -- backlog-add "
+            f"type\\={legacy_issue_type} "
+            f"'title={title}' "
+            f"severity\\={severity} "
+            f"'desc={desc}'"
+        )
+        print()
+
     manager = BacklogManager(project_root=ctx.ph_data_root, env=env)
     issue_id = manager.add_issue(
-        issue_type=issue_type,
+        issue_type=legacy_issue_type,
         title=title,
         severity=severity,
         desc=desc,
@@ -31,9 +63,9 @@ def run_backlog_add(
 
     if ctx.scope == "project":
         print("Backlog entry created.")
-        print(f"  - Run 'ph backlog triage --issue {issue_id}' for P0 analysis")
-        print(f"  - Assign it into a sprint via 'ph backlog assign --issue {issue_id} --sprint current'")
-        print("  - Re-run 'ph validate --quick' if files were edited manually")
+        print("  - Run 'make backlog-triage issue=<ID>' for P0 analysis")
+        print("  - Assign it into a sprint via 'make backlog-assign issue=<ID> sprint=current'")
+        print("  - Re-run 'make validate-quick' if files were edited manually")
 
     return 0
 
