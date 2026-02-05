@@ -578,52 +578,114 @@ def write_release_progress(*, ph_root: Path, version: str, env: dict[str, str]) 
     This is used by both `ph release progress` (current release) and sprint-close parity,
     where legacy runs `process/automation/release_manager.py --progress <version>`.
     """
-    resolved = (version or "").strip()
+    resolved = normalize_version(version)
     if not resolved:
         raise ValueError("missing version")
-    if not resolved.startswith("v"):
-        resolved = f"v{resolved}"
 
     release_dir = ph_root / "releases" / resolved
     if not release_dir.exists():
         raise FileNotFoundError(resolved)
 
+    plan_file = release_dir / "plan.md"
+    features_file = release_dir / "features.yaml"
+    progress_file = release_dir / "progress.md"
+
+    timeline = get_release_timeline_info(ph_root=ph_root, version=resolved)
     features = load_release_features(ph_root=ph_root, version=resolved)
     progress = calculate_release_progress(ph_root=ph_root, version=resolved, features=features, env=env)
+    current_sprint = _resolve_current_sprint_id(ph_root=ph_root, fallback="SPRINT-SEQ-0001")
+    timeline_mode = str(timeline.get("timeline_mode") or "sprint_slots").strip().lower()
+
+    def status_for_sprint_id(sprint_id: str | None) -> str:
+        if not sprint_id:
+            return "⭕ Planned"
+        if sprint_id == current_sprint:
+            return "🔄 In Progress"
+        if is_sprint_archived(ph_root=ph_root, sprint_id=sprint_id):
+            return "✅ Complete"
+        return "⭕ Planned"
+
     today = clock_today(env=env).strftime("%Y-%m-%d")
+    links: list[str] = []
+    try:
+        if plan_file.exists():
+            links.append(str(plan_file.relative_to(ph_root)))
+        if features_file.exists():
+            links.append(str(features_file.relative_to(ph_root)))
+    except Exception:
+        links = []
 
-    lines: list[str] = []
-    lines.append("---")
-    lines.append(f"title: Release {resolved} Progress")
-    lines.append("type: release-progress")
-    lines.append(f"version: {resolved}")
-    lines.append(f"date: {today}")
-    lines.append("tags: [release, progress]")
-    lines.append("links: []")
-    lines.append("---")
-    lines.append("")
-    lines.append(f"# Release {resolved} Progress")
-    lines.append("")
-    lines.append("*This file is auto-generated. Do not edit manually.*")
-    lines.append("")
-    if progress:
-        lines.append(f"- Health: {progress.get('health', 'Unknown')}")
-        lines.append(f"- Avg completion: {progress.get('avg_completion', 0)}%")
-        completed = progress.get("completed_features", 0)
-        total = progress.get("total_features", 0)
-        lines.append(f"- Completed features: {completed}/{total}")
-        lines.append("")
-        lines.append("## Feature Progress")
-        for feature_name in sorted(features.keys()):
-            completion = int(progress.get("feature_completions", {}).get(feature_name, 0))
-            lines.append(f"- {feature_name}: {completion}%")
+    content = f"""---
+title: Release {resolved} Progress
+type: release-progress
+version: {resolved}
+date: {today}
+tags: [release, progress]
+links: [{", ".join(links)}]
+---
+
+# Release {resolved} Progress
+
+*This file is auto-generated. Do not edit manually.*
+
+## Sprint Progress
+"""
+
+    planned_sprints = int(timeline.get("planned_sprints") or 0)
+    if timeline_mode == "sprint_slots":
+        slots = timeline.get("sprint_slots") or list(range(1, planned_sprints + 1))
+        assignments = timeline.get("slot_assignments") or {}
+        for i, slot in enumerate(slots, 1):
+            sprint_id = assignments.get(slot)
+            status = status_for_sprint_id(sprint_id)
+            label = sprint_id or "(unassigned)"
+            content += f"- **Slot {slot}**: {status} — {label} (Sprint {i} of {len(slots)})\n"
     else:
-        lines.append("_No features assigned yet. Add features via `ph release add-feature`._")
-    lines.append("")
+        sprint_ids = timeline.get("sprint_ids") or []
+        for i, sprint_id in enumerate(sprint_ids, 1):
+            status = status_for_sprint_id(sprint_id)
+            content += f"- **{sprint_id}**: {status} (Sprint {i} of {len(sprint_ids)})\n"
 
-    path = release_dir / "progress.md"
-    path.write_text("\n".join(lines), encoding="utf-8")
-    return path
+    content += "\n## Feature Progress\n"
+    if features and progress.get("feature_completions"):
+        for feature_name, feature_data in features.items():
+            completion = int(progress.get("feature_completions", {}).get(feature_name, 0) or 0)
+            status_emoji = "✅" if completion >= 90 else ("🔄" if completion > 0 else "⭕")
+            critical = " (Critical Path)" if bool(feature_data.get("critical_path")) else ""
+            content += f"- {status_emoji} {feature_name}: {completion}%{critical}\n"
+    else:
+        content += "*No release features tracked yet.*\n"
+
+    tagged_tasks = collect_release_tagged_tasks(ph_root=ph_root, version=resolved)
+    gates = [
+        task
+        for task in tagged_tasks
+        if bool(task.get("release_gate") is True)
+        or str(task.get("release_gate", "")).strip().lower() in {"true", "yes", "1"}
+    ]
+    gates_done = len([task for task in gates if str(task.get("status", "")).strip().lower() == "done"])
+
+    content += "\n## Gate Burn-up\n"
+    if gates:
+        content += f"- Gates: {gates_done}/{len(gates)} complete\n"
+        for gate in sorted(gates, key=lambda task: (str(task.get("status", "")), str(task.get("id", ""))))[:8]:
+            status = str(gate.get("status", "todo")).strip().lower()
+            status_emoji = {"todo": "⭕", "doing": "🔄", "review": "👀", "done": "✅", "blocked": "🚫"}.get(
+                status, "❓"
+            )
+            content += f"- {status_emoji} {gate.get('id')}: {gate.get('title')} ({gate.get('sprint')})\n"
+        remaining = len(gates) - 8
+        if remaining > 0:
+            content += f"- …and {remaining} more\n"
+    else:
+        content += "*No release gates tracked yet.*\n"
+
+    content += "\n## Release Health\n"
+    readiness = calculate_release_readiness(progress=progress) if progress else "n/a"
+    content += f"- Readiness: {readiness}\n"
+
+    progress_file.write_text(content.rstrip() + "\n", encoding="utf-8")
+    return progress_file
 
 
 def run_release_show(*, ctx: Context, env: dict[str, str]) -> int:

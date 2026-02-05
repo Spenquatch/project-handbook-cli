@@ -8713,3 +8713,60 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 20:41 UTC — V1P-0056 — Parity: `make release-progress` → `ph release progress`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created via `mktemp`; see Commands executed)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0056)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- release-progress` → `ph release progress` (stdout + `releases/<version>/progress.md`).
+
+Work performed (ordered):
+1. Ran legacy-vs-`ph` capture + diff for `release-progress` (stdout + `releases/<version>/progress.md`) on a disposable handbook instance using a baseline-restore workflow.
+2. Updated `ph release progress` generation to match legacy progress semantics byte-for-byte.
+3. Added deterministic pytest coverage and re-ran parity diffs + `ruff` + `pytest`.
+
+Commands executed (exact):
+- export TMPDIR=/tmp; LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0056-root-XXXXXXXX)"; PH_ROOT="$TMP_ROOT/project-handbook"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"; (cd "$PH_ROOT" && pnpm install --frozen-lockfile >/dev/null); tar -C "$TMP_ROOT" -czf /tmp/V1P-0056.baseline.tgz project-handbook
+- set +e; (cd "$PH_ROOT" && npm_config_reporter=silent pnpm make -- release-progress) > /tmp/V1P-0056.legacy.stdout.txt; echo $? > /tmp/V1P-0056.legacy.status.txt; set -e
+- LEGACY_VERSION=$(readlink "$PH_ROOT/releases/current"); printf "%s\\n" "$LEGACY_VERSION" > /tmp/V1P-0056.legacy.current.txt; cp "$PH_ROOT/releases/$LEGACY_VERSION/progress.md" /tmp/V1P-0056.legacy.progress.md
+- rm -rf "$PH_ROOT"; tar -C "$TMP_ROOT" -xzf /tmp/V1P-0056.baseline.tgz
+- set +e; UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache npm_config_reporter=silent uv run ph --root "$PH_ROOT" release progress > /tmp/V1P-0056.ph.stdout.txt; echo $? > /tmp/V1P-0056.ph.status.txt; set -e
+- PH_VERSION=$(readlink "$PH_ROOT/releases/current"); printf "%s\\n" "$PH_VERSION" > /tmp/V1P-0056.ph.current.txt; cp "$PH_ROOT/releases/$PH_VERSION/progress.md" /tmp/V1P-0056.ph.progress.md
+- diff -u /tmp/V1P-0056.legacy.status.txt /tmp/V1P-0056.ph.status.txt
+- diff -u /tmp/V1P-0056.legacy.stdout.txt /tmp/V1P-0056.ph.stdout.txt
+- diff -u /tmp/V1P-0056.legacy.current.txt /tmp/V1P-0056.ph.current.txt
+- diff -u /tmp/V1P-0056.legacy.progress.md /tmp/V1P-0056.ph.progress.md
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0056.done
+- src/ph/release.py
+- tests/test_release_progress_parity_v1p0056.py
+
+Verification:
+- Parity diffs: all `diff -u /tmp/V1P-0056.*` comparisons returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 187 passed)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> release progress` matches legacy `pnpm make -- release-progress` for stdout + exit code + `releases/<version>/progress.md`; parity locked via pytest.
+
+Next task:
+- V1P-0057
+
+Blockers (if blocked):
+- (none)
