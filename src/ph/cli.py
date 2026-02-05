@@ -1005,6 +1005,8 @@ def main(argv: list[str] | None = None) -> int:
                         )
                     exit_code = run_backlog_rubric(ctx=ctx, env=os.environ)
                 elif args.backlog_command == "stats":
+                    if ctx.scope == "project":
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["backlog-stats"]))
                     exit_code = run_backlog_stats(ctx=ctx, env=os.environ)
                 else:
                     print("Usage: ph backlog <add|list|triage|assign|rubric|stats>\n", file=sys.stderr, end="")

@@ -68,3 +68,34 @@ def test_backlog_stats_prints_expected_header_and_total(tmp_path: Path) -> None:
     assert stats.returncode == 0
     assert "📊 BACKLOG STATISTICS" in stats.stdout.splitlines()
     assert "Total Issues: 2" in stats.stdout
+
+
+def test_backlog_stats_prints_make_preamble_when_package_json_present(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    (tmp_path / "package.json").write_text('{"name":"project-handbook","version":"0.0.0"}\n', encoding="utf-8")
+
+    (tmp_path / "backlog").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "backlog" / "index.json").write_text(
+        (
+            "{\n"
+            '  "last_updated": "2099-01-01T00:00:00.000000",\n'
+            '  "total_items": 0,\n'
+            '  "items": [],\n'
+            '  "by_category": {"bugs": [], "wildcards": [], "work-items": []}\n'
+            "}\n"
+        ),
+        encoding="utf-8",
+    )
+
+    stats = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "backlog", "stats"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert stats.returncode == 0
+
+    expected_cwd = str(tmp_path.resolve())
+    assert stats.stdout.startswith(
+        f"\n> project-handbook@0.0.0 make {expected_cwd}\n> make -- backlog-stats\n\n"
+    )
