@@ -810,6 +810,8 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 elif args.task_command == "list":
+                    if ctx.scope == "project":
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["task-list"]))
                     exit_code = run_task_list(ctx=ctx)
                 elif args.task_command == "show":
                     exit_code = run_task_show(ctx=ctx, task_id=str(args.id))

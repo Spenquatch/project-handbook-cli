@@ -55,6 +55,8 @@ def _seed_current_sprint_with_tasks(*, ph_root: Path, scope: str) -> None:
                 "depends_on: [FIRST_TASK]",
                 "prio: P2",
                 "due: 2099-01-08",
+                "release: v9.9.9",
+                "release_gate: false",
             ]
         )
         + "\n",
@@ -76,6 +78,8 @@ def _seed_current_sprint_with_tasks(*, ph_root: Path, scope: str) -> None:
                 "depends_on: []",
                 "prio: P2",
                 "due: 2099-01-08",
+                "release: null",
+                "release_gate: true",
             ]
         )
         + "\n",
@@ -99,8 +103,8 @@ def test_task_list_and_show_match_v0_formatting_rules(tmp_path: Path, scope: str
     assert listed.stdout.splitlines() == [
         "📋 SPRINT TASKS: SPRINT-2099-01-01",
         "=" * 60,
-        "🔄 TASK-001: First task [ops] (task-execution) [3pts] (depends: FIRST_TASK)",
-        "⭕ TASK-002: Second task [5pts]",
+        "🔄 TASK-001: First task  [ops] (task-execution) [rel:v9.9.9] [3pts] (depends: FIRST_TASK)",
+        "⭕ TASK-002: Second task  [gate] [5pts]",
     ]
 
     cmd = ["ph", "--root", str(tmp_path)]

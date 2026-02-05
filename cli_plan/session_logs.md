@@ -142,6 +142,65 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 04:09 UTC — V1P-0022 — Parity: `make task-list` → `ph task list`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created under `$TMPDIR`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0022)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `make task-list` → `ph task list` (stdout only).
+
+Work performed (ordered):
+1. Captured legacy stdout for `pnpm make -- task-list` from a disposable PH_ROOT and diffed against `uv run ph ... task list` (initial mismatch).
+2. Updated task list rendering to match legacy formatting (including `[rel:...]`, `[gate]`, and legacy spacing) and ensured project-scope output includes the pnpm/make preamble.
+3. Updated/extended deterministic pytest coverage for `ph task list` formatting.
+4. Re-ran legacy-vs-`ph` capture + diff; verified byte-for-byte match; ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- TMP_ROOT=\"$(mktemp -d -t ph-parity-V1P-0022-root-real-XXXXXXXX)\"
+- PH_ROOT=\"$TMP_ROOT/project-handbook\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- (cd \"$PH_ROOT\" && tar -cf /tmp/ph-parity-V1P-0022-base.tar .)
+- (cd \"$PH_ROOT\" && pnpm make -- task-list) > /tmp/V1P-0022.legacy.stdout.txt
+- rm -rf \"$PH_ROOT\" && mkdir -p \"$PH_ROOT\" && tar -xf /tmp/ph-parity-V1P-0022-base.tar -C \"$PH_ROOT\"
+- uv run ph --root \"$PH_ROOT\" task list > /tmp/V1P-0022.ph.stdout.txt
+- diff -u /tmp/V1P-0022.legacy.stdout.txt /tmp/V1P-0022.ph.stdout.txt
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/tasks_v1_parity.json
+- cli_plan/session_logs.md
+- src/ph/cli.py
+- src/ph/task_view.py
+- tests/test_task_list_show.py
+
+Verification:
+- `diff -u /tmp/V1P-0022.legacy.stdout.txt /tmp/V1P-0022.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 151 tests)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> task list` now matches legacy `pnpm make -- task-list` stdout byte-for-byte; parity locked via pytest.
+
+Next task:
+- V1P-0023
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-05 03:33 UTC — V1P-0021 — Parity: `make task-create ...` → `ph task create ...`
 
 Agent: GPT-5.2 (Orchestrator + background Codex CLI)

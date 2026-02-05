@@ -101,17 +101,36 @@ def run_task_list(*, ctx: Context) -> int:
         }.get(str(task.get("status", "")).lower(), "❓")
 
         deps = _normalize_list(task.get("depends_on", []))
+        dep_info = f" (depends: {', '.join(deps)})" if deps else ""
         lane = str(task.get("lane", "") or "").strip()
+        lane_info = f" [{lane}]" if lane else ""
         session = str(task.get("session", "") or "").strip()
-        line = f"{status_emoji} {task.get('id')}: {task.get('title')}"
-        if lane:
-            line += f" [{lane}]"
-        if session:
-            line += f" ({session})"
-        line += f" [{task.get('story_points')}pts]"
-        if deps:
-            line += f" (depends: {', '.join(deps)})"
-        print(line)
+        session_info = f" ({session})" if session else ""
+
+        release = task.get("release")
+        release_value = str(release).strip() if release is not None else ""
+        release_info = ""
+        if release_value and release_value.lower() not in {"null", "none"}:
+            release_info = f" [rel:{release_value}]"
+
+        gate_raw = task.get("release_gate")
+        gate_value = False
+        if isinstance(gate_raw, bool):
+            gate_value = gate_raw
+        elif gate_raw is not None:
+            gate_str = str(gate_raw).strip().lower()
+            gate_value = gate_str in {"true", "1", "yes"}
+        gate_info = " [gate]" if gate_value else ""
+
+        points = task.get("story_points")
+        points_value = str(points).strip() if points is not None else "?"
+        if not points_value or points_value.lower() in {"null", "none"}:
+            points_value = "?"
+
+        print(
+            f"{status_emoji} {task.get('id')}: {task.get('title')} "
+            f"{lane_info}{session_info}{release_info}{gate_info} [{points_value}pts]{dep_info}"
+        )
 
     return 0
 
