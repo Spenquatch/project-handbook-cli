@@ -204,6 +204,8 @@ def run_task_create(
     prio: str,
     lane: str | None,
     session: str,
+    release: str | None = None,
+    gate: bool = False,
     env: dict[str, str],
 ) -> int:
     sprint_dir = _require_current_sprint_dir(ph_data_root=ctx.ph_data_root)
@@ -228,28 +230,50 @@ def run_task_create(
     today = clock_today(env=env)
     due_date = today + dt.timedelta(days=7)
 
+    normalized_release: str | None = None
+    if release and str(release).strip().lower() not in {"null", "none"}:
+        candidate = str(release).strip()
+        if candidate.lower() == "current":
+            try:
+                import sys
+
+                sys.path.append(str(ph_root / "process" / "automation"))
+                from release_manager import get_current_release  # type: ignore
+
+                current = get_current_release()
+                if not current:
+                    print("⚠️  release=current requested but no current release is set; leaving task release=null")
+                    normalized_release = None
+                else:
+                    normalized_release = str(current)
+            except Exception:
+                print("⚠️  release=current requested but release_manager is unavailable; leaving task release=null")
+                normalized_release = None
+        else:
+            normalized_release = candidate if candidate.startswith("v") else f"v{candidate}"
+
+    release_line = f"release: {normalized_release}\n" if normalized_release else "release: null\n"
+    release_gate_line = f"release_gate: {'true' if gate else 'false'}\n"
+
     lane_line = f"lane: {lane}\n" if lane else ""
     session_line = f"session: {session}\n" if session else ""
 
-    task_yaml = (
-        f"id: {task_id}\n"
-        f"title: {title}\n"
-        f"feature: {feature}\n"
-        f"{lane_line}"
-        f"decision: {decision}\n"
-        f"{session_line}"
-        f"owner: {owner}\n"
-        "status: todo\n"
-        f"story_points: {story_points}\n"
-        "depends_on: []\n"
-        f"prio: {prio}\n"
-        f"due: {due_date.strftime('%Y-%m-%d')}\n"
-        "acceptance:\n"
-        "  - Implementation complete and tested\n"
-        "  - Code review passed\n"
-        "  - Documentation updated\n"
-        "links: []\n"
-    )
+    task_yaml = f"""id: {task_id}
+title: {title}
+feature: {feature}
+{lane_line}decision: {decision}
+{session_line}owner: {owner}
+status: todo
+story_points: {story_points}
+depends_on: []
+prio: {prio}
+due: {due_date.strftime('%Y-%m-%d')}
+{release_line}{release_gate_line}acceptance:
+  - Implementation complete and tested
+  - Code review passed
+  - Documentation updated
+links: []
+"""
     (task_dir / "task.yaml").write_text(task_yaml, encoding="utf-8")
 
     decision_doc = resolve_decision_doc(ph_data_root=ctx.ph_data_root, decision_id=decision, feature=feature)
@@ -258,9 +282,13 @@ def run_task_create(
     else:
         decision_link = f"`{decision}`"
 
-    feature_overview_rel, feature_architecture_rel = _feature_doc_links(
-        ph_data_root=ctx.ph_data_root, task_dir=task_dir, feature=feature
-    )
+    if ctx.scope == "project":
+        feature_overview_rel = f"../../../features/{feature}/overview.md"
+        feature_architecture_rel = f"../../../features/{feature}/architecture/ARCHITECTURE.md"
+    else:
+        feature_overview_rel, feature_architecture_rel = _feature_doc_links(
+            ph_data_root=ctx.ph_data_root, task_dir=task_dir, feature=feature
+        )
 
     cd_path = _task_cd_path_for_scope(ctx=ctx, task_dir_name=task_dir_name)
     ph_cmd = _scope_prefix_for_ph_command(ctx=ctx)
@@ -287,6 +315,8 @@ def run_task_create(
             f"**Owner**: {owner}",
             f"**Lane**: {lane or '(unset)'}",
             f"**Session**: `{session}`",
+            f"**Release**: {normalized_release or '(none)'}",
+            f"**Release Gate**: `{str(gate).lower()}`",
             "",
             "## Agent Navigation Rules",
             '1. **Start work**: Update `task.yaml` status to "doing"',
@@ -394,153 +424,289 @@ def run_task_create(
     )
     (task_dir / "steps.md").write_text(steps_content, encoding="utf-8")
 
-    commands_content = "\n".join(
-        [
-            "---",
-            f"title: {title} - Commands",
-            "type: commands",
-            f"date: {today.strftime('%Y-%m-%d')}",
-            f"task_id: {task_id}",
-            "tags: [commands]",
-            "links: []",
-            "---",
-            "",
-            f"# Commands: {title}",
-            "",
-            "## Task Status Updates",
-            "```bash",
-            "# When starting work",
-            f"cd {cd_path}",
-            '# Edit task.yaml: change status from "todo" to "doing"',
-            "",
-            "# When ready for review",
-            '# Edit task.yaml: change status to "review"',
-            "",
-            "# When complete",
-            '# Edit task.yaml: change status to "done"',
-            "```",
-            "",
-            "## Validation Commands",
-            "```bash",
-            "# Run validation",
-            f"{ph_cmd} validate",
-            "",
-            "# Check sprint status",
-            f"{ph_cmd} sprint status",
-            "",
-            "# Update daily status",
-            f"{ph_cmd} daily generate",
-            "```",
-            "",
-            "## Implementation Commands",
-            "```bash",
-            "# Add specific commands for this task here",
-            "# Example:",
-            "# npm install package-name",
-            "# python3 -m pytest tests/",
-            "# docker build -t app .",
-            "```",
-            "",
-            "## Git Integration",
-            "```bash",
-            "# Commit with task reference",
-            (
-                f'git commit -m "feat: {title.lower()}\\n\\nImplements {task_id} for {feature} feature.\\n'
-                f'Part of sprint: {sprint_dir.name}\\n\\nRefs: #{task_id}"'
-            ),
-            "",
-            "# Link PR to task (in PR description)",
-            f"# Closes #{task_id}",
-            f"# Implements {decision}",
-            "```",
-            "",
-            "## Quick Copy-Paste",
-            "```bash",
-            "# Most common commands for this task type",
-            'echo "Add task-specific commands here"',
-            "```",
-            "",
-        ]
-    )
+    if ctx.scope == "project":
+        commands_content = f"""---
+title: {title} - Commands
+type: commands
+date: {today.strftime('%Y-%m-%d')}
+task_id: {task_id}
+tags: [commands]
+links: []
+---
+
+# Commands: {title}
+
+## Task Status Updates
+```bash
+# When starting work
+cd sprints/current/tasks/{task_dir_name}/
+# Edit task.yaml: change status from "todo" to "doing"
+
+# When ready for review
+# Edit task.yaml: change status to "review"
+
+# When complete
+# Edit task.yaml: change status to "done"
+```
+
+## Validation Commands
+```bash
+# Run validation
+make validate
+
+# Check sprint status
+make sprint-status
+
+# Update daily status
+make daily
+```
+
+## Implementation Commands
+```bash
+# Add specific commands for this task here
+# Example:
+# npm install package-name
+# python3 -m pytest tests/
+# docker build -t app .
+```
+
+## Git Integration
+```bash
+# Commit with task reference
+git commit -m "feat: {title.lower()}
+
+Implements {task_id} for {feature} feature.
+Part of sprint: {sprint_dir.name}
+
+Refs: #{task_id}"
+
+# Link PR to task (in PR description)
+# Closes #{task_id}
+# Implements {decision}
+```
+
+## Quick Copy-Paste
+```bash
+# Most common commands for this task type
+echo "Add task-specific commands here"
+```
+"""
+    else:
+        commands_content = "\n".join(
+            [
+                "---",
+                f"title: {title} - Commands",
+                "type: commands",
+                f"date: {today.strftime('%Y-%m-%d')}",
+                f"task_id: {task_id}",
+                "tags: [commands]",
+                "links: []",
+                "---",
+                "",
+                f"# Commands: {title}",
+                "",
+                "## Task Status Updates",
+                "```bash",
+                "# When starting work",
+                f"cd {cd_path}",
+                '# Edit task.yaml: change status from "todo" to "doing"',
+                "",
+                "# When ready for review",
+                '# Edit task.yaml: change status to "review"',
+                "",
+                "# When complete",
+                '# Edit task.yaml: change status to "done"',
+                "```",
+                "",
+                "## Validation Commands",
+                "```bash",
+                "# Run validation",
+                f"{ph_cmd} validate",
+                "",
+                "# Check sprint status",
+                f"{ph_cmd} sprint status",
+                "",
+                "# Update daily status",
+                f"{ph_cmd} daily generate",
+                "```",
+                "",
+                "## Implementation Commands",
+                "```bash",
+                "# Add specific commands for this task here",
+                "# Example:",
+                "# npm install package-name",
+                "# python3 -m pytest tests/",
+                "# docker build -t app .",
+                "```",
+                "",
+                "## Git Integration",
+                "```bash",
+                "# Commit with task reference",
+                (
+                    f'git commit -m \"feat: {title.lower()}\\n\\nImplements {task_id} for {feature} feature.\\n'
+                    f'Part of sprint: {sprint_dir.name}\\n\\nRefs: #{task_id}\"'
+                ),
+                "",
+                "# Link PR to task (in PR description)",
+                f"# Closes #{task_id}",
+                f"# Implements {decision}",
+                "```",
+                "",
+                "## Quick Copy-Paste",
+                "```bash",
+                "# Most common commands for this task type",
+                'echo \"Add task-specific commands here\"',
+                "```",
+                "",
+            ]
+        )
     (task_dir / "commands.md").write_text(commands_content, encoding="utf-8")
 
-    checklist_content = "\n".join(
-        [
-            "---",
-            f"title: {title} - Completion Checklist",
-            "type: checklist",
-            f"date: {today.strftime('%Y-%m-%d')}",
-            f"task_id: {task_id}",
-            "tags: [checklist]",
-            "links: []",
-            "---",
-            "",
-            f"# Completion Checklist: {title}",
-            "",
-            "## Pre-Work",
-            "- [ ] Confirm all `depends_on` tasks are `done`",
-            "- [ ] Review `README.md`, `steps.md`, `commands.md`",
-            "- [ ] Align with the feature owner on acceptance criteria",
-            "",
-            "## During Execution",
-            "- [ ] Capture implementation steps in `steps.md`",
-            "- [ ] Record shell commands in `commands.md`",
-            "- [ ] Document verification steps in `validation.md`",
-            "- [ ] Keep this checklist updated as milestones are completed",
-            "",
-            "## Before Review",
-            f"- [ ] Run `{ph_cmd} validate --quick`",
-            "- [ ] Update daily status with progress/blockers",
-            "- [ ] Gather artifacts (screenshots, logs, PR links)",
-            "- [ ] Set status to `review` via `ph task status`",
-            "",
-            "## After Completion",
-            "- [ ] Peer review approved and merged",
-            "- [ ] Update owning feature docs/changelog if needed",
-            "- [ ] Move status to `done` with `ph task status`",
-            "- [ ] Capture learnings for the sprint retrospective",
-            "",
-        ]
-    )
+    if ctx.scope == "project":
+        checklist_content = f"""---
+title: {title} - Completion Checklist
+type: checklist
+date: {today.strftime('%Y-%m-%d')}
+task_id: {task_id}
+tags: [checklist]
+links: []
+---
+
+# Completion Checklist: {title}
+
+## Pre-Work
+- [ ] Confirm all `depends_on` tasks are `done`
+- [ ] Review `README.md`, `steps.md`, `commands.md`
+- [ ] Align with the feature owner on acceptance criteria
+
+## During Execution
+- [ ] Capture implementation steps in `steps.md`
+- [ ] Record shell commands in `commands.md`
+- [ ] Document verification steps in `validation.md`
+- [ ] Keep this checklist updated as milestones are completed
+
+## Before Review
+- [ ] Run `make validate-quick`
+- [ ] Update daily status with progress/blockers
+- [ ] Gather artifacts (screenshots, logs, PR links)
+- [ ] Set status to `review` via `make task-status`
+
+## After Completion
+- [ ] Peer review approved and merged
+- [ ] Update owning feature docs/changelog if needed
+- [ ] Move status to `done` with `make task-status`
+- [ ] Capture learnings for the sprint retrospective
+"""
+    else:
+        checklist_content = "\n".join(
+            [
+                "---",
+                f"title: {title} - Completion Checklist",
+                "type: checklist",
+                f"date: {today.strftime('%Y-%m-%d')}",
+                f"task_id: {task_id}",
+                "tags: [checklist]",
+                "links: []",
+                "---",
+                "",
+                f"# Completion Checklist: {title}",
+                "",
+                "## Pre-Work",
+                "- [ ] Confirm all `depends_on` tasks are `done`",
+                "- [ ] Review `README.md`, `steps.md`, `commands.md`",
+                "- [ ] Align with the feature owner on acceptance criteria",
+                "",
+                "## During Execution",
+                "- [ ] Capture implementation steps in `steps.md`",
+                "- [ ] Record shell commands in `commands.md`",
+                "- [ ] Document verification steps in `validation.md`",
+                "- [ ] Keep this checklist updated as milestones are completed",
+                "",
+                "## Before Review",
+                f"- [ ] Run `{ph_cmd} validate --quick`",
+                "- [ ] Update daily status with progress/blockers",
+                "- [ ] Gather artifacts (screenshots, logs, PR links)",
+                "- [ ] Set status to `review` via `ph task status`",
+                "",
+                "## After Completion",
+                "- [ ] Peer review approved and merged",
+                "- [ ] Update owning feature docs/changelog if needed",
+                "- [ ] Move status to `done` with `ph task status`",
+                "- [ ] Capture learnings for the sprint retrospective",
+                "",
+            ]
+        )
     (task_dir / "checklist.md").write_text(checklist_content, encoding="utf-8")
 
-    validation_content = "\n".join(
-        [
-            "---",
-            f"title: {title} - Validation Guide",
-            "type: validation",
-            f"date: {today.strftime('%Y-%m-%d')}",
-            f"task_id: {task_id}",
-            "tags: [validation]",
-            "links: []",
-            "---",
-            "",
-            f"# Validation Guide: {title}",
-            "",
-            "## Automated Validation",
-            "```bash",
-            f"{ph_cmd} validate",
-            f"{ph_cmd} sprint status",
-            "```",
-            "",
-            "## Manual Validation (Must Be Task-Specific)",
-            (
-                "This file must be updated during sprint planning so an execution agent can validate "
-                "without inventing steps."
-            ),
-            "",
-            "Before the task is marked `review`, add:",
-            "- exact copy/paste command(s),",
-            "- exact pass/fail success criteria,",
-            f"- exact evidence file list (under `status/evidence/{task_id}/`).",
-            "",
-            "## Sign-off",
-            "- [ ] All validation steps completed",
-            "- [ ] Evidence documented above",
-            '- [ ] Ready to mark task as "done"',
-            "",
-        ]
-    )
+    if ctx.scope == "project":
+        validation_content = f"""---
+title: {title} - Validation Guide
+type: validation
+date: {today.strftime('%Y-%m-%d')}
+task_id: {task_id}
+tags: [validation]
+links: []
+---
+
+# Validation Guide: {title}
+
+## Automated Validation
+```bash
+pnpm -C project-handbook make -- validate
+pnpm -C project-handbook make -- sprint-status
+```
+
+## Manual Validation (Must Be Task-Specific)
+This file must be updated during sprint planning so an execution agent can validate without inventing steps.
+
+Before the task is marked `review`, add:
+- exact copy/paste command(s),
+- exact pass/fail success criteria,
+- exact evidence file list (under `project-handbook/status/evidence/{task_id}/`).
+
+## Sign-off
+- [ ] All validation steps completed
+- [ ] Evidence documented above
+- [ ] Ready to mark task as \"done\"
+"""
+    else:
+        validation_content = "\n".join(
+            [
+                "---",
+                f"title: {title} - Validation Guide",
+                "type: validation",
+                f"date: {today.strftime('%Y-%m-%d')}",
+                f"task_id: {task_id}",
+                "tags: [validation]",
+                "links: []",
+                "---",
+                "",
+                f"# Validation Guide: {title}",
+                "",
+                "## Automated Validation",
+                "```bash",
+                f"{ph_cmd} validate",
+                f"{ph_cmd} sprint status",
+                "```",
+                "",
+                "## Manual Validation (Must Be Task-Specific)",
+                (
+                    "This file must be updated during sprint planning so an execution agent can validate "
+                    "without inventing steps."
+                ),
+                "",
+                "Before the task is marked `review`, add:",
+                "- exact copy/paste command(s),",
+                "- exact pass/fail success criteria,",
+                f"- exact evidence file list (under `status/evidence/{task_id}/`).",
+                "",
+                "## Sign-off",
+                "- [ ] All validation steps completed",
+                "- [ ] Evidence documented above",
+                '- [ ] Ready to mark task as \"done\"',
+                "",
+            ]
+        )
     (task_dir / "validation.md").write_text(validation_content, encoding="utf-8")
 
     references_content = "\n".join(
@@ -581,7 +747,10 @@ def run_task_create(
     print(f"   1. Edit {task_dir}/steps.md with implementation details")
     print(f"   2. Update {task_dir}/commands.md with specific commands")
     print(f"   3. Review checklist/logistics in {task_dir}/checklist.md")
-    print(f"   4. Run '{ph_cmd} validate --quick' before pushing changes")
+    if ctx.scope == "project":
+        print("   4. Run 'make validate-quick' before pushing changes")
+    else:
+        print(f"   4. Run '{ph_cmd} validate --quick' before pushing changes")
     print("   5. Set status to 'doing' when starting work")
 
     if ctx.scope == "system":
@@ -596,6 +765,6 @@ def run_task_create(
         print("Next steps:")
         print("  - Open sprints/current/tasks/ for the new directory, update steps.md + commands.md")
         print("  - Set status to 'doing' when work starts and log progress in checklist.md")
-        print("  - Run 'ph validate --quick' once initial scaffolding is filled in")
+        print("  - Run 'make validate-quick' once initial scaffolding is filled in")
 
     return 0

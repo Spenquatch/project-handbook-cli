@@ -305,6 +305,15 @@ def build_parser() -> argparse.ArgumentParser:
     task_create_parser.add_argument("--prio", default="P2", help="Priority (default: P2)")
     task_create_parser.add_argument("--lane", help="Optional lane/workstream label")
     task_create_parser.add_argument("--session", default="task-execution", help="Recommended session template")
+    task_create_parser.add_argument(
+        "--release",
+        help='Optional release tag (vX.Y.Z or "current") to attribute work to a release',
+    )
+    task_create_parser.add_argument(
+        "--gate",
+        action="store_true",
+        help="Mark this task as a release gate (counts toward release burn-up)",
+    )
     task_subparsers.add_parser("list", help="List tasks in current sprint", parents=[sub_common])
     task_show_parser = task_subparsers.add_parser("show", help="Show a task", parents=[sub_common])
     task_show_parser.add_argument("--id", required=True, help="Task id (e.g. TASK-001)")
@@ -755,6 +764,36 @@ def main(argv: list[str] | None = None) -> int:
                     print("Usage: ph task <create|list|show|status>\n", file=sys.stderr, end="")
                     exit_code = 2
                 elif args.task_command == "create":
+                    if ctx.scope == "project":
+                        def _make_var_token(key: str, value: str) -> str:
+                            raw = f"{key}={value}"
+                            if any(ch.isspace() for ch in raw):
+                                return f"'{raw}'"
+                            return raw.replace("=", "\\=", 1)
+
+                        make_args = [
+                            "task-create",
+                            _make_var_token("title", str(args.title)),
+                            _make_var_token("feature", str(args.feature)),
+                            _make_var_token("decision", str(args.decision)),
+                        ]
+                        if "--points" in invocation_args and getattr(args, "points", None) is not None:
+                            make_args.append(_make_var_token("points", str(args.points)))
+                        if "--owner" in invocation_args:
+                            make_args.append(_make_var_token("owner", str(args.owner)))
+                        if "--prio" in invocation_args:
+                            make_args.append(_make_var_token("prio", str(args.prio)))
+                        if "--lane" in invocation_args and getattr(args, "lane", None) is not None:
+                            make_args.append(_make_var_token("lane", str(args.lane)))
+                        if "--session" in invocation_args:
+                            make_args.append(_make_var_token("session", str(args.session)))
+                        if "--release" in invocation_args and getattr(args, "release", None) is not None:
+                            make_args.append(_make_var_token("release", str(args.release)))
+                        if "--gate" in invocation_args and bool(getattr(args, "gate", False)):
+                            make_args.append(_make_var_token("gate", "true"))
+
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
+
                     exit_code = run_task_create(
                         ph_root=ph_root,
                         ctx=ctx,
@@ -766,6 +805,8 @@ def main(argv: list[str] | None = None) -> int:
                         prio=str(args.prio),
                         lane=getattr(args, "lane", None),
                         session=str(args.session),
+                        release=getattr(args, "release", None),
+                        gate=bool(getattr(args, "gate", False)),
                         env=os.environ,
                     )
                 elif args.task_command == "list":

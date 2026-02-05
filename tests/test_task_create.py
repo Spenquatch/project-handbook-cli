@@ -4,10 +4,13 @@ import os
 import subprocess
 from pathlib import Path
 
-import pytest
-
 
 def _write_minimal_ph_root(ph_root: Path, *, routing_rules: dict | None = None) -> None:
+    (ph_root / "package.json").write_text(
+        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
+        encoding="utf-8",
+    )
+
     config = ph_root / "project_handbook.config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
@@ -36,74 +39,70 @@ def _plan_sprint(*, ph_root: Path, scope: str) -> None:
     assert result.returncode == 0
 
 
-@pytest.mark.parametrize(
-    ("scope", "hint_lines"),
-    [
-        (
-            "project",
-            [
-                "Next steps:",
-                "  - Open sprints/current/tasks/ for the new directory, update steps.md + commands.md",
-                "  - Set status to 'doing' when work starts and log progress in checklist.md",
-                "  - Run 'ph validate --quick' once initial scaffolding is filled in",
-            ],
-        ),
-        (
-            "system",
-            [
-                "Next steps:",
-                "  - Open .project-handbook/system/sprints/current/tasks/ for the new directory, "
-                "update steps.md + commands.md",
-                "  - Set status to 'doing' when work starts and log progress in checklist.md",
-                "  - Run 'ph --scope system validate --quick' once initial scaffolding is filled in",
-            ],
-        ),
-    ],
-)
-def test_task_create_creates_expected_files_and_prints_hint_block(
-    tmp_path: Path, scope: str, hint_lines: list[str]
-) -> None:
+def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
-    _plan_sprint(ph_root=tmp_path, scope=scope)
+    _plan_sprint(ph_root=tmp_path, scope="project")
 
     env = dict(os.environ)
     env["PH_FAKE_TODAY"] = "2099-01-01"
 
-    cmd = ["ph", "--root", str(tmp_path)]
-    if scope == "system":
-        cmd += ["--scope", "system"]
-    cmd += [
-        "--no-post-hook",
-        "task",
-        "create",
-        "--title",
-        "T",
-        "--feature",
-        "f",
-        "--decision",
-        "ADR-0000",
-        "--points",
-        "5",
-        "--owner",
-        "@a",
-        "--prio",
-        "P1",
-        "--lane",
-        "ops",
-        "--session",
-        "task-execution",
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    result = subprocess.run(
+        [
+            "ph",
+            "--root",
+            str(tmp_path),
+            "--no-post-hook",
+            "task",
+            "create",
+            "--title",
+            "T",
+            "--feature",
+            "f",
+            "--decision",
+            "ADR-0000",
+            "--points",
+            "5",
+            "--owner",
+            "@a",
+            "--prio",
+            "P1",
+            "--lane",
+            "ops",
+            "--session",
+            "task-execution",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
     assert result.returncode == 0
-    assert result.stdout.splitlines()[-4:] == hint_lines
 
-    base = tmp_path if scope == "project" else (tmp_path / ".project-handbook" / "system")
-    tasks_dir = base / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
-    task_dirs = [p for p in tasks_dir.iterdir() if p.is_dir()]
-    assert len(task_dirs) == 1
-    assert task_dirs[0].name.startswith("TASK-001-")
+    resolved = tmp_path.resolve()
+    task_dir = resolved / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / "TASK-001-t"
 
-    expected = {
+    expected_stdout = (
+        "\n"
+        f"> project-handbook@0.0.0 make {resolved}\n"
+        "> make -- task-create title\\=T feature\\=f decision\\=ADR-0000 points\\=5 owner\\=@a prio\\=P1 "
+        "lane\\=ops session\\=task-execution\n"
+        "\n"
+        "✅ Created task directory: TASK-001-t\n"
+        f"📁 Location: {task_dir}\n"
+        "📝 Next steps:\n"
+        f"   1. Edit {task_dir}/steps.md with implementation details\n"
+        f"   2. Update {task_dir}/commands.md with specific commands\n"
+        f"   3. Review checklist/logistics in {task_dir}/checklist.md\n"
+        "   4. Run 'make validate-quick' before pushing changes\n"
+        "   5. Set status to 'doing' when starting work\n"
+        "Next steps:\n"
+        "  - Open sprints/current/tasks/ for the new directory, update steps.md + commands.md\n"
+        "  - Set status to 'doing' when work starts and log progress in checklist.md\n"
+        "  - Run 'make validate-quick' once initial scaffolding is filled in\n"
+    )
+    assert result.stdout == expected_stdout
+
+    assert task_dir.exists()
+    expected_files = {
         "source",
         "task.yaml",
         "README.md",
@@ -113,21 +112,287 @@ def test_task_create_creates_expected_files_and_prints_hint_block(
         "validation.md",
         "references.md",
     }
-    assert expected.issubset({p.name for p in task_dirs[0].iterdir()})
+    assert expected_files.issubset({p.name for p in task_dir.iterdir()})
 
-    task_yaml = (task_dirs[0] / "task.yaml").read_text(encoding="utf-8")
-    assert "id: TASK-001" in task_yaml
-    assert "status: todo" in task_yaml
+    assert (task_dir / "task.yaml").read_text(encoding="utf-8") == (
+        "id: TASK-001\n"
+        "title: T\n"
+        "feature: f\n"
+        "lane: ops\n"
+        "decision: ADR-0000\n"
+        "session: task-execution\n"
+        "owner: @a\n"
+        "status: todo\n"
+        "story_points: 5\n"
+        "depends_on: []\n"
+        "prio: P1\n"
+        "due: 2099-01-08\n"
+        "release: null\n"
+        "release_gate: false\n"
+        "acceptance:\n"
+        "  - Implementation complete and tested\n"
+        "  - Code review passed\n"
+        "  - Documentation updated\n"
+        "links: []\n"
+    )
 
-    feature_overview = base / "features" / "f" / "overview.md"
-    expected_feature_overview_rel = os.path.relpath(str(feature_overview), str(task_dirs[0])).replace(os.sep, "/")
+    assert (task_dir / "README.md").read_text(encoding="utf-8") == (
+        "---\n"
+        "title: Task TASK-001 - T\n"
+        "type: task\n"
+        "date: 2099-01-01\n"
+        "task_id: TASK-001\n"
+        "feature: f\n"
+        "session: task-execution\n"
+        "tags: [task, f]\n"
+        "links: [../../../features/f/overview.md]\n"
+        "---\n"
+        "\n"
+        "# Task TASK-001: T\n"
+        "\n"
+        "## Overview\n"
+        "**Feature**: [f](../../../features/f/overview.md)\n"
+        "**Decision**: `ADR-0000`\n"
+        "**Story Points**: 5\n"
+        "**Owner**: @a\n"
+        "**Lane**: ops\n"
+        "**Session**: `task-execution`\n"
+        "**Release**: (none)\n"
+        "**Release Gate**: `false`\n"
+        "\n"
+        "## Agent Navigation Rules\n"
+        "1. **Start work**: Update `task.yaml` status to \"doing\"\n"
+        "2. **Read first**: `steps.md` for implementation sequence\n"
+        "3. **Use commands**: Copy-paste from `commands.md`\n"
+        "4. **Validate progress**: Follow `validation.md` guidelines\n"
+        "5. **Check completion**: Use `checklist.md` before marking done\n"
+        "6. **Update status**: Set to \"review\" when ready for review\n"
+        "\n"
+        "## Context & Background\n"
+        "This task implements the `ADR-0000` decision for the [f] feature.\n"
+        "\n"
+        "## Quick Start\n"
+        "```bash\n"
+        "# Update status when starting\n"
+        "cd sprints/current/tasks/TASK-001-t/\n"
+        "# Edit task.yaml: status: doing\n"
+        "\n"
+        "# Follow implementation\n"
+        "cat steps.md              # Read implementation steps\n"
+        "cat commands.md           # Copy-paste commands\n"
+        "cat validation.md         # Validation approach\n"
+        "```\n"
+        "\n"
+        "## Dependencies\n"
+        "Review `task.yaml` for any `depends_on` tasks that must be completed first.\n"
+        "\n"
+        "## Acceptance Criteria\n"
+        "See `task.yaml` acceptance section and `checklist.md` for completion requirements.\n"
+    )
 
-    readme = (task_dirs[0] / "README.md").read_text(encoding="utf-8")
-    assert f"links: [{expected_feature_overview_rel}]" in readme
-    assert f"**Feature**: [f]({expected_feature_overview_rel})" in readme
+    assert (task_dir / "checklist.md").read_text(encoding="utf-8") == (
+        "---\n"
+        "title: T - Completion Checklist\n"
+        "type: checklist\n"
+        "date: 2099-01-01\n"
+        "task_id: TASK-001\n"
+        "tags: [checklist]\n"
+        "links: []\n"
+        "---\n"
+        "\n"
+        "# Completion Checklist: T\n"
+        "\n"
+        "## Pre-Work\n"
+        "- [ ] Confirm all `depends_on` tasks are `done`\n"
+        "- [ ] Review `README.md`, `steps.md`, `commands.md`\n"
+        "- [ ] Align with the feature owner on acceptance criteria\n"
+        "\n"
+        "## During Execution\n"
+        "- [ ] Capture implementation steps in `steps.md`\n"
+        "- [ ] Record shell commands in `commands.md`\n"
+        "- [ ] Document verification steps in `validation.md`\n"
+        "- [ ] Keep this checklist updated as milestones are completed\n"
+        "\n"
+        "## Before Review\n"
+        "- [ ] Run `make validate-quick`\n"
+        "- [ ] Update daily status with progress/blockers\n"
+        "- [ ] Gather artifacts (screenshots, logs, PR links)\n"
+        "- [ ] Set status to `review` via `make task-status`\n"
+        "\n"
+        "## After Completion\n"
+        "- [ ] Peer review approved and merged\n"
+        "- [ ] Update owning feature docs/changelog if needed\n"
+        "- [ ] Move status to `done` with `make task-status`\n"
+        "- [ ] Capture learnings for the sprint retrospective\n"
+    )
 
-    references = (task_dirs[0] / "references.md").read_text(encoding="utf-8")
-    assert f"[Feature overview]({expected_feature_overview_rel})" in references
+    assert (task_dir / "commands.md").read_text(encoding="utf-8") == (
+        "---\n"
+        "title: T - Commands\n"
+        "type: commands\n"
+        "date: 2099-01-01\n"
+        "task_id: TASK-001\n"
+        "tags: [commands]\n"
+        "links: []\n"
+        "---\n"
+        "\n"
+        "# Commands: T\n"
+        "\n"
+        "## Task Status Updates\n"
+        "```bash\n"
+        "# When starting work\n"
+        "cd sprints/current/tasks/TASK-001-t/\n"
+        "# Edit task.yaml: change status from \"todo\" to \"doing\"\n"
+        "\n"
+        "# When ready for review\n"
+        "# Edit task.yaml: change status to \"review\"\n"
+        "\n"
+        "# When complete\n"
+        "# Edit task.yaml: change status to \"done\"\n"
+        "```\n"
+        "\n"
+        "## Validation Commands\n"
+        "```bash\n"
+        "# Run validation\n"
+        "make validate\n"
+        "\n"
+        "# Check sprint status\n"
+        "make sprint-status\n"
+        "\n"
+        "# Update daily status\n"
+        "make daily\n"
+        "```\n"
+        "\n"
+        "## Implementation Commands\n"
+        "```bash\n"
+        "# Add specific commands for this task here\n"
+        "# Example:\n"
+        "# npm install package-name\n"
+        "# python3 -m pytest tests/\n"
+        "# docker build -t app .\n"
+        "```\n"
+        "\n"
+        "## Git Integration\n"
+        "```bash\n"
+        "# Commit with task reference\n"
+        "git commit -m \"feat: t\n"
+        "\n"
+        "Implements TASK-001 for f feature.\n"
+        "Part of sprint: SPRINT-2099-01-01\n"
+        "\n"
+        "Refs: #TASK-001\"\n"
+        "\n"
+        "# Link PR to task (in PR description)\n"
+        "# Closes #TASK-001\n"
+        "# Implements ADR-0000\n"
+        "```\n"
+        "\n"
+        "## Quick Copy-Paste\n"
+        "```bash\n"
+        "# Most common commands for this task type\n"
+        "echo \"Add task-specific commands here\"\n"
+        "```\n"
+    )
+
+    assert (task_dir / "validation.md").read_text(encoding="utf-8") == (
+        "---\n"
+        "title: T - Validation Guide\n"
+        "type: validation\n"
+        "date: 2099-01-01\n"
+        "task_id: TASK-001\n"
+        "tags: [validation]\n"
+        "links: []\n"
+        "---\n"
+        "\n"
+        "# Validation Guide: T\n"
+        "\n"
+        "## Automated Validation\n"
+        "```bash\n"
+        "pnpm -C project-handbook make -- validate\n"
+        "pnpm -C project-handbook make -- sprint-status\n"
+        "```\n"
+        "\n"
+        "## Manual Validation (Must Be Task-Specific)\n"
+        "This file must be updated during sprint planning so an execution agent can validate without inventing steps.\n"
+        "\n"
+        "Before the task is marked `review`, add:\n"
+        "- exact copy/paste command(s),\n"
+        "- exact pass/fail success criteria,\n"
+        "- exact evidence file list (under `project-handbook/status/evidence/TASK-001/`).\n"
+        "\n"
+        "## Sign-off\n"
+        "- [ ] All validation steps completed\n"
+        "- [ ] Evidence documented above\n"
+        "- [ ] Ready to mark task as \"done\"\n"
+    )
+
+    assert (task_dir / "references.md").read_text(encoding="utf-8") == (
+        "---\n"
+        "title: T - References\n"
+        "type: references\n"
+        "date: 2099-01-01\n"
+        "task_id: TASK-001\n"
+        "tags: [references]\n"
+        "links: []\n"
+        "---\n"
+        "\n"
+        "# References: T\n"
+        "\n"
+        "## Internal References\n"
+        "\n"
+        "### Decision Context\n"
+        "- **Decision**: `ADR-0000`\n"
+        "- **Feature**: [Feature overview](../../../features/f/overview.md)\n"
+        "- **Architecture**: [Feature architecture](../../../features/f/architecture/ARCHITECTURE.md)\n"
+        "\n"
+        "### Sprint Context\n"
+        "- **Sprint Plan**: [Current sprint](../../plan.md)\n"
+        "- **Sprint Tasks**: [All sprint tasks](../)\n"
+        "- **Daily Progress**: [Daily status](../../daily/)\n"
+        "\n"
+        "## Notes\n"
+        "Add concrete links here only when you discover resources during the task (no placeholders).\n"
+    )
+
+
+def test_task_create_system_scope_prints_hint_block(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _plan_sprint(ph_root=tmp_path, scope="system")
+
+    env = dict(os.environ)
+    env["PH_FAKE_TODAY"] = "2099-01-01"
+
+    result = subprocess.run(
+        [
+            "ph",
+            "--root",
+            str(tmp_path),
+            "--scope",
+            "system",
+            "--no-post-hook",
+            "task",
+            "create",
+            "--title",
+            "T",
+            "--feature",
+            "f",
+            "--decision",
+            "ADR-0000",
+            "--lane",
+            "ops",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0
+    assert result.stdout.splitlines()[-4:] == [
+        "Next steps:",
+        "  - Open .project-handbook/system/sprints/current/tasks/ for the new directory, "
+        "update steps.md + commands.md",
+        "  - Set status to 'doing' when work starts and log progress in checklist.md",
+        "  - Run 'ph --scope system validate --quick' once initial scaffolding is filled in",
+    ]
 
 
 def test_task_create_guardrail_rejects_system_scoped_lanes_in_project_scope(tmp_path: Path) -> None:
@@ -155,7 +420,14 @@ def test_task_create_guardrail_rejects_system_scoped_lanes_in_project_scope(tmp_
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, env=env)
     assert result.returncode == 1
-    assert result.stdout.strip() == "Use: ph --scope system task create ..."
+    resolved = tmp_path.resolve()
+    assert result.stdout == (
+        "\n"
+        f"> project-handbook@0.0.0 make {resolved}\n"
+        "> make -- task-create title\\=T feature\\=f decision\\=ADR-0000 lane\\=handbook/automation\n"
+        "\n"
+        "Use: ph --scope system task create ...\n"
+    )
 
     tasks_dir = tmp_path / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
     assert not any(p.is_dir() for p in tasks_dir.iterdir())

@@ -142,6 +142,84 @@ Next task:
 Blockers (if blocked):
 - (none)
 
+## 2026-02-05 03:33 UTC — V1P-0021 — Parity: `make task-create ...` → `ph task create ...`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (created under `$TMPDIR`)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0021)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+- cli_plan/v0_make/MAKE_CONTRACT.md
+- /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook/process/automation/task_manager.py (legacy source)
+
+Goal:
+- Achieve strict parity for `make task-create ...` → `ph task create ...` (stdout + generated task directory contents).
+
+Work performed (ordered):
+1. Ran legacy `pnpm make -- task-create ...` and `uv run ph ... task create ...` against the same disposable PH_ROOT (reset between runs) and diffed stdout + generated task directory contents.
+2. Updated `ph task create` to match legacy’s stdout formatting and file templates (including legacy-relative links and “make validate-quick” guidance for project scope).
+3. Added deterministic pytest coverage to lock stdout + task directory file contents for both project and system scopes.
+4. Re-ran legacy-vs-`ph` parity diff; verified byte-for-byte match; ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC=\"/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook\"
+- TMP_ROOT=\"$(mktemp -d -t ph-parity-V1P-0021-root-real-XXXXXXXX)\"
+- PH_ROOT=\"$TMP_ROOT/project-handbook\"
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' \"$LEGACY_SRC/\" \"$PH_ROOT/\"
+- (cd \"$PH_ROOT\" && pnpm install --frozen-lockfile)
+- FEATURE_NAME=\"$(ls -1 \"$PH_ROOT/features\" | rg -v '^(implemented|archive)$' | head -n 1)\"
+- ADR_FILE=\"$(ls -1 \"$PH_ROOT/adr\" | head -n 1)\"
+- ADR_NUM=\"$(echo \"$ADR_FILE\" | rg -o '^[0-9]{4}' | head -n 1)\"
+- DECISION_ID=\"ADR-$ADR_NUM\"
+- (cd \"$PH_ROOT\" && tar -cf /tmp/ph-parity-V1P-0021-base.tar .)
+- find \"$PH_ROOT/sprints/current/tasks\" -maxdepth 1 -type d -name 'TASK-*' -print | sort > /tmp/V1P-0021.before.txt || true
+- (cd \"$PH_ROOT\" && pnpm make -- task-create title=\"Parity task create\" feature=\"$FEATURE_NAME\" decision=\"$DECISION_ID\" points=1 lane=ops session=task-execution) > /tmp/V1P-0021.legacy.stdout.txt
+- find \"$PH_ROOT/sprints/current/tasks\" -maxdepth 1 -type d -name 'TASK-*' -print | sort > /tmp/V1P-0021.after.txt
+- comm -13 /tmp/V1P-0021.before.txt /tmp/V1P-0021.after.txt > /tmp/V1P-0021.created.txt
+- LEGACY_TASK_DIR=\"$(tail -n 1 /tmp/V1P-0021.created.txt)\"
+- rm -rf /tmp/V1P-0021.legacy.taskdir && mkdir -p /tmp/V1P-0021.legacy.taskdir
+- rsync -a --delete \"$LEGACY_TASK_DIR/\" /tmp/V1P-0021.legacy.taskdir/
+- rm -rf \"$PH_ROOT\" && mkdir -p \"$PH_ROOT\" && tar -xf /tmp/ph-parity-V1P-0021-base.tar -C \"$PH_ROOT\"
+- find \"$PH_ROOT/sprints/current/tasks\" -maxdepth 1 -type d -name 'TASK-*' -print | sort > /tmp/V1P-0021.before2.txt || true
+- uv run ph --root \"$PH_ROOT\" task create --title \"Parity task create\" --feature \"$FEATURE_NAME\" --decision \"$DECISION_ID\" --points 1 --lane ops --session task-execution > /tmp/V1P-0021.ph.stdout.txt
+- find \"$PH_ROOT/sprints/current/tasks\" -maxdepth 1 -type d -name 'TASK-*' -print | sort > /tmp/V1P-0021.after2.txt
+- comm -13 /tmp/V1P-0021.before2.txt /tmp/V1P-0021.after2.txt > /tmp/V1P-0021.created2.txt
+- PH_TASK_DIR=\"$(tail -n 1 /tmp/V1P-0021.created2.txt)\"
+- rm -rf /tmp/V1P-0021.ph.taskdir && mkdir -p /tmp/V1P-0021.ph.taskdir
+- rsync -a --delete \"$PH_TASK_DIR/\" /tmp/V1P-0021.ph.taskdir/
+- diff -u /tmp/V1P-0021.legacy.stdout.txt /tmp/V1P-0021.ph.stdout.txt
+- diff -ru /tmp/V1P-0021.legacy.taskdir /tmp/V1P-0021.ph.taskdir
+- uv run ruff check .
+- uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/tasks_v1_parity.json
+- cli_plan/session_logs.md
+- src/ph/cli.py
+- src/ph/task_create.py
+- tests/test_task_create.py
+
+Verification:
+- `diff -u /tmp/V1P-0021.legacy.stdout.txt /tmp/V1P-0021.ph.stdout.txt` returned no diff (byte-for-byte match).
+- `diff -ru /tmp/V1P-0021.legacy.taskdir /tmp/V1P-0021.ph.taskdir` returned no diff (byte-for-byte match).
+- `uv run ruff check .` (pass)
+- `uv run pytest -q` (pass; 151 tests)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> task create ...` matches legacy `pnpm make -- task-create ...` stdout and generated task directory contents byte-for-byte; parity locked via pytest.
+
+Next task:
+- V1P-0022
+
+Blockers (if blocked):
+- (none)
+
 ## 2026-02-05 02:15 UTC — V1P-0018 — Parity: `make sprint-capacity` → `ph sprint capacity`
 
 Agent: GPT-5.2 (Codex CLI Orchestrator) + background Codex exec
