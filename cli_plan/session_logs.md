@@ -9279,3 +9279,138 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 23:39 UTC — V1P-0066 — Parity: make clean → ph clean
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (PH_ROOT=/tmp/ph-parity-v1p0066.KCUvMN)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0066)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- clean` → `ph clean` (stdout + removal of `**/__pycache__/**` and `**/*.pyc` under PH_ROOT).
+
+Work performed (ordered):
+1. Created a disposable handbook root, seeded `__pycache__` + `.pyc`, and captured legacy vs `ph` stdout + filesystem changes.
+2. Updated `ph clean` to emit the legacy pnpm preamble in project scope before cleanup.
+3. Added deterministic pytest coverage and ran `ruff` + `pytest` to lock parity.
+
+Commands executed (exact):
+- ls
+- cat AGENTS.md
+- rg -n "clean" src tests
+- cat src/ph/clean.py
+- cat tests/test_clean.py
+- mktemp -d /tmp/ph-parity-v1p0066.XXXXXX
+- rsync -a --exclude .git --exclude node_modules --exclude .venv --exclude .project-handbook /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook/ /tmp/ph-parity-v1p0066.KCUvMN/
+- mkdir -p /tmp/ph-parity-v1p0066.KCUvMN/src/pkg/__pycache__ /tmp/ph-parity-v1p0066.KCUvMN/scripts/__pycache__
+- printf 'x' > /tmp/ph-parity-v1p0066.KCUvMN/src/pkg/__pycache__/dummy.cpython-312.pyc
+- printf 'x' > /tmp/ph-parity-v1p0066.KCUvMN/scripts/temp.pyc
+- python - <<'PY'
+import subprocess, os, textwrap
+ph_root = '/tmp/ph-parity-v1p0066.KCUvMN'
+proc = subprocess.run(['pnpm','make','--','clean'], cwd=ph_root, capture_output=True, text=True)
+print('LEGACY_EXIT', proc.returncode)
+print('LEGACY_STDOUT_START')
+print(proc.stdout)
+print('LEGACY_STDOUT_END')
+print('LEGACY_STDERR_START')
+print(proc.stderr)
+print('LEGACY_STDERR_END')
+PY
+- mkdir -p /tmp/ph-parity-v1p0066.KCUvMN/src/pkg/__pycache__ /tmp/ph-parity-v1p0066.KCUvMN/scripts/__pycache__
+- printf 'x' > /tmp/ph-parity-v1p0066.KCUvMN/src/pkg/__pycache__/dummy.cpython-312.pyc
+- printf 'x' > /tmp/ph-parity-v1p0066.KCUvMN/scripts/temp.pyc
+- python - <<'PY'
+import subprocess
+ph_root = '/tmp/ph-parity-v1p0066.KCUvMN'
+proc = subprocess.run(['uv','run','ph','--root',ph_root,'clean'], capture_output=True, text=True, cwd='/Users/spensermcconnell/__Active_Code/project-handbook-cli')
+print('PH_EXIT', proc.returncode)
+print('PH_STDOUT_START')
+print(proc.stdout)
+print('PH_STDOUT_END')
+print('PH_STDERR_START')
+print(proc.stderr)
+print('PH_STDERR_END')
+PY
+- python - <<'PY'
+import subprocess, os
+ph_root = '/tmp/ph-parity-v1p0066.KCUvMN'
+env = os.environ.copy()
+env['UV_CACHE_DIR'] = '/tmp/uv-cache'
+proc = subprocess.run(['uv','run','ph','--root',ph_root,'clean'], capture_output=True, text=True, cwd='/Users/spensermcconnell/__Active_Code/project-handbook-cli', env=env)
+print('PH_EXIT', proc.returncode)
+print('PH_STDOUT_START')
+print(proc.stdout)
+print('PH_STDOUT_END')
+print('PH_STDERR_START')
+print(proc.stderr)
+print('PH_STDERR_END')
+PY
+- rg -n "_format_pnpm_make_preamble" -n src/ph/cli.py
+- sed -n '640,680p' src/ph/cli.py
+- sed -n '1,120p' src/ph/cli.py
+- sed -n '520,700p' src/ph/cli.py
+- cat <<'PY' > tests/test_clean_parity_v1p0066.py
+...
+PY
+- mkdir -p /tmp/ph-parity-v1p0066.KCUvMN/src/pkg/__pycache__ /tmp/ph-parity-v1p0066.KCUvMN/scripts/__pycache__
+- printf 'x' > /tmp/ph-parity-v1p0066.KCUvMN/src/pkg/__pycache__/dummy.cpython-312.pyc
+- printf 'x' > /tmp/ph-parity-v1p0066.KCUvMN/scripts/temp.pyc
+- python - <<'PY'
+from pathlib import Path
+ph_root = Path('/tmp/ph-parity-v1p0066.KCUvMN')
+pyc = list(ph_root.rglob('*.pyc'))
+pycache = list(ph_root.rglob('__pycache__'))
+print('PYC_COUNT', len(pyc))
+print('PYCACHE_COUNT', len(pycache))
+PY
+- UV_CACHE_DIR=/tmp/uv-cache uv run ruff check .
+- UV_CACHE_DIR=/tmp/uv-cache uv run pytest -q
+- UV_CACHE_DIR=/tmp/uv-cache uv run pytest -q
+- git status -sb
+- git add src/ph/cli.py tests/test_clean_parity_v1p0066.py
+- ls -la .git/index.lock
+- ls -ld .git
+- touch .git/index.lock
+- touch .git/objects/.codex_write_test
+- python - <<'PY'
+from pathlib import Path
+p = Path('.git') / 'codex_test'
+try:
+    p.write_text('x', encoding='utf-8')
+    print('write ok')
+except Exception as e:
+    print('write failed', type(e).__name__, e)
+PY
+- ls -le .git
+- git diff --stat
+- git diff -- src/ph/cli.py
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0066.done
+- src/ph/cli.py
+- tests/test_clean_parity_v1p0066.py
+
+Verification:
+- Parity evidence: legacy `pnpm make -- clean` stdout matched `ph clean` after preamble update; `PYC_COUNT 0` and `PYCACHE_COUNT 0` confirmed cache deletion.
+- `UV_CACHE_DIR=/tmp/uv-cache uv run ruff check .` (pass)
+- `UV_CACHE_DIR=/tmp/uv-cache uv run pytest -q` (pass; 191 tests)
+
+Outcome:
+- status: done
+- summary: Added pnpm-style preamble to `ph clean` in project scope and added parity test; stdout + cleanup behavior now match legacy.
+
+Next task:
+- V1P-0067
+
+Blockers (if blocked):
+- (none)

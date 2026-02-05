@@ -659,6 +659,9 @@ def main(argv: list[str] | None = None) -> int:
                     )
                     exit_code = 0
             elif args.command == "clean":
+                if ctx.scope == "project":
+                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["clean"]))
+                    sys.stdout.flush()
                 clean_python_caches(ph_root=ph_root)
                 print("Cleaned Python cache files\n", end="")
                 exit_code = 0
