@@ -73,6 +73,14 @@ from .validate_docs import run_validate
 
 
 def _format_pnpm_make_preamble(*, ph_root: Path, make_args: list[str]) -> str:
+    reporter = (
+        os.environ.get("npm_config_reporter")
+        or os.environ.get("NPM_CONFIG_REPORTER")
+        or os.environ.get("PNPM_REPORTER")
+    )
+    if isinstance(reporter, str) and reporter.strip().lower() == "silent":
+        return ""
+
     pkg = ph_root / "package.json"
     if not pkg.exists():
         return ""

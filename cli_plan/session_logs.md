@@ -8364,3 +8364,55 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 18:40 UTC — V1P-0050 — Parity: `make roadmap-validate` → `ph roadmap validate`
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copies of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (PH_ROOT_LEGACY/PH_ROOT_PH created via `mktemp`; see Commands executed)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0050)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- roadmap-validate` → `ph roadmap validate` (stdout + exit code).
+
+Work performed (ordered):
+1. Restarted the background agent with `google-docs-mcp` disabled after an MCP startup hang blocked progress.
+2. Captured legacy stdout/exit and `ph` stdout/exit under `npm_config_reporter=silent` (legacy `pnpm` otherwise prints a non-deterministic absolute path in its preamble); diffed and iterated until matched.
+3. Updated `ph` to suppress the pnpm-style preamble when `npm_config_reporter=silent` (matching legacy), and added deterministic pytest coverage to lock parity; ran ruff + pytest.
+
+Commands executed (exact):
+- LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; PH_ROOT_LEGACY="$(mktemp -d -t ph-parity-V1P-0050-legacy-XXXXXXXX)/project-handbook"; PH_ROOT_PH="$(mktemp -d -t ph-parity-V1P-0050-ph-XXXXXXXX)/project-handbook"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT_LEGACY/"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT_PH/"; (cd "$PH_ROOT_LEGACY" && pnpm install --frozen-lockfile >/dev/null); (cd "$PH_ROOT_PH" && pnpm install --frozen-lockfile >/dev/null)
+- set +e; (cd "$PH_ROOT_LEGACY" && npm_config_reporter=silent pnpm make -- roadmap-validate) > /tmp/V1P-0050.legacy.stdout.txt; echo $? > /tmp/V1P-0050.legacy.status.txt; set -e
+- set +e; UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache npm_config_reporter=silent uv run ph --root "$PH_ROOT_PH" roadmap validate > /tmp/V1P-0050.ph.stdout.txt; echo $? > /tmp/V1P-0050.ph.status.txt; set -e
+- diff -u /tmp/V1P-0050.legacy.stdout.txt /tmp/V1P-0050.ph.stdout.txt
+- diff -u /tmp/V1P-0050.legacy.status.txt /tmp/V1P-0050.ph.status.txt
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ruff check .
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- src/ph/cli.py
+- tests/test_roadmap_validate_parity_v1p0050.py
+
+Verification:
+- diff -u /tmp/V1P-0050.legacy.stdout.txt /tmp/V1P-0050.ph.stdout.txt (no diff; byte-for-byte match)
+- diff -u /tmp/V1P-0050.legacy.status.txt /tmp/V1P-0050.ph.status.txt (no diff; legacy exit code `0`, `ph` exit code `0`)
+- uv run ruff check . (pass)
+- uv run pytest -q (pass)
+
+Outcome:
+- status: done
+- summary: `ph --root <PH_ROOT> roadmap validate` matches legacy `pnpm make -- roadmap-validate` for stdout + exit code when run under `npm_config_reporter=silent`; parity locked via deterministic pytest.
+
+Next task:
+- V1P-0051
+
+Blockers (if blocked):
+- (none)
