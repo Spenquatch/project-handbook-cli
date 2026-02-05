@@ -711,6 +711,10 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 elif args.sprint_command == "capacity":
+                    if ctx.scope == "project":
+                        sys.stdout.write(
+                            _format_pnpm_make_preamble(ph_root=ph_root, make_args=["sprint-capacity"])
+                        )
                     exit_code = run_sprint_capacity(
                         ph_root=ph_root,
                         ctx=ctx,
