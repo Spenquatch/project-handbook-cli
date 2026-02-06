@@ -27,8 +27,7 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         "{\n"
         '  "name": "project-handbook",\n'
         '  "private": true,\n'
-        '  "version": "0.0.0",\n'
-        '  "scripts": { "make": "make" }\n'
+        '  "version": "0.0.0"\n'
         "}\n",
         encoding="utf-8",
     )
@@ -54,4 +53,3 @@ def test_roadmap_validate_stdout_matches_legacy_when_pnpm_reporter_silent(tmp_pa
     )
     assert result.returncode == 0
     assert result.stdout == "✅ Roadmap validation passed\n"
-

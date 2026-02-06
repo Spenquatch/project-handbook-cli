@@ -61,7 +61,7 @@ def test_post_hook_validation_errors_do_not_change_exit_code(tmp_path: Path) -> 
         encoding="utf-8",
     )
 
-    # Force quick validation to have at least one error (legacy make still exits 0).
+    # Force quick validation to have at least one error (legacy behavior still exits 0).
     (tmp_path / "INVALID.md").write_text("# Missing front matter\n", encoding="utf-8")
 
     env = dict(os.environ)
