@@ -84,7 +84,7 @@ jobs:
           path: dist
 
       - name: Publish to PyPI (Trusted Publishing)
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@v1.13.0
 
       - name: Create GitHub Release (attach artifacts)
         uses: softprops/action-gh-release@v2
