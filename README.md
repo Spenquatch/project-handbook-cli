@@ -52,8 +52,7 @@ Example:
 
 ## Release (exact steps)
 
-1) update `src/ph/__init__.py` `__version__`
-2) run `uv run ruff format .` then `uv run ruff check .` then `uv run pytest -q`
-3) create git tag `v<__version__>`
-4) build with `python -m build`
-5) verify artifacts exist in `dist/`.
+1) update `pyproject.toml` `project.version` and `src/ph/__init__.py` `__version__` (must match)
+2) run `uv run ruff check .` then `uv run pytest -q`
+3) create git tag `v<version>` and push
+4) GitHub Actions publishes to PyPI on tag push (see `.github/workflows/release.yml`)

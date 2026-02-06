@@ -1,16 +1,16 @@
-name: Release to PyPI
+name: Release (PyPI)
 
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch: {}
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
-  build-and-publish:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,12 +19,73 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Verify tag matches version
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          import tomllib
+          from pathlib import Path
+          
+          tag = os.environ["TAG"]
+          m = re.fullmatch(r"v(?P<version>[0-9]+(?:\.[0-9]+){2}(?:[a-zA-Z0-9\.\-_]+)?)", tag)
+          if not m:
+              raise SystemExit(f"Tag must look like vX.Y.Z (got {tag!r})")
+          tag_version = m.group("version")
+          
+          pyproject = tomllib.loads(Path("pyproject.toml").read_text("utf-8"))
+          project_version = pyproject["project"]["version"]
+          if project_version != tag_version:
+              raise SystemExit(f"pyproject.toml version {project_version!r} != tag {tag_version!r}")
+          
+          init_text = Path("src/ph/__init__.py").read_text("utf-8")
+          mm = re.search(r'__version__\\s*=\\s*"([^"]+)"', init_text)
+          if not mm:
+              raise SystemExit("src/ph/__init__.py missing __version__")
+          init_version = mm.group(1)
+          if init_version != tag_version:
+              raise SystemExit(f"src/ph/__init__.py __version__ {init_version!r} != tag {tag_version!r}")
+          
+          print(f"OK: tag={tag_version} matches pyproject + src/ph/__init__.py")
+          PY
+
       - name: Build sdist and wheel
         run: |
           python -m pip install --upgrade pip
-          python -m pip install build
+          python -m pip install build twine
           python -m build
+          python -m twine check --strict dist/*
 
-      - name: Publish to PyPI
+      - name: Smoke test wheel
+        run: |
+          python -m pip install dist/*.whl
+          ph --help >/dev/null
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Publish to PyPI (Trusted Publishing)
         uses: pypa/gh-action-pypi-publish@release/v1
 
+      - name: Create GitHub Release (attach artifacts)
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
