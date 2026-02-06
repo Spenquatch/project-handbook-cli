@@ -5,24 +5,23 @@ Installed Python CLI distribution: `project-handbook-cli`
 Console script: `ph`
 
 Handbook root marker (v1):
-- `.ph/config.json`
+- `project_handbook.config.json`
 
 Rule: `ph` MUST NOT execute repo-local Python scripts at runtime.
 
-## IMPORTANT: Do not use the legacy handbook repo for CLI development
+## IMPORTANT: Be explicit about `PH_ROOT` during development
 
-Do **not** use `../project-handbook/` or `legacy-reference/project-handbook/` as a dev target (PH_ROOT) while working on `project-handbook-cli`.
+When developing, prefer `ph --root /absolute/path/to/handbook` so you don’t accidentally operate on the wrong directory.
 
-- `legacy-reference/project-handbook/` is a reference snapshot only (gitignored).
-- v1 docs/specs assume `.ph/config.json` + `.ph/**` (internals) + `ph/**` (content) and **no system scope**.
-- The current CLI implementation is not yet fully aligned with the v1 marker/scope, so running `ph` against the legacy repo will be misleading.
+v1 contract summary:
+- Content root: `PH_ROOT/**` (repo-root layout, e.g. `sprints/`, `features/`, `status/`, etc.)
+- Internals: `PH_ROOT/.project-handbook/**`
 
 ## Repo layout (this repo)
 
 - `src/ph/**`: CLI implementation
 - `cli_plan/**`: authoritative v1 contract + spec + planning
 - `docs/**`: rendered docs (MkDocs)
-- `legacy-reference/project-handbook/**`: legacy repo snapshot for reference only (ignored by git; do not treat as v1 `PH_ROOT`)
 
 ## Local install verification (exact commands)
 

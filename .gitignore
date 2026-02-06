@@ -9,5 +9,6 @@ site/
 .pytest_cache/
 .ruff_cache/
 uv.lock
-legacy-reference
+.codex-agent-*
+ph-parity-*.done
 .DS_Store

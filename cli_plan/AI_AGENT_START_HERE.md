@@ -29,7 +29,6 @@ This folder is the **only** place we track v1 CLI execution planning and due dil
 - A separately-installed Python CLI tool named `project-handbook-cli` that provides the `ph` command.
 - The `ph` tool operates on a “handbook instance repo” (any repo with `project_handbook.config.json`) as **data/templates/plans**, and MUST NOT execute repo-local Python scripts at runtime.
   - Reference implementation for parity/real-world behavior: `/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook` (invoked via `pnpm make -- <target>`).
-  - This repo also includes `legacy-reference/project-handbook/` as a historical snapshot; it is gitignored and not used as a primary validation target.
   - When running commands during development, prefer `ph --root /absolute/path/to/target` so you don’t accidentally operate on the wrong directory.
 
 ## Sources of truth (read in this order)
