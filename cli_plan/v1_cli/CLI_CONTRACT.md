@@ -84,7 +84,7 @@ On every invocation, `ph` MUST:
 2. Refuse to run if `handbook_schema_version != 1`.
 3. Refuse to run if installed `ph` version does not satisfy `requires_ph_version`.
 4. Print remediation including the exact command:
-   - `uv tool install project-handbook-cli`
+   - `uv tool install project-handbook`
 
 ### `ph init`
 

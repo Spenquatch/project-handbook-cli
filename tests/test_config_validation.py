@@ -17,11 +17,11 @@ def test_schema_mismatch_exits_nonzero_with_remediation(tmp_path: Path) -> None:
     _write_config(tmp_path, schema=999)
     result = subprocess.run(["ph", "--root", str(tmp_path)], capture_output=True, text=True)
     assert result.returncode != 0
-    assert "uv tool install project-handbook-cli" in result.stderr
+    assert "uv tool install project-handbook" in result.stderr
 
 
 def test_version_mismatch_exits_nonzero_with_remediation(tmp_path: Path) -> None:
     _write_config(tmp_path, requires=">=9.9.9")
     result = subprocess.run(["ph", "--root", str(tmp_path)], capture_output=True, text=True)
     assert result.returncode != 0
-    assert "uv tool install project-handbook-cli" in result.stderr
+    assert "uv tool install project-handbook" in result.stderr

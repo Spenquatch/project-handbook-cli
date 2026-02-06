@@ -8,9 +8,9 @@ When developing, prefer `ph --root /absolute/path/to/handbook` so you don’t ac
 
 Pick one:
 
-- `uv tool install project-handbook-cli`
-- `pipx install project-handbook-cli`
-- `pip install project-handbook-cli`
+- `uv tool install project-handbook`
+- `pipx install project-handbook`
+- `pip install project-handbook`
 
 Verify:
 

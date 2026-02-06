@@ -1,4 +1,4 @@
-site_name: project-handbook-cli
+site_name: project-handbook
 repo_url: https://github.com/Spenquatch/project-handbook-cli
 repo_name: Spenquatch/project-handbook-cli
 
@@ -9,4 +9,3 @@ nav:
   - Home: index.md
   - Quick Start: quickstart.md
   - Commands: commands.md
-

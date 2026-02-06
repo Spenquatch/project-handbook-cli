@@ -113,4 +113,4 @@ def check_handbook_config(ph_root: Path) -> ConfigCheckResult:
 
 
 def _config_error_message(message: str) -> str:
-    return f"{message}\nRemediation: uv tool install project-handbook-cli\n"
+    return f"{message}\nRemediation: uv tool install project-handbook\n"

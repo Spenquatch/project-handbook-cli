@@ -68,13 +68,13 @@ Implement a first-class `ph` CLI (Python-based) that becomes the primary interfa
 
 `ph` MUST be distributed as an installable Python package:
 
-- Distribution name (PyPI): `project-handbook-cli`
+- Distribution name (PyPI): `project-handbook`
 - Console script: `ph`
 - Supported installation mechanisms:
-  - `uv tool install project-handbook-cli`
-  - `pipx install project-handbook-cli`
-  - `pip install project-handbook-cli`
-  - `poetry add project-handbook-cli`
+  - `uv tool install project-handbook`
+  - `pipx install project-handbook`
+  - `pip install project-handbook`
+  - `poetry add project-handbook`
 
 The Project Handbook repository remains viewable and editable (Markdown/JSON/etc) and becomes a “data + templates + planning” instance that the installed `ph` tool operates against.
 
@@ -98,7 +98,7 @@ On every invocation, `ph` MUST:
 
 The v1 CLI implementation MUST be developed in a **separate repository** (not inside the handbook instance repo):
 
-- Repo: `project-handbook-cli` (source for the `project-handbook-cli` distribution)
+- Repo: `project-handbook-cli` (source for the `project-handbook` distribution)
 
 Rationale:
 - the handbook instance repo remains “data only” (no executed Python required),

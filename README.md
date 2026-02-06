@@ -1,6 +1,6 @@
 # project-handbook-cli
 
-Installed Python CLI distribution: `project-handbook-cli`
+Installed Python CLI distribution: `project-handbook`
 
 Console script: `ph`
 

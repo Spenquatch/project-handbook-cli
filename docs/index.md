@@ -1,6 +1,6 @@
 # project-handbook-cli
 
-`project-handbook-cli` is an installable Python CLI distribution that provides the `ph` command.
+`project-handbook` is an installable Python CLI distribution that provides the `ph` command.
 
 Key principles:
 

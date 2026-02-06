@@ -3,12 +3,15 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "project-handbook-cli"
+name = "project-handbook"
 version = "0.1.0"
 description = "Installed ph CLI for Project Handbook"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = ["packaging>=23.0"]
+
+[project.urls]
+Repository = "https://github.com/Spenquatch/project-handbook-cli"
 
 [project.optional-dependencies]
 dev = ["build", "mkdocs>=1.6.0", "pytest", "ruff"]
