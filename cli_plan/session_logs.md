@@ -4,7 +4,8 @@ type: log
 date: 2026-01-14
 tags: [cli, plan, execution, logs]
 links:
-  - ./tasks_v1_parity.json
+  - ./tasks_v1_next.json
+  - ./archive/strict_parity_2026-02/tasks_v1_parity.json
   - ./archive/tasks_legacy.json
   - ./AI_AGENT_START_HERE.md
   - ./v1_cli/ADR-CLI-0001-ph-cli-migration.md
@@ -13,7 +14,7 @@ links:
 
 # CLI Plan – Session Logs
 
-Every execution session MUST append exactly one entry below, and MUST reference a single task ID from the active task queue (`cli_plan/tasks_v1_parity.json` during strict parity work).
+Every execution session MUST append exactly one entry below, and MUST reference a single task ID from the active task queue (for new work: `cli_plan/tasks_v1_next.json`).
 
 Note: Some older entries describe a deprecated `.ph/**` + `ph/**` layout. The current v1 layout is defined by `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` (repo-root content; marker `project_handbook.config.json`; internals under `.project-handbook/**`).
 
@@ -32,7 +33,7 @@ CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
 Inputs reviewed:
 - cli_plan/v1_cli/ADR-CLI-0001-ph-cli-migration.md
 - cli_plan/v1_cli/CLI_CONTRACT.md
-- cli_plan/tasks_v1_parity.json (task <TASK_ID>)
+- cli_plan/tasks_v1_next.json (task <TASK_ID>)
 
 Goal:
  - Achieve strict parity for `pnpm make -- release-plan version=next` → `ph release plan --version next` (stdout + `releases/current` + release scaffold files).
@@ -60,8 +61,7 @@ Commands executed (exact):
 
 Files changed (exact paths):
 - cli_plan/session_logs.md
-- cli_plan/tasks_v1_parity.json
-- ph-parity-V1P-0051.done
+- cli_plan/tasks_v1_next.json
 - src/ph/release.py
 - tests/test_release_plan.py
 

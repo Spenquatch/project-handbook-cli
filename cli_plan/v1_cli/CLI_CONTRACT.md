@@ -6,8 +6,8 @@ tags: [handbook, cli, contract, automation]
 links:
   - ./ADR-CLI-0001-ph-cli-migration.md
   - ./ADR-CLI-0004-ph-root-layout.md
-  - ../v0_make/MAKE_CONTRACT.md
-  - ../PARITY_CHECKLIST.md
+  - ../archive/strict_parity_2026-02/v0_make/MAKE_CONTRACT.md
+  - ../archive/strict_parity_2026-02/PARITY_CHECKLIST.md
 ---
 
 # Purpose

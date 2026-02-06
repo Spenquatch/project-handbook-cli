@@ -4,7 +4,7 @@ type: guide
 date: 2026-01-13
 tags: [handbook, cli, migration, plan]
 links:
-  - ./v0_make/MAKE_CONTRACT.md
+  - ./archive/strict_parity_2026-02/v0_make/MAKE_CONTRACT.md
   - ./v1_cli/ADR-CLI-0001-ph-cli-migration.md
   - ./v1_cli/CLI_CONTRACT.md
 ---
@@ -33,5 +33,5 @@ Authoritative CLI design:
 ## Task queues
 
 - `cli_plan/archive/tasks_legacy.json`: historical migration task queue (complete; kept as an audit trail).
-- `cli_plan/tasks_v1_parity.json`: strict parity queue (one checkbox per task from `cli_plan/PARITY_CHECKLIST.md`).
+- `cli_plan/archive/strict_parity_2026-02/tasks_v1_parity.json`: strict parity queue (complete; one checkbox per task from `cli_plan/archive/strict_parity_2026-02/PARITY_CHECKLIST.md`).
 - `cli_plan/tasks_v1_next.json`: active incremental v1 task queue (preferred for new work).

@@ -4,7 +4,6 @@ from pathlib import Path
 
 ROOT_MARKER_RELATIVE_PATHS: tuple[Path, ...] = (
     Path("project_handbook.config.json"),
-    Path("cli_plan/project_handbook.config.json"),  # legacy (deprecated)
 )
 
 

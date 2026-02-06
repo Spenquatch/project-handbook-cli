@@ -6,17 +6,17 @@ tags: [cli, plan, execution, agent]
 links:
   - ./archive/tasks_legacy.json
   - ./tasks_v1_next.json
-  - ./tasks_v1_parity.json
-  - ./due-diligence.json
+  - ./archive/strict_parity_2026-02/tasks_v1_parity.json
+  - ./archive/strict_parity_2026-02/due-diligence.json
   - ./backlog.json
   - ./session_logs.md
-  - ./PARITY_CHECKLIST.md
+  - ./archive/strict_parity_2026-02/PARITY_CHECKLIST.md
   - ./v1_cli/ADR-CLI-0001-ph-cli-migration.md
   - ./v1_cli/ADR-CLI-0002-handbook-instance-scaffolding.md
   - ./v1_cli/ADR-CLI-0003-ph-project-layout.md
   - ./v1_cli/ADR-CLI-0004-ph-root-layout.md
   - ./v1_cli/CLI_CONTRACT.md
-  - ./v0_make/MAKE_CONTRACT.md
+  - ./archive/strict_parity_2026-02/v0_make/MAKE_CONTRACT.md
   - ./ph_spec/
 ---
 
@@ -36,11 +36,12 @@ This folder is the **only** place we track v1 CLI execution planning and due dil
 1. `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` (project layout + marker)
 2. `cli_plan/v1_cli/CLI_CONTRACT.md`
 3. `cli_plan/ph_spec/` (directory-by-directory spec + examples)
-4. `cli_plan/due-diligence.json` (work queue for spec completion)
-5. `cli_plan/v0_make/MAKE_CONTRACT.md` (parity reference, optional)
-6. `cli_plan/v1_cli/ADR-CLI-0001-ph-cli-migration.md` (historical context)
-7. `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md` (historical context; superseded)
-8. `cli_plan/v1_cli/ADR-CLI-0002-handbook-instance-scaffolding.md` (historical context; superseded)
+4. `cli_plan/tasks_v1_next.json` (active incremental work queue)
+5. `cli_plan/archive/strict_parity_2026-02/due-diligence.json` (historical; complete)
+6. `cli_plan/archive/strict_parity_2026-02/v0_make/MAKE_CONTRACT.md` (historical parity reference)
+7. `cli_plan/v1_cli/ADR-CLI-0001-ph-cli-migration.md` (historical context)
+8. `cli_plan/v1_cli/ADR-CLI-0003-ph-project-layout.md` (historical context; superseded)
+9. `cli_plan/v1_cli/ADR-CLI-0002-handbook-instance-scaffolding.md` (historical context; superseded)
 
 ## Root marker for v1
 
@@ -52,18 +53,19 @@ The `ph` CLI MUST treat the directory that contains `project_handbook.config.jso
 
 ## Workstreams
 
-There are two independent workstreams under `cli_plan/`:
+There are two primary workstreams under `cli_plan/`:
 
-1. **Due diligence (preferred until complete)**: finish the `ph_spec` contracts + example validation checklist in `cli_plan/due-diligence.json`.
-2. **CLI implementation (historical)**: the original migration task queue in `cli_plan/archive/tasks_legacy.json` (complete; keep for audit trail).
-3. **Strict parity (active)**: granular Make→CLI parity tasks in `cli_plan/tasks_v1_parity.json` (one checkbox per task from `cli_plan/PARITY_CHECKLIST.md`).
-4. **Next tasks (post-parity)**: incremental v1 improvements in `cli_plan/tasks_v1_next.json` (use after parity baseline is green).
+1. **Next tasks (active)**: incremental v1 improvements in `cli_plan/tasks_v1_next.json`.
+2. **Backlog (active)**: items that require contract/spec decisions first in `cli_plan/backlog.json` (+ tech-debt notes in `cli_plan/backlog.md`).
+
+Historical (kept for audit trail):
+- Due diligence queue: `cli_plan/archive/strict_parity_2026-02/due-diligence.json` (complete).
+- Strict parity queue + checklist: `cli_plan/archive/strict_parity_2026-02/` (complete).
+- Original migration queue: `cli_plan/archive/tasks_legacy.json` (complete).
 
 Default policy:
-- If any due-diligence task is not `done`, work due diligence first.
-- If due diligence is complete, use `cli_plan/tasks_v1_parity.json` for new work until parity baseline is complete.
-- After parity is complete, use `cli_plan/tasks_v1_next.json` for follow-on refinements.
-- Only refer to `cli_plan/archive/tasks_legacy.json` for historical context.
+- Use `cli_plan/tasks_v1_next.json` for new work.
+- Only refer to archived queues for historical context.
 
 Important note:
 - `cli_plan/archive/tasks_legacy.json` and older `cli_plan/session_logs.md` entries include historical references to a deprecated `.ph/**` / `ph/**` layout. For v1, treat `cli_plan/v1_cli/CLI_CONTRACT.md` + `cli_plan/ph_spec/` as authoritative.
@@ -71,8 +73,7 @@ Important note:
 ## Strict workflow (do this every session)
 
 1. Decide the active queue:
-   - If `cli_plan/due-diligence.json` has any task with `status != "done"`, use **Due diligence workflow** (below).
-   - Else use **CLI task workflow** (below).
+   - Use **Next queue workflow** (`cli_plan/tasks_v1_next.json`) for new work.
 2. Select exactly one task to execute (algorithm below).
 3. Before doing any work:
    - set that task’s `status` to `in_progress` in the appropriate JSON file
@@ -85,9 +86,9 @@ Important note:
 
 ## Task selection algorithm (zero ambiguity)
 
-### Due diligence queue (`cli_plan/due-diligence.json`)
+### Due diligence queue (archived) (`cli_plan/archive/strict_parity_2026-02/due-diligence.json`)
 
-Given `cli_plan/due-diligence.json`:
+Given `cli_plan/archive/strict_parity_2026-02/due-diligence.json`:
 
 1. If there is exactly one task with `status == "in_progress"`, continue that same task.
 2. Else pick the single task with `status == "todo"` with the lowest numeric ID (e.g. `DD-0001` before `DD-0100`).
@@ -121,9 +122,9 @@ Given `cli_plan/tasks_v1_next.json`:
 4. Otherwise pick the single task in `CANDIDATES` with the lowest `(phase.order, task.order)`.
 5. The selected task is “the next task” for this session.
 
-### Parity queue (`cli_plan/tasks_v1_parity.json`)
+### Parity queue (archived) (`cli_plan/archive/strict_parity_2026-02/tasks_v1_parity.json`)
 
-Given `cli_plan/tasks_v1_parity.json`:
+Given `cli_plan/archive/strict_parity_2026-02/tasks_v1_parity.json`:
 
 1. Build the set `DONE = { task.id | task.status == "done" }`.
 2. Compute the candidate list:
@@ -136,7 +137,7 @@ Given `cli_plan/tasks_v1_parity.json`:
 
 ## How to mark progress
 
-### Due diligence tasks (`cli_plan/due-diligence.json`)
+### Due diligence tasks (archived) (`cli_plan/archive/strict_parity_2026-02/due-diligence.json`)
 
 For the active due-diligence task object:
 

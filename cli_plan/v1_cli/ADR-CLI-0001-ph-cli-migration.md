@@ -8,7 +8,7 @@ tags: [handbook, cli, automation, ergonomics, reliability]
 links:
   - ./ADR-CLI-0004-ph-root-layout.md
   - ./CLI_CONTRACT.md
-  - ../v0_make/MAKE_CONTRACT.md
+  - ../archive/strict_parity_2026-02/v0_make/MAKE_CONTRACT.md
 ---
 
 # Note (historical)

@@ -22,7 +22,7 @@
       "impacted_sources_of_truth": [
         "cli_plan/v1_cli/CLI_CONTRACT.md (new `ph adr` surface)",
         "cli_plan/ph_spec/ph/adr/contract.md (creation/ownership/validation rules update)",
-        "cli_plan/v0_make/MAKE_CONTRACT.md (parity note: v0 had no ADR target; this is a v1+ enhancement)"
+        "cli_plan/archive/strict_parity_2026-02/v0_make/MAKE_CONTRACT.md (parity note: v0 had no ADR target; this is a v1+ enhancement)"
       ],
       "acceptance_criteria": [
         "`ph adr add --id ADR-#### --title <t> [--status draft] [--date YYYY-MM-DD] [--force]` creates a new ADR file that passes `ph validate`.",

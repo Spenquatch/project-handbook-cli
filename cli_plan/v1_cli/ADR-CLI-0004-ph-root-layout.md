@@ -9,7 +9,7 @@ links:
   - ./ADR-CLI-0001-ph-cli-migration.md
   - ./ADR-CLI-0003-ph-project-layout.md
   - ./CLI_CONTRACT.md
-  - ../v0_make/MAKE_CONTRACT.md
+  - ../archive/strict_parity_2026-02/v0_make/MAKE_CONTRACT.md
   - ../AI_AGENT_START_HERE.md
 ---
 
@@ -44,4 +44,4 @@ Additionally:
 - The authoritative behavior lives in:
   - `cli_plan/v1_cli/CLI_CONTRACT.md`
   - `cli_plan/ph_spec/` (directory contracts under repo-root layout)
-  - `cli_plan/v0_make/MAKE_CONTRACT.md` (reference behavior)
+  - `cli_plan/archive/strict_parity_2026-02/v0_make/MAKE_CONTRACT.md` (historical reference behavior)
