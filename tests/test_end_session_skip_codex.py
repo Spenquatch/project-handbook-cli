@@ -83,5 +83,7 @@ def test_end_session_skip_codex_writes_summary_and_manifest(tmp_path: Path) -> N
     assert manifest["sessions"][0]["summary_path"] == expected_summary.as_posix()
     assert (ph_root / expected_summary).exists()
     summary_text = (ph_root / expected_summary).read_text(encoding="utf-8")
-    assert "[Tue Jan 13 - 07:00 PM] USER :: Hello from fixture" in summary_text
+    # Local time zone differs across machines (CI runners are typically UTC).
+    # Only assert the stable transcript payload.
+    assert "USER :: Hello from fixture" in summary_text
     assert "- Hello from fixture (?) – no file changes" in summary_text
