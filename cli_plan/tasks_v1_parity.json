@@ -1060,10 +1060,14 @@
       "phase_id": "PHASE-P15",
       "order": 1,
       "title": "Parity: `ph reset` / `ph reset-smoke`",
-      "status": "todo",
+      "status": "done",
       "depends_on": [],
       "work_location": "cli_repo",
-      "kickoff_prompt": "Goal: strict parity for: `ph reset` / `ph reset-smoke`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: CLI-only (not in reference Makefile))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Note: the reference Make interface does not define `reset*` targets.\n"
+      "kickoff_prompt": "Goal: strict parity for: `ph reset` / `ph reset-smoke`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: CLI-only (not in reference Makefile))\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Note: the reference Make interface does not define `reset*` targets.\n",
+      "started_at": "2026-02-06T01:06:51Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-02-06 01:06 UTC \u2014 V1P-0070 \u2014 Parity: ph reset / ph reset-smoke",
+      "completed_at": "2026-02-06T01:13:32Z",
+      "next_task_id": "NONE"
     }
   ]
 }

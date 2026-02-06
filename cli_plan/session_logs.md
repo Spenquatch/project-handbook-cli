@@ -9602,3 +9602,65 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-06 01:06 UTC — V1P-0070 — Parity: ph reset / ph reset-smoke
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (reset_spec.json missing) and legacy-reference/project-handbook (reset_spec.json present)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0070)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `ph reset` / `ph reset-smoke` (CLI-only; no legacy make target).
+
+Work performed (ordered):
+1. Reviewed `CLI_CONTRACT.md`, `reset.py`, and `reset_smoke.py`; confirmed behavior and existing tests.
+2. Ran `ph reset` (dry run) and `ph reset-smoke` on a disposable root that includes `process/automation/reset_spec.json` (legacy-reference snapshot).
+3. Attempted the same on a copy of the canonical legacy repo; observed expected failure due to missing `reset_spec.json`.
+4. Verified smoke artifacts and validated test coverage; created marker file.
+
+Commands executed (exact):
+- rg -n "reset" -S cli_plan docs src tests legacy-reference
+- sed -n '740,840p' cli_plan/v1_cli/CLI_CONTRACT.md
+- sed -n '1,260p' src/ph/reset.py
+- sed -n '1,220p' src/ph/reset_smoke.py
+- PH_ROOT=$(mktemp -d /tmp/ph-reset-parity-XXXXXX)
+- cp -a legacy-reference/project-handbook/. "$PH_ROOT"/
+- uv run ph --root "$PH_ROOT" reset > /tmp/ph-reset-parity-reset.out 2> /tmp/ph-reset-parity-reset.err
+- UV_CACHE_DIR=/tmp/uv-cache uv run ph --root "$PH_ROOT" reset-smoke > /tmp/ph-reset-parity-reset-smoke.out 2> /tmp/ph-reset-parity-reset-smoke.err
+- printf "features/reset-smoke-project: %s
+" "$(test -d "$PH_ROOT/features/reset-smoke-project" && echo exists || echo missing)"
+- printf ".project-handbook/system/features/handbook-reset-smoke: %s
+" "$(test -d "$PH_ROOT/.project-handbook/system/features/handbook-reset-smoke" && echo exists || echo missing)"
+- export TMPDIR=/tmp; LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0070-XXXXXXXX)"; PH_ROOT="$TMP_ROOT/project-handbook"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ph --root "$PH_ROOT" reset > /tmp/V1P-0070.reset.stdout.txt 2> /tmp/V1P-0070.reset.stderr.txt
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ph --root "$PH_ROOT" reset-smoke > /tmp/V1P-0070.reset-smoke.stdout.txt 2> /tmp/V1P-0070.reset-smoke.stderr.txt
+- UV_CACHE_DIR=/tmp/uv-cache uv run ruff check .
+- UV_CACHE_DIR=/tmp/uv-cache uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0070.done
+
+Verification:
+- `ph reset` (dry-run) reports delete set + execution hint when reset_spec exists; `ph reset-smoke` completes and validates artifacts per `docs/RESET_SMOKE.md`.
+- Canonical legacy repo copy fails with `Missing reset spec: .../process/automation/reset_spec.json` (expected given missing spec).
+- `UV_CACHE_DIR=/tmp/uv-cache uv run ruff check .` (pass)
+- `UV_CACHE_DIR=/tmp/uv-cache uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: No code changes required; reset/reset-smoke behaviors match contract when reset_spec is present. Marker file added.
+
+Next task:
+- NONE
+
+Blockers (if blocked):
+- (none)
