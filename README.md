@@ -56,3 +56,5 @@ Example:
 2) run `uv run ruff check .` then `uv run pytest -q`
 3) create git tag `v<version>` and push
 4) GitHub Actions publishes to PyPI on tag push (see `.github/workflows/release.yml`)
+   - Preferred: PyPI Trusted Publishing (OIDC)
+   - Fallback: set GitHub secret `PYPI_API_TOKEN` for token-based publishing
