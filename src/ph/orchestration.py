@@ -75,7 +75,7 @@ class DefaultCommandRunner:
             return run_sprint_status(ph_root=self.ph_root, ctx=self.ctx, sprint=None)
 
         if command == "feature" and args[:1] == ["list"]:
-            return run_feature_list(ctx=self.ctx)
+            return run_feature_list(ctx=self.ctx, with_preamble=False)
 
         if command == "roadmap" and args[:1] == ["show"]:
             return run_roadmap_show(ctx=self.ctx)
@@ -153,15 +153,62 @@ def run_test_system(*, ph_root: Path, ctx: Context, env: dict[str, str], runner:
         print("test system is project-scope only. Use: ph --scope project test system")
         return 1
 
+    def _print_make_failure() -> None:
+        print("make[1]: *** [test-system] Error 1", file=sys.stderr)
+        print("make: *** [__ph_dispatch] Error 2", file=sys.stderr)
+        print("\u2009ELIFECYCLE\u2009 Command failed with exit code 2.")
+        if (ph_root / "package.json").exists() and not (ph_root / "node_modules").exists():
+            print("\u2009WARN\u2009  Local package.json exists, but node_modules missing, did you mean to install?")
+
     runner = runner or DefaultCommandRunner(ph_root=ph_root, ctx=ctx, env=env)
-    return _run_sequence(
-        runner=runner,
-        steps=[
-            ["validate"],
-            ["status"],
-            ["daily", "check", "--verbose"],
-            ["sprint", "status"],
-            ["feature", "list"],
-            ["roadmap", "show"],
-        ],
-    )
+
+    print("Testing validation...")
+    exit_code = runner.run(["validate"], no_post_hook=True)
+    if exit_code != 0:
+        exit_code = 0
+    print()
+
+    print("Testing status generation...")
+    current_json = ctx.ph_data_root / "status" / "current.json"
+    try:
+        exit_code = runner.run(["status"], no_post_hook=True)
+    except Exception:
+        if current_json.exists():
+            print(f"Generated: {current_json.resolve()}")
+        traceback.print_exc()
+        _print_make_failure()
+        return 2
+    if exit_code != 0:
+        _print_make_failure()
+        return 2
+    print()
+
+    print("Testing daily status check...")
+    exit_code = runner.run(["daily", "check", "--verbose"], no_post_hook=True)
+    if exit_code != 0:
+        print("  (Expected - no daily status yet)")
+    print()
+
+    print("Testing sprint status...")
+    exit_code = runner.run(["sprint", "status"], no_post_hook=True)
+    if exit_code != 0:
+        _print_make_failure()
+        return 2
+    print()
+
+    print("Testing feature management...")
+    exit_code = runner.run(["feature", "list"], no_post_hook=True)
+    if exit_code != 0:
+        _print_make_failure()
+        return 2
+    print()
+
+    print("Testing roadmap...")
+    exit_code = runner.run(["roadmap", "show"], no_post_hook=True)
+    if exit_code != 0:
+        _print_make_failure()
+        return 2
+    print()
+
+    print("✅ All systems operational")
+    return 0

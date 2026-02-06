@@ -314,8 +314,9 @@ links: []
     return 0
 
 
-def run_feature_list(*, ctx: Context) -> int:
-    _maybe_print_pnpm_make_preamble(ctx=ctx, make_args="feature-list")
+def run_feature_list(*, ctx: Context, with_preamble: bool = True) -> int:
+    if with_preamble:
+        _maybe_print_pnpm_make_preamble(ctx=ctx, make_args="feature-list")
 
     features_dir, _implemented_dir = _ensure_feature_roots(ph_data_root=ctx.ph_data_root)
     feature_dirs = [d for d in features_dir.iterdir() if d.is_dir() and d.name != "implemented"]

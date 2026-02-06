@@ -9539,3 +9539,66 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-06 00:44 UTC — V1P-0069 — Parity: make test-system → ph test system
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (PH_ROOT=/tmp/ph-parity-V1P-0069-shared-XXXXXXXX.Nz7iGqTivc/project-handbook)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0069)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- test-system` → `ph test system` (stdout + `status/validation.json` + `status/current.json` + `status/current_summary.md`).
+
+Work performed (ordered):
+1. Ran legacy vs `ph` test-system on a shared disposable PH_ROOT to capture stdout, exit codes, and status artifacts.
+2. Updated `ph test system` to emit make-style section banners, tolerate daily check failures, and print pnpm-style error lines on failure; added pnpm preamble for the top-level command.
+3. Suppressed extra pnpm preamble during feature list inside test-system; added deterministic pytest coverage for test-system output.
+4. Re-verified parity using `PYTHONHASHSEED=0` and `PH_FAKE_NOW` (legacy generated_at) to align hash-order + timestamps in `status/current.json`.
+
+Commands executed (exact):
+- rsync -a --delete --exclude .git --exclude node_modules --exclude .venv --exclude .project-handbook /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook/ "$PH_ROOT/"
+- (cd "$PH_ROOT" && pnpm make -- test-system) > /tmp/V1P-0069.shared.legacy.stdout.txt 2> /tmp/V1P-0069.shared.legacy.stderr.txt
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ph --root "$PH_ROOT" test system > /tmp/V1P-0069.shared.ph.stdout.txt 2> /tmp/V1P-0069.shared.ph.stderr.txt
+- diff -u /tmp/V1P-0069.shared.legacy.stdout.txt /tmp/V1P-0069.shared.ph.stdout.txt
+- diff -u /tmp/V1P-0069.shared.legacy.validation.json /tmp/V1P-0069.shared.ph.validation.json
+- diff -u /tmp/V1P-0069.shared.legacy.current.json /tmp/V1P-0069.shared.ph.current.json
+- diff -u /tmp/V1P-0069.shared.legacy.current_summary.md /tmp/V1P-0069.shared.ph.current_summary.md
+- PYTHONHASHSEED=0 pnpm make -- test-system
+- PYTHONHASHSEED=0 PH_FAKE_NOW="$LEGACY_GENERATED_AT" UV_CACHE_DIR=/tmp/uv-cache uv run ph --root "$PH_ROOT" test system
+- diff -u /tmp/ph-v1p-0069-legacy.stdout /tmp/ph-v1p-0069-ph.stdout
+- diff -u /tmp/ph-v1p-0069-legacy-status/validation.json "$PH_ROOT/status/validation.json"
+- diff -u /tmp/ph-v1p-0069-legacy-status/current.json "$PH_ROOT/status/current.json"
+- diff -u /tmp/ph-v1p-0069-legacy-status/current_summary.md "$PH_ROOT/status/current_summary.md"
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ruff check .
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0069.done
+- src/ph/cli.py
+- src/ph/feature.py
+- src/ph/orchestration.py
+- tests/test_test_system_parity_v1p0069.py
+
+Verification:
+- Shared-root parity: stdout + exit codes + `status/validation.json` + `status/current_summary.md` matched legacy; `status/current.json` matched after normalizing `PYTHONHASHSEED=0` and `PH_FAKE_NOW` to legacy generated_at.
+- `UV_CACHE_DIR=/tmp/uv-cache uv run ruff check .` (pass)
+- `UV_CACHE_DIR=/tmp/uv-cache uv run pytest -q` (pass; 194 tests)
+
+Outcome:
+- status: done
+- summary: `ph test system` now mirrors legacy make-style output + flow, with deterministic parity tests and pnpm preamble; hash-order/time drift controlled via env for parity checks.
+
+Next task:
+- V1P-0070
+
+Blockers (if blocked):
+- (none)

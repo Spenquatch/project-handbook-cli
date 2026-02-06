@@ -1046,10 +1046,14 @@
       "phase_id": "PHASE-P14",
       "order": 4,
       "title": "Parity: `make test-system` \u2192 `ph test system`",
-      "status": "todo",
+      "status": "done",
       "depends_on": [],
       "work_location": "cli_repo",
-      "kickoff_prompt": "Goal: strict parity for: `make test-system` \u2192 `ph test system`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Utilities)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> test system`\n- Outputs to verify: `status/validation.json`, `status/current.json`, `status/current_summary.md` (written by internal `ph validate` + `ph status`)\n"
+      "kickoff_prompt": "Goal: strict parity for: `make test-system` \u2192 `ph test system`\n\nReference: cli_plan/PARITY_CHECKLIST.md (section: Utilities)\n\nCreate a disposable handbook instance for parity testing:\n- Copy `legacy-reference/project-handbook/` to a fresh temp directory (do not run on the real repo).\n- Use that copied directory as `PH_ROOT` for BOTH legacy and `ph` commands.\n\nSteps:\n1) Run the legacy command(s) listed in the checklist and capture stdout + filesystem outputs.\n2) Run the corresponding `ph` command and capture stdout + filesystem outputs.\n3) Compare against the checklist\u2019s \u2018Outputs to verify\u2019.\n4) If mismatched: fix implementation + update/add pytest tests so parity is enforced deterministically.\n\nChecklist details:\n- Preconditions: none\n- Command: `ph --root <PH_ROOT> test system`\n- Outputs to verify: `status/validation.json`, `status/current.json`, `status/current_summary.md` (written by internal `ph validate` + `ph status`)\n",
+      "started_at": "2026-02-06T00:44:46Z",
+      "last_session_log_ref": "cli_plan/session_logs.md#2026-02-06 00:44 UTC \u2014 V1P-0069 \u2014 Parity: make test-system \u2192 ph test system",
+      "completed_at": "2026-02-06T01:05:41Z",
+      "next_task_id": "V1P-0070"
     },
     {
       "id": "V1P-0070",

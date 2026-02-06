@@ -705,6 +705,9 @@ def main(argv: list[str] | None = None) -> int:
                     print("Usage: ph test <system>\n", file=sys.stderr, end="")
                     exit_code = 2
                 elif args.test_command == "system":
+                    if ctx.scope == "project":
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["test-system"]))
+                        sys.stdout.flush()
                     exit_code = run_test_system(ph_root=ph_root, ctx=ctx, env=os.environ)
                 else:
                     print("Usage: ph test <system>\n", file=sys.stderr, end="")
