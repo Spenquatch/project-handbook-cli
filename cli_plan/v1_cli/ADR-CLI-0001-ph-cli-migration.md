@@ -85,7 +85,7 @@ The handbook root MUST contain `project_handbook.config.json` and `ph` MUST trea
 `project_handbook.config.json` MUST contain:
 
 - `handbook_schema_version`: integer, MUST be `1` for v1 CLI
-- `requires_ph_version`: string, PEP 440 compatible specifier, MUST be `>=0.1.0,<0.2.0`
+- `requires_ph_version`: string, PEP 440 compatible specifier, MUST be `>=0.0.1,<0.1.0`
 - `repo_root`: string, MUST be `"."`
 
 On every invocation, `ph` MUST:

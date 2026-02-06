@@ -20,7 +20,7 @@ def test_init_creates_root_marker_and_is_idempotent(tmp_path: Path) -> None:
     data = json.loads(marker.read_text(encoding="utf-8"))
     assert data == {
         "handbook_schema_version": 1,
-        "requires_ph_version": ">=0.1.0,<0.2.0",
+        "requires_ph_version": ">=0.0.1,<0.1.0",
         "repo_root": ".",
     }
 

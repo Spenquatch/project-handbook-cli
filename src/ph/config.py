@@ -9,7 +9,7 @@ from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from . import __version__
 
 DEFAULT_SCHEMA_VERSION = 1
-DEFAULT_REQUIRES_PH_VERSION = ">=0.1.0,<0.2.0"
+DEFAULT_REQUIRES_PH_VERSION = ">=0.0.1,<0.1.0"
 
 
 @dataclass(frozen=True)

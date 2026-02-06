@@ -75,7 +75,7 @@ If any are missing, `ph` MUST exit non-zero and print remediation that includes 
 `project_handbook.config.json` MUST contain:
 
 - `handbook_schema_version`: integer, MUST be `1`
-- `requires_ph_version`: string, MUST be `>=0.1.0,<0.2.0`
+- `requires_ph_version`: string, MUST be `>=0.0.1,<0.1.0`
 - `repo_root`: string, MUST be `"."` (project repo root)
 
 On every invocation, `ph` MUST:

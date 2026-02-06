@@ -6,7 +6,7 @@ from pathlib import Path
 
 DEFAULT_SCHEMA_VERSION = 1
 DEFAULT_REPO_ROOT = "."
-DEFAULT_REQUIRES_PH_VERSION = ">=0.1.0,<0.2.0"
+DEFAULT_REQUIRES_PH_VERSION = ">=0.0.1,<0.1.0"
 
 _DEFAULT_GITIGNORE_LINES = (
     ".project-handbook/history.log",

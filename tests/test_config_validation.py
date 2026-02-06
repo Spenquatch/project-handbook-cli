@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 
 
-def _write_config(ph_root: Path, *, schema: int = 1, requires: str = ">=0.1.0,<0.2.0") -> None:
+def _write_config(ph_root: Path, *, schema: int = 1, requires: str = ">=0.0.1,<0.1.0") -> None:
     marker = ph_root / "project_handbook.config.json"
     marker.parent.mkdir(parents=True, exist_ok=True)
     marker.write_text(

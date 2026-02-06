@@ -8,7 +8,7 @@ def _write_valid_config(ph_root: Path) -> None:
     config = ph_root / "project_handbook.config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
-        '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.1.0,<0.2.0",\n  "repo_root": "."\n}\n',
+        '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
 
@@ -32,7 +32,7 @@ def test_doctor_schema_mismatch_exits_2(tmp_path: Path) -> None:
     config = tmp_path / "project_handbook.config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
-        '{\n  "handbook_schema_version": 999,\n  "requires_ph_version": ">=0.1.0,<0.2.0",\n  "repo_root": "."\n}\n',
+        '{\n  "handbook_schema_version": 999,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
     result = subprocess.run(["ph", "doctor", "--root", str(tmp_path)], capture_output=True, text=True)

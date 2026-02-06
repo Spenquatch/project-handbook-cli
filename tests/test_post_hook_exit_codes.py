@@ -7,7 +7,7 @@ from pathlib import Path
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
     (ph_root / "project_handbook.config.json").write_text(
-        '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.1.0,<0.2.0",\n  "repo_root": "."\n}\n',
+        '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
 
