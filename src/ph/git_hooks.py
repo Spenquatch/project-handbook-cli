@@ -3,12 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-POST_COMMIT_HOOK = """#!/bin/sh
-ph --no-post-hook daily check
+POST_COMMIT_HOOK = """#!/bin/bash
+python3 process/automation/daily_status_check.py --check-only
 """
 
-PRE_PUSH_HOOK = """#!/bin/sh
-ph --no-post-hook validate
+PRE_PUSH_HOOK = """#!/bin/bash
+python3 process/checks/validate_docs.py
 """
 
 

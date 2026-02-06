@@ -9414,3 +9414,67 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-05 23:48 UTC — V1P-0067 — Parity: make install-hooks → ph hooks install
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (PH_ROOT=/tmp/ph-parity-V1P-0067-shared-XXXXXXXX.qHoSVYdiQg/project-handbook)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0067)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- install-hooks` → `ph hooks install` (stdout + `.git/hooks/post-commit` + `.git/hooks/pre-push`).
+
+Work performed (ordered):
+1. Ran legacy vs `ph` comparisons on a disposable repo with `.git/hooks` present; captured stdout, exit codes, and hook contents.
+2. Updated `ph hooks install` to emit the pnpm preamble + “Git hooks installed!” and to write legacy hook contents (bash + python3 scripts).
+3. Ensured post-command validation uses the internal validator (no repo-local execution) and keeps legacy output/exit semantics; added deterministic pytest coverage.
+4. Re-verified parity on the canonical legacy repo with a shared PH_ROOT; ran `ruff` + `pytest`.
+
+Commands executed (exact):
+- mkdir -p /tmp/v1p-0067-legacy /tmp/v1p-0067-ph
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' /Users/spensermcconnell/__Active_Code/project-handbook-cli/legacy-reference/project-handbook/ /tmp/v1p-0067-legacy/
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' /Users/spensermcconnell/__Active_Code/project-handbook-cli/legacy-reference/project-handbook/ /tmp/v1p-0067-ph/
+- mkdir -p /tmp/v1p-0067-legacy/.git/hooks /tmp/v1p-0067-ph/.git/hooks
+- pnpm make -- install-hooks > /tmp/v1p-0067-legacy.stdout 2> /tmp/v1p-0067-legacy.stderr; echo $? > /tmp/v1p-0067-legacy.status
+- PH_ROOT=/tmp/v1p-0067-ph; UV_CACHE_DIR=/tmp/uv-cache uv run ph --root "$PH_ROOT" hooks install > /tmp/v1p-0067-ph.stdout 2> /tmp/v1p-0067-ph.stderr; echo $? > /tmp/v1p-0067-ph.status
+- diff -u /tmp/v1p-0067-legacy/.git/hooks/post-commit /tmp/v1p-0067-ph/.git/hooks/post-commit || true
+- diff -u /tmp/v1p-0067-legacy/.git/hooks/pre-push /tmp/v1p-0067-ph/.git/hooks/pre-push || true
+- diff -u /tmp/v1p-0067-legacy.stdout /tmp/v1p-0067-ph.stdout || true
+- export TMPDIR=/tmp; LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0067-shared-XXXXXXXX)"; PH_ROOT="$TMP_ROOT/project-handbook"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"; mkdir -p "$PH_ROOT/.git/hooks"; (cd "$PH_ROOT" && pnpm make -- install-hooks) > /tmp/V1P-0067.shared.legacy.stdout.txt 2> /tmp/V1P-0067.shared.legacy.stderr.txt; printf "%s" $? > /tmp/V1P-0067.shared.legacy.status.txt; cp "$PH_ROOT/.git/hooks/post-commit" /tmp/V1P-0067.shared.legacy.post-commit; cp "$PH_ROOT/.git/hooks/pre-push" /tmp/V1P-0067.shared.legacy.pre-push; UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ph --root "$PH_ROOT" hooks install > /tmp/V1P-0067.shared.ph.stdout.txt 2> /tmp/V1P-0067.shared.ph.stderr.txt; printf "%s" $? > /tmp/V1P-0067.shared.ph.status.txt; cp "$PH_ROOT/.git/hooks/post-commit" /tmp/V1P-0067.shared.ph.post-commit; cp "$PH_ROOT/.git/hooks/pre-push" /tmp/V1P-0067.shared.ph.pre-push; diff -u /tmp/V1P-0067.shared.legacy.status.txt /tmp/V1P-0067.shared.ph.status.txt; diff -u /tmp/V1P-0067.shared.legacy.stdout.txt /tmp/V1P-0067.shared.ph.stdout.txt; diff -u /tmp/V1P-0067.shared.legacy.post-commit /tmp/V1P-0067.shared.ph.post-commit; diff -u /tmp/V1P-0067.shared.legacy.pre-push /tmp/V1P-0067.shared.ph.pre-push
+- export TMPDIR=/tmp; LEGACY_SRC="/Users/spensermcconnell/__Active_Code/oss-saas/project-handbook"; TMP_ROOT="$(mktemp -d -t ph-parity-V1P-0067-invalid-XXXXXXXX)"; PH_ROOT="$TMP_ROOT/project-handbook"; rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' "$LEGACY_SRC/" "$PH_ROOT/"; mkdir -p "$PH_ROOT/.git/hooks"; printf "# Missing front matter
+" > "$PH_ROOT/INVALID.md"; (cd "$PH_ROOT" && pnpm make -- install-hooks) > /tmp/V1P-0067.invalid.legacy.stdout.txt 2> /tmp/V1P-0067.invalid.legacy.stderr.txt; printf "%s" $? > /tmp/V1P-0067.invalid.legacy.status.txt; cat /tmp/V1P-0067.invalid.legacy.status.txt; cat /tmp/V1P-0067.invalid.legacy.stdout.txt; cat /tmp/V1P-0067.invalid.legacy.stderr.txt
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ruff check .
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0067.done
+- src/ph/cli.py
+- src/ph/git_hooks.py
+- src/ph/hooks.py
+- src/ph/validate_docs.py
+- tests/test_hooks_install_parity_v1p0067.py
+
+Verification:
+- Shared-root parity: `diff -u /tmp/V1P-0067.shared.*` comparisons returned no diff (stdout + hook files + exit codes matched).
+- Validation error case matches legacy: stdout includes `validation:` line and `status/validation.json`, exit code remains `0`.
+- `UV_CACHE_DIR=/tmp/uv-cache uv run ruff check .` (pass)
+- `UV_CACHE_DIR=/tmp/uv-cache uv run pytest -q` (pass; 192 tests)
+
+Outcome:
+- status: done
+- summary: `ph hooks install` now matches legacy hook contents and stdout preamble; validation output remains internal and parity-accurate; added deterministic pytest coverage.
+
+Next task:
+- V1P-0068
+
+Blockers (if blocked):
+- (none)

@@ -771,7 +771,12 @@ def validate_phase(*, issues: list[dict], root: Path) -> None:
 
 
 def run_validate(
-    *, ph_root: Path, ph_data_root: Path, scope: str, quick: bool, silent_success: bool
+    *,
+    ph_root: Path,
+    ph_data_root: Path,
+    scope: str,
+    quick: bool,
+    silent_success: bool,
 ) -> tuple[int, Path, str]:
     rules = load_validation_rules(ph_root=ph_root)
 

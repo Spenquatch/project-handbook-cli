@@ -596,7 +596,10 @@ def main(argv: list[str] | None = None) -> int:
                         exit_code = 0
             elif args.command == "hooks":
                 if args.hooks_command == "install":
+                    if ctx.scope == "project":
+                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["install-hooks"]))
                     install_git_hooks(ph_root=ph_root)
+                    sys.stdout.write("Git hooks installed!\n")
                     exit_code = 0
                 else:
                     print("Unknown hooks command.\nUse: ph hooks install\n", file=sys.stderr, end="")
