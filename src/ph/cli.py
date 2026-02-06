@@ -102,6 +102,8 @@ def _format_pnpm_make_preamble(*, ph_root: Path, make_args: list[str]) -> str:
     return f"\n> {name}@{version} make {cwd}\n> make -- {args}\n\n"
 
 
+
+
 def build_parser() -> argparse.ArgumentParser:
     def _add_common_args(p: argparse.ArgumentParser, *, suppress_defaults: bool) -> None:
         default = argparse.SUPPRESS if suppress_defaults else None
@@ -694,6 +696,9 @@ def main(argv: list[str] | None = None) -> int:
                     sys.stdout.flush()
                 exit_code = run_dashboard(ph_root=ph_root, ctx=ctx)
             elif args.command == "check-all":
+                if ctx.scope == "project":
+                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["check-all"]))
+                    sys.stdout.flush()
                 exit_code = run_check_all(ph_root=ph_root, ctx=ctx, env=os.environ)
             elif args.command == "test":
                 if getattr(args, "test_command", None) is None:

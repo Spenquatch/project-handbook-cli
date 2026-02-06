@@ -9478,3 +9478,64 @@ Next task:
 
 Blockers (if blocked):
 - (none)
+
+## 2026-02-06 00:09 UTC — V1P-0068 — Parity: make check-all → ph check-all
+
+Agent: GPT-5.2 (Orchestrator + background Codex CLI)
+Environment: approval_policy=never; sandbox_mode=danger-full-access; network_access=enabled; shell=zsh
+Handbook instance repo: disposable copy of /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook (PH_ROOT=/tmp/ph-parity-V1P-0068-shared-XXXXXXXX.Oh1bKNnLxo/project-handbook)
+CLI repo: /Users/spensermcconnell/__Active_Code/project-handbook-cli
+
+Inputs reviewed:
+- cli_plan/AI_AGENT_START_HERE.md
+- cli_plan/tasks_v1_parity.json (task V1P-0068)
+- cli_plan/PARITY_CHECKLIST.md
+- cli_plan/v1_cli/CLI_CONTRACT.md
+
+Goal:
+- Achieve strict parity for `pnpm make -- check-all` → `ph check-all` (stdout + `status/validation.json` + `status/current.json` + `status/current_summary.md`).
+
+Work performed (ordered):
+1. Ran legacy vs `ph` check-all on a shared disposable PH_ROOT to capture stdout, exit codes, and status artifacts.
+2. Updated `ph check-all` to emit the pnpm preamble, run internal validate + status, and mirror legacy failure output/exit codes when status crashes.
+3. Replaced parity tests with deterministic internal checks using `PH_FAKE_NOW` and minimal root scaffolding.
+4. Re-verified parity on the canonical legacy repo; used `PYTHONHASHSEED=0` to normalize hash-ordering in `current.json` decisions.
+
+Commands executed (exact):
+- rsync -a --delete --exclude '.git' --exclude 'node_modules' --exclude '.venv' --exclude '.project-handbook' /Users/spensermcconnell/__Active_Code/oss-saas/project-handbook/ "$PH_ROOT/"
+- (cd "$PH_ROOT" && pnpm make -- check-all) > /tmp/V1P-0068.shared.legacy.stdout.txt 2> /tmp/V1P-0068.shared.legacy.stderr.txt
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ph --root "$PH_ROOT" check-all > /tmp/V1P-0068.shared.ph.stdout.txt 2> /tmp/V1P-0068.shared.ph.stderr.txt
+- diff -u /tmp/V1P-0068.shared.legacy.status.txt /tmp/V1P-0068.shared.ph.status.txt
+- diff -u /tmp/V1P-0068.shared.legacy.stdout.txt /tmp/V1P-0068.shared.ph.stdout.txt
+- diff -u /tmp/V1P-0068.shared.legacy.validation.json /tmp/V1P-0068.shared.ph.validation.json
+- diff -u /tmp/V1P-0068.shared.legacy.current.json /tmp/V1P-0068.shared.ph.current.json
+- diff -u /tmp/V1P-0068.shared.legacy.current_summary.md /tmp/V1P-0068.shared.ph.current_summary.md
+- env PYTHONHASHSEED=0 PH_ROOT="$PH_ROOT" sh -c 'cd "$PH_ROOT" && pnpm make -- check-all' > /tmp/V1P-0068.seed.legacy.stdout.txt 2> /tmp/V1P-0068.seed.legacy.stderr.txt
+- env PYTHONHASHSEED=0 UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ph --root "$PH_ROOT" check-all > /tmp/V1P-0068.seed.ph.stdout.txt 2> /tmp/V1P-0068.seed.ph.stderr.txt
+- diff -u /tmp/V1P-0068.seed.legacy.current.json /tmp/V1P-0068.seed.ph.current.json
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run ruff check .
+- UV_CACHE_DIR=/tmp/uv-cache XDG_CACHE_HOME=/tmp/xdg-cache uv run pytest -q
+
+Files changed (exact paths):
+- cli_plan/session_logs.md
+- cli_plan/tasks_v1_parity.json
+- ph-parity-V1P-0068.done
+- src/ph/cli.py
+- src/ph/orchestration.py
+- tests/test_check_all_parity_v1p0068.py
+
+Verification:
+- Shared-root parity: stdout + exit codes + `status/validation.json` + `status/current_summary.md` matched legacy; `status/current.json` matched after normalizing hash seed with `PYTHONHASHSEED=0` (legacy uses hash-ordered sets for decisions).
+- Failure parity: when status generation raises, `ph check-all` now prints legacy-style pnpm error lines and returns exit code `2`.
+- `UV_CACHE_DIR=/tmp/uv-cache uv run ruff check .` (pass)
+- `UV_CACHE_DIR=/tmp/uv-cache uv run pytest -q` (pass)
+
+Outcome:
+- status: done
+- summary: `ph check-all` now matches legacy stdout + exit behavior and status artifacts; parity locked with deterministic tests.
+
+Next task:
+- V1P-0069
+
+Blockers (if blocked):
+- (none)
