@@ -42,7 +42,7 @@ jobs:
               raise SystemExit(f"pyproject.toml version {project_version!r} != tag {tag_version!r}")
           
           init_text = Path("src/ph/__init__.py").read_text("utf-8")
-          mm = re.search(r'__version__\\s*=\\s*"([^"]+)"', init_text)
+          mm = re.search(r'__version__\s*=\s*"([^"]+)"', init_text)
           if not mm:
               raise SystemExit("src/ph/__init__.py missing __version__")
           init_version = mm.group(1)
