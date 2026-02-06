@@ -90,8 +90,8 @@ def test_feature_archive_prints_pnpm_make_preamble_when_forced(tmp_path: Path) -
     expected_root = str(tmp_path.resolve())
     assert result.stdout.splitlines() == [
         "",
-        f"> project-handbook@0.0.0 make {expected_root}",
-        "> make -- feature-archive name\\=feat-dev force\\=true",
+        f"> project-handbook@0.0.0 ph {expected_root}",
+        "> ph feature archive --name feat-dev --force",
         "",
         "✅ Completeness check passed (all critical docs present and filled).",
         "📦 Moved feature 'feat-dev' to features/implemented/",

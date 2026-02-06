@@ -93,7 +93,7 @@ def test_sprint_burndown_stdout_matches_make_preamble_and_spacing(tmp_path: Path
     assert result.returncode == 0
 
     expected_prefix = (
-        f"\n> project-handbook@0.0.0 make {tmp_path.resolve()}\n> make -- burndown\n\n"
+        f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n> ph sprint burndown\n\n"
     )
     assert result.stdout.startswith(expected_prefix)
 
@@ -192,7 +192,7 @@ def test_sprint_capacity_stdout_matches_make_preamble_and_bounded_output(tmp_pat
     assert result.returncode == 0
 
     expected = (
-        f"\n> project-handbook@0.0.0 make {tmp_path.resolve()}\n> make -- sprint-capacity\n\n"
+        f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n> ph sprint capacity\n\n"
         "\n📊 SPRINT METRICS (BOUNDED)\n"
         + "=" * 80
         + "\n"

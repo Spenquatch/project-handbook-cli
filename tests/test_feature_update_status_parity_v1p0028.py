@@ -115,8 +115,8 @@ def test_feature_update_status_preamble_and_estimated_completion_strings(tmp_pat
 
     lines = result.stdout.splitlines()
     assert lines[0] == ""
-    assert lines[1].startswith("> project-handbook@0.0.0 make ")
-    assert lines[2] == "> make -- feature-update-status"
+    assert lines[1].startswith("> project-handbook@0.0.0 ph ")
+    assert lines[2] == "> ph feature update-status"
     assert lines[3] == ""
 
     status_complete = (tmp_path / "features" / "feat-complete" / "status.md").read_text(encoding="utf-8")

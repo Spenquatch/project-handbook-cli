@@ -136,7 +136,7 @@ def _resolve_task_dir(*, ctx: Context, task_id: str, sprint_dir: Path | None = N
             print(f"  - {sprint_dir.name} [{status_info}]: {task_dir}")
         if len(enriched) > 12:
             print(f"  - (+{len(enriched) - 12} more)")
-        print("Set an active sprint via `make sprint-open --sprint SPRINT-...`, then retry.")
+        print("Set an active sprint via `ph sprint open --sprint SPRINT-...`, then retry.")
         return None
 
     return matches[0]

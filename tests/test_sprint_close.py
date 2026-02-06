@@ -181,7 +181,7 @@ def test_sprint_close_stdout_archive_and_retrospective_match_make_convention(tmp
     progress_path = resolved_root / "releases" / "v0.6.0" / "progress.md"
 
     expected_stdout = (
-        f"\n> project-handbook@0.0.0 make {tmp_path.resolve()}\n> make -- sprint-close\n\n"
+        f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n> ph sprint close\n\n"
         "📊 Updated backlog index: 1 items\n"
         "📊 Updated parking lot index: 1 items\n"
         f"Created retrospective: {retro_path}\n"
@@ -192,8 +192,8 @@ def test_sprint_close_stdout_archive_and_retrospective_match_make_convention(tmp
         "Sprint closed! Next steps:\n"
         "  1. Share the new retrospective and velocity summary\n"
         "  2. Update roadmap/releases with completed scope\n"
-        "  3. Run 'make status' so status/current_summary.md reflects the close-out\n"
-        "  4. Kick off the next sprint via 'make sprint-plan' when ready\n"
+        "  3. Run 'ph status' so status/current_summary.md reflects the close-out\n"
+        "  4. Kick off the next sprint via 'ph sprint plan' when ready\n"
         "  5. Capture any loose ends inside parking lot or backlog\n"
     )
     assert res.stdout == expected_stdout

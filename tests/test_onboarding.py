@@ -68,7 +68,7 @@ def test_onboarding_session_list_sorts_topics(tmp_path: Path) -> None:
     expected += "".join(f"  - {topic}\n" for topic in expected_topics)
     expected += "Special topics:\n"
     expected += "  - continue-session (print the latest session summary)\n"
-    expected += "make[1]: Nothing to be done for `list'.\n"
+    expected += "ph: Nothing to be done for `list`.\n"
     assert result.stdout == expected
 
 
@@ -104,7 +104,7 @@ def test_onboarding_continue_session_renders_header_and_make_line(tmp_path: Path
     assert result.returncode == 0
     expected = "SESSION CONTINUITY SUMMARY\n==========================\n"
     expected += summary
-    expected += "\nmake[1]: Nothing to be done for `continue-session'.\n"
+    expected += "\nph: Nothing to be done for `continue-session`.\n"
     assert result.stdout == expected
 
 

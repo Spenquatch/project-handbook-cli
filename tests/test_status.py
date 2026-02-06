@@ -54,8 +54,8 @@ def test_status_writes_outputs_and_prints_expected_format(tmp_path: Path) -> Non
 
     expected_preamble = (
         "\n"
-        f"> project-handbook@0.0.0 make {tmp_path.resolve()}\n"
-        "> make -- status\n"
+        f"> project-handbook@0.0.0 ph {tmp_path.resolve()}\n"
+        "> ph status\n"
         "\n"
     )
     assert result.stdout.startswith(expected_preamble)

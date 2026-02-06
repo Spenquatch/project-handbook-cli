@@ -152,8 +152,8 @@ def test_task_show_project_scope_emits_pnpm_make_preamble_when_package_json_pres
     expected_prefix = "\n".join(
         [
             "",
-            f"> project-handbook@0.0.0 make {root_display}",
-            "> make -- task-show id\\=TASK-001",
+            f"> project-handbook@0.0.0 ph {root_display}",
+            "> ph task show --id TASK-001",
             "",
             "📋 TASK DETAILS: TASK-001",
         ]

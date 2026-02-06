@@ -84,8 +84,8 @@ def test_parking_list_stdout_matches_legacy_make_v1p0038(tmp_path: Path) -> None
 
     expected_root = tmp_path.resolve()
     expected = (
-        f"\n> project-handbook@0.0.0 make {expected_root}\n"
-        "> make -- parking-list\n\n"
+        f"\n> project-handbook@0.0.0 ph {expected_root}\n"
+        "> ph parking list\n\n"
         "\n📦 PARKING LOT ITEMS\n"
         + ("=" * 80)
         + "\n"
@@ -108,4 +108,3 @@ def test_parking_list_stdout_matches_legacy_make_v1p0038(tmp_path: Path) -> None
         "Last updated: 2099-01-01T09:00:00Z\n"
     )
     assert result.stdout == expected
-

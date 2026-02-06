@@ -142,7 +142,7 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
         "Lanes:\n"
         "- lane-a: 3/3 pts done (blocked 0)\n"
         "\n"
-        "Tip: use `make onboarding session task-execution` (alias: `implement`) for detailed hand-off guidance.\n"
+        "Tip: use `ph onboarding session task-execution` (alias: `implement`) for detailed hand-off guidance.\n"
     )
 
     release_status_out = (
@@ -166,8 +166,8 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
 
     expected_stdout = (
         "\n"
-        f"> project-handbook@0.0.0 make {resolved}\n"
-        f"> make -- pre-exec-audit sprint\\={sprint_id} date\\={date}\n"
+        f"> project-handbook@0.0.0 ph {resolved}\n"
+        f"> ph pre-exec audit --sprint {sprint_id} --date {date}\n"
         "\n"
         f"EVIDENCE_DIR={evidence_dir}\n"
         "\n"
@@ -206,7 +206,7 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
         f"- Review evidence bundle: {evidence_dir}\n"
         "- Update `project-handbook/sprints/current/plan.md` to confirm the audit gate passed (date + evidence path).\n"
         "- Start execution by claiming the first ready task (typically `TASK-001`) via "
-        "`pnpm -C project-handbook make -- task-status id=TASK-001 status=doing`.\n"
+        "`ph task status --id TASK-001 --status doing`.\n"
     )
     assert result.stdout == expected_stdout
 

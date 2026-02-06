@@ -141,7 +141,7 @@ def test_status_stdout_and_outputs_match_expected_shape(tmp_path: Path) -> None:
     assert result.returncode == 0
 
     resolved = tmp_path.resolve()
-    expected_preamble = f"\n> project-handbook@0.0.0 make {resolved}\n> make -- status\n\n"
+    expected_preamble = f"\n> project-handbook@0.0.0 ph {resolved}\n> ph status\n\n"
     assert result.stdout.startswith(expected_preamble)
 
     current_json = (tmp_path / "status" / "current.json").resolve()

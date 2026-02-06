@@ -115,8 +115,8 @@ def test_feature_status_project_scope_emits_pnpm_make_preamble_when_package_json
     expected_root = str(tmp_path.resolve())
     assert updated.stdout.splitlines() == [
         "",
-        f"> project-handbook@0.0.0 make {expected_root}",
-        "> make -- feature-status name\\=feat-a stage\\=developing",
+        f"> project-handbook@0.0.0 ph {expected_root}",
+        "> ph feature status --name feat-a --stage developing",
         "",
         "✅ Updated 'feat-a' stage to 'developing'",
     ]
@@ -153,8 +153,8 @@ def test_feature_status_not_found_emits_pnpm_make_preamble_when_package_json_pre
     expected_root = str(tmp_path.resolve())
     assert missing.stdout.splitlines() == [
         "",
-        f"> project-handbook@0.0.0 make {expected_root}",
-        "> make -- feature-status name\\=missing stage\\=developing",
+        f"> project-handbook@0.0.0 ph {expected_root}",
+        "> ph feature status --name missing --stage developing",
         "",
         "❌ Feature 'missing' not found",
     ]

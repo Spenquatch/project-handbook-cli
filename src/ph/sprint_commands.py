@@ -54,18 +54,18 @@ def sprint_plan(*, ph_root: Path, ctx: Context, sprint_id: str | None, force: bo
         print(f"  📁 {sprint_dir}/tasks/ (ready for task creation)")
         print("Next steps:")
         print("  1. Edit plan.md with goals, lanes, and integration tasks")
-        print("  2. Create tasks via `make task-create ...`")
+        print("  2. Create tasks via `ph task create ...`")
         print("  3. Review `status/current_summary.md` after generating status")
-        print("  4. Re-run `make onboarding session sprint-planning` for facilitation tips")
+        print("  4. Re-run `ph onboarding session sprint-planning` for facilitation tips")
 
         update_current_symlink(ph_data_root=ctx.ph_data_root, sprint_id=resolved_id)
 
         print("Sprint scaffold ready:")
         print("  1. Edit sprints/current/plan.md with goals, lanes, and integration tasks")
-        print("  2. Seed tasks via 'make task-create title=... feature=... decision=ADR-###'")
-        print("  3. Re-run 'make sprint-status' to confirm health + next-up ordering")
-        print("  4. Run 'make validate-quick' before handing off to another agent")
-        print("  5. Need facilitation tips? 'make onboarding session sprint-planning'")
+        print("  2. Seed tasks via 'ph task create --title ... --feature ... --decision ADR-###'")
+        print("  3. Re-run 'ph sprint status' to confirm health + next-up ordering")
+        print("  4. Run 'ph validate --quick' before handing off to another agent")
+        print("  5. Need facilitation tips? 'ph onboarding session sprint-planning'")
 
     return 0
 

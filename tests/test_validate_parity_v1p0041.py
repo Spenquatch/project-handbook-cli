@@ -36,8 +36,8 @@ def test_validate_stdout_and_report_match_make_validate(tmp_path: Path) -> None:
     resolved = tmp_path.resolve()
     expected_stdout = (
         "\n"
-        f"> project-handbook@0.0.0 make {resolved}\n"
-        "> make -- validate\n"
+        f"> project-handbook@0.0.0 ph {resolved}\n"
+        "> ph validate\n"
         "\n"
         f"validation: 0 error(s), 0 warning(s), report: {resolved}/status/validation.json\n"
     )
@@ -46,4 +46,3 @@ def test_validate_stdout_and_report_match_make_validate(tmp_path: Path) -> None:
     report = tmp_path / "status" / "validation.json"
     assert report.exists()
     assert report.read_text(encoding="utf-8") == '{\n  "issues": []\n}\n'
-

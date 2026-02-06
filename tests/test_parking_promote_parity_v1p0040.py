@@ -80,8 +80,8 @@ def test_parking_promote_stdout_matches_legacy_make_v1p0040(tmp_path: Path) -> N
 
     expected_root = tmp_path.resolve()
     expected = (
-        f"\n> project-handbook@0.0.0 make {expected_root}\n"
-        f"> make -- parking-promote item\\={expected_id} target\\=later\n\n"
+        f"\n> project-handbook@0.0.0 ph {expected_root}\n"
+        f"> ph parking promote --item {expected_id} --target later\n\n"
         f"✅ Promoted {expected_id} to roadmap/later/\n"
         "📊 Updated parking lot index: 0 items\n"
     )

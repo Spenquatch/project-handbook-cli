@@ -402,9 +402,8 @@ def run_sprint_status(*, ph_root: Path, ctx: Context, sprint: str | None) -> int
         for warn in dep_warnings:
             print(f"⚠️  {warn}")
 
-    tip_cmd = "make" if ctx.scope == "project" else "ph"
     tip = (
-        f"\nTip: use `{tip_cmd} onboarding session task-execution` (alias: `implement`) "
+        "\nTip: use `ph onboarding session task-execution` (alias: `implement`) "
         "for detailed hand-off guidance."
     )
     print(tip)

@@ -91,8 +91,8 @@ def test_backlog_assign_stdout_matches_legacy_make_preamble_and_next_steps_v1p00
 
     expected_root = tmp_path.resolve()
     expected = (
-        f"\n> project-handbook@0.0.0 make {expected_root}\n"
-        f"> make -- backlog-assign issue\\={issue_id} sprint\\=current\n\n"
+        f"\n> project-handbook@0.0.0 ph {expected_root}\n"
+        f"> ph backlog assign --issue {issue_id} --sprint current\n\n"
         "📊 Updated backlog index: 1 items\n\n"
         f"Assigning {issue_id} to sprint SPRINT-2099-01-01\n"
         "Severity: P2\n"
@@ -100,8 +100,8 @@ def test_backlog_assign_stdout_matches_legacy_make_preamble_and_next_steps_v1p00
         "📊 Updated backlog index: 1 items\n\n"
         f"✅ Recorded assignment: {issue_id} → SPRINT-2099-01-01\n"
         "Next steps:\n"
-        "1. Create/assign the actual sprint task via 'make task-create ...' (feature + decision required; "
-        "discovery tasks may use session=research-discovery decision=DR-XXXX).\n"
+        "1. Create/assign the actual sprint task via 'ph task create ...' (feature + decision required; "
+        "discovery tasks may use --session research-discovery --decision DR-XXXX).\n"
         "2. If needed, update the sprint plan lanes/integration tasks to reflect the new work.\n"
     )
     assert result.stdout == expected

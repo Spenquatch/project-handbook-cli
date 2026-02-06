@@ -925,7 +925,7 @@ def render_summary(
         lines.append("- (No command or message events recorded)")
     lines.append("")
 
-    lines.append("## Recent Make Commands")
+    lines.append("## Recent CLI Commands")
     if history_entries:
         for timestamp, command in history_entries:
             lines.append(f"- {timestamp.strftime('%Y-%m-%d %H:%M:%S')} | {command}")
@@ -952,7 +952,7 @@ def render_summary(
             lines.append(f"- {snippet}")
     else:
         lines.append("- Review `status/current_summary.md` and backlog updates.")
-        lines.append("- Re-run `make onboarding session continue-session` before resuming work.")
+        lines.append("- Re-run `ph onboarding session continue-session` before resuming work.")
 
     lines.append("")
     lines.append("> Generated automatically from Codex logs, command history, and sprint status.")

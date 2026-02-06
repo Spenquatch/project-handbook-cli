@@ -60,14 +60,14 @@ def test_parking_add_stdout_matches_legacy_make_v1p0037(tmp_path: Path) -> None:
     expected_root = tmp_path.resolve()
     expected_id = "DEBT-20990101-parity-parking-item"
     expected = (
-        f"\n> project-handbook@0.0.0 make {expected_root}\n"
-        "> make -- parking-add type\\=technical-debt 'title=Parity parking item' 'desc=Created for V1P-0037'\n\n"
+        f"\n> project-handbook@0.0.0 ph {expected_root}\n"
+        "> ph parking add --type technical-debt --title 'Parity parking item' --desc 'Created for V1P-0037'\n\n"
         f"✅ Created parking lot item: {expected_id}\n"
         f"   Location: parking-lot/technical-debt/{expected_id}\n"
         "📊 Updated parking lot index: 1 items\n"
-        "Parking lot updated → review via 'make parking-list' or 'make parking-review'\n"
+        "Parking lot updated → review via 'ph parking list' or 'ph parking review'\n"
         "  - Capture owner/priority inside parking-lot/technical-debt/ entries if missing\n"
-        "  - Promote items with 'make parking-promote' once they graduate to roadmap\n"
+        "  - Promote items with 'ph parking promote' once they graduate to roadmap\n"
     )
     assert result.stdout == expected
 
@@ -78,4 +78,3 @@ def test_parking_add_stdout_matches_legacy_make_v1p0037(tmp_path: Path) -> None:
     index = json.loads(index_path.read_text(encoding="utf-8"))
     assert expected_id in index["by_category"]["technical-debt"]
     assert any(item.get("id") == expected_id for item in index["items"])
-

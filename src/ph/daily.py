@@ -162,7 +162,7 @@ def generate_daily_template(*, ph_root: Path, ph_data_root: Path, date: dt.date,
 
     paths = daily_paths_for_date(ph_data_root=ph_data_root, date=date)
     sprint_plan = ph_data_root / "sprints" / "current.md"
-    # Legacy `make daily` computes the link as if it were relative to the year directory
+    # Legacy daily computes the link as if it were relative to the year directory
     # (status/daily/YYYY), even though the file is written under status/daily/YYYY/MM.
     sprint_plan_rel = relative_markdown_link(from_dir=paths.status_file.parent.parent, target=sprint_plan)
 

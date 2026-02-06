@@ -67,7 +67,7 @@ _RUBRIC = (
     "  • P1 issues are addressed in the next sprint\n"
     "  • P2-P3 issues queue in the backlog\n"
     "  • P4 issues are candidates for the parking lot\n"
-    "  • Use 'make backlog-triage' for P0 decision support\n"
+    "  • Use 'ph backlog triage' for P0 decision support\n"
 )
 
 
@@ -106,7 +106,7 @@ def test_backlog_rubric_stdout_matches_legacy_v1p0035(tmp_path: Path, scope: str
     else:
         expected_root = tmp_path.resolve()
         expected = (
-            f"\n> project-handbook@0.0.0 make {expected_root}\n> make -- backlog-rubric\n\n" + _RUBRIC
+            f"\n> project-handbook@0.0.0 ph {expected_root}\n> ph backlog rubric\n\n" + _RUBRIC
         )
 
     cmd += ["--no-post-hook", "backlog", "rubric"]

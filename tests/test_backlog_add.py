@@ -109,20 +109,19 @@ def test_backlog_add_creates_issue_updates_index_and_prints_hint_block(tmp_path:
 
     hint_lines = [
         "Backlog entry created.",
-        "  - Run 'make backlog-triage issue=<ID>' for P0 analysis",
-        "  - Assign it into a sprint via 'make backlog-assign issue=<ID> sprint=current'",
-        "  - Re-run 'make validate-quick' if files were edited manually",
+        "  - Run 'ph backlog triage --issue <ID>' for P0 analysis",
+        "  - Assign it into a sprint via 'ph backlog assign --issue <ID> --sprint current'",
+        "  - Re-run 'ph validate --quick' if files were edited manually",
     ]
     if scope == "project":
         expected_root = str(tmp_path.resolve())
         expected_make_line = (
-            "> make -- backlog-add type\\=bug 'title=Parity backlog issue' "
-            "severity\\=P2 'desc=Created for V1P-0031'"
+            "> ph backlog add --type bugs --title 'Parity backlog issue' --severity P2 --desc 'Created for V1P-0031'"
         )
         expected_stdout = "\n".join(
             [
                 "",
-                f"> project-handbook@0.0.0 make {expected_root}",
+                f"> project-handbook@0.0.0 ph {expected_root}",
                 expected_make_line,
                 "",
                 f"✅ Created backlog issue: {expected_id}",

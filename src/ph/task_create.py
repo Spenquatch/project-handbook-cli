@@ -452,13 +452,13 @@ cd sprints/current/tasks/{task_dir_name}/
 ## Validation Commands
 ```bash
 # Run validation
-make validate
+ph validate
 
 # Check sprint status
-make sprint-status
+ph sprint status
 
 # Update daily status
-make daily
+ph daily generate
 ```
 
 ## Implementation Commands
@@ -586,15 +586,15 @@ links: []
 - [ ] Keep this checklist updated as milestones are completed
 
 ## Before Review
-- [ ] Run `make validate-quick`
+- [ ] Run `ph validate --quick`
 - [ ] Update daily status with progress/blockers
 - [ ] Gather artifacts (screenshots, logs, PR links)
-- [ ] Set status to `review` via `make task-status`
+- [ ] Set status to `review` via `ph task status --id {task_id} --status review`
 
 ## After Completion
 - [ ] Peer review approved and merged
 - [ ] Update owning feature docs/changelog if needed
-- [ ] Move status to `done` with `make task-status`
+- [ ] Move status to `done` with `ph task status --id {task_id} --status done`
 - [ ] Capture learnings for the sprint retrospective
 """
     else:
@@ -652,8 +652,8 @@ links: []
 
 ## Automated Validation
 ```bash
-pnpm -C project-handbook make -- validate
-pnpm -C project-handbook make -- sprint-status
+ph validate
+ph sprint status
 ```
 
 ## Manual Validation (Must Be Task-Specific)
@@ -748,7 +748,7 @@ Before the task is marked `review`, add:
     print(f"   2. Update {task_dir}/commands.md with specific commands")
     print(f"   3. Review checklist/logistics in {task_dir}/checklist.md")
     if ctx.scope == "project":
-        print("   4. Run 'make validate-quick' before pushing changes")
+        print("   4. Run 'ph validate --quick' before pushing changes")
     else:
         print(f"   4. Run '{ph_cmd} validate --quick' before pushing changes")
     print("   5. Set status to 'doing' when starting work")
@@ -765,6 +765,6 @@ Before the task is marked `review`, add:
         print("Next steps:")
         print("  - Open sprints/current/tasks/ for the new directory, update steps.md + commands.md")
         print("  - Set status to 'doing' when work starts and log progress in checklist.md")
-        print("  - Run 'make validate-quick' once initial scaffolding is filled in")
+        print("  - Run 'ph validate --quick' once initial scaffolding is filled in")
 
     return 0

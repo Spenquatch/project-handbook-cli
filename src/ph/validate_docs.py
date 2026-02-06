@@ -449,7 +449,8 @@ def validate_system_scope_artifacts_in_project_scope(
                     "severity": "error",
                     "message": (
                         f"System-scope feature MUST NOT exist in project scope: {name}. "
-                        f"Move to `{internal_system_root}` or recreate via `make hb-feature-create name={name}`."
+                        f"Move to `{internal_system_root}` or recreate via "
+                        f"`ph --scope system feature create --name {name}`."
                     ),
                 }
             )
@@ -476,13 +477,13 @@ def validate_system_scope_artifacts_in_project_scope(
                     {
                         "path": str(task_yaml),
                         "code": "system_scope_lane_in_project",
-                        "severity": "error",
-                        "message": (
-                            f"System-scope task lane MUST NOT exist in project scope: lane={lane_value}. "
-                            f"Move to `{internal_system_root}` or recreate via `make hb-task-create ...`."
-                        ),
-                    }
-                )
+                    "severity": "error",
+                    "message": (
+                        f"System-scope task lane MUST NOT exist in project scope: lane={lane_value}. "
+                        f"Move to `{internal_system_root}` or recreate via `ph --scope system task create ...`."
+                    ),
+                }
+            )
 
     adr_dir = root / "adr"
     if adr_dir.exists():
@@ -494,14 +495,14 @@ def validate_system_scope_artifacts_in_project_scope(
                     {
                         "path": str(md),
                         "code": "system_scope_adr_in_project",
-                        "severity": "error",
-                        "message": (
-                            "System-scope ADR MUST NOT exist in project scope. "
-                            f"Move to `{internal_system_root}/adr/` and keep related work in system scope via "
-                            "`hb-*` commands."
-                        ),
-                    }
-                )
+                    "severity": "error",
+                    "message": (
+                        "System-scope ADR MUST NOT exist in project scope. "
+                        f"Move to `{internal_system_root}/adr/` and keep related work in system scope via "
+                        "`ph --scope system ...` commands."
+                    ),
+                }
+            )
 
 
 def normalize_roadmap_links(*, rules: dict, root: Path, scope: str, quick: bool) -> int:

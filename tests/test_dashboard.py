@@ -122,7 +122,7 @@ def test_dashboard_prints_pnpm_make_preamble_when_package_json_present(tmp_path:
     lines = result.stdout.splitlines()
     assert lines[:4] == [
         "",
-        f"> project-handbook@0.0.0 make {tmp_path.resolve()}",
-        "> make -- dashboard",
+        f"> project-handbook@0.0.0 ph {tmp_path.resolve()}",
+        "> ph dashboard",
         "",
     ]

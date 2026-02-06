@@ -97,5 +97,5 @@ def test_backlog_stats_prints_make_preamble_when_package_json_present(tmp_path: 
 
     expected_cwd = str(tmp_path.resolve())
     assert stats.stdout.startswith(
-        f"\n> project-handbook@0.0.0 make {expected_cwd}\n> make -- backlog-stats\n\n"
+        f"\n> project-handbook@0.0.0 ph {expected_cwd}\n> ph backlog stats\n\n"
     )

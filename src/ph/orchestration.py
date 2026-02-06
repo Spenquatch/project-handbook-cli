@@ -137,8 +137,8 @@ def run_check_all(*, ph_root: Path, ctx: Context, env: dict[str, str], runner: C
         if current_json.exists():
             print(f"Generated: {current_json.resolve()}")
         traceback.print_exc()
-        print("make[1]: *** [status] Error 1", file=sys.stderr)
-        print("make: *** [__ph_dispatch] Error 2", file=sys.stderr)
+        print("ph: *** [status] Error 1", file=sys.stderr)
+        print("ph: *** [__ph_dispatch] Error 2", file=sys.stderr)
         print("\u2009ELIFECYCLE\u2009 Command failed with exit code 2.")
         if (ph_root / "package.json").exists() and not (ph_root / "node_modules").exists():
             print("\u2009WARN\u2009  Local package.json exists, but node_modules missing, did you mean to install?")
@@ -153,9 +153,9 @@ def run_test_system(*, ph_root: Path, ctx: Context, env: dict[str, str], runner:
         print("test system is project-scope only. Use: ph --scope project test system")
         return 1
 
-    def _print_make_failure() -> None:
-        print("make[1]: *** [test-system] Error 1", file=sys.stderr)
-        print("make: *** [__ph_dispatch] Error 2", file=sys.stderr)
+    def _print_ph_failure() -> None:
+        print("ph: *** [test system] Error 1", file=sys.stderr)
+        print("ph: *** [__ph_dispatch] Error 2", file=sys.stderr)
         print("\u2009ELIFECYCLE\u2009 Command failed with exit code 2.")
         if (ph_root / "package.json").exists() and not (ph_root / "node_modules").exists():
             print("\u2009WARN\u2009  Local package.json exists, but node_modules missing, did you mean to install?")
@@ -176,10 +176,10 @@ def run_test_system(*, ph_root: Path, ctx: Context, env: dict[str, str], runner:
         if current_json.exists():
             print(f"Generated: {current_json.resolve()}")
         traceback.print_exc()
-        _print_make_failure()
+        _print_ph_failure()
         return 2
     if exit_code != 0:
-        _print_make_failure()
+        _print_ph_failure()
         return 2
     print()
 
@@ -192,21 +192,21 @@ def run_test_system(*, ph_root: Path, ctx: Context, env: dict[str, str], runner:
     print("Testing sprint status...")
     exit_code = runner.run(["sprint", "status"], no_post_hook=True)
     if exit_code != 0:
-        _print_make_failure()
+        _print_ph_failure()
         return 2
     print()
 
     print("Testing feature management...")
     exit_code = runner.run(["feature", "list"], no_post_hook=True)
     if exit_code != 0:
-        _print_make_failure()
+        _print_ph_failure()
         return 2
     print()
 
     print("Testing roadmap...")
     exit_code = runner.run(["roadmap", "show"], no_post_hook=True)
     if exit_code != 0:
-        _print_make_failure()
+        _print_ph_failure()
         return 2
     print()
 

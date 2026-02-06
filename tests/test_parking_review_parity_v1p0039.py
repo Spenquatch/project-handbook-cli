@@ -75,8 +75,8 @@ def test_parking_review_stdout_matches_legacy_make_v1p0039(tmp_path: Path) -> No
 
     expected_root = tmp_path.resolve()
     expected = (
-        f"\n> project-handbook@0.0.0 make {expected_root}\n"
-        "> make -- parking-review\n\n"
+        f"\n> project-handbook@0.0.0 ph {expected_root}\n"
+        "> ph parking review\n\n"
         "\n🔍 PARKING LOT QUARTERLY REVIEW\n"
         + ("=" * 80)
         + "\n"
@@ -97,4 +97,3 @@ def test_parking_review_stdout_matches_legacy_make_v1p0039(tmp_path: Path) -> No
         "\u2009ELIFECYCLE\u2009 Command failed with exit code 2.\n"
     )
     assert result.stdout == expected
-

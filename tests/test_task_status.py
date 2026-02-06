@@ -257,8 +257,8 @@ def test_task_status_project_scope_emits_pnpm_make_preamble_when_package_json_pr
     expected_prefix = "\n".join(
         [
             "",
-            f"> project-handbook@0.0.0 make {root_display}",
-            "> make -- task-status id\\=TASK-001 status\\=doing",
+            f"> project-handbook@0.0.0 ph {root_display}",
+            "> ph task status --id TASK-001 --status doing",
             "",
             "✅ Updated TASK-001 status: doing",
         ]
@@ -274,8 +274,8 @@ def test_task_status_project_scope_emits_pnpm_make_preamble_when_package_json_pr
     expected_force_prefix = "\n".join(
         [
             "",
-            f"> project-handbook@0.0.0 make {root_display}",
-            "> make -- task-status id\\=TASK-001 status\\=doing force\\=true",
+            f"> project-handbook@0.0.0 ph {root_display}",
+            "> ph task status --id TASK-001 --status doing --force",
             "",
             "✅ Updated TASK-001 status: doing",
         ]

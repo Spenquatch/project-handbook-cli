@@ -132,11 +132,10 @@ def test_pre_exec_lint_stdout_matches_make_pre_exec_lint_preamble(tmp_path: Path
     resolved = tmp_path.resolve()
     expected_stdout = (
         "\n"
-        f"> project-handbook@0.0.0 make {resolved}\n"
-        "> make -- pre-exec-lint\n"
+        f"> project-handbook@0.0.0 ph {resolved}\n"
+        "> ph pre-exec lint\n"
         "\n"
         "\n"
         "PRE-EXEC LINT PASSED\n"
     )
     assert result.stdout == expected_stdout
-

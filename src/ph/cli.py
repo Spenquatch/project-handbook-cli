@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shlex
 import sys
 from pathlib import Path
 
@@ -72,7 +73,7 @@ from .task_view import run_task_list, run_task_show
 from .validate_docs import run_validate
 
 
-def _format_pnpm_make_preamble(*, ph_root: Path, make_args: list[str]) -> str:
+def _format_cli_preamble(*, ph_root: Path, cmd_args: list[str]) -> str:
     reporter = (
         os.environ.get("npm_config_reporter")
         or os.environ.get("NPM_CONFIG_REPORTER")
@@ -98,8 +99,8 @@ def _format_pnpm_make_preamble(*, ph_root: Path, make_args: list[str]) -> str:
         return ""
 
     cwd = str(ph_root.resolve())
-    args = " ".join(make_args)
-    return f"\n> {name}@{version} make {cwd}\n> make -- {args}\n\n"
+    args = shlex.join([str(token) for token in cmd_args if str(token)])
+    return f"\n> {name}@{version} ph {cwd}\n> ph {args}\n\n"
 
 
 
@@ -570,10 +571,10 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"Unknown help topic: {args.topic}\n", file=sys.stderr, end="")
                     exit_code = 2
                 else:
-                    make_args = ["help"]
+                    cmd_args = ["help"]
                     if topic:
-                        make_args.append(topic)
-                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
+                        cmd_args.append(topic)
+                    sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     sys.stdout.write(text)
             elif args.command == "onboarding":
                 if args.onboarding_command is None:
@@ -584,14 +585,14 @@ def main(argv: list[str] | None = None) -> int:
                     if session_topic == "list":
                         topics = list_session_topics(ph_root=ph_root)
                         print(SessionList(topics=topics).render(), end="")
-                        print("make[1]: Nothing to be done for `list'.")
+                        print("ph: Nothing to be done for `list`.")
                         exit_code = 0
                     elif session_topic == "continue-session":
                         summary = read_latest_session_summary(ph_root=ph_root)
                         header = "SESSION CONTINUITY SUMMARY"
                         underline = "=" * len(header)
                         sys.stdout.write(f"{header}\n{underline}\n{summary}\n")
-                        sys.stdout.write("make[1]: Nothing to be done for `continue-session'.\n")
+                        sys.stdout.write("ph: Nothing to be done for `continue-session`.\n")
                         exit_code = 0
                     else:
                         sys.stdout.write(render_session_template(ph_root=ph_root, topic=session_topic))
@@ -599,7 +600,7 @@ def main(argv: list[str] | None = None) -> int:
             elif args.command == "hooks":
                 if args.hooks_command == "install":
                     if ctx.scope == "project":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["install-hooks"]))
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["hooks", "install"]))
                     install_git_hooks(ph_root=ph_root)
                     sys.stdout.write("Git hooks installed!\n")
                     exit_code = 0
@@ -665,14 +666,14 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = 0
             elif args.command == "clean":
                 if ctx.scope == "project":
-                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["clean"]))
+                    sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["clean"]))
                     sys.stdout.flush()
                 clean_python_caches(ph_root=ph_root)
                 print("Cleaned Python cache files\n", end="")
                 exit_code = 0
             elif args.command == "status":
                 if ctx.scope == "project":
-                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["status"]))
+                    sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["status"]))
                     sys.stdout.flush()
 
                 status_result = run_status(ph_root=ph_root, ph_data_root=ctx.ph_data_root, env=os.environ)
@@ -692,12 +693,12 @@ def main(argv: list[str] | None = None) -> int:
                     print(status_result.feature_update_message)
             elif args.command == "dashboard":
                 if ctx.scope == "project":
-                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["dashboard"]))
+                    sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["dashboard"]))
                     sys.stdout.flush()
                 exit_code = run_dashboard(ph_root=ph_root, ctx=ctx)
             elif args.command == "check-all":
                 if ctx.scope == "project":
-                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["check-all"]))
+                    sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["check-all"]))
                     sys.stdout.flush()
                 exit_code = run_check_all(ph_root=ph_root, ctx=ctx, env=os.environ)
             elif args.command == "test":
@@ -706,7 +707,7 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = 2
                 elif args.test_command == "system":
                     if ctx.scope == "project":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["test-system"]))
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["test", "system"]))
                         sys.stdout.flush()
                     exit_code = run_test_system(ph_root=ph_root, ctx=ctx, env=os.environ)
                 else:
@@ -722,7 +723,13 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = 2
                 elif args.sprint_command == "plan":
                     if ctx.scope == "project":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["sprint-plan"]))
+                        cmd_args = ["sprint", "plan"]
+                        sprint_id = getattr(args, "sprint", None)
+                        if sprint_id:
+                            cmd_args.extend(["--sprint", str(sprint_id)])
+                        if bool(getattr(args, "force", False)):
+                            cmd_args.append("--force")
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     exit_code = sprint_plan(
                         ph_root=ph_root,
                         ctx=ctx,
@@ -734,23 +741,35 @@ def main(argv: list[str] | None = None) -> int:
                     sprint_id = str(args.sprint)
                     if ctx.scope == "project":
                         sys.stdout.write(
-                            _format_pnpm_make_preamble(
+                            _format_cli_preamble(
                                 ph_root=ph_root,
-                                make_args=["sprint-open", f"sprint\\={sprint_id}"],
+                                cmd_args=["sprint", "open", "--sprint", sprint_id],
                             )
                         )
                     exit_code = sprint_open(ph_root=ph_root, ctx=ctx, sprint_id=sprint_id)
                 elif args.sprint_command == "status":
                     if ctx.scope == "project":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["sprint-status"]))
+                        cmd_args = ["sprint", "status"]
+                        sprint_id = getattr(args, "sprint", None)
+                        if sprint_id:
+                            cmd_args.extend(["--sprint", str(sprint_id)])
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     exit_code = run_sprint_status(ph_root=ph_root, ctx=ctx, sprint=getattr(args, "sprint", None))
                 elif args.sprint_command == "tasks":
                     if ctx.scope == "project":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["sprint-tasks"]))
+                        cmd_args = ["sprint", "tasks"]
+                        sprint_id = getattr(args, "sprint", None)
+                        if sprint_id:
+                            cmd_args.extend(["--sprint", str(sprint_id)])
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     exit_code = run_sprint_tasks(ctx=ctx, sprint=getattr(args, "sprint", None))
                 elif args.sprint_command == "burndown":
                     if ctx.scope == "project":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["burndown"]))
+                        cmd_args = ["sprint", "burndown"]
+                        sprint_id = getattr(args, "sprint", None)
+                        if sprint_id:
+                            cmd_args.extend(["--sprint", str(sprint_id)])
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     exit_code = run_sprint_burndown(
                         ph_root=ph_root,
                         ctx=ctx,
@@ -759,9 +778,11 @@ def main(argv: list[str] | None = None) -> int:
                     )
                 elif args.sprint_command == "capacity":
                     if ctx.scope == "project":
-                        sys.stdout.write(
-                            _format_pnpm_make_preamble(ph_root=ph_root, make_args=["sprint-capacity"])
-                        )
+                        cmd_args = ["sprint", "capacity"]
+                        sprint_id = getattr(args, "sprint", None)
+                        if sprint_id:
+                            cmd_args.extend(["--sprint", str(sprint_id)])
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     exit_code = run_sprint_capacity(
                         ph_root=ph_root,
                         ctx=ctx,
@@ -770,11 +791,11 @@ def main(argv: list[str] | None = None) -> int:
                     )
                 elif args.sprint_command == "archive":
                     if ctx.scope == "project":
-                        make_args = ["sprint-archive"]
-                        sprint_arg = getattr(args, "sprint", None)
-                        if sprint_arg is not None:
-                            make_args.append(f"sprint\\={sprint_arg}")
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
+                        cmd_args = ["sprint", "archive"]
+                        sprint_id = getattr(args, "sprint", None)
+                        if sprint_id:
+                            cmd_args.extend(["--sprint", str(sprint_id)])
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     exit_code = run_sprint_archive(
                         ph_root=ph_root,
                         ctx=ctx,
@@ -783,7 +804,11 @@ def main(argv: list[str] | None = None) -> int:
                     )
                 elif args.sprint_command == "close":
                     if ctx.scope == "project":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["sprint-close"]))
+                        cmd_args = ["sprint", "close"]
+                        sprint_id = getattr(args, "sprint", None)
+                        if sprint_id:
+                            cmd_args.extend(["--sprint", str(sprint_id)])
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     exit_code = run_sprint_close(
                         ph_root=ph_root,
                         ctx=ctx,
@@ -803,34 +828,32 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = 2
                 elif args.task_command == "create":
                     if ctx.scope == "project":
-                        def _make_var_token(key: str, value: str) -> str:
-                            raw = f"{key}={value}"
-                            if any(ch.isspace() for ch in raw):
-                                return f"'{raw}'"
-                            return raw.replace("=", "\\=", 1)
-
-                        make_args = [
-                            "task-create",
-                            _make_var_token("title", str(args.title)),
-                            _make_var_token("feature", str(args.feature)),
-                            _make_var_token("decision", str(args.decision)),
+                        cmd_args = [
+                            "task",
+                            "create",
+                            "--title",
+                            str(args.title),
+                            "--feature",
+                            str(args.feature),
+                            "--decision",
+                            str(args.decision),
                         ]
                         if "--points" in invocation_args and getattr(args, "points", None) is not None:
-                            make_args.append(_make_var_token("points", str(args.points)))
+                            cmd_args.extend(["--points", str(args.points)])
                         if "--owner" in invocation_args:
-                            make_args.append(_make_var_token("owner", str(args.owner)))
+                            cmd_args.extend(["--owner", str(args.owner)])
                         if "--prio" in invocation_args:
-                            make_args.append(_make_var_token("prio", str(args.prio)))
+                            cmd_args.extend(["--prio", str(args.prio)])
                         if "--lane" in invocation_args and getattr(args, "lane", None) is not None:
-                            make_args.append(_make_var_token("lane", str(args.lane)))
+                            cmd_args.extend(["--lane", str(args.lane)])
                         if "--session" in invocation_args:
-                            make_args.append(_make_var_token("session", str(args.session)))
+                            cmd_args.extend(["--session", str(args.session)])
                         if "--release" in invocation_args and getattr(args, "release", None) is not None:
-                            make_args.append(_make_var_token("release", str(args.release)))
+                            cmd_args.extend(["--release", str(args.release)])
                         if "--gate" in invocation_args and bool(getattr(args, "gate", False)):
-                            make_args.append(_make_var_token("gate", "true"))
+                            cmd_args.append("--gate")
 
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
 
                     exit_code = run_task_create(
                         ph_root=ph_root,
@@ -849,28 +872,31 @@ def main(argv: list[str] | None = None) -> int:
                     )
                 elif args.task_command == "list":
                     if ctx.scope == "project":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["task-list"]))
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["task", "list"]))
                     exit_code = run_task_list(ctx=ctx)
                 elif args.task_command == "show":
                     if ctx.scope == "project":
                         sys.stdout.write(
-                            _format_pnpm_make_preamble(
+                            _format_cli_preamble(
                                 ph_root=ph_root,
-                                make_args=["task-show", f"id\\={args.id}"],
+                                cmd_args=["task", "show", "--id", str(args.id)],
                             )
                         )
                     exit_code = run_task_show(ctx=ctx, task_id=str(args.id))
                 elif args.task_command == "status":
                     if ctx.scope == "project":
-                        make_args = [
-                            "task-status",
-                            f"id\\={args.id}",
-                            f"status\\={args.status}",
+                        cmd_args = [
+                            "task",
+                            "status",
+                            "--id",
+                            str(args.id),
+                            "--status",
+                            str(args.status),
                         ]
                         if "--force" in invocation_args and bool(getattr(args, "force", False)):
-                            make_args.append("force\\=true")
+                            cmd_args.append("--force")
 
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
 
                     exit_code = run_task_status(
                         ctx=ctx,
@@ -891,21 +917,14 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = 2
                 elif args.feature_command == "create":
                     if ctx.scope == "project":
-                        def _make_var_token(key: str, value: str) -> str:
-                            raw = f"{key}={value}"
-                            if any(ch.isspace() for ch in raw):
-                                return f"'{raw}'"
-                            return raw.replace("=", "\\=", 1)
-
-                        sys.stdout.write(
-                            _format_pnpm_make_preamble(
-                                ph_root=ph_root,
-                                make_args=[
-                                    "feature-create",
-                                    _make_var_token("name", str(args.name)),
-                                ],
-                            )
-                        )
+                        cmd_args = ["feature", "create", "--name", str(args.name)]
+                        if "--epic" in invocation_args and bool(getattr(args, "epic", False)):
+                            cmd_args.append("--epic")
+                        if "--owner" in invocation_args:
+                            cmd_args.extend(["--owner", str(args.owner)])
+                        if "--stage" in invocation_args:
+                            cmd_args.extend(["--stage", str(args.stage)])
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     exit_code = run_feature_create(
                         ph_root=ph_root,
                         ctx=ctx,
@@ -916,23 +935,15 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 elif args.feature_command == "list":
+                    if ctx.scope == "project":
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["feature", "list"]))
                     exit_code = run_feature_list(ctx=ctx)
                 elif args.feature_command == "status":
                     if ctx.scope == "project":
-                        def _make_var_token(key: str, value: str) -> str:
-                            raw = f"{key}={value}"
-                            if any(ch.isspace() for ch in raw):
-                                return f"'{raw}'"
-                            return raw.replace("=", "\\=", 1)
-
                         sys.stdout.write(
-                            _format_pnpm_make_preamble(
+                            _format_cli_preamble(
                                 ph_root=ph_root,
-                                make_args=[
-                                    "feature-status",
-                                    _make_var_token("name", str(args.name)),
-                                    _make_var_token("stage", str(args.stage)),
-                                ],
+                                cmd_args=["feature", "status", "--name", str(args.name), "--stage", str(args.stage)],
                             )
                         )
                     exit_code = run_feature_status(
@@ -943,26 +954,18 @@ def main(argv: list[str] | None = None) -> int:
                     )
                 elif args.feature_command == "update-status":
                     if ctx.scope == "project":
-                        sys.stdout.write(
-                            _format_pnpm_make_preamble(ph_root=ph_root, make_args=["feature-update-status"])
-                        )
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["feature", "update-status"]))
                     exit_code = run_feature_update_status(ctx=ctx, env=os.environ)
                 elif args.feature_command == "summary":
                     if ctx.scope == "project":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["feature-summary"]))
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["feature", "summary"]))
                     exit_code = run_feature_summary(ctx=ctx, env=os.environ)
                 elif args.feature_command == "archive":
                     if ctx.scope == "project":
-                        def _make_var_token(key: str, value: str) -> str:
-                            raw = f"{key}={value}"
-                            if any(ch.isspace() for ch in raw):
-                                return f"'{raw}'"
-                            return raw.replace("=", "\\=", 1)
-
-                        make_args = ["feature-archive", _make_var_token("name", str(args.name))]
+                        cmd_args = ["feature", "archive", "--name", str(args.name)]
                         if bool(getattr(args, "force", False)):
-                            make_args.append(_make_var_token("force", "true"))
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
+                            cmd_args.append("--force")
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     exit_code = run_feature_archive(
                         ctx=ctx,
                         name=str(args.name),
@@ -980,6 +983,26 @@ def main(argv: list[str] | None = None) -> int:
                     print("Usage: ph backlog <add|list|triage|assign|rubric|stats>\n", file=sys.stderr, end="")
                     exit_code = 2
                 elif args.backlog_command == "add":
+                    if ctx.scope == "project":
+                        cmd_args = [
+                            "backlog",
+                            "add",
+                            "--type",
+                            str(args.issue_type),
+                            "--title",
+                            str(args.title),
+                            "--severity",
+                            str(args.severity),
+                        ]
+                        if "--desc" in invocation_args and str(getattr(args, "desc", "") or "") != "":
+                            cmd_args.extend(["--desc", str(args.desc)])
+                        if "--owner" in invocation_args and str(getattr(args, "owner", "") or "") != "":
+                            cmd_args.extend(["--owner", str(args.owner)])
+                        if "--impact" in invocation_args and str(getattr(args, "impact", "") or "") != "":
+                            cmd_args.extend(["--impact", str(args.impact)])
+                        if "--workaround" in invocation_args and str(getattr(args, "workaround", "") or "") != "":
+                            cmd_args.extend(["--workaround", str(args.workaround)])
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     exit_code = run_backlog_add(
                         ctx=ctx,
                         issue_type=str(args.issue_type),
@@ -993,7 +1016,12 @@ def main(argv: list[str] | None = None) -> int:
                     )
                 elif args.backlog_command == "list":
                     if ctx.scope == "project" and str(args.format) != "json":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["backlog-list"]))
+                        cmd_args = ["backlog", "list"]
+                        if "--severity" in invocation_args and getattr(args, "severity", None) is not None:
+                            cmd_args.extend(["--severity", str(args.severity)])
+                        if "--category" in invocation_args and getattr(args, "category", None) is not None:
+                            cmd_args.extend(["--category", str(args.category)])
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     exit_code = run_backlog_list(
                         ctx=ctx,
                         severity=getattr(args, "severity", None),
@@ -1005,9 +1033,9 @@ def main(argv: list[str] | None = None) -> int:
                     issue_id = str(args.issue_id)
                     if ctx.scope == "project":
                         sys.stdout.write(
-                            _format_pnpm_make_preamble(
+                            _format_cli_preamble(
                                 ph_root=ph_root,
-                                make_args=["backlog-triage", f"issue\\={issue_id}"],
+                                cmd_args=["backlog", "triage", "--issue", issue_id],
                             )
                         )
                     exit_code = run_backlog_triage(
@@ -1021,13 +1049,9 @@ def main(argv: list[str] | None = None) -> int:
                     sprint = str(getattr(args, "sprint", "current") or "current")
                     if ctx.scope == "project":
                         sys.stdout.write(
-                            _format_pnpm_make_preamble(
+                            _format_cli_preamble(
                                 ph_root=ph_root,
-                                make_args=[
-                                    "backlog-assign",
-                                    f"issue\\={issue_id}",
-                                    f"sprint\\={sprint}",
-                                ],
+                                cmd_args=["backlog", "assign", "--issue", issue_id, "--sprint", sprint],
                             )
                         )
                     exit_code = run_backlog_assign(
@@ -1039,12 +1063,12 @@ def main(argv: list[str] | None = None) -> int:
                 elif args.backlog_command == "rubric":
                     if ctx.scope == "project":
                         sys.stdout.write(
-                            _format_pnpm_make_preamble(ph_root=ph_root, make_args=["backlog-rubric"])
+                            _format_cli_preamble(ph_root=ph_root, cmd_args=["backlog", "rubric"])
                         )
                     exit_code = run_backlog_rubric(ctx=ctx, env=os.environ)
                 elif args.backlog_command == "stats":
                     if ctx.scope == "project":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["backlog-stats"]))
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["backlog", "stats"]))
                     exit_code = run_backlog_stats(ctx=ctx, env=os.environ)
                 else:
                     print("Usage: ph backlog <add|list|triage|assign|rubric|stats>\n", file=sys.stderr, end="")
@@ -1055,25 +1079,22 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = 2
                 elif args.parking_command == "add":
                     if ctx.scope == "project":
-                        def _make_var_token(key: str, value: str) -> str:
-                            raw = f"{key}={value}"
-                            if any(ch.isspace() for ch in raw):
-                                return f"'{raw}'"
-                            return raw.replace("=", "\\=", 1)
-
-                        make_args = [
-                            "parking-add",
-                            _make_var_token("type", str(args.parking_type)),
-                            _make_var_token("title", str(args.title)),
+                        cmd_args = [
+                            "parking",
+                            "add",
+                            "--type",
+                            str(args.parking_type),
+                            "--title",
+                            str(args.title),
                         ]
                         if "--desc" in invocation_args and str(getattr(args, "desc", "") or "") != "":
-                            make_args.append(_make_var_token("desc", str(args.desc)))
+                            cmd_args.extend(["--desc", str(args.desc)])
                         if "--owner" in invocation_args and str(getattr(args, "owner", "") or "") != "":
-                            make_args.append(_make_var_token("owner", str(args.owner)))
+                            cmd_args.extend(["--owner", str(args.owner)])
                         if "--tags" in invocation_args and str(getattr(args, "tags", "") or "") != "":
-                            make_args.append(_make_var_token("tags", str(args.tags)))
+                            cmd_args.extend(["--tags", str(args.tags)])
 
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
 
                     exit_code = run_parking_add(
                         ctx=ctx,
@@ -1086,7 +1107,10 @@ def main(argv: list[str] | None = None) -> int:
                     )
                 elif args.parking_command == "list":
                     if ctx.scope == "project" and str(args.format) != "json":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["parking-list"]))
+                        cmd_args = ["parking", "list"]
+                        if "--category" in invocation_args and getattr(args, "category", None) is not None:
+                            cmd_args.extend(["--category", str(args.category)])
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     exit_code = run_parking_list(
                         ctx=ctx,
                         category=getattr(args, "category", None),
@@ -1095,19 +1119,22 @@ def main(argv: list[str] | None = None) -> int:
                     )
                 elif args.parking_command == "review":
                     if ctx.scope == "project":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["parking-review"]))
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["parking", "review"]))
                     exit_code = run_parking_review(ctx=ctx, env=os.environ)
                     if exit_code == 2:
                         sys.stdout.write("\u2009ELIFECYCLE\u2009 Command failed with exit code 2.\n")
                 elif args.parking_command == "promote":
                     if ctx.scope == "project":
                         sys.stdout.write(
-                            _format_pnpm_make_preamble(
+                            _format_cli_preamble(
                                 ph_root=ph_root,
-                                make_args=[
-                                    "parking-promote",
-                                    f"item\\={str(args.item)}",
-                                    f"target\\={str(args.target)}",
+                                cmd_args=[
+                                    "parking",
+                                    "promote",
+                                    "--item",
+                                    str(args.item),
+                                    "--target",
+                                    str(args.target),
                                 ],
                             )
                         )
@@ -1123,11 +1150,15 @@ def main(argv: list[str] | None = None) -> int:
             elif args.command == "roadmap":
                 if ctx.scope == "project":
                     if getattr(args, "roadmap_command", None) in (None, "show"):
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["roadmap"]))
+                        if getattr(args, "roadmap_command", None) is None:
+                            cmd_args = ["roadmap"]
+                        else:
+                            cmd_args = ["roadmap", "show"]
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     elif args.roadmap_command == "create":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["roadmap-create"]))
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["roadmap", "create"]))
                     elif args.roadmap_command == "validate":
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["roadmap-validate"]))
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["roadmap", "validate"]))
 
                 if args.roadmap_command is None:
                     exit_code = run_roadmap_show(ctx=ctx)
@@ -1191,7 +1222,11 @@ def main(argv: list[str] | None = None) -> int:
                     )
                     exit_code = 2
             elif args.command == "validate":
-                make_args = ["validate-quick"] if bool(args.quick) else ["validate"]
+                cmd_args = ["validate"]
+                if bool(args.quick):
+                    cmd_args.append("--quick")
+                if "--silent-success" in invocation_args and bool(args.silent_success):
+                    cmd_args.append("--silent-success")
                 exit_code, _out_path, message = run_validate(
                     ph_root=ph_root,
                     ph_data_root=ctx.ph_data_root,
@@ -1200,27 +1235,27 @@ def main(argv: list[str] | None = None) -> int:
                     silent_success=bool(args.silent_success),
                 )
                 if message:
-                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
+                    sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     print(message, end="")
             elif args.command == "pre-exec":
                 if getattr(args, "pre_exec_command", None) is None:
                     print("Usage: ph pre-exec <lint|audit>\n", file=sys.stderr, end="")
                     exit_code = 2
                 elif args.pre_exec_command == "lint":
-                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["pre-exec-lint"]))
+                    sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["pre-exec", "lint"]))
                     exit_code = run_pre_exec_lint(ctx=ctx)
                 elif args.pre_exec_command == "audit":
-                    make_args = ["pre-exec-audit"]
+                    cmd_args = ["pre-exec", "audit"]
                     sprint = getattr(args, "sprint", None)
                     date = getattr(args, "date", None)
                     evidence_dir = getattr(args, "evidence_dir", None)
                     if sprint:
-                        make_args.append(f"sprint\\={sprint}")
+                        cmd_args.extend(["--sprint", str(sprint)])
                     if date:
-                        make_args.append(f"date\\={date}")
+                        cmd_args.extend(["--date", str(date)])
                     if evidence_dir:
-                        make_args.append(f"evidence_dir\\={evidence_dir}")
-                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
+                        cmd_args.extend(["--evidence-dir", str(evidence_dir)])
+                    sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     try:
                         exit_code = run_pre_exec_audit(
                             ph_root=ph_root,
@@ -1240,8 +1275,10 @@ def main(argv: list[str] | None = None) -> int:
                     print("Usage: ph daily <generate|check>\n", file=sys.stderr, end="")
                     exit_code = 2
                 elif args.daily_command == "generate":
-                    make_args = ["daily-force"] if bool(getattr(args, "force", False)) else ["daily"]
-                    sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=make_args))
+                    cmd_args = ["daily", "generate"]
+                    if bool(getattr(args, "force", False)):
+                        cmd_args.append("--force")
+                    sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     created = create_daily_status(
                         ph_root=ph_root,
                         ph_data_root=ctx.ph_data_root,
@@ -1251,7 +1288,9 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = 0 if created else 1
                 elif args.daily_command == "check":
                     if bool(getattr(args, "verbose", False)):
-                        sys.stdout.write(_format_pnpm_make_preamble(ph_root=ph_root, make_args=["daily-check"]))
+                        sys.stdout.write(
+                            _format_cli_preamble(ph_root=ph_root, cmd_args=["daily", "check", "--verbose"])
+                        )
 
                     exit_code = check_daily_status(
                         ph_root=ph_root,

@@ -75,11 +75,10 @@ def test_feature_summary_pnpm_make_preamble_and_header(tmp_path: Path) -> None:
 
     lines = result.stdout.splitlines()
     assert lines[0] == ""
-    assert lines[1] == f"> project-handbook@0.0.0 make {tmp_path.resolve()}"
-    assert lines[2] == "> make -- feature-summary"
+    assert lines[1] == f"> project-handbook@0.0.0 ph {tmp_path.resolve()}"
+    assert lines[2] == "> ph feature summary"
     assert lines[3] == ""
     assert lines[4:6] == ["🎯 FEATURE SUMMARY WITH SPRINT DATA", "=" * 60]
 
     expected_points = f"{3:3d}/{8:3d} pts"
     assert any("feat-a" in line and expected_points in line and "Current: " in line for line in lines)
-

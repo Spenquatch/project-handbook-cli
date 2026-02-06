@@ -69,9 +69,9 @@ def test_parking_add_creates_item_updates_index_and_prints_hint_block(tmp_path: 
     assert any(item.get("id") == expected_id for item in index["items"])
 
     hint_lines = [
-        "Parking lot updated → review via 'make parking-list' or 'make parking-review'",
+        "Parking lot updated → review via 'ph parking list' or 'ph parking review'",
         "  - Capture owner/priority inside parking-lot/features/ entries if missing",
-        "  - Promote items with 'make parking-promote' once they graduate to roadmap",
+        "  - Promote items with 'ph parking promote' once they graduate to roadmap",
     ]
     if scope == "project":
         assert result.stdout.splitlines()[-3:] == hint_lines

@@ -119,8 +119,8 @@ def test_daily_generate_stdout_and_file_match_make_daily(tmp_path: Path) -> None
     resolved = tmp_path.resolve()
     expected_stdout = (
         "\n"
-        f"> project-handbook@0.0.0 make {resolved}\n"
-        "> make -- daily\n"
+        f"> project-handbook@0.0.0 ph {resolved}\n"
+        "> ph daily generate\n"
         "\n"
         f"Created daily status: {resolved}/status/daily/2026/02/04.md\n"
     )
@@ -151,8 +151,8 @@ def test_daily_generate_force_stdout_matches_make_daily_force(tmp_path: Path) ->
     resolved = tmp_path.resolve()
     expected_stdout = (
         "\n"
-        f"> project-handbook@0.0.0 make {resolved}\n"
-        "> make -- daily-force\n"
+        f"> project-handbook@0.0.0 ph {resolved}\n"
+        "> ph daily generate --force\n"
         "\n"
         f"Created daily status: {resolved}/status/daily/2026/02/04.md\n"
     )
@@ -182,8 +182,8 @@ def test_daily_check_verbose_stdout_matches_make_daily_check(tmp_path: Path) -> 
     script = (resolved / "process" / "automation" / "daily_status_check.py").resolve()
     expected_stdout = (
         "\n"
-        f"> project-handbook@0.0.0 make {resolved}\n"
-        "> make -- daily-check\n"
+        f"> project-handbook@0.0.0 ph {resolved}\n"
+        "> ph daily check --verbose\n"
         "\n"
         "⚠️  No daily status found!\n"
         f"Run: python3 {script} --generate\n"

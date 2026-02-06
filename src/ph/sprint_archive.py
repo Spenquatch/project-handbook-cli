@@ -125,7 +125,7 @@ def run_sprint_archive(*, ph_root: Path, ctx: Context, sprint: str | None, env: 
         sprint_dir = _get_current_sprint_path(ph_data_root=ctx.ph_data_root)
         if sprint_dir is None:
             print("❌ No active sprint (sprints/current is not set).")
-            print("Set one via `make sprint-plan` / `make sprint-open`, or pass `--sprint SPRINT-...`.")
+            print("Set one via `ph sprint plan` / `ph sprint open`, or pass `--sprint SPRINT-...`.")
             return 1
         sprint_id = sprint_dir.name
     else:

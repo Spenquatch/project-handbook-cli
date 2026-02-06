@@ -116,8 +116,8 @@ def test_sprint_archive_stdout_and_index_match_make_convention_for_seq_sprint(tm
 
     target = (tmp_path / "sprints" / "archive" / "SEQ" / sprint_id).resolve()
     expected_stdout = (
-        f"\n> project-handbook@0.0.0 make {tmp_path.resolve()}\n"
-        f"> make -- sprint-archive sprint\\={sprint_id}\n\n"
+        f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n"
+        f"> ph sprint archive --sprint {sprint_id}\n\n"
         f"📦 Archived sprint {sprint_id} to {target}\n"
     )
     assert archived.stdout == expected_stdout

@@ -354,7 +354,7 @@ _Add investigation findings here_
         print(f"\n✅ Recorded assignment: {issue_id} → {resolved_sprint}")
         print("Next steps:")
         if scope == "project":
-            task_create_cmd = "make task-create"
+            task_create_cmd = "ph task create"
         elif scope == "system":
             task_create_cmd = "ph --scope system task create"
         else:
@@ -362,7 +362,7 @@ _Add investigation findings here_
         print(
             "1. Create/assign the actual sprint task via "
             f"'{task_create_cmd} ...' (feature + decision required; discovery tasks may use "
-            "session=research-discovery decision=DR-XXXX)."
+            "--session research-discovery --decision DR-XXXX)."
         )
         print("2. If needed, update the sprint plan lanes/integration tasks to reflect the new work.")
 
@@ -579,7 +579,7 @@ _Add investigation findings here_
         print("  • P1 issues are addressed in the next sprint")
         print("  • P2-P3 issues queue in the backlog")
         print("  • P4 issues are candidates for the parking lot")
-        print("  • Use 'make backlog-triage' for P0 decision support")
+        print("  • Use 'ph backlog triage' for P0 decision support")
 
     def _normalize_issue_type(self, value: str) -> str:
         normalized = (value or "").strip().lower()

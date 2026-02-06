@@ -86,8 +86,8 @@ def test_test_system_parity_v1p0069(tmp_path: Path) -> None:
     daily_script = (tmp_path / "process" / "automation" / "daily_status_check.py").resolve()
 
     expected = (
-        f"\n> project-handbook@0.0.0 make {resolved}\n"
-        "> make -- test-system\n\n"
+        f"\n> project-handbook@0.0.0 ph {resolved}\n"
+        "> ph test system\n\n"
         "Testing validation...\n"
         f"validation: 0 error(s), 0 warning(s), report: {validation_json}\n"
         "\n"

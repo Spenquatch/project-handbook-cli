@@ -522,13 +522,13 @@ def _write_status_summary(
     lines.append("")
 
     lines.append("## Quick Links")
-    lines.append("- `make onboarding` (default guide)")
-    lines.append("- `make onboarding session sprint-planning` to facilitate planning")
-    lines.append("- `make onboarding session sprint-closing` to close a sprint cleanly")
-    lines.append("- `make onboarding session research-discovery` for research-discovery decisions")
-    lines.append("- `make onboarding session continue-session` for continuity")
+    lines.append("- `ph onboarding` (default guide)")
+    lines.append("- `ph onboarding session sprint-planning` to facilitate planning")
+    lines.append("- `ph onboarding session sprint-closing` to close a sprint cleanly")
+    lines.append("- `ph onboarding session research-discovery` for research-discovery decisions")
+    lines.append("- `ph onboarding session continue-session` for continuity")
     lines.append("")
-    lines.append("> Generated with `make status`.")
+    lines.append("> Generated with `ph status`.")
 
     summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 

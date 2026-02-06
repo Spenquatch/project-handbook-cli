@@ -45,7 +45,7 @@ def test_backlog_list_table_matches_legacy_pnpm_preamble_v1p0032(tmp_path: Path)
     assert result.returncode == 0
 
     expected_root = tmp_path.resolve()
-    expected = f"\n> project-handbook@0.0.0 make {expected_root}\n> make -- backlog-list\n\n"
+    expected = f"\n> project-handbook@0.0.0 ph {expected_root}\n> ph backlog list\n\n"
     assert result.stdout.startswith(expected)
 
     json_result = subprocess.run(

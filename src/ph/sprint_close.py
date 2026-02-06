@@ -211,7 +211,7 @@ def run_sprint_close(*, ph_root: Path, ctx: Context, sprint: str | None, env: di
             print("❌ Sprint close blocked: failed to archive referenced backlog/parking-lot items.")
             for err in work_item_errors:
                 print(f"  - {err}")
-            print("Resolve the issues above, then rerun: make sprint-close")
+            print("Resolve the issues above, then rerun: ph sprint close")
             return 1
     except Exception as exc:
         print(f"⚠️  Work-item archiving guardrail skipped: {exc}")
@@ -250,8 +250,8 @@ def run_sprint_close(*, ph_root: Path, ctx: Context, sprint: str | None, env: di
         print("Sprint closed! Next steps:")
         print("  1. Share the new retrospective and velocity summary")
         print("  2. Update roadmap/releases with completed scope")
-        print("  3. Run 'make status' so status/current_summary.md reflects the close-out")
-        print("  4. Kick off the next sprint via 'make sprint-plan' when ready")
+        print("  3. Run 'ph status' so status/current_summary.md reflects the close-out")
+        print("  4. Kick off the next sprint via 'ph sprint plan' when ready")
         print("  5. Capture any loose ends inside parking lot or backlog")
 
     return 0

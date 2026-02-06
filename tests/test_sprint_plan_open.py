@@ -44,15 +44,15 @@ def test_sprint_plan_creates_skeleton_and_prints_project_hints(tmp_path: Path) -
         f"  📁 {sprint_dir}/tasks/ (ready for task creation)",
         "Next steps:",
         "  1. Edit plan.md with goals, lanes, and integration tasks",
-        "  2. Create tasks via `make task-create ...`",
+        "  2. Create tasks via `ph task create ...`",
         "  3. Review `status/current_summary.md` after generating status",
-        "  4. Re-run `make onboarding session sprint-planning` for facilitation tips",
+        "  4. Re-run `ph onboarding session sprint-planning` for facilitation tips",
         "Sprint scaffold ready:",
         "  1. Edit sprints/current/plan.md with goals, lanes, and integration tasks",
-        "  2. Seed tasks via 'make task-create title=... feature=... decision=ADR-###'",
-        "  3. Re-run 'make sprint-status' to confirm health + next-up ordering",
-        "  4. Run 'make validate-quick' before handing off to another agent",
-        "  5. Need facilitation tips? 'make onboarding session sprint-planning'",
+        "  2. Seed tasks via 'ph task create --title ... --feature ... --decision ADR-###'",
+        "  3. Re-run 'ph sprint status' to confirm health + next-up ordering",
+        "  4. Run 'ph validate --quick' before handing off to another agent",
+        "  5. Need facilitation tips? 'ph onboarding session sprint-planning'",
     ]
     assert sprint_dir.exists()
     assert (sprint_dir / "tasks").exists()
@@ -127,12 +127,12 @@ def test_sprint_plan_bounded_template_matches_legacy(tmp_path: Path) -> None:
         "## Task Creation Guide",
         "```bash",
         (
-            "make task-create title=\"Task Name\" feature=feature-name decision=ADR-XXX points=3 "
-            "lane=\"handbook/automation\" release=current"
+            "ph task create --title \"Task Name\" --feature feature-name --decision ADR-XXX --points 3 "
+            "--lane \"handbook/automation\" --release current"
         ),
         (
-            "make task-create title=\"Gate: <name>\" feature=feature-name decision=ADR-XXX points=3 "
-            "lane=\"integration/<scope>\" release=current gate=true"
+            "ph task create --title \"Gate: <name>\" --feature feature-name --decision ADR-XXX --points 3 "
+            "--lane \"integration/<scope>\" --release current --gate"
         ),
         "```",
         "",
@@ -172,8 +172,8 @@ def test_sprint_plan_prints_pnpm_make_preamble_when_package_json_present(tmp_pat
     lines = result.stdout.splitlines()
     assert lines[0:4] == [
         "",
-        f"> project-handbook@0.0.0 make {tmp_path.resolve()}",
-        "> make -- sprint-plan",
+        f"> project-handbook@0.0.0 ph {tmp_path.resolve()}",
+        "> ph sprint plan --sprint SPRINT-2099-01-01",
         "",
     ]
 
@@ -200,8 +200,8 @@ def test_sprint_open_prints_pnpm_make_preamble_when_package_json_present(tmp_pat
     lines = result.stdout.splitlines()
     assert lines[0:4] == [
         "",
-        f"> project-handbook@0.0.0 make {tmp_path.resolve()}",
-        f"> make -- sprint-open sprint\\={sprint_id}",
+        f"> project-handbook@0.0.0 ph {tmp_path.resolve()}",
+        f"> ph sprint open --sprint {sprint_id}",
         "",
     ]
     assert lines[4:] == [f"✅ Current sprint set to: {sprint_id}"]

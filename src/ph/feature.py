@@ -7,27 +7,6 @@ from .clock import today as clock_today
 from .context import Context
 
 
-def _maybe_print_pnpm_make_preamble(*, ctx: Context, make_args: str) -> None:
-    package_json_path = ctx.ph_root / "package.json"
-    if not package_json_path.exists():
-        return
-
-    try:
-        package_json = json.loads(package_json_path.read_text(encoding="utf-8"))
-    except Exception:
-        return
-
-    name = str(package_json.get("name") or "").strip()
-    version = str(package_json.get("version") or "").strip()
-    if not name or not version:
-        return
-
-    print()
-    print(f"> {name}@{version} make {ctx.ph_root}")
-    print(f"> make -- {make_args}")
-    print()
-
-
 def _feature_name_prefixes_for_system_scope(*, ph_root: Path) -> list[str]:
     config_path = ph_root / "process" / "automation" / "system_scope_config.json"
     try:
@@ -60,7 +39,7 @@ def _feature_hint_block(*, ctx: Context, name: str) -> list[str]:
         f"Next steps for features/{name}/:",
         "  1. Flesh out overview.md + status.md with owner, goals, and risks",
         "  2. Draft architecture/implementation/testing docs before assigning sprint work",
-        "  3. Run 'make validate-quick' so docs stay lint-clean",
+        "  3. Run 'ph validate --quick' so docs stay lint-clean",
     ]
 
 
@@ -306,7 +285,7 @@ links: []
     if ctx.scope == "system":
         print("   3. Run 'ph --scope system validate' to check structure")
     else:
-        print("   3. Run 'make validate' to check structure")
+        print("   3. Run 'ph validate' to check structure")
 
     for line in _feature_hint_block(ctx=ctx, name=name):
         print(line)
@@ -315,8 +294,7 @@ links: []
 
 
 def run_feature_list(*, ctx: Context, with_preamble: bool = True) -> int:
-    if with_preamble:
-        _maybe_print_pnpm_make_preamble(ctx=ctx, make_args="feature-list")
+    _ = with_preamble  # legacy option; no longer prints legacy preambles
 
     features_dir, _implemented_dir = _ensure_feature_roots(ph_data_root=ctx.ph_data_root)
     feature_dirs = [d for d in features_dir.iterdir() if d.is_dir() and d.name != "implemented"]

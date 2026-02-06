@@ -37,7 +37,7 @@ def _write_minimal_ph_root(ph_root: Path, *, routing_rules: dict | None = None) 
                 "Next steps for features/feat-a/:",
                 "  1. Flesh out overview.md + status.md with owner, goals, and risks",
                 "  2. Draft architecture/implementation/testing docs before assigning sprint work",
-                "  3. Run 'make validate-quick' so docs stay lint-clean",
+                "  3. Run 'ph validate --quick' so docs stay lint-clean",
             ],
         ),
         (
@@ -147,8 +147,8 @@ def test_feature_list_prints_pnpm_make_preamble_when_package_json_present(tmp_pa
     expected_root = str(tmp_path.resolve())
     assert listed.stdout.splitlines() == [
         "",
-        f"> project-handbook@0.0.0 make {expected_root}",
-        "> make -- feature-list",
+        f"> project-handbook@0.0.0 ph {expected_root}",
+        "> ph feature list",
         "",
         "📁 No features found",
         "💡 Create one with: ph feature create --name my-feature",
@@ -172,7 +172,7 @@ def test_feature_create_prints_pnpm_make_preamble_when_package_json_present(tmp_
     expected_root = str(tmp_path.resolve())
     assert created.stdout.splitlines()[:4] == [
         "",
-        f"> project-handbook@0.0.0 make {expected_root}",
-        "> make -- feature-create name\\=feat-a",
+        f"> project-handbook@0.0.0 ph {expected_root}",
+        "> ph feature create --name feat-a",
         "",
     ]

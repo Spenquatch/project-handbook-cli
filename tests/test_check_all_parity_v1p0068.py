@@ -50,8 +50,8 @@ def test_check_all_parity_v1p0068(tmp_path: Path) -> None:
     summary_md = (tmp_path / "status" / "current_summary.md").resolve()
 
     expected = (
-        f"\n> project-handbook@0.0.0 make {resolved}\n"
-        "> make -- check-all\n\n"
+        f"\n> project-handbook@0.0.0 ph {resolved}\n"
+        "> ph check-all\n\n"
         f"validation: 0 error(s), 0 warning(s), report: {validation_json}\n"
         f"Generated: {current_json}\n"
         f"Updated: {summary_md}\n"

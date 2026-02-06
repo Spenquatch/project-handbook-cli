@@ -13,10 +13,10 @@ _SYSTEM_SCOPE_REMEDIATION = "Releases are project-scope only. Use: ph --scope pr
 def _plan_hint_lines() -> tuple[str, ...]:
     return (
         "Release plan scaffold created under releases/<version>/plan.md",
-        "  - Assign features via 'make release-add-feature release=<version> feature=<name>'",
-        "  - Activate when ready via 'make release-activate release=<version>'",
-        "  - Confirm sprint alignment via 'make release-status' (requires an active release)",
-        "  - Run 'make validate-quick' before sharing externally",
+        "  - Assign features via 'ph release add-feature --release <version> --feature <name>'",
+        "  - Activate when ready via 'ph release activate --release <version>'",
+        "  - Confirm sprint alignment via 'ph release status' (requires an active release)",
+        "  - Run 'ph validate --quick' before sharing externally",
     )
 
 _ADD_FEATURE_SUCCESS_PREFIX = "✅ Added"
@@ -229,11 +229,11 @@ This release uses **sprint slots** (not calendar dates). Assign a concrete sprin
 ## Release Gates (Burn-up)
 Define a small set of explicit gates (smoke/demo/contract-lock) as **sprint tasks** and tag them to this release:
 ```bash
-make task-create title="Gate: <name>" feature=<feature> decision=ADR-XXX points=3 release={version} gate=true
+ph task create --title "Gate: <name>" --feature <feature> --decision ADR-XXX --points 3 --release {version} --gate
 ```
 
 ## Feature Assignments
-*Use `make release-add-feature` to assign features to this release*
+*Use `ph release add-feature` to assign features to this release*
 
 ## Scope Control
 - **Scope lock**: TBD (slot or criteria)
@@ -313,7 +313,7 @@ Brief description of what this release delivers.
             plan_content += """
 
 ## Feature Assignments
-*Use `make release-add-feature` to assign features to this release*
+*Use `ph release add-feature` to assign features to this release*
 
 ## Scope Control
 - **Scope lock date**: TBD
@@ -364,7 +364,7 @@ planned_sprints: {sprint_count}
 
 
 features:
-  # Features will be added with: make release-add-feature
+  # Features will be added with: ph release add-feature
   # Example:
   # auth-system:
   #   type: epic
@@ -387,7 +387,7 @@ end_sprint: {end_sprint}
 planned_sprints: {sprint_count}
 
 features:
-  # Features will be added with: make release-add-feature
+  # Features will be added with: ph release add-feature
   # Example:
   # auth-system:
   #   type: epic
@@ -514,8 +514,8 @@ def run_release_plan(
     print(f"📅 Timeline: {sprint_count} sprint slot(s) (decoupled from calendar dates)")
     print("📝 Next steps:")
     print(f"   1. Edit {resolved_plan_path} to define release goals")
-    print(f"   2. Add features: make release-add-feature release={raw_version} feature=feature-name")
-    print(f"   3. Activate when ready: make release-activate release={raw_version}")
+    print(f"   2. Add features: ph release add-feature --release {raw_version} --feature feature-name")
+    print(f"   3. Activate when ready: ph release activate --release {raw_version}")
     print("   4. Review timeline and adjust if needed")
     for line in _plan_hint_lines():
         print(line)
@@ -1571,7 +1571,7 @@ def run_release_add_feature(
         "critical_path": critical,
     }
 
-    # Match legacy `make release-add-feature` behavior byte-for-byte.
+    # Match legacy release add-feature behavior byte-for-byte.
     content = features_file.read_text(encoding="utf-8")
     lines = content.splitlines()
 

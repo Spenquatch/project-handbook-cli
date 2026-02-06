@@ -76,12 +76,11 @@ def test_backlog_triage_existing_issue_stdout_matches_legacy_make_preamble_v1p00
 
     expected_root = tmp_path.resolve()
     expected = (
-        f"\n> project-handbook@0.0.0 make {expected_root}\n"
-        f"> make -- backlog-triage issue\\={issue_id}\n\n"
+        f"\n> project-handbook@0.0.0 ph {expected_root}\n"
+        f"> ph backlog triage --issue {issue_id}\n\n"
         "📊 Updated backlog index: 1 items\n\n"
         f"🎯 TRIAGE ANALYSIS: {issue_id}\n"
         f"{'=' * 80}\n"
         f"{triage_content}\n"
     )
     assert result.stdout == expected
-

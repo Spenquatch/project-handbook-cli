@@ -320,12 +320,12 @@ tags: [sprint, planning]
             "## Task Creation Guide",
             "```bash",
             (
-                "make task-create title=\"Task Name\" feature=feature-name decision=ADR-XXX points=3 "
-                "lane=\"handbook/automation\" release=current"
+                "ph task create --title \"Task Name\" --feature feature-name --decision ADR-XXX --points 3 "
+                "--lane \"handbook/automation\" --release current"
             ),
             (
-                "make task-create title=\"Gate: <name>\" feature=feature-name decision=ADR-XXX points=3 "
-                "lane=\"integration/<scope>\" release=current gate=true"
+                "ph task create --title \"Gate: <name>\" --feature feature-name --decision ADR-XXX --points 3 "
+                "--lane \"integration/<scope>\" --release current --gate"
             ),
             "```",
             "",
@@ -373,12 +373,12 @@ tags: [sprint, planning]
             "## Task Creation Guide",
             "```bash",
             (
-                "make task-create title=\"Task Name\" feature=feature-name decision=ADR-XXX points=5 "
-                "release=current"
+                "ph task create --title \"Task Name\" --feature feature-name --decision ADR-XXX --points 5 "
+                "--release current"
             ),
             (
-                "make task-create title=\"Gate: <name>\" feature=feature-name decision=ADR-XXX points=3 "
-                "release=current gate=true"
+                "ph task create --title \"Gate: <name>\" --feature feature-name --decision ADR-XXX --points 3 "
+                "--release current --gate"
             ),
             "```",
             "",
@@ -397,6 +397,4 @@ tags: [sprint, planning]
     )
     template += "\n".join(timeboxed_lines) + "\n"
 
-    if scope == "system":
-        template = template.replace("make task-create", "ph --scope system task create")
     return template

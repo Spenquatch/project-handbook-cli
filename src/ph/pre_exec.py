@@ -532,6 +532,6 @@ def run_pre_exec_audit(
     )
     print(
         "- Start execution by claiming the first ready task (typically `TASK-001`) "
-        "via `pnpm -C project-handbook make -- task-status id=TASK-001 status=doing`."
+        "via `ph task status --id TASK-001 --status doing`."
     )
     return 0

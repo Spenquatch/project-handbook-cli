@@ -52,8 +52,8 @@ def test_roadmap_create_preamble_stdout_and_file_match_legacy(tmp_path: Path) ->
     roadmap_path = resolved / "roadmap" / "now-next-later.md"
 
     expected_stdout = (
-        f"\n> project-handbook@0.0.0 make {resolved}\n"
-        "> make -- roadmap-create\n\n"
+        f"\n> project-handbook@0.0.0 ph {resolved}\n"
+        "> ph roadmap create\n\n"
         f"📋 Created roadmap template: {roadmap_path}\n"
     )
     assert result.stdout == expected_stdout

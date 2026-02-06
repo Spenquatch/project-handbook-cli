@@ -74,7 +74,7 @@ def test_roadmap_show_preamble_and_stdout_match_legacy(tmp_path: Path) -> None:
     assert result.returncode == 0
 
     resolved = tmp_path.resolve()
-    expected_preamble = f"\n> project-handbook@0.0.0 make {resolved}\n> make -- roadmap\n\n"
+    expected_preamble = f"\n> project-handbook@0.0.0 ph {resolved}\n> ph roadmap show\n\n"
     expected_body = (
         "🗺️  PROJECT ROADMAP\n"
         "==================================================\n"
@@ -89,4 +89,3 @@ def test_roadmap_show_preamble_and_stdout_match_legacy(tmp_path: Path) -> None:
         "  - later-item\n"
     )
     assert result.stdout == expected_preamble + expected_body
-
