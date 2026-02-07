@@ -3,9 +3,11 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+from ph.root import resolve_ph_root
+
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / "project_handbook.config.json"
+    config = ph_root / ".project-handbook" / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
@@ -51,6 +53,7 @@ def test_ph_fails_outside_repo_with_remediation(tmp_path: Path) -> None:
     result = subprocess.run(["ph"], cwd=outside, capture_output=True, text=True)
     assert result.returncode != 0
     assert "ph --root" in result.stderr
+    assert ".project-handbook/config.json" in result.stderr
 
 
 def test_root_override_allows_running_outside_repo(tmp_path: Path) -> None:
@@ -63,3 +66,10 @@ def test_root_override_allows_running_outside_repo(tmp_path: Path) -> None:
 
     result = subprocess.run(["ph", "--root", str(ph_root)], cwd=outside, capture_output=True, text=True)
     assert result.returncode == 0
+
+
+def test_resolve_ph_root_finds_marker_from_nested_subdir(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    nested = tmp_path / "a" / "b"
+    nested.mkdir(parents=True)
+    assert resolve_ph_root(override=None, cwd=nested) == tmp_path.resolve()

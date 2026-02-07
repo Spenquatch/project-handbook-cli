@@ -7,7 +7,9 @@ from pathlib import Path
 
 def _write_legacy_like_config(ph_root: Path) -> None:
     # Legacy handbook repos may have only repo_root (and it may be absolute).
-    (ph_root / "project_handbook.config.json").write_text(
+    config = ph_root / ".project-handbook" / "config.json"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text(
         '{\n  "repo_root": "/tmp"\n}\n',
         encoding="utf-8",
     )

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from . import __version__
 from .config import ConfigCheckResult, check_handbook_config
-from .root import find_root_marker
+from .root import PH_CONFIG_RELATIVE_PATH, find_root_marker
 
 REQUIRED_ASSET_PATHS: tuple[str, ...] = (
     "process/checks/validation_rules.json",
@@ -43,8 +43,8 @@ def run_doctor(ph_root: Path) -> DoctorResult:
     missing: list[str] = []
     lines.append("required_assets:")
     if marker is None:
-        lines.append("- MISSING project_handbook.config.json")
-        missing.append(str((ph_root / "project_handbook.config.json").resolve()))
+        lines.append(f"- MISSING {PH_CONFIG_RELATIVE_PATH.as_posix()}")
+        missing.append(str((ph_root / PH_CONFIG_RELATIVE_PATH).resolve()))
     else:
         lines.append(f"- OK {marker.as_posix()}")
 

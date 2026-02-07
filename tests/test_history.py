@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 def _write_minimal_ph_root(ph_root: Path, *, schema: int = 1) -> None:
-    config = ph_root / "project_handbook.config.json"
+    config = ph_root / ".project-handbook" / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         "{\n"

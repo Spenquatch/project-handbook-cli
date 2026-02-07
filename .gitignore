@@ -12,3 +12,4 @@ uv.lock
 .codex-agent-*
 ph-parity-*.done
 .DS_Store
+.runs

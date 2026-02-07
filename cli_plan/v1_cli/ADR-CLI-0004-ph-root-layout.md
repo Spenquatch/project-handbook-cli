@@ -1,6 +1,6 @@
 ---
 id: ADR-CLI-0004
-title: Adopt Repo-Root Handbook Layout + `project_handbook.config.json` Marker
+title: Adopt Repo-Root Handbook Layout + `.project-handbook/config.json` Marker
 type: adr
 status: accepted
 date: 2026-02-04
@@ -29,9 +29,9 @@ The earlier v1 design proposed a layout suitable for embedding the handbook into
 
 For v1, we adopt the **repo-root handbook layout** as the canonical contract:
 
-- Root marker: `PH_ROOT/project_handbook.config.json`
+- Root marker: `PH_ROOT/.project-handbook/config.json`
 - Content root: `PH_ROOT/**` (e.g. `PH_ROOT/sprints/`, `PH_ROOT/features/`, `PH_ROOT/status/`, etc.)
-- Internals: `PH_ROOT/.project-handbook/**` (append-only history log, optional caches)
+- Internals: `PH_ROOT/.project-handbook/**` (CLI-owned state/config + system-scope data)
 
 Additionally:
 

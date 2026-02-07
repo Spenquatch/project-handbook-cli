@@ -8,7 +8,7 @@ from ph.git_hooks import POST_COMMIT_HOOK, PRE_PUSH_HOOK
 
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / "project_handbook.config.json"
+    config = ph_root / ".project-handbook" / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',

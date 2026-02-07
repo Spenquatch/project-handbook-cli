@@ -13,9 +13,9 @@ def test_init_creates_root_marker_and_is_idempotent(tmp_path: Path) -> None:
         text=True,
     )
     assert result.returncode == 0
-    assert result.stdout.strip() == "Created: project_handbook.config.json"
+    assert result.stdout.strip() == "Created: .project-handbook/config.json"
 
-    marker = tmp_path / "project_handbook.config.json"
+    marker = tmp_path / ".project-handbook" / "config.json"
     assert marker.exists()
     data = json.loads(marker.read_text(encoding="utf-8"))
     assert data == {
@@ -62,7 +62,7 @@ def test_init_creates_root_marker_and_is_idempotent(tmp_path: Path) -> None:
         text=True,
     )
     assert result2.returncode == 0
-    assert result2.stdout.strip() == "Already exists: project_handbook.config.json"
+    assert result2.stdout.strip() == "Already exists: .project-handbook/config.json"
 
 
 def test_init_uses_root_override(tmp_path: Path) -> None:
@@ -78,7 +78,7 @@ def test_init_uses_root_override(tmp_path: Path) -> None:
         text=True,
     )
     assert result.returncode == 0
-    assert (target / "project_handbook.config.json").exists()
+    assert (target / ".project-handbook" / "config.json").exists()
 
 
 def test_init_no_gitignore_flag_does_not_write_gitignore(tmp_path: Path) -> None:

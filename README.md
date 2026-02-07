@@ -5,7 +5,7 @@ Installed Python CLI distribution: `project-handbook`
 Console script: `ph`
 
 Handbook root marker (v1):
-- `project_handbook.config.json`
+- `.project-handbook/config.json`
 
 Rule: `ph` MUST NOT execute repo-local Python scripts at runtime.
 

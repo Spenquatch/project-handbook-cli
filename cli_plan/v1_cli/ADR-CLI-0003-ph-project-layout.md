@@ -19,7 +19,7 @@ This ADR captured an earlier v1 layout proposal (`.ph/**` internals + `ph/**` co
 
 - `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md`
 
-The accepted v1 layout uses repo-root content trees and the root marker `project_handbook.config.json`.
+The accepted v1 layout uses repo-root content trees and the root marker `.project-handbook/config.json`.
 
 # Context
 

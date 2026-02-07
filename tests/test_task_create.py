@@ -11,7 +11,7 @@ def _write_minimal_ph_root(ph_root: Path, *, routing_rules: dict | None = None) 
         encoding="utf-8",
     )
 
-    config = ph_root / "project_handbook.config.json"
+    config = ph_root / ".project-handbook" / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',

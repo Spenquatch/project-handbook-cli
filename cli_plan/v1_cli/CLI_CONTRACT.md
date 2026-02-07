@@ -35,8 +35,8 @@ This contract is intended to be implementable with zero ambiguity.
 
 `ph` MUST resolve a single handbook root directory (`PH_ROOT`) for each invocation:
 
-- If `--root <path>` is provided, use it (must be a directory that contains `project_handbook.config.json`).
-- Else, walk up from `cwd` until a directory contains `project_handbook.config.json`.
+- If `--root <path>` is provided, use it (must be a directory that contains `.project-handbook/config.json`).
+- Else, walk up from `cwd` until a directory contains `.project-handbook/config.json`.
 - Else, exit non-zero with a message that includes an example `ph --root ...`.
 
 All filesystem operations MUST use absolute paths derived from `PH_ROOT`.
@@ -48,7 +48,7 @@ Exception:
 
 Within `PH_ROOT`, `ph` MUST use two distinct roots:
 
-- `PH_INTERNAL_ROOT = PH_ROOT/.project-handbook` (automation internals; optional)
+- `PH_INTERNAL_ROOT = PH_ROOT/.project-handbook` (CLI-owned state/config + system-scope data; required)
 - `PH_CONTENT_ROOT = PH_ROOT` (project handbook content root)
 
 Contract path convention:
@@ -61,7 +61,9 @@ Contract path convention:
 
 For `PH_ROOT` to be considered a valid handbook repo root, this marker file MUST exist:
 
-- `project_handbook.config.json`
+- `.project-handbook/config.json`
+
+No other repo root marker is supported (no legacy compatibility, migration, or fallback markers).
 
 For full CLI functionality (including post-command auto-validation and onboarding sessions), these paths MUST exist:
 
@@ -72,7 +74,7 @@ If any are missing, `ph` MUST exit non-zero and print remediation that includes 
 
 ## Repository schema/version compatibility
 
-`project_handbook.config.json` MUST contain:
+`.project-handbook/config.json` MUST contain:
 
 - `handbook_schema_version`: integer, MUST be `1`
 - `requires_ph_version`: string, MUST be `>=0.0.1,<0.1.0`
@@ -80,7 +82,7 @@ If any are missing, `ph` MUST exit non-zero and print remediation that includes 
 
 On every invocation, `ph` MUST:
 
-1. Load `project_handbook.config.json`.
+1. Load `.project-handbook/config.json`.
 2. Refuse to run if `handbook_schema_version != 1`.
 3. Refuse to run if installed `ph` version does not satisfy `requires_ph_version`.
 4. Print remediation including the exact command:
@@ -101,7 +103,8 @@ Behavior:
   - If `--root <path>` is provided, write under that directory.
   - Else, write under `cwd`.
 - Create these paths if missing (do not overwrite existing files):
-  - `project_handbook.config.json`
+  - `.project-handbook/` (directory; includes `.gitkeep`)
+  - `.project-handbook/config.json`
   - `ONBOARDING.md` (seeded)
   - `process/checks/validation_rules.json`
   - `process/automation/system_scope_config.json` (optional; routing prefixes and exclusions)
@@ -113,7 +116,6 @@ Behavior:
   - `process/sessions/logs/latest_summary.md` (seeded placeholder)
   - `process/sessions/session_end/` (directory)
   - `process/sessions/session_end/session_end_index.json` (seeded; `{ "records": [] }`)
-  - `.project-handbook/` (directory; includes `.gitkeep`)
   - Content roots (repo-root layout):
     - `adr/`
     - `assets/` (includes `.gitkeep`)
@@ -145,8 +147,8 @@ Gitignore behavior:
 
 Stdout:
 - Always print exactly one line for the marker file:
-  - On create: `Created: project_handbook.config.json`
-  - If already exists: `Already exists: project_handbook.config.json`
+  - On create: `Created: .project-handbook/config.json`
+  - If already exists: `Already exists: .project-handbook/config.json`
 
 Exit codes:
 - `0` on success (created or already exists)
@@ -261,6 +263,7 @@ Topics (MUST exist for Make parity):
 - `ph help utilities`
 
 Additional topics (MUST exist as CLI improvements):
+- `ph help adr`
 - `ph help roadmap`
 
 Behavior:
@@ -275,6 +278,7 @@ Equivalent: `make validate`
 Behavior:
 - Run full validation.
 - Write report to: `status/validation.json`
+- Validation MUST include strict ADR checks for `adr/*.md` (see `ph adr`).
 
 Flags:
 - `--quick` (equivalent to `make validate-quick`)
@@ -512,6 +516,65 @@ Behavior:
 
 Behavior:
 - Completeness check, then move to `features/implemented/<name>/`.
+
+## `ph adr`
+
+### `ph adr add --id ADR-#### --title <t> [--status draft] [--date YYYY-MM-DD]`
+
+Behavior:
+- Create a new ADR markdown file under `PH_ROOT/adr/` and print its path.
+- The target filename MUST be: `adr/NNNN-<slug>.md` where:
+  - `NNNN` is the 4-digit numeric portion of `--id` (e.g. `ADR-0007` → `0007`).
+  - `<slug>` is derived deterministically from `--title` as lowercase kebab-case:
+    - lowercase,
+    - non-alphanumeric characters replaced with `-`,
+    - collapse consecutive `-`,
+    - trim leading/trailing `-`.
+- The generated file MUST include YAML front matter with at least:
+  - `id: ADR-NNNN` (MUST match filename numeric prefix)
+  - `title: <t>`
+  - `type: adr`
+  - `status: draft|accepted|rejected|superseded` (default: `draft`)
+  - `date: YYYY-MM-DD` (default: today, local time)
+- The generated file body MUST include these H1 sections (exact spelling, H1 only):
+  - `# Context`
+  - `# Decision`
+  - `# Consequences`
+  - `# Acceptance Criteria`
+  - `# Rollout` (recommended; see validation warnings below)
+
+Guardrails:
+- `--id` MUST be exactly `ADR-NNNN` where `NNNN` is 4 digits (`0000`–`9999`); otherwise fail non-zero with remediation.
+- The CLI MUST refuse to create the ADR if the target path already exists (non-destructive).
+
+Internal-only escape hatch (MUST exist, MUST NOT appear in CLI help output):
+- `--force`:
+  - Non-destructive override only.
+  - If the target ADR file already exists, `ph adr add --force ...` MUST succeed without modifying the file (idempotent “already exists” success).
+
+## ADR conventions + validation (strict) (BL-0001)
+
+Naming convention for `PH_ROOT/adr/`:
+- ADR filenames MUST be `NNNN-<slug>.md` where `NNNN` is 4 digits and `<slug>` is lowercase kebab-case.
+- ADR front matter `id` MUST be `ADR-NNNN` and MUST match the filename numeric prefix.
+
+Validation requirements for ADR markdown files:
+- Naming/id checks (**errors**):
+  - filename matches `NNNN-<slug>.md`
+  - front matter `id` exists and equals `ADR-NNNN` for the filename prefix
+- Required H1 headings (missing any is an **error**):
+  - `# Context`
+  - `# Decision`
+  - `# Consequences`
+  - `# Acceptance Criteria`
+- Recommended H1 heading (missing is a **warning**):
+  - `# Rollout`
+
+Actionable validation output:
+- Errors/warnings MUST include:
+  - ADR file path,
+  - what was expected vs what was found (e.g., `expected id ADR-0007, found ADR-0008`),
+  - for heading checks: an explicit `missing:` list and a `found H1:` list (in document order).
 
 ## `ph backlog`
 

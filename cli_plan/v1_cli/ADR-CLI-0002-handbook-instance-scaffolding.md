@@ -24,7 +24,7 @@ This ADR is **superseded** and kept for context only. Do not implement new behav
 
 ## Update (2026-01-15)
 
-This ADR assumes a “handbook instance repo” layout at repo root. The accepted v1 direction is now defined in `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` (root marker `project_handbook.config.json`, internals under `.project-handbook/**`). Treat this ADR as historical background on “full scaffolding” only.
+This ADR assumes a “handbook instance repo” layout at repo root. The accepted v1 direction is now defined in `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` (root marker `.project-handbook/config.json`, internals under `.project-handbook/**`). Treat this ADR as historical background on “full scaffolding” only.
 
 However, creating a *new* handbook instance repo from scratch still requires external steps (copying/cloning an existing instance), and it is easy to end up with a “half-initialized” directory that passes root detection but lacks expected content/templates and conventions.
 
@@ -70,7 +70,7 @@ The template should include:
 
 ## Root marker and internal state location
 
-Removed. v1 layout is defined by `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` (marker `project_handbook.config.json`, internals under `.project-handbook/**`).
+Removed. v1 layout is defined by `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` (marker `.project-handbook/config.json`, internals under `.project-handbook/**`).
 
 ## Documentation placement
 

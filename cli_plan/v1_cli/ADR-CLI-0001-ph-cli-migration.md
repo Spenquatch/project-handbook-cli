@@ -28,7 +28,7 @@ This ADR’s **packaging** motivations still hold, but its original assumptions 
 - the root marker location, and
 - system-scope semantics
 
-are superseded by `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` (marker: `project_handbook.config.json`, internals under `.project-handbook/**`).
+are superseded by `cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md` (marker: `.project-handbook/config.json`, internals under `.project-handbook/**`).
 
 This works well, but reliability issues repeatedly show up around:
 
@@ -80,16 +80,16 @@ The Project Handbook repository remains viewable and editable (Markdown/JSON/etc
 
 ## Repository marker + schema versioning (required)
 
-The handbook root MUST contain `project_handbook.config.json` and `ph` MUST treat its presence as the canonical root marker (independent of any repo-local Python scripts).
+The handbook root MUST contain `.project-handbook/config.json` and `ph` MUST treat its presence as the canonical root marker (independent of any repo-local Python scripts).
 
-`project_handbook.config.json` MUST contain:
+`.project-handbook/config.json` MUST contain:
 
 - `handbook_schema_version`: integer, MUST be `1` for v1 CLI
 - `requires_ph_version`: string, PEP 440 compatible specifier, MUST be `>=0.0.1,<0.1.0`
 - `repo_root`: string, MUST be `"."`
 
 On every invocation, `ph` MUST:
-- read `project_handbook.config.json`,
+- read `.project-handbook/config.json`,
 - refuse to run if `handbook_schema_version` is not supported,
 - refuse to run if the installed `ph` version does not satisfy `requires_ph_version`,
 - print a remediation message that includes the exact `uv tool install ...` command to resolve it.
@@ -109,9 +109,9 @@ Rationale:
 
 `ph` resolves the handbook root using a deterministic search strategy:
 
-1. If `--root <path>` is provided, use it (must contain `project_handbook.config.json`).
+1. If `--root <path>` is provided, use it (must contain `.project-handbook/config.json`).
 2. Else, walk up from `cwd` looking for a directory that contains:
-   - `project_handbook.config.json`
+   - `.project-handbook/config.json`
 3. If none found, exit with a fatal error that instructs how to run with `--root`.
 
 This makes command behavior independent of the directory you run from.

@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+PH_CONFIG_RELATIVE_PATH = Path(".project-handbook") / "config.json"
+
 ROOT_MARKER_RELATIVE_PATHS: tuple[Path, ...] = (
-    Path("project_handbook.config.json"),
+    PH_CONFIG_RELATIVE_PATH,
 )
 
 
@@ -31,11 +33,12 @@ def resolve_ph_root(*, override: str | None, cwd: Path | None = None) -> Path:
 
 
 def _missing_root_message(*, start: Path) -> str:
+    expected = ", ".join(p.as_posix() for p in ROOT_MARKER_RELATIVE_PATHS)
     return (
         "No Project Handbook root found.\n"
         f"Start directory: {start}\n"
-        f"Expected marker: {', '.join(p.as_posix() for p in ROOT_MARKER_RELATIVE_PATHS)}\n"
-        "Example: ph --root /path/to/project-handbook\n"
+        f"Expected marker file(s): {expected}\n"
+        'Example: ph --root "$PWD"\n'
     )
 
 

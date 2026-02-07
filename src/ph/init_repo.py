@@ -4,6 +4,8 @@ import datetime as dt
 import json
 from pathlib import Path
 
+from .root import PH_CONFIG_RELATIVE_PATH
+
 DEFAULT_SCHEMA_VERSION = 1
 DEFAULT_REPO_ROOT = "."
 DEFAULT_REQUIRES_PH_VERSION = ">=0.0.1,<0.1.0"
@@ -469,7 +471,7 @@ def run_init(*, target_root: Path, update_gitignore: bool) -> int:
         raise InitError(f"--root must be a directory: {target_root}\n")
     target_root.mkdir(parents=True, exist_ok=True)
 
-    config_path = target_root / "project_handbook.config.json"
+    config_path = target_root / PH_CONFIG_RELATIVE_PATH
 
     if update_gitignore:
         _ensure_gitignore(target_root=target_root)
@@ -591,7 +593,7 @@ links: []
     _write_text_if_missing(path=target_root / "roadmap" / "now-next-later.md", text=roadmap_seed)
 
     if config_path.exists():
-        print("Already exists: project_handbook.config.json")
+        print(f"Already exists: {PH_CONFIG_RELATIVE_PATH.as_posix()}")
         return 0
 
     payload = {
@@ -604,5 +606,5 @@ links: []
     except OSError as exc:
         raise InitError(f"Failed to write config: {config_path} ({exc})\n") from exc
 
-    print("Created: project_handbook.config.json")
+    print(f"Created: {PH_CONFIG_RELATIVE_PATH.as_posix()}")
     return 0

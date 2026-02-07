@@ -22,16 +22,19 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - Humans create/edit ADR Markdown files directly (no dedicated `ph adr ...` commands in v1).
+  - Humans create/edit ADR Markdown files directly.
+  - The CLI MAY scaffold a new ADR file via `ph adr add`.
 - Non-destructive:
-  - The CLI MUST NOT overwrite ADR files (unless explicitly force-writing a new file that does not already exist).
+  - The CLI MUST NOT overwrite or modify existing ADR files.
+  - If `ph adr add` targets an existing ADR path, it MUST fail unless `--force` is provided.
+  - With `--force`, `ph adr add` MUST succeed without modifying the existing file (idempotent “already exists” success).
 
 ## Required Files and Directories
 - Required files: (none)
 - Allowed files:
   - `NNNN-<slug>.md` where:
     - `NNNN` is a 4-digit zero-padded number (e.g. `0007`), and
-    - `<slug>` is lowercase kebab-case (recommended; not strictly required by the filesystem).
+    - `<slug>` is lowercase kebab-case (required).
 
 ## Schemas
 - ADR markdown files MUST include YAML front matter with at least:
@@ -56,9 +59,16 @@ tags: [ph, spec]
 ## Validation Rules
 - `ph validate` MUST enforce:
   - front matter exists (global rule)
+  - ADR filename matches `NNNN-<slug>.md` and `id: ADR-NNNN` matches the filename numeric prefix
   - `type: adr`
-  - `id` matches filename numeric prefix
   - `status` is one of `draft|accepted|rejected|superseded`
+  - Required H1 headings exist (exact spelling, H1 only):
+    - `# Context`
+    - `# Decision`
+    - `# Consequences`
+    - `# Acceptance Criteria`
+  - Recommended H1 heading (warning if missing):
+    - `# Rollout`
 - If `superseded_by` is set, validation SHOULD confirm the referenced ADR exists.
 
 ## Examples Mapping

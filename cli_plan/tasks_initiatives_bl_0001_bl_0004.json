@@ -1,0 +1,320 @@
+{
+  "meta": {
+    "title": "CLI Plan \u2013 Initiative Task Queue (BL-0001 + BL-0004)",
+    "type": "task-queue",
+    "date": "2026-02-06",
+    "tags": [
+      "cli",
+      "plan",
+      "initiatives",
+      "backlog",
+      "v1"
+    ],
+    "sources_of_truth": [
+      "cli_plan/backlog.json",
+      "cli_plan/v1_cli/CLI_CONTRACT.md",
+      "cli_plan/v1_cli/ADR-CLI-0004-ph-root-layout.md",
+      "cli_plan/ph_spec/ph/adr/contract.md"
+    ],
+    "legacy_reference_repo": null,
+    "notes": [
+      "This queue is intended to replace ad-hoc backlog work with an executable task list.",
+      "Start by completing INIT-PLN-0001 to expand this file into a granular, ordered queue.",
+      "Strict Make-era parity is no longer a requirement; prioritize clear contract + forward-looking UX.",
+      "NOTE: This file was regenerated after an accidental cleanup deleted the untracked queue file; task IDs/orders were preserved."
+    ]
+  },
+  "phases": [
+    {
+      "id": "PHASE-I00",
+      "order": 0,
+      "title": "Planning",
+      "goals": [
+        "Decompose BL-0001 and BL-0004 into an executable task queue with clear dependencies.",
+        "Identify contract/spec changes required before implementation work."
+      ]
+    },
+    {
+      "id": "PHASE-I01",
+      "order": 1,
+      "title": "Initiative \u2014 BL-0001 ADR Commands + Validation",
+      "goals": [
+        "Introduce first-class ADR commands (starting with `ph adr add`).",
+        "Enforce strict ADR naming/front-matter/heading conventions.",
+        "Make ADR validation errors actionable and test-backed."
+      ]
+    },
+    {
+      "id": "PHASE-I02",
+      "order": 2,
+      "title": "Initiative \u2014 BL-0004 PH_ROOT Marker + Config Under `.project-handbook/`",
+      "goals": [
+        "Make `.project-handbook/config.json` the default marker/config location.",
+        "Keep planning docs in the repo root while keeping CLI-owned state under `.project-handbook/`.",
+        "Explicitly provide no legacy compatibility for root-level `project_handbook.config.json` and ensure errors point to `.project-handbook/config.json`."
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "INIT-PLN-0001",
+      "phase_id": "PHASE-I00",
+      "order": 1,
+      "title": "Plan: decompose BL-0001 + BL-0004 into executable tasks",
+      "status": "done",
+      "started_at": "2026-02-06T23:36:15Z",
+      "completed_at": "2026-02-06T23:49:32Z",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Create an executable task queue for BL-0001 and BL-0004 (planning-only; no implementation).\n\nFiles likely to change:\n- cli_plan/tasks_initiatives_bl_0001_bl_0004.json\n\nBehaviors to implement/adjust:\n- Expand PHASE-I01 (BL-0001) into granular ADR command + validation tasks.\n- Expand PHASE-I02 (BL-0004) into granular root marker/config tasks (canonical: `.project-handbook/config.json`; no legacy compatibility).\n- Make dependencies explicit: contract/spec tasks before code changes; tests/docs follow implementation.\n\nVerification steps:\n- Validate JSON: `python -m json.tool cli_plan/tasks_initiatives_bl_0001_bl_0004.json`.\n- Sanity check: each task includes required fields and kickoff_prompt sections (files, behaviors, verification, acceptance).\n\nAcceptance criteria:\n- PHASE-I01 and PHASE-I02 contain ordered, dependency-aware tasks that can be executed one-at-a-time.\n- Each task kickoff_prompt lists exact files likely to change, concrete behavior changes, verification commands, and pass/fail acceptance criteria.\n"
+    },
+    {
+      "id": "I02-ROOT-0001",
+      "phase_id": "PHASE-I02",
+      "order": 10,
+      "title": "Contract: adopt `.project-handbook/config.json` marker (no legacy compatibility)",
+      "status": "done",
+      "started_at": "2026-02-06T23:50:15Z",
+      "completed_at": "2026-02-06T23:57:12Z",
+      "depends_on": [
+        "INIT-PLN-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Update the v1 CLI contract to make `.project-handbook/config.json` the canonical (and only supported) handbook marker/config path (BL-0004).\n\nFiles likely to change:\n- cli_plan/v1_cli/CLI_CONTRACT.md\n\nBehaviors to implement/adjust:\n- Contract-level; no code yet.\n- Root resolution: `PH_ROOT` is the nearest ancestor directory that contains `.project-handbook/config.json`.\n- `ph init` creates `.project-handbook/config.json`.\n- Explicitly state: `project_handbook.config.json` at repo root is not supported (no legacy compatibility; no migration command).\n\nVerification steps:\n- Doc review: ensure Root resolution, Repository asset contract, Schema/version compatibility, `ph init`, and `ph doctor` sections are internally consistent.\n- Quick grep: `rg -n \"project_handbook.config.json|\\.project-handbook/config.json\" cli_plan/v1_cli/CLI_CONTRACT.md` should reflect the new canonical marker path.\n\nAcceptance criteria:\n- CLI contract explicitly states the canonical marker/config path is `.project-handbook/config.json`.\n- CLI contract does not promise legacy compatibility, remediation, or migration tooling.\n- Contract text continues to reflect: planning docs remain at repo root; `.project-handbook/` is CLI-owned state/config + system-scope data; CLI does not execute repo-local Python at runtime.\n"
+    },
+    {
+      "id": "I02-ROOT-0002",
+      "phase_id": "PHASE-I02",
+      "order": 11,
+      "title": "Spec/docs: update PH root marker references (spec + agent guide)",
+      "status": "done",
+      "started_at": "2026-02-07T00:28:29Z",
+      "completed_at": "2026-02-07T00:35:22Z",
+      "depends_on": [
+        "I02-ROOT-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Update non-contract-but-authoritative docs/specs that currently state `project_handbook.config.json` is the marker so they align with BL-0004.\n\nFiles likely to change:\n- cli_plan/ph_spec/ph/contract.md\n- cli_plan/AI_AGENT_START_HERE.md\n- cli_plan/v1_cli/ADR-CLI-0001-ph-cli-migration.md (marker references)\n\nBehaviors to implement/adjust:\n- Docs/spec-level; no code yet.\n- Replace marker references from `project_handbook.config.json` to `.project-handbook/config.json`.\n- Clarify repo-root planning docs default remains unchanged (features/, sprints/, backlog/, roadmap/, etc. stay at repo root by default).\n- Clarify `.project-handbook/` is reserved for CLI-owned state/config and system-scope content root.\n\nVerification steps:\n- `rg -n \"project_handbook.config.json\" cli_plan/ph_spec/ph/contract.md cli_plan/AI_AGENT_START_HERE.md cli_plan/v1_cli/ADR-CLI-0001-ph-cli-migration.md` returns no stale marker references (or only explicitly marked historical context).\n\nAcceptance criteria:\n- Spec and agent guide consistently describe `.project-handbook/config.json` as the marker/config path.\n- Any legacy marker mention is explicitly labeled as historical context, not as the active contract.\n"
+    },
+    {
+      "id": "I02-ROOT-0003",
+      "phase_id": "PHASE-I02",
+      "order": 12,
+      "title": "ADR: record root marker change (new ADR)",
+      "status": "done",
+      "started_at": "2026-02-07T00:37:56Z",
+      "completed_at": "2026-02-07T00:47:23Z",
+      "depends_on": [
+        "I02-ROOT-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Capture the product direction change from `PH_ROOT/project_handbook.config.json` to `PH_ROOT/.project-handbook/config.json` in a new ADR so future work has a durable rationale.\n\nFiles likely to change:\n- cli_plan/v1_cli/ADR-CLI-0005-ph-root-marker-under-dot-project-handbook.md (new)\n- cli_plan/v1_cli/CLI_CONTRACT.md (link the new ADR)\n\nBehaviors to implement/adjust:\n- ADR-level; no code yet.\n- Clearly state:\n  - Marker/config path is `.project-handbook/config.json`.\n  - Planning docs stay at repo root by default.\n  - `.project-handbook/` is for CLI-owned state/config and system-scope data.\n  - No legacy compatibility is provided for `project_handbook.config.json`.\n\nVerification steps:\n- Ensure `cli_plan/v1_cli/CLI_CONTRACT.md` links to the new ADR.\n\nAcceptance criteria:\n- A new ADR exists that documents the marker change and references BL-0004.\n- The ADR is linked from the CLI contract and does not contradict other v1 sources of truth.\n"
+    },
+    {
+      "id": "I02-ROOT-0010",
+      "phase_id": "PHASE-I02",
+      "order": 20,
+      "title": "Code: update PH_ROOT discovery to use `.project-handbook/config.json` (no legacy fallback)",
+      "status": "done",
+      "started_at": "2026-02-07T00:49:02Z",
+      "completed_at": "2026-02-07T00:58:39Z",
+      "depends_on": [
+        "I02-ROOT-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Change root detection so the marker is `.project-handbook/config.json` only (BL-0004).\n\nFiles likely to change:\n- src/ph/root.py\n- tests/test_root_detection.py\n\nBehaviors to implement/adjust:\n- Update `ROOT_MARKER_RELATIVE_PATHS` to include only `.project-handbook/config.json`.\n- Ensure `project_handbook.config.json` is not treated as a root marker.\n- Update root-resolution error messaging to list the canonical marker.\n\nVerification steps:\n- `uv run pytest -q tests/test_root_detection.py`\n\nAcceptance criteria:\n- `resolve_ph_root(...)` finds `PH_ROOT` via `.project-handbook/config.json`.\n- A repo that only contains `project_handbook.config.json` is not considered a handbook root.\n- Error messages enumerate expected marker(s) and provide a concrete example command.\n"
+    },
+    {
+      "id": "I02-ROOT-0011",
+      "phase_id": "PHASE-I02",
+      "order": 21,
+      "title": "Code: update config loading to read `.project-handbook/config.json` (no legacy compatibility)",
+      "status": "done",
+      "started_at": "2026-02-07T01:01:44Z",
+      "completed_at": "2026-02-07T01:13:05Z",
+      "depends_on": [
+        "I02-ROOT-0010"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Load handbook config from the canonical marker path `.project-handbook/config.json` only (no legacy fallbacks).\n\nFiles likely to change:\n- src/ph/config.py\n- tests/test_config_validation.py\n\nBehaviors to implement/adjust:\n- Update `load_handbook_config(...)` to read only:\n  - `PH_ROOT/.project-handbook/config.json`\n- Remove/avoid fallback reads from:\n  - `PH_ROOT/project_handbook.config.json`\n  - `PH_ROOT/cli_plan/project_handbook.config.json`\n- Ensure error messages point to the canonical path.\n\nVerification steps:\n- `uv run pytest -q tests/test_config_validation.py`\n\nAcceptance criteria:\n- `load_handbook_config(...)` reads only from `.project-handbook/config.json`.\n- Errors do not mention legacy config paths as supported locations.\n- Tests pass.\n"
+    },
+    {
+      "id": "I02-ROOT-0012",
+      "phase_id": "PHASE-I02",
+      "order": 22,
+      "title": "Code: update `ph doctor` to report new marker path + missing-path output",
+      "status": "done",
+      "started_at": "2026-02-07T01:13:53Z",
+      "completed_at": "2026-02-07T01:20:08Z",
+      "depends_on": [
+        "I02-ROOT-0011"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Update `ph doctor` so its output reflects the canonical marker path `.project-handbook/config.json`.\n\nFiles likely to change:\n- src/ph/doctor.py\n- tests/test_doctor.py\n\nBehaviors to implement/adjust:\n- Update missing-marker messaging from `project_handbook.config.json` to `.project-handbook/config.json`.\n\nVerification steps:\n- `uv run pytest -q tests/test_doctor.py`\n\nAcceptance criteria:\n- `ph doctor` prints the actual marker path found.\n- Missing-marker output uses `.project-handbook/config.json` as the required/canonical marker.\n- Exit codes remain consistent with contract.\n"
+    },
+    {
+      "id": "I02-ROOT-0013",
+      "phase_id": "PHASE-I02",
+      "order": 23,
+      "title": "Code: rework `ph init` to write `.project-handbook/config.json` and keep planning docs at repo root",
+      "status": "done",
+      "started_at": "2026-02-07T01:20:56Z",
+      "completed_at": "2026-02-07T01:27:00Z",
+      "depends_on": [
+        "I02-ROOT-0011"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Update `ph init` to create `.project-handbook/config.json` as the marker/config (BL-0004), while continuing to scaffold planning docs at repo root.\n\nFiles likely to change:\n- src/ph/init_repo.py\n- tests/test_init.py\n\nBehaviors to implement/adjust:\n- Change the marker/config path from `PH_ROOT/project_handbook.config.json` to `PH_ROOT/.project-handbook/config.json`.\n- Stdout must print exactly one line for the marker file:\n  - `Created: .project-handbook/config.json` OR `Already exists: .project-handbook/config.json`\n- Ensure `ph init` is still:\n  - non-destructive (no overwrites)\n  - idempotent\n  - safe to run in a directory that already has planning docs\n- Ensure planning doc scaffolding remains at repo root (e.g. `features/`, `sprints/`, `backlog/`, `roadmap/` are not moved under `.project-handbook/`).\n\nVerification steps:\n- `uv run pytest -q tests/test_init.py`\n\nAcceptance criteria:\n- Marker path and stdout match the contract.\n- Tests pass.\n"
+    },
+    {
+      "id": "I02-ROOT-0020",
+      "phase_id": "PHASE-I02",
+      "order": 30,
+      "title": "Tests: rewrite all fixtures that assume root-level `project_handbook.config.json`",
+      "status": "done",
+      "started_at": "2026-02-07T01:43:47Z",
+      "completed_at": "2026-02-07T01:50:39Z",
+      "depends_on": [
+        "I02-ROOT-0013",
+        "I02-ROOT-0012"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Update the test suite so temp handbook roots use the canonical marker `.project-handbook/config.json` instead of `project_handbook.config.json`.\n\nFiles likely to change:\n- tests/* (many files currently write/read `project_handbook.config.json`)\n- Potentially add a helper fixture in tests/conftest.py to create a canonical PH_ROOT marker.\n\nBehaviors to implement/adjust:\n- Replace all direct references to `tmp_path / \"project_handbook.config.json\"` with `tmp_path / \".project-handbook\" / \"config.json\"`.\n- Update assertions expecting init/doctor/root-detection stdout/stderr where marker names appear.\n- Keep tests focused on behavior (files written, exit codes, key lines), not Make-era strict output parity.\n\nVerification steps:\n- `uv run pytest -q`\n\nAcceptance criteria:\n- Entire test suite passes with the new marker path.\n- No test relies on the root-level marker `project_handbook.config.json`.\n"
+    },
+    {
+      "id": "I02-ROOT-0022",
+      "phase_id": "PHASE-I02",
+      "order": 32,
+      "title": "Docs: update user-facing setup instructions for new marker path",
+      "status": "done",
+      "started_at": "2026-02-07T01:51:14Z",
+      "completed_at": "2026-02-07T01:54:10Z",
+      "depends_on": [
+        "I02-ROOT-0013",
+        "I02-ROOT-0020"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Ensure repo docs reflect `.project-handbook/config.json` as the marker/config path.\n\nFiles likely to change:\n- README.md\n\nBehaviors to implement/adjust:\n- Update any examples that mention `project_handbook.config.json`.\n\nVerification steps:\n- `rg -n \"project_handbook.config.json\" README.md` should return no user-facing stale references.\n\nAcceptance criteria:\n- README examples match the implemented behavior.\n"
+    },
+    {
+      "id": "I01-ADR-0001",
+      "phase_id": "PHASE-I01",
+      "order": 100,
+      "title": "Contract: add `ph adr ...` command surface (at minimum `ph adr add`) and ADR validation requirements",
+      "status": "done",
+      "started_at": "2026-02-07T01:54:58Z",
+      "completed_at": "2026-02-07T02:11:22Z",
+      "depends_on": [
+        "INIT-PLN-0001",
+        "I02-ROOT-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Update the CLI contract to introduce first-class ADR commands and strengthen ADR validation requirements (BL-0001).\n\nFiles likely to change:\n- cli_plan/v1_cli/CLI_CONTRACT.md\n\nBehaviors to implement/adjust:\n- Contract-level; no code yet.\n- Add a new command family:\n  - `ph adr add --id ADR-#### --title <t> [--status draft] [--date YYYY-MM-DD]`\n- Document an internal-only escape hatch flag:\n  - `--force` exists for non-destructive override, but MUST NOT be shown in CLI help output.\n- Define the strict ADR naming convention for `PH_ROOT/adr/`:\n  - filename MUST be `NNNN-<slug>.md` where `NNNN` is 4 digits and `<slug>` is lowercase kebab-case.\n  - front matter `id` MUST be `ADR-NNNN` and MUST match the filename numeric prefix.\n- Define ADR validation requirements:\n  - required H1 headings: `# Context`, `# Decision`, `# Consequences`, `# Acceptance Criteria` (error)\n  - recommended H1 heading: `# Rollout` (warning)\n  - validation errors are actionable (expected/found, missing lists, etc.)\n\nVerification steps:\n- Doc review: ensure command surface, file layout, and validation requirements are consistent with other v1 docs.\n\nAcceptance criteria:\n- CLI contract includes ADR command surface and strict validation requirements.\n- Contract explicitly states `--force` is internal-only and not shown in help.\n"
+    },
+    {
+      "id": "I01-ADR-0002",
+      "phase_id": "PHASE-I01",
+      "order": 101,
+      "title": "ADR: write contract ADR for ADR conventions + internal-only --force",
+      "status": "todo",
+      "started_at": null,
+      "completed_at": null,
+      "depends_on": [
+        "I01-ADR-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Create an ADR documenting ADR conventions and the `ph adr add` contract surface (BL-0001).\n\nFiles likely to change:\n- cli_plan/v1_cli/ADR-CLI-0006-adr-commands-and-validation.md (new)\n- cli_plan/v1_cli/CLI_CONTRACT.md (link the ADR)\n\nBehaviors to implement/adjust:\n- ADR-level; no code.\n- Document strict ADR filename/front-matter/heading requirements.\n- Document `--force` as internal-only (not shown in help output).\n\nVerification steps:\n- Ensure contract links the new ADR.\n\nAcceptance criteria:\n- New ADR exists and does not contradict contract.\n"
+    },
+    {
+      "id": "I01-ADR-0010",
+      "phase_id": "PHASE-I01",
+      "order": 110,
+      "title": "Code: add `ph adr add` command to CLI",
+      "status": "todo",
+      "started_at": null,
+      "completed_at": null,
+      "depends_on": [
+        "I01-ADR-0001",
+        "I02-ROOT-0020"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Implement `ph adr add` and create ADR files under `PH_ROOT/adr/`.\n\nFiles likely to change:\n- src/ph/cli.py (or equivalent command entry)\n- src/ph/adr/*.py (new module(s))\n- tests/test_adr_add.py (new)\n\nBehaviors to implement/adjust:\n- Implement `ph adr add --id ADR-#### --title <t> [--status draft] [--date YYYY-MM-DD]`.\n- Ensure ADR filename is `NNNN-<slug>.md` and front matter `id` matches.\n- `--force` exists but MUST NOT appear in help output.\n\nVerification steps:\n- `uv run pytest -q tests/test_adr_add.py`\n\nAcceptance criteria:\n- Command creates valid ADR and respects overwrite semantics.\n"
+    },
+    {
+      "id": "I01-ADR-0011",
+      "phase_id": "PHASE-I01",
+      "order": 111,
+      "title": "Code: add ADR validation to `ph validate`",
+      "status": "todo",
+      "started_at": null,
+      "completed_at": null,
+      "depends_on": [
+        "I01-ADR-0010",
+        "I01-ADR-0002"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Implement ADR validation in `ph validate` per strict ADR conventions.\n\nFiles likely to change:\n- src/ph/validate.py (or equivalent)\n- src/ph/adr/validate.py (new)\n- tests/test_validate_adr.py\n\nBehaviors to implement/adjust:\n- Enforce strict filename and front matter matching.\n- Enforce required headings as errors; missing # Rollout as warning.\n- Error messages include expected/found and structured fields when applicable.\n\nVerification steps:\n- `uv run pytest -q tests/test_validate_adr.py`\n\nAcceptance criteria:\n- Validation matches conventions and produces actionable messages.\n"
+    },
+    {
+      "id": "I01-ADR-0012",
+      "phase_id": "PHASE-I01",
+      "order": 112,
+      "title": "Docs: update CLI contract and docs to include ADR folder conventions",
+      "status": "todo",
+      "started_at": null,
+      "completed_at": null,
+      "depends_on": [
+        "I01-ADR-0001",
+        "I01-ADR-0002",
+        "I02-ROOT-0020"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Ensure docs/specs reflect ADR conventions and `ph adr` surface.\n\nFiles likely to change:\n- cli_plan/v1_cli/CLI_CONTRACT.md\n- README.md (if user-facing ADR docs exist)\n\nBehaviors to implement/adjust:\n- Document ADR folder (`adr/`) under PH_ROOT and strict conventions.\n\nVerification steps:\n- Grep for `ph adr` and ADR conventions across contract.\n\nAcceptance criteria:\n- Docs match implemented behavior.\n"
+    },
+    {
+      "id": "I01-ADR-0013",
+      "phase_id": "PHASE-I01",
+      "order": 113,
+      "title": "Code: add `ph adr list` or equivalent ADR discovery",
+      "status": "todo",
+      "started_at": null,
+      "completed_at": null,
+      "depends_on": [
+        "I01-ADR-0011",
+        "I02-ROOT-0020"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Add an ADR discovery/listing command (optional but recommended) to make ADRs navigable.\n\nFiles likely to change:\n- src/ph/adr/list.py\n- tests/test_adr_list.py\n\nBehaviors to implement/adjust:\n- List ADRs in `PH_ROOT/adr/` and surface id/title/status/date.\n\nVerification steps:\n- `uv run pytest -q tests/test_adr_list.py`\n\nAcceptance criteria:\n- Command works and respects root marker contract.\n"
+    },
+    {
+      "id": "I01-ADR-0014",
+      "phase_id": "PHASE-I01",
+      "order": 114,
+      "title": "Tests: add ADR validation coverage (duplicates, mismatch, supersession consistency, headings)",
+      "status": "todo",
+      "started_at": null,
+      "completed_at": null,
+      "depends_on": [
+        "I01-ADR-0012",
+        "I02-ROOT-0020"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Encode ADR validation rules as tests so the contract stays stable (strict conventions).\n\nFiles likely to change:\n- tests/test_validate_adr.py (new)\n\nBehaviors to implement/adjust:\n- Tests only (no production code changes).\n- Create minimal ADR fixtures under `adr/` and run `ph validate --quick`.\n- Test cases should include:\n  - filename not matching `NNNN-<slug>.md` \u2192 error\n  - `id: ADR-0001` duplicated across two files \u2192 error (message includes both paths)\n  - filename `0002-...md` with `id: ADR-0003` \u2192 error (expected vs found)\n  - `status: superseded` without `superseded_by` \u2192 error (actionable message)\n  - `superseded_by: ADR-9999` where the referenced ADR file does not exist \u2192 error (actionable message)\n  - missing required headings `# Context`, `# Decision`, `# Consequences`, `# Acceptance Criteria` \u2192 error\n  - missing recommended headings `# Rollout` \u2192 warning\n\nVerification steps:\n- `uv run pytest -q tests/test_validate_adr.py`\n\nAcceptance criteria:\n- Tests cover strict ADR validation rules.\n"
+    },
+    {
+      "id": "I01-ADR-0015",
+      "phase_id": "PHASE-I01",
+      "order": 115,
+      "title": "Polish: ensure `--force` is hidden from help but available internally",
+      "status": "todo",
+      "started_at": null,
+      "completed_at": null,
+      "depends_on": [
+        "I01-ADR-0010",
+        "I01-ADR-0012"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Ensure `--force` exists for internal usage but is not visible in help output.\n\nFiles likely to change:\n- src/ph/cli.py\n- tests/test_help_topics.py\n\nBehaviors to implement/adjust:\n- Argument exists and is parsed.\n- CLI help (`ph adr add --help` and `ph --help`) must not show `--force`.\n\nVerification steps:\n- `uv run pytest -q tests/test_help_topics.py`\n\nAcceptance criteria:\n- `--force` is hidden from help and still usable.\n"
+    }
+  ]
+}
