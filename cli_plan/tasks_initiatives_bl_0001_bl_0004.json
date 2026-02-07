@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "CLI Plan \u2013 Initiative Task Queue (BL-0001 + BL-0004)",
+    "title": "CLI Plan – Initiative Task Queue (BL-0001 + BL-0004)",
     "type": "task-queue",
     "date": "2026-02-06",
     "tags": [
@@ -37,7 +37,7 @@
     {
       "id": "PHASE-I01",
       "order": 1,
-      "title": "Initiative \u2014 BL-0001 ADR Commands + Validation",
+      "title": "Initiative — BL-0001 ADR Commands + Validation",
       "goals": [
         "Introduce first-class ADR commands (starting with `ph adr add`).",
         "Enforce strict ADR naming/front-matter/heading conventions.",
@@ -47,7 +47,7 @@
     {
       "id": "PHASE-I02",
       "order": 2,
-      "title": "Initiative \u2014 BL-0004 PH_ROOT Marker + Config Under `.project-handbook/`",
+      "title": "Initiative — BL-0004 PH_ROOT Marker + Config Under `.project-handbook/`",
       "goals": [
         "Make `.project-handbook/config.json` the default marker/config location.",
         "Keep planning docs in the repo root while keeping CLI-owned state under `.project-handbook/`.",
@@ -216,9 +216,9 @@
       "phase_id": "PHASE-I01",
       "order": 101,
       "title": "ADR: write contract ADR for ADR conventions + internal-only --force",
-      "status": "todo",
-      "started_at": null,
-      "completed_at": null,
+      "status": "done",
+      "started_at": "2026-02-07T02:24:24Z",
+      "completed_at": "2026-02-07T02:31:58Z",
       "depends_on": [
         "I01-ADR-0001"
       ],
@@ -230,9 +230,9 @@
       "phase_id": "PHASE-I01",
       "order": 110,
       "title": "Code: add `ph adr add` command to CLI",
-      "status": "todo",
-      "started_at": null,
-      "completed_at": null,
+      "status": "done",
+      "started_at": "2026-02-07T02:32:51Z",
+      "completed_at": "2026-02-07T02:44:48Z",
       "depends_on": [
         "I01-ADR-0001",
         "I02-ROOT-0020"
@@ -245,9 +245,9 @@
       "phase_id": "PHASE-I01",
       "order": 111,
       "title": "Code: add ADR validation to `ph validate`",
-      "status": "todo",
-      "started_at": null,
-      "completed_at": null,
+      "status": "done",
+      "started_at": "2026-02-07T02:46:53Z",
+      "completed_at": "2026-02-07T02:55:38Z",
       "depends_on": [
         "I01-ADR-0010",
         "I01-ADR-0002"
@@ -260,9 +260,9 @@
       "phase_id": "PHASE-I01",
       "order": 112,
       "title": "Docs: update CLI contract and docs to include ADR folder conventions",
-      "status": "todo",
-      "started_at": null,
-      "completed_at": null,
+      "status": "done",
+      "started_at": "2026-02-07T02:56:13Z",
+      "completed_at": "2026-02-07T03:02:15Z",
       "depends_on": [
         "I01-ADR-0001",
         "I01-ADR-0002",
@@ -276,9 +276,9 @@
       "phase_id": "PHASE-I01",
       "order": 113,
       "title": "Code: add `ph adr list` or equivalent ADR discovery",
-      "status": "todo",
-      "started_at": null,
-      "completed_at": null,
+      "status": "done",
+      "started_at": "2026-02-07T03:02:44Z",
+      "completed_at": "2026-02-07T03:08:36Z",
       "depends_on": [
         "I01-ADR-0011",
         "I02-ROOT-0020"
@@ -291,24 +291,24 @@
       "phase_id": "PHASE-I01",
       "order": 114,
       "title": "Tests: add ADR validation coverage (duplicates, mismatch, supersession consistency, headings)",
-      "status": "todo",
-      "started_at": null,
-      "completed_at": null,
+      "status": "done",
+      "started_at": "2026-02-07T03:09:18Z",
+      "completed_at": "2026-02-07T03:18:15Z",
       "depends_on": [
         "I01-ADR-0012",
         "I02-ROOT-0020"
       ],
       "work_location": "cli_repo",
-      "kickoff_prompt": "Goal: Encode ADR validation rules as tests so the contract stays stable (strict conventions).\n\nFiles likely to change:\n- tests/test_validate_adr.py (new)\n\nBehaviors to implement/adjust:\n- Tests only (no production code changes).\n- Create minimal ADR fixtures under `adr/` and run `ph validate --quick`.\n- Test cases should include:\n  - filename not matching `NNNN-<slug>.md` \u2192 error\n  - `id: ADR-0001` duplicated across two files \u2192 error (message includes both paths)\n  - filename `0002-...md` with `id: ADR-0003` \u2192 error (expected vs found)\n  - `status: superseded` without `superseded_by` \u2192 error (actionable message)\n  - `superseded_by: ADR-9999` where the referenced ADR file does not exist \u2192 error (actionable message)\n  - missing required headings `# Context`, `# Decision`, `# Consequences`, `# Acceptance Criteria` \u2192 error\n  - missing recommended headings `# Rollout` \u2192 warning\n\nVerification steps:\n- `uv run pytest -q tests/test_validate_adr.py`\n\nAcceptance criteria:\n- Tests cover strict ADR validation rules.\n"
+      "kickoff_prompt": "Goal: Encode ADR validation rules as tests so the contract stays stable (strict conventions).\n\nFiles likely to change:\n- tests/test_validate_adr.py (new)\n\nBehaviors to implement/adjust:\n- Tests only (no production code changes).\n- Create minimal ADR fixtures under `adr/` and run `ph validate --quick`.\n- Test cases should include:\n  - filename not matching `NNNN-<slug>.md` → error\n  - `id: ADR-0001` duplicated across two files → error (message includes both paths)\n  - filename `0002-...md` with `id: ADR-0003` → error (expected vs found)\n  - `status: superseded` without `superseded_by` → error (actionable message)\n  - `superseded_by: ADR-9999` where the referenced ADR file does not exist → error (actionable message)\n  - missing required headings `# Context`, `# Decision`, `# Consequences`, `# Acceptance Criteria` → error\n  - missing recommended headings `# Rollout` → warning\n\nVerification steps:\n- `uv run pytest -q tests/test_validate_adr.py`\n\nAcceptance criteria:\n- Tests cover strict ADR validation rules.\n"
     },
     {
       "id": "I01-ADR-0015",
       "phase_id": "PHASE-I01",
       "order": 115,
       "title": "Polish: ensure `--force` is hidden from help but available internally",
-      "status": "todo",
-      "started_at": null,
-      "completed_at": null,
+      "status": "done",
+      "started_at": "2026-02-07T03:18:45Z",
+      "completed_at": "2026-02-07T03:24:38Z",
       "depends_on": [
         "I01-ADR-0010",
         "I01-ADR-0012"

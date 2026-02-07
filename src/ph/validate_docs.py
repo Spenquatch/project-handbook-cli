@@ -4,6 +4,8 @@ import json
 import re
 from pathlib import Path
 
+from .adr.validate import validate_adrs
+
 
 def load_validation_rules(*, ph_root: Path) -> dict:
     rules_path = ph_root / "process" / "checks" / "validation_rules.json"
@@ -790,6 +792,7 @@ def run_validate(
     validate_system_scope_artifacts_in_project_scope(
         issues=issues, rules=rules, root=ph_data_root, ph_root=ph_root, scope=scope
     )
+    validate_adrs(issues=issues, root=ph_data_root)
 
     try:
         validate_sprints(issues=issues, rules=rules, root=ph_data_root)

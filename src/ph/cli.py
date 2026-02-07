@@ -8,6 +8,8 @@ import sys
 from pathlib import Path
 
 from . import __version__
+from .adr import run_adr_add, run_adr_list
+from .adr.add import add_adr_add_arguments
 from .backlog import (
     run_backlog_add,
     run_backlog_assign,
@@ -359,6 +361,12 @@ def build_parser() -> argparse.ArgumentParser:
     feature_archive_parser.add_argument(
         "--force", action="store_true", help="Force archive despite warnings (requires explicit approval)"
     )
+
+    adr_parser = subparsers.add_parser("adr", help="Manage ADRs", parents=[sub_common])
+    adr_subparsers = adr_parser.add_subparsers(dest="adr_command")
+    adr_add_parser = adr_subparsers.add_parser("add", help="Create an ADR file", parents=[sub_common])
+    add_adr_add_arguments(adr_add_parser)
+    adr_subparsers.add_parser("list", help="List ADRs", parents=[sub_common])
 
     backlog_parser = subparsers.add_parser("backlog", help="Manage issue backlog", parents=[sub_common])
     backlog_subparsers = backlog_parser.add_subparsers(dest="backlog_command")
@@ -977,6 +985,46 @@ def main(argv: list[str] | None = None) -> int:
                         file=sys.stderr,
                         end="",
                     )
+                    exit_code = 2
+            elif args.command == "adr":
+                if getattr(args, "adr_command", None) is None:
+                    print("Usage: ph adr <add|list>\n", file=sys.stderr, end="")
+                    exit_code = 2
+                elif args.adr_command == "add":
+                    if ctx.scope == "project":
+                        cmd_args = [
+                            "adr",
+                            "add",
+                            "--id",
+                            str(getattr(args, "id")),
+                            "--title",
+                            str(getattr(args, "title")),
+                        ]
+                        if "--status" in invocation_args:
+                            cmd_args.extend(["--status", str(getattr(args, "status"))])
+                        if "--superseded-by" in invocation_args and getattr(args, "superseded_by", None) is not None:
+                            cmd_args.extend(["--superseded-by", str(getattr(args, "superseded_by"))])
+                        if "--date" in invocation_args and getattr(args, "date", None) is not None:
+                            cmd_args.extend(["--date", str(getattr(args, "date"))])
+                        if "--force" in invocation_args and bool(getattr(args, "force", False)):
+                            cmd_args.append("--force")
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
+
+                    exit_code = run_adr_add(
+                        ph_root=ph_root,
+                        adr_id=str(getattr(args, "id")),
+                        title=str(getattr(args, "title")),
+                        status=str(getattr(args, "status")),
+                        date=getattr(args, "date", None),
+                        superseded_by=getattr(args, "superseded_by", None),
+                        force=bool(getattr(args, "force", False)),
+                    )
+                elif args.adr_command == "list":
+                    if ctx.scope == "project":
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["adr", "list"]))
+                    exit_code = run_adr_list(ph_root=ph_root)
+                else:
+                    print("Usage: ph adr <add|list>\n", file=sys.stderr, end="")
                     exit_code = 2
             elif args.command == "backlog":
                 if args.backlog_command is None:

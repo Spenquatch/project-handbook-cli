@@ -6,6 +6,7 @@ tags: [handbook, cli, contract, automation]
 links:
   - ./ADR-CLI-0001-ph-cli-migration.md
   - ./ADR-CLI-0004-ph-root-layout.md
+  - ./ADR-CLI-0006-adr-commands-and-validation.md
   - ../archive/strict_parity_2026-02/v0_make/MAKE_CONTRACT.md
   - ../archive/strict_parity_2026-02/PARITY_CHECKLIST.md
 ---
@@ -519,7 +520,10 @@ Behavior:
 
 ## `ph adr`
 
-### `ph adr add --id ADR-#### --title <t> [--status draft] [--date YYYY-MM-DD]`
+Rationale + conventions reference:
+- `cli_plan/v1_cli/ADR-CLI-0006-adr-commands-and-validation.md`
+
+### `ph adr add --id ADR-#### --title <t> [--status draft] [--superseded-by ADR-####] [--date YYYY-MM-DD]`
 
 Behavior:
 - Create a new ADR markdown file under `PH_ROOT/adr/` and print its path.
@@ -529,13 +533,15 @@ Behavior:
     - lowercase,
     - non-alphanumeric characters replaced with `-`,
     - collapse consecutive `-`,
-    - trim leading/trailing `-`.
+    - trim leading/trailing `-`,
+    - truncate to 80 characters (then trim a trailing `-` if truncation produces one).
 - The generated file MUST include YAML front matter with at least:
   - `id: ADR-NNNN` (MUST match filename numeric prefix)
   - `title: <t>`
   - `type: adr`
   - `status: draft|accepted|rejected|superseded` (default: `draft`)
   - `date: YYYY-MM-DD` (default: today, local time)
+  - If `status: superseded`, then `superseded_by: ADR-NNNN` (MUST reference an existing ADR id)
 - The generated file body MUST include these H1 sections (exact spelling, H1 only):
   - `# Context`
   - `# Decision`
@@ -546,6 +552,7 @@ Behavior:
 Guardrails:
 - `--id` MUST be exactly `ADR-NNNN` where `NNNN` is 4 digits (`0000`–`9999`); otherwise fail non-zero with remediation.
 - The CLI MUST refuse to create the ADR if the target path already exists (non-destructive).
+- If `--status superseded`, then `--superseded-by ADR-NNNN` MUST be provided and MUST reference an existing ADR in `adr/*.md`.
 
 Internal-only escape hatch (MUST exist, MUST NOT appear in CLI help output):
 - `--force`:
@@ -557,11 +564,15 @@ Internal-only escape hatch (MUST exist, MUST NOT appear in CLI help output):
 Naming convention for `PH_ROOT/adr/`:
 - ADR filenames MUST be `NNNN-<slug>.md` where `NNNN` is 4 digits and `<slug>` is lowercase kebab-case.
 - ADR front matter `id` MUST be `ADR-NNNN` and MUST match the filename numeric prefix.
+- ADR ids MUST be unique across `PH_ROOT/adr/*.md` (no duplicate `id: ADR-NNNN` across multiple files).
+- If front matter `status: superseded`, front matter MUST include `superseded_by: ADR-NNNN` and `superseded_by` MUST reference an existing ADR in `PH_ROOT/adr/*.md`.
 
 Validation requirements for ADR markdown files:
 - Naming/id checks (**errors**):
   - filename matches `NNNN-<slug>.md`
   - front matter `id` exists and equals `ADR-NNNN` for the filename prefix
+  - front matter `id` is not duplicated across multiple files
+  - if `status: superseded`, then `superseded_by` exists and references an existing ADR
 - Required H1 headings (missing any is an **error**):
   - `# Context`
   - `# Decision`
@@ -574,7 +585,7 @@ Actionable validation output:
 - Errors/warnings MUST include:
   - ADR file path,
   - what was expected vs what was found (e.g., `expected id ADR-0007, found ADR-0008`),
-  - for heading checks: an explicit `missing:` list and a `found H1:` list (in document order).
+  - for heading checks: an explicit `missing:` list and a `found_h1:` list (in document order).
 
 ## `ph backlog`
 

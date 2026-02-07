@@ -82,3 +82,37 @@ def test_help_unknown_topic_exits_non_zero(tmp_path: Path) -> None:
     result = subprocess.run(["ph", "help", "nope", "--root", str(tmp_path)], capture_output=True, text=True)
     assert result.returncode != 0
 
+
+def test_cli_help_does_not_show_force_flag() -> None:
+    result = subprocess.run(["ph", "--help"], capture_output=True, text=True)
+    assert result.returncode == 0
+    assert "--force" not in result.stdout
+
+
+def test_adr_add_help_does_not_show_force_flag() -> None:
+    result = subprocess.run(["ph", "adr", "add", "--help"], capture_output=True, text=True)
+    assert result.returncode == 0
+    assert "--force" not in result.stdout
+
+
+def test_adr_add_force_flag_is_accepted_but_hidden(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    cmd = [
+        "ph",
+        "adr",
+        "add",
+        "--no-post-hook",
+        "--root",
+        str(tmp_path),
+        "--id",
+        "ADR-0001",
+        "--title",
+        "Test ADR",
+    ]
+    first = subprocess.run(cmd, capture_output=True, text=True)
+    assert first.returncode == 0
+    assert "--force" not in first.stdout
+
+    second = subprocess.run([*cmd, "--force"], capture_output=True, text=True)
+    assert second.returncode == 0
+    assert "--force" not in second.stdout
