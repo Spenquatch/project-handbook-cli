@@ -892,7 +892,7 @@ def render_summary(
                 scope = event.get("scope", "unknown")
                 stats: list[str] = []
                 duration = event.get("duration")
-                if isinstance(duration, (int, float)):
+                if isinstance(duration, int | float):
                     stats.append(f"{duration:.2f}s")
                 stdout_len = event.get("stdout_len")
                 if isinstance(stdout_len, int):

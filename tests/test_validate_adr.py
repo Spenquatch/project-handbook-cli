@@ -4,8 +4,6 @@ import json
 import subprocess
 from pathlib import Path
 
-import pytest
-
 
 def _write_basic_ph_root(ph_root: Path) -> None:
     config = ph_root / ".project-handbook" / "config.json"
@@ -166,7 +164,12 @@ def test_validate_adr_duplicate_id_across_files_is_error_and_mentions_both_paths
     err = next(i for i in report["issues"] if i.get("code") == "adr_duplicate_id")
     assert err.get("severity") == "error"
     assert err.get("id") == "ADR-0001"
-    assert sorted(err.get("paths", [])) == sorted([a.relative_to(tmp_path).as_posix(), b.relative_to(tmp_path).as_posix()])
+    assert sorted(err.get("paths", [])) == sorted(
+        [
+            a.relative_to(tmp_path).as_posix(),
+            b.relative_to(tmp_path).as_posix(),
+        ]
+    )
 
     msg = str(err.get("message", ""))
     assert "ADR-0001" in msg
