@@ -30,8 +30,8 @@ def _read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _load_routing_config(ph_root: Path) -> tuple[list[str], list[str], set[str]]:
-    config_path = ph_root / "process" / "automation" / "system_scope_config.json"
+def _load_routing_config(ph_project_root: Path) -> tuple[list[str], list[str], set[str]]:
+    config_path = ph_project_root / "process" / "automation" / "system_scope_config.json"
     config = _read_json(config_path)
     routing = config.get("routing_rules") or {}
     feature_prefixes = routing.get("feature_name_prefixes_for_system_scope") or []
@@ -137,8 +137,8 @@ def _is_system_lane(lane: str, lane_prefixes: list[str]) -> bool:
     return any(lane.startswith(prefix) for prefix in lane_prefixes)
 
 
-def _project_task_dest(ph_root: Path, system_root: Path, task_dir: Path) -> Path | None:
-    rel = task_dir.relative_to(ph_root)
+def _project_task_dest(ph_project_root: Path, system_root: Path, task_dir: Path) -> Path | None:
+    rel = task_dir.relative_to(ph_project_root)
     parts = list(rel.parts)
     if len(parts) < 5:
         return None
@@ -302,6 +302,8 @@ def _rewrite_target(
             rel = os.path.relpath(str(adr_dst), start=str(md_path.parent))
             return f"{Path(rel).as_posix()}{fragment}"
 
+    handbook_root = ph_root / ".project-handbook"
+
     repo_roots = [
         "backlog",
         "parking-lot",
@@ -321,6 +323,10 @@ def _rewrite_target(
 
     for root_name in repo_roots:
         if raw.startswith(f"../{root_name}/"):
+            repo_path = handbook_root / raw[len("../") :]
+            if repo_path.exists():
+                rel = os.path.relpath(str(repo_path), start=str(md_path.parent))
+                return f"{Path(rel).as_posix()}{fragment}"
             repo_path = ph_root / raw[len("../") :]
             if repo_path.exists():
                 rel = os.path.relpath(str(repo_path), start=str(md_path.parent))
@@ -329,6 +335,10 @@ def _rewrite_target(
         marker = f"{root_name}/"
         idx = raw.find(marker)
         if idx != -1 and (idx == 0 or raw[idx - 1] == "/"):
+            repo_path = handbook_root / raw[idx:]
+            if repo_path.exists():
+                rel = os.path.relpath(str(repo_path), start=str(md_path.parent))
+                return f"{Path(rel).as_posix()}{fragment}"
             repo_path = ph_root / raw[idx:]
             if repo_path.exists():
                 rel = os.path.relpath(str(repo_path), start=str(md_path.parent))
@@ -428,10 +438,11 @@ def run_migrate_system_scope(*, ph_root: Path, confirm: str, force: str) -> int:
 
     summary = Summary(moved=[], skipped=[], errors=[])
 
-    feature_prefixes, lane_prefixes, system_adr_tags = _load_routing_config(ph_root)
-    system_root = ph_root / ".project-handbook" / "system"
+    ph_project_root = ph_root / ".project-handbook"
+    feature_prefixes, lane_prefixes, system_adr_tags = _load_routing_config(ph_project_root)
+    system_root = ph_project_root / "system"
 
-    features_dir = ph_root / "features"
+    features_dir = ph_project_root / "features"
     for feature_dir in _iter_feature_dirs(features_dir):
         name = feature_dir.name
         if not any(name.startswith(prefix) for prefix in feature_prefixes):
@@ -448,7 +459,7 @@ def run_migrate_system_scope(*, ph_root: Path, confirm: str, force: str) -> int:
         except Exception as exc:
             summary.errors.append({"path": _to_rel_posix(ph_root, feature_dir), "message": str(exc)})
 
-    adr_dir = ph_root / "adr"
+    adr_dir = ph_project_root / "adr"
     for adr_file in _iter_adr_files(adr_dir):
         try:
             text = adr_file.read_text(encoding="utf-8")
@@ -470,14 +481,14 @@ def run_migrate_system_scope(*, ph_root: Path, confirm: str, force: str) -> int:
         except Exception as exc:
             summary.errors.append({"path": _to_rel_posix(ph_root, adr_file), "message": str(exc)})
 
-    sprints_dir = ph_root / "sprints"
+    sprints_dir = ph_project_root / "sprints"
     if sprints_dir.exists():
         for task_yaml in sorted(sprints_dir.rglob("task.yaml")):
-            if ".project-handbook" in task_yaml.parts:
+            if task_yaml.is_relative_to(system_root):
                 continue
             try:
                 task_dir = task_yaml.parent
-                task_dir.relative_to(ph_root)
+                task_dir.relative_to(ph_project_root)
             except Exception:
                 continue
 
@@ -485,7 +496,7 @@ def run_migrate_system_scope(*, ph_root: Path, confirm: str, force: str) -> int:
             if not lane or not _is_system_lane(lane, lane_prefixes):
                 continue
 
-            dest = _project_task_dest(ph_root, system_root, task_dir)
+            dest = _project_task_dest(ph_project_root, system_root, task_dir)
             if not dest:
                 summary.skipped.append({"path": _to_rel_posix(ph_root, task_dir), "reason": "unrecognized_task_layout"})
                 continue

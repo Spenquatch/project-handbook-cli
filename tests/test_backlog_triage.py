@@ -18,15 +18,16 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def test_backlog_triage_generates_then_displays_p0(tmp_path: Path) -> None:
@@ -61,7 +62,7 @@ def test_backlog_triage_generates_then_displays_p0(tmp_path: Path) -> None:
     )
     assert add.returncode == 0
 
-    triage_path = tmp_path / "backlog" / "bugs" / issue_id / "triage.md"
+    triage_path = tmp_path / ".project-handbook" / "backlog" / "bugs" / issue_id / "triage.md"
     assert triage_path.exists()
     triage_path.unlink()
 

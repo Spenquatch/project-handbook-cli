@@ -13,23 +13,25 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def test_roadmap_validate_fails_for_broken_links_then_passes(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
 
-    (tmp_path / "valid.md").write_text("ok\n", encoding="utf-8")
+    data_root = tmp_path / ".project-handbook"
+    (data_root / "valid.md").write_text("ok\n", encoding="utf-8")
 
-    roadmap_path = tmp_path / "roadmap" / "now-next-later.md"
+    roadmap_path = data_root / "roadmap" / "now-next-later.md"
     roadmap_path.parent.mkdir(parents=True, exist_ok=True)
     roadmap_path.write_text(
         "- [Valid](../valid.md)\n- [Broken](../missing.md)\n",
@@ -48,7 +50,7 @@ def test_roadmap_validate_fails_for_broken_links_then_passes(tmp_path: Path) -> 
     assert "❌ Roadmap validation failed:" in result.stdout
     assert "  - Broken link: Broken -> ../missing.md" in result.stdout
 
-    (tmp_path / "missing.md").write_text("ok\n", encoding="utf-8")
+    (data_root / "missing.md").write_text("ok\n", encoding="utf-8")
 
     result = subprocess.run(
         ["ph", "--root", str(tmp_path), "--no-post-hook", "roadmap", "validate"],

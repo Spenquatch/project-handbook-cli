@@ -17,7 +17,7 @@ def test_project_scope_data_root_is_repo_root(tmp_path: Path, monkeypatch: pytes
     scope = resolve_scope(cli_scope=None)
     assert scope == "project"
     ctx = build_context(ph_root=tmp_path, scope=scope)
-    assert ctx.ph_data_root == tmp_path.resolve()
+    assert ctx.ph_data_root == (tmp_path / ".project-handbook").resolve()
 
 
 def test_system_scope_data_root(tmp_path: Path) -> None:

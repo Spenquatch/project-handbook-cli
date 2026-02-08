@@ -14,15 +14,16 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _write_package_json(ph_root: Path) -> None:
@@ -51,9 +52,10 @@ def _extract_completed_task_lines(retro_text: str) -> list[str]:
 def test_sprint_close_stdout_archive_and_retrospective_match_make_convention(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     _write_package_json(tmp_path)
+    ph_data_root = tmp_path / ".project-handbook"
 
     # Seed backlog + parking-lot so the guardrail refresh prints stable counts.
-    bug_dir = tmp_path / "backlog" / "bugs" / "BUG-001"
+    bug_dir = ph_data_root / "backlog" / "bugs" / "BUG-001"
     bug_dir.mkdir(parents=True, exist_ok=True)
     (bug_dir / "README.md").write_text(
         "\n".join(
@@ -71,7 +73,7 @@ def test_sprint_close_stdout_archive_and_retrospective_match_make_convention(tmp
         encoding="utf-8",
     )
 
-    parking_dir = tmp_path / "parking-lot" / "features" / "PARK-001"
+    parking_dir = ph_data_root / "parking-lot" / "features" / "PARK-001"
     parking_dir.mkdir(parents=True, exist_ok=True)
     (parking_dir / "README.md").write_text(
         "\n".join(
@@ -89,7 +91,7 @@ def test_sprint_close_stdout_archive_and_retrospective_match_make_convention(tmp
 
     # Seed a bounded SEQ sprint + current pointer.
     sprint_id = "SPRINT-SEQ-0004"
-    sprint_dir = tmp_path / "sprints" / "SEQ" / sprint_id
+    sprint_dir = ph_data_root / "sprints" / "SEQ" / sprint_id
     tasks_dir = sprint_dir / "tasks"
     tasks_dir.mkdir(parents=True, exist_ok=True)
     (sprint_dir / "plan.md").write_text(
@@ -151,11 +153,11 @@ def test_sprint_close_stdout_archive_and_retrospective_match_make_convention(tmp
                 title = raw.split(":", 1)[1].strip()
         expected_done_lines.append(f"- ✅ {task_id}: {title}")
 
-    current_link = tmp_path / "sprints" / "current"
+    current_link = ph_data_root / "sprints" / "current"
     current_link.parent.mkdir(parents=True, exist_ok=True)
     current_link.symlink_to(Path("SEQ") / sprint_id)
 
-    (tmp_path / "releases" / "v0.6.0").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "releases" / "v0.6.0").mkdir(parents=True, exist_ok=True)
 
     env = dict(os.environ)
     env["PH_FAKE_NOW"] = "2099-02-03T04:05:06.789012Z"
@@ -176,9 +178,9 @@ def test_sprint_close_stdout_archive_and_retrospective_match_make_convention(tmp
     assert res.returncode == 0
 
     resolved_root = tmp_path.resolve()
-    archived_dir = resolved_root / "sprints" / "archive" / "SEQ" / sprint_id
-    retro_path = resolved_root / "sprints" / "SEQ" / sprint_id / "retrospective.md"
-    progress_path = resolved_root / "releases" / "v0.6.0" / "progress.md"
+    archived_dir = resolved_root / ".project-handbook" / "sprints" / "archive" / "SEQ" / sprint_id
+    retro_path = resolved_root / ".project-handbook" / "sprints" / "SEQ" / sprint_id / "retrospective.md"
+    progress_path = resolved_root / ".project-handbook" / "releases" / "v0.6.0" / "progress.md"
 
     expected_stdout = (
         f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n> ph sprint close\n\n"
@@ -201,7 +203,7 @@ def test_sprint_close_stdout_archive_and_retrospective_match_make_convention(tmp
     assert not current_link.exists()
     assert archived_dir.exists()
 
-    archive_index = json.loads((tmp_path / "sprints" / "archive" / "index.json").read_text(encoding="utf-8"))
+    archive_index = json.loads((ph_data_root / "sprints" / "archive" / "index.json").read_text(encoding="utf-8"))
     entry = next(e for e in archive_index.get("sprints", []) if e.get("sprint") == sprint_id)
     assert entry["archived_at"] == env["PH_FAKE_NOW"]
     assert entry["path"] == f"sprints/archive/SEQ/{sprint_id}"

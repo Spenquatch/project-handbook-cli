@@ -13,15 +13,16 @@ def _write_minimal_ph_root(ph_root: Path, *, validation_rules: str = "{}") -> No
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text(validation_rules, encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text(validation_rules, encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def test_sprint_plan_creates_skeleton_and_prints_project_hints(tmp_path: Path) -> None:
@@ -35,7 +36,7 @@ def test_sprint_plan_creates_skeleton_and_prints_project_hints(tmp_path: Path) -
         env=env,
     )
     assert result.returncode == 0
-    sprint_dir = tmp_path / "sprints" / "2099" / "SPRINT-2099-01-01"
+    sprint_dir = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01"
     plan_file = sprint_dir / "plan.md"
     assert result.stdout.splitlines() == [
         f"Created sprint plan: {plan_file}",
@@ -48,7 +49,7 @@ def test_sprint_plan_creates_skeleton_and_prints_project_hints(tmp_path: Path) -
         "  3. Review `status/current_summary.md` after generating status",
         "  4. Re-run `ph onboarding session sprint-planning` for facilitation tips",
         "Sprint scaffold ready:",
-        "  1. Edit sprints/current/plan.md with goals, lanes, and integration tasks",
+        "  1. Edit .project-handbook/sprints/current/plan.md with goals, lanes, and integration tasks",
         "  2. Seed tasks via 'ph task create --title ... --feature ... --decision ADR-###'",
         "  3. Re-run 'ph sprint status' to confirm health + next-up ordering",
         "  4. Run 'ph validate --quick' before handing off to another agent",
@@ -57,7 +58,7 @@ def test_sprint_plan_creates_skeleton_and_prints_project_hints(tmp_path: Path) -
     assert sprint_dir.exists()
     assert (sprint_dir / "tasks").exists()
     assert (sprint_dir / "plan.md").exists()
-    assert (tmp_path / "sprints" / "current").resolve() == sprint_dir.resolve()
+    assert (tmp_path / ".project-handbook" / "sprints" / "current").resolve() == sprint_dir.resolve()
 
 def test_sprint_plan_bounded_template_matches_legacy(tmp_path: Path) -> None:
     _write_minimal_ph_root(
@@ -75,7 +76,7 @@ def test_sprint_plan_bounded_template_matches_legacy(tmp_path: Path) -> None:
     )
     assert result.returncode == 0
 
-    plan_path = tmp_path / "sprints" / "2099" / "SPRINT-2099-01-01" / "plan.md"
+    plan_path = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "plan.md"
     assert plan_path.exists()
 
     expected_lines = [
@@ -187,7 +188,7 @@ def test_sprint_open_prints_pnpm_make_preamble_when_package_json_present(tmp_pat
     env = dict(os.environ)
 
     sprint_id = "SPRINT-2099-01-02"
-    sprint_dir = tmp_path / "sprints" / "2099" / sprint_id
+    sprint_dir = tmp_path / ".project-handbook" / "sprints" / "2099" / sprint_id
     sprint_dir.mkdir(parents=True, exist_ok=True)
 
     result = subprocess.run(
@@ -271,7 +272,7 @@ def test_sprint_open_updates_current_symlink_and_prints_exact_stdout(tmp_path: P
     env = dict(os.environ)
 
     sprint_id = "SPRINT-2099-01-02"
-    sprint_dir = tmp_path / "sprints" / "2099" / sprint_id
+    sprint_dir = tmp_path / ".project-handbook" / "sprints" / "2099" / sprint_id
     sprint_dir.mkdir(parents=True, exist_ok=True)
 
     opened = subprocess.run(
@@ -283,7 +284,7 @@ def test_sprint_open_updates_current_symlink_and_prints_exact_stdout(tmp_path: P
     assert opened.returncode == 0
     assert opened.stdout == f"✅ Current sprint set to: {sprint_id}\n"
 
-    current_link = tmp_path / "sprints" / "current"
+    current_link = tmp_path / ".project-handbook" / "sprints" / "current"
     assert current_link.exists()
     assert current_link.resolve() == sprint_dir.resolve()
 

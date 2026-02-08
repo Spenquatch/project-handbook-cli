@@ -9,26 +9,27 @@ import pytest
 
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / ".project-handbook" / "config.json"
+    ph_project_root = ph_root / ".project-handbook"
+    config = ph_project_root / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_project_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "system_scope_config.json").write_text(
         json.dumps({"routing_rules": {}}), encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _seed_feature_and_sprint(*, ph_root: Path, scope: str) -> Path:
-    base = ph_root if scope == "project" else (ph_root / ".project-handbook" / "system")
+    base = (ph_root / ".project-handbook") if scope == "project" else (ph_root / ".project-handbook" / "system")
 
     feature_dir = base / "features" / "feat-a"
     feature_dir.mkdir(parents=True, exist_ok=True)

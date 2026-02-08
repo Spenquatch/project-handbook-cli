@@ -6,32 +6,33 @@ from pathlib import Path
 
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / ".project-handbook" / "config.json"
+    ph_project_root = ph_root / ".project-handbook"
+    config = ph_project_root / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_project_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def test_release_progress_file_parity_v1p0056(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
 
     version = "v0.6.0"
-    release_dir = tmp_path / "releases" / version
+    release_dir = tmp_path / ".project-handbook" / "releases" / version
     release_dir.mkdir(parents=True, exist_ok=True)
-    (tmp_path / "releases" / "current").parent.mkdir(parents=True, exist_ok=True)
-    (tmp_path / "releases" / "current").symlink_to(version)
+    (tmp_path / ".project-handbook" / "releases" / "current").parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / ".project-handbook" / "releases" / "current").symlink_to(version)
 
     (release_dir / "plan.md").write_text(
         "\n".join(
@@ -75,9 +76,9 @@ def test_release_progress_file_parity_v1p0056(tmp_path: Path) -> None:
     )
 
     # Sprint slot assignments: slots 1-3 assigned, slot 4 unassigned.
-    archived_2 = tmp_path / "sprints" / "archive" / "2026" / "SPRINT-SEQ-0002"
-    archived_3 = tmp_path / "sprints" / "archive" / "2026" / "SPRINT-SEQ-0003"
-    current_4 = tmp_path / "sprints" / "2026" / "SPRINT-SEQ-0004"
+    archived_2 = tmp_path / ".project-handbook" / "sprints" / "archive" / "2026" / "SPRINT-SEQ-0002"
+    archived_3 = tmp_path / ".project-handbook" / "sprints" / "archive" / "2026" / "SPRINT-SEQ-0003"
+    current_4 = tmp_path / ".project-handbook" / "sprints" / "2026" / "SPRINT-SEQ-0004"
     for sprint_dir, slot in [(archived_2, 1), (archived_3, 2), (current_4, 3)]:
         sprint_dir.mkdir(parents=True, exist_ok=True)
         (sprint_dir / "plan.md").write_text(
@@ -93,8 +94,8 @@ def test_release_progress_file_parity_v1p0056(tmp_path: Path) -> None:
             encoding="utf-8",
         )
 
-    (tmp_path / "sprints" / "current").parent.mkdir(parents=True, exist_ok=True)
-    (tmp_path / "sprints" / "current").symlink_to(Path("2026") / "SPRINT-SEQ-0004")
+    (tmp_path / ".project-handbook" / "sprints" / "current").parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / ".project-handbook" / "sprints" / "current").symlink_to(Path("2026") / "SPRINT-SEQ-0004")
 
     # Tasks for feature completion (all done → 100%).
     tasks_root = current_4 / "tasks"
@@ -158,7 +159,7 @@ def test_release_progress_file_parity_v1p0056(tmp_path: Path) -> None:
     )
     assert result.returncode == 0
 
-    progress_path = tmp_path / "releases" / version / "progress.md"
+    progress_path = tmp_path / ".project-handbook" / "releases" / version / "progress.md"
     expected_stdout = f"📝 Updated: {progress_path}\n"
     assert result.stdout == expected_stdout
 

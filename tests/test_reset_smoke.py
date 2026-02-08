@@ -6,19 +6,20 @@ from pathlib import Path
 
 
 def _write_ph_root_for_reset_smoke(ph_root: Path) -> None:
-    config = ph_root / ".project-handbook" / "config.json"
+    ph_project_root = ph_root / ".project-handbook"
+    config = ph_project_root / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_project_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
 
@@ -26,56 +27,48 @@ def _write_ph_root_for_reset_smoke(ph_root: Path) -> None:
         "schema_version": 1,
         "forbidden_subtrees": [".project-handbook/system"],
         "delete_contents_roots": [
-            "sprints",
-            "features",
-            "adr",
-            "decision-register",
-            "backlog",
-            "parking-lot",
-            "releases",
-            "contracts",
-            "status",
-            "process/sessions/logs",
-            "process/sessions/session_end",
+            ".project-handbook/sprints",
+            ".project-handbook/features",
+            ".project-handbook/adr",
+            ".project-handbook/decision-register",
+            ".project-handbook/backlog",
+            ".project-handbook/parking-lot",
+            ".project-handbook/releases",
+            ".project-handbook/contracts",
+            ".project-handbook/status",
+            ".project-handbook/process/sessions/logs",
+            ".project-handbook/process/sessions/session_end",
         ],
         "delete_paths": [".project-handbook/history.log"],
         "preserve_paths": [
             ".project-handbook/.gitkeep",
-            "sprints/archive/.gitkeep",
-            "adr/README.md",
-            "adr/EXAMPLE-0001-sample-decision.md",
-            "decision-register/README.md",
-            "releases/CHANGELOG.md",
-            "releases/EXAMPLE-v0.1.0.md",
-            "status/README.md",
-            "process/sessions/logs/.gitkeep",
-            "process/sessions/logs/latest_summary.md",
-            "process/sessions/session_end/session_end_index.json",
+            ".project-handbook/process/sessions/logs/.gitkeep",
+            ".project-handbook/sprints/archive/.gitkeep",
         ],
         "rewrite_paths": [
-            "roadmap/now-next-later.md",
-            "backlog/index.json",
-            "parking-lot/index.json",
-            "sprints/archive/index.json",
-            "process/sessions/logs/latest_summary.md",
-            "process/sessions/session_end/session_end_index.json",
+            ".project-handbook/roadmap/now-next-later.md",
+            ".project-handbook/backlog/index.json",
+            ".project-handbook/parking-lot/index.json",
+            ".project-handbook/sprints/archive/index.json",
+            ".project-handbook/process/sessions/logs/latest_summary.md",
+            ".project-handbook/process/sessions/session_end/session_end_index.json",
         ],
         "recreate_dirs": [
             ".project-handbook",
-            "backlog",
-            "parking-lot",
-            "process/sessions/logs",
-            "process/sessions/session_end",
-            "roadmap",
-            "sprints/archive",
+            ".project-handbook/backlog",
+            ".project-handbook/parking-lot",
+            ".project-handbook/process/sessions/logs",
+            ".project-handbook/process/sessions/session_end",
+            ".project-handbook/roadmap",
+            ".project-handbook/sprints/archive",
         ],
         "recreate_files": [
             ".project-handbook/.gitkeep",
-            "process/sessions/logs/.gitkeep",
-            "sprints/archive/.gitkeep",
+            ".project-handbook/process/sessions/logs/.gitkeep",
+            ".project-handbook/sprints/archive/.gitkeep",
         ],
     }
-    spec_path = ph_root / "process" / "automation" / "reset_spec.json"
+    spec_path = ph_project_root / "process" / "automation" / "reset_spec.json"
     spec_path.write_text(json.dumps(reset_spec, indent=2) + "\n", encoding="utf-8")
 
 
@@ -96,17 +89,18 @@ def test_reset_smoke_creates_system_artifacts_wipes_project_and_validates(tmp_pa
     assert "Running reset smoke verification: docs/RESET_SMOKE.md" in result.stdout
     assert "✅ reset-smoke complete (project scope wiped; system scope preserved)." in result.stdout
 
-    assert not (tmp_path / "features" / "reset-smoke-project").exists()
-    assert not (tmp_path / "sprints" / "2099" / "SPRINT-2099-01-02").exists()
-    assert (tmp_path / "sprints" / "2099" / "SPRINT-2099-01-03").exists()
-    current = tmp_path / "sprints" / "current"
+    project_root = tmp_path / ".project-handbook"
+    assert not (project_root / "features" / "reset-smoke-project").exists()
+    assert not (project_root / "sprints" / "2099" / "SPRINT-2099-01-02").exists()
+    assert (project_root / "sprints" / "2099" / "SPRINT-2099-01-03").exists()
+    current = project_root / "sprints" / "current"
     assert current.exists()
-    assert current.resolve() == (tmp_path / "sprints" / "2099" / "SPRINT-2099-01-03").resolve()
+    assert current.resolve() == (project_root / "sprints" / "2099" / "SPRINT-2099-01-03").resolve()
 
     assert (tmp_path / ".project-handbook" / "system" / "features" / "handbook-reset-smoke").exists()
     assert (tmp_path / ".project-handbook" / "system" / "sprints" / "2099" / "SPRINT-2099-01-01").exists()
 
-    report = tmp_path / "status" / "validation.json"
+    report = project_root / "status" / "validation.json"
     assert report.exists()
     data = json.loads(report.read_text(encoding="utf-8"))
     assert data.get("issues") == []

@@ -86,6 +86,7 @@ def run_post_command_hook(
 
     validate_exit, _out_path, message = run_validate(
         ph_root=ctx.ph_root,
+        ph_project_root=ctx.ph_project_root,
         ph_data_root=ctx.ph_data_root,
         scope=ctx.scope,
         quick=True,

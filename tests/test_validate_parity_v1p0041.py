@@ -18,7 +18,7 @@ def _write_legacy_like_package_json(ph_root: Path) -> None:
 
 
 def _write_minimal_validation_rules(ph_root: Path) -> None:
-    rules_path = ph_root / "process" / "checks" / "validation_rules.json"
+    rules_path = ph_root / ".project-handbook" / "process" / "checks" / "validation_rules.json"
     rules_path.parent.mkdir(parents=True, exist_ok=True)
     rules_path.write_text("{}", encoding="utf-8")
 
@@ -41,10 +41,10 @@ def test_validate_stdout_and_report_match_make_validate(tmp_path: Path) -> None:
         f"> project-handbook@0.0.0 ph {resolved}\n"
         "> ph validate\n"
         "\n"
-        f"validation: 0 error(s), 0 warning(s), report: {resolved}/status/validation.json\n"
+        f"validation: 0 error(s), 0 warning(s), report: {resolved}/.project-handbook/status/validation.json\n"
     )
     assert result.stdout == expected_stdout
 
-    report = tmp_path / "status" / "validation.json"
+    report = tmp_path / ".project-handbook" / "status" / "validation.json"
     assert report.exists()
     assert report.read_text(encoding="utf-8") == '{\n  "issues": []\n}\n'

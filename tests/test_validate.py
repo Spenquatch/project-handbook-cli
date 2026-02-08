@@ -12,8 +12,8 @@ def _write_basic_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_root / ".project-handbook" / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_root / ".project-handbook" / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
 
 
 def test_validate_project_scope_writes_report_and_silent_success(tmp_path: Path) -> None:
@@ -25,7 +25,7 @@ def test_validate_project_scope_writes_report_and_silent_success(tmp_path: Path)
     )
     assert result.returncode == 0
     assert result.stdout == ""
-    assert (tmp_path / "status" / "validation.json").exists()
+    assert (tmp_path / ".project-handbook" / "status" / "validation.json").exists()
 
 
 def test_validate_system_scope_writes_report_and_silent_success(tmp_path: Path) -> None:

@@ -13,15 +13,16 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _seed_sprint_with_task(*, ph_root: Path, scope: str) -> None:
@@ -32,7 +33,7 @@ def _seed_sprint_with_task(*, ph_root: Path, scope: str) -> None:
     res = subprocess.run(cmd, capture_output=True, text=True, env=dict(os.environ))
     assert res.returncode == 0
 
-    base = ph_root if scope == "project" else (ph_root / ".project-handbook" / "system")
+    base = (ph_root / ".project-handbook") if scope == "project" else (ph_root / ".project-handbook" / "system")
     task_dir = base / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / "TASK-001-test"
     task_dir.mkdir(parents=True, exist_ok=True)
     (task_dir / "task.yaml").write_text(
@@ -135,7 +136,7 @@ def test_sprint_tasks_project_scope_includes_make_preamble_and_release_tags(tmp_
     res = subprocess.run(cmd, capture_output=True, text=True, env=dict(os.environ))
     assert res.returncode == 0
 
-    task_root = tmp_path / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
+    task_root = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
     task_a = task_root / "TASK-001-rel"
     task_a.mkdir(parents=True, exist_ok=True)
     (task_a / "task.yaml").write_text(

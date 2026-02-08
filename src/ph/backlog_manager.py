@@ -451,11 +451,11 @@ _Add investigation findings here_
         readme_path.write_text(f"---\n{rebuilt}\n---{body}", encoding="utf-8")
         return True
 
-    def show_stats(self, *, ph_root: Path) -> None:
+    def show_stats(self, *, ph_project_root: Path) -> None:
         """Display backlog statistics and analysis (ported from v0)."""
         from datetime import datetime
 
-        validation_rules_path = ph_root / "process" / "checks" / "validation_rules.json"
+        validation_rules_path = ph_project_root / "process" / "checks" / "validation_rules.json"
         validation_rules: dict[str, Any] = {}
         if validation_rules_path.exists():
             validation_rules = json.loads(validation_rules_path.read_text(encoding="utf-8"))

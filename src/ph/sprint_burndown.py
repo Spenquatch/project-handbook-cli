@@ -25,9 +25,9 @@ def _resolve_sprint_dir(*, ctx: Context, sprint: str | None) -> Path | None:
     return sprint_dir_from_id(ph_data_root=ctx.ph_data_root, sprint_id=sprint.strip())
 
 
-def _generate_ascii_burndown(*, ph_root: Path, sprint_dir: Path, tasks: list[dict]) -> str:
+def _generate_ascii_burndown(*, ph_project_root: Path, sprint_dir: Path, tasks: list[dict]) -> str:
     sprint_id = sprint_dir.name
-    mode = sprint_status._get_sprint_mode(ph_root=ph_root, sprint_dir=sprint_dir)
+    mode = sprint_status._get_sprint_mode(ph_project_root=ph_project_root, sprint_dir=sprint_dir)
     metrics = sprint_status.calculate_velocity(tasks)
 
     total = int(metrics.get("total_points", 0))
@@ -83,14 +83,14 @@ Current Status:
     return chart.lstrip("\n")
 
 
-def run_sprint_burndown(*, ph_root: Path, ctx: Context, sprint: str | None, env: dict[str, str]) -> int:
+def run_sprint_burndown(*, ph_project_root: Path, ctx: Context, sprint: str | None, env: dict[str, str]) -> int:
     sprint_dir = _resolve_sprint_dir(ctx=ctx, sprint=sprint)
     if sprint_dir is None or not sprint_dir.exists():
         print("No active sprint")
         return 1
 
     tasks = sprint_status.collect_tasks(sprint_dir=sprint_dir)
-    burndown = _generate_ascii_burndown(ph_root=ph_root, sprint_dir=sprint_dir, tasks=tasks)
+    burndown = _generate_ascii_burndown(ph_project_root=ph_project_root, sprint_dir=sprint_dir, tasks=tasks)
     print(burndown, end="")
 
     burndown_file = sprint_dir / "burndown.md"

@@ -13,7 +13,7 @@ def _write_basic_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    rules_path = ph_root / "process" / "checks" / "validation_rules.json"
+    rules_path = ph_root / ".project-handbook" / "process" / "checks" / "validation_rules.json"
     rules_path.parent.mkdir(parents=True, exist_ok=True)
     rules_path.write_text("{}", encoding="utf-8")
 
@@ -24,7 +24,7 @@ def _run_validate_and_read_report(ph_root: Path) -> tuple[int, dict]:
         capture_output=True,
         text=True,
     )
-    report_path = ph_root / "status" / "validation.json"
+    report_path = ph_root / ".project-handbook" / "status" / "validation.json"
     assert report_path.exists()
     return result.returncode, json.loads(report_path.read_text(encoding="utf-8"))
 
@@ -85,7 +85,7 @@ def _write_adr(
 
 def test_validate_adr_valid_passes(tmp_path: Path) -> None:
     _write_basic_ph_root(tmp_path)
-    _write_adr(tmp_path / "adr" / "0001-valid-adr.md", adr_id="ADR-0001")
+    _write_adr(tmp_path / ".project-handbook" / "adr" / "0001-valid-adr.md", adr_id="ADR-0001")
 
     code, report = _run_validate_and_read_report(tmp_path)
     assert code == 0
@@ -94,7 +94,7 @@ def test_validate_adr_valid_passes(tmp_path: Path) -> None:
 
 def test_validate_adr_missing_rollout_is_warning(tmp_path: Path) -> None:
     _write_basic_ph_root(tmp_path)
-    adr_path = tmp_path / "adr" / "0002-no-rollout.md"
+    adr_path = tmp_path / ".project-handbook" / "adr" / "0002-no-rollout.md"
     _write_adr(adr_path, adr_id="ADR-0002")
     text = adr_path.read_text(encoding="utf-8").replace("\n# Rollout\n\nx\n", "\n")
     adr_path.write_text(text, encoding="utf-8")
@@ -111,7 +111,7 @@ def test_validate_adr_missing_rollout_is_warning(tmp_path: Path) -> None:
 
 def test_validate_adr_missing_required_h1_is_error(tmp_path: Path) -> None:
     _write_basic_ph_root(tmp_path)
-    adr_path = tmp_path / "adr" / "0003-missing-consequences.md"
+    adr_path = tmp_path / ".project-handbook" / "adr" / "0003-missing-consequences.md"
     _write_adr(adr_path, adr_id="ADR-0003")
     text = adr_path.read_text(encoding="utf-8").replace("\n# Consequences\n\nx\n", "\n")
     adr_path.write_text(text, encoding="utf-8")
@@ -126,7 +126,7 @@ def test_validate_adr_missing_required_h1_is_error(tmp_path: Path) -> None:
 
 def test_validate_adr_filename_and_id_mismatch_is_error(tmp_path: Path) -> None:
     _write_basic_ph_root(tmp_path)
-    _write_adr(tmp_path / "adr" / "0002-mismatch.md", adr_id="ADR-0003")
+    _write_adr(tmp_path / ".project-handbook" / "adr" / "0002-mismatch.md", adr_id="ADR-0003")
 
     code, report = _run_validate_and_read_report(tmp_path)
     assert code == 1
@@ -140,7 +140,7 @@ def test_validate_adr_filename_and_id_mismatch_is_error(tmp_path: Path) -> None:
 
 def test_validate_adr_filename_invalid_includes_expected_found(tmp_path: Path) -> None:
     _write_basic_ph_root(tmp_path)
-    _write_adr(tmp_path / "adr" / "ADR-0006-bad.md", adr_id="ADR-0006")
+    _write_adr(tmp_path / ".project-handbook" / "adr" / "ADR-0006-bad.md", adr_id="ADR-0006")
 
     code, report = _run_validate_and_read_report(tmp_path)
     assert code == 1
@@ -154,8 +154,8 @@ def test_validate_adr_filename_invalid_includes_expected_found(tmp_path: Path) -
 
 def test_validate_adr_duplicate_id_across_files_is_error_and_mentions_both_paths(tmp_path: Path) -> None:
     _write_basic_ph_root(tmp_path)
-    a = tmp_path / "adr" / "0001-first.md"
-    b = tmp_path / "adr" / "0001-second.md"
+    a = tmp_path / ".project-handbook" / "adr" / "0001-first.md"
+    b = tmp_path / ".project-handbook" / "adr" / "0001-second.md"
     _write_adr(a, adr_id="ADR-0001")
     _write_adr(b, adr_id="ADR-0001")
 
@@ -164,23 +164,24 @@ def test_validate_adr_duplicate_id_across_files_is_error_and_mentions_both_paths
     err = next(i for i in report["issues"] if i.get("code") == "adr_duplicate_id")
     assert err.get("severity") == "error"
     assert err.get("id") == "ADR-0001"
+    ph_data_root = tmp_path / ".project-handbook"
     assert sorted(err.get("paths", [])) == sorted(
         [
-            a.relative_to(tmp_path).as_posix(),
-            b.relative_to(tmp_path).as_posix(),
+            a.relative_to(ph_data_root).as_posix(),
+            b.relative_to(ph_data_root).as_posix(),
         ]
     )
 
     msg = str(err.get("message", ""))
     assert "ADR-0001" in msg
-    assert a.relative_to(tmp_path).as_posix() in msg
-    assert b.relative_to(tmp_path).as_posix() in msg
+    assert a.relative_to(ph_data_root).as_posix() in msg
+    assert b.relative_to(ph_data_root).as_posix() in msg
 
 
 def test_validate_adr_superseded_without_superseded_by_is_error_with_actionable_message(tmp_path: Path) -> None:
     _write_basic_ph_root(tmp_path)
     _write_adr(
-        tmp_path / "adr" / "0007-superseded-missing-target.md",
+        tmp_path / ".project-handbook" / "adr" / "0007-superseded-missing-target.md",
         adr_id="ADR-0007",
         status="superseded",
         superseded_by=None,
@@ -199,7 +200,7 @@ def test_validate_adr_superseded_without_superseded_by_is_error_with_actionable_
 def test_validate_adr_superseded_by_missing_target_is_error_with_actionable_message(tmp_path: Path) -> None:
     _write_basic_ph_root(tmp_path)
     _write_adr(
-        tmp_path / "adr" / "0008-superseded-bad-target.md",
+        tmp_path / ".project-handbook" / "adr" / "0008-superseded-bad-target.md",
         adr_id="ADR-0008",
         status="superseded",
         superseded_by="ADR-9999",

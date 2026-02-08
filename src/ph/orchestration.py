@@ -35,6 +35,7 @@ class DefaultCommandRunner:
         if command == "validate":
             exit_code, _out_path, message = run_validate(
                 ph_root=self.ph_root,
+                ph_project_root=self.ctx.ph_project_root,
                 ph_data_root=self.ctx.ph_data_root,
                 scope=self.ctx.scope,
                 quick=False,
@@ -45,7 +46,12 @@ class DefaultCommandRunner:
             return exit_code
 
         if command == "status":
-            status_result = run_status(ph_root=self.ph_root, ph_data_root=self.ctx.ph_data_root, env=self.env)
+            status_result = run_status(
+                ph_root=self.ph_root,
+                ph_project_root=self.ctx.ph_project_root,
+                ph_data_root=self.ctx.ph_data_root,
+                env=self.env,
+            )
             print(f"Generated: {status_result.json_path.resolve()}")
             print(f"Updated: {status_result.summary_path.resolve()}")
 
@@ -72,7 +78,7 @@ class DefaultCommandRunner:
             )
 
         if command == "sprint" and args[:1] == ["status"]:
-            return run_sprint_status(ph_root=self.ph_root, ctx=self.ctx, sprint=None)
+            return run_sprint_status(ph_project_root=self.ctx.ph_project_root, ctx=self.ctx, sprint=None)
 
         if command == "feature" and args[:1] == ["list"]:
             return run_feature_list(ctx=self.ctx, with_preamble=False)
@@ -106,6 +112,7 @@ def run_check_all(*, ph_root: Path, ctx: Context, env: dict[str, str], runner: C
 
     exit_code, _out_path, message = run_validate(
         ph_root=ph_root,
+        ph_project_root=ctx.ph_project_root,
         ph_data_root=ctx.ph_data_root,
         scope=ctx.scope,
         quick=False,
@@ -118,7 +125,12 @@ def run_check_all(*, ph_root: Path, ctx: Context, env: dict[str, str], runner: C
 
     current_json = ctx.ph_data_root / "status" / "current.json"
     try:
-        status_result = run_status(ph_root=ph_root, ph_data_root=ctx.ph_data_root, env=env)
+        status_result = run_status(
+            ph_root=ph_root,
+            ph_project_root=ctx.ph_project_root,
+            ph_data_root=ctx.ph_data_root,
+            env=env,
+        )
         print(f"Generated: {status_result.json_path.resolve()}")
         print(f"Updated: {status_result.summary_path.resolve()}")
 

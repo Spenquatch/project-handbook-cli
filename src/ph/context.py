@@ -13,6 +13,7 @@ class ScopeError(RuntimeError):
 class Context:
     ph_root: Path
     scope: str
+    ph_project_root: Path
     ph_data_root: Path
 
 
@@ -30,7 +31,8 @@ def resolve_scope(*, cli_scope: str | None) -> str:
 
 def build_context(*, ph_root: Path, scope: str) -> Context:
     ph_root = ph_root.resolve()
-    ph_data_root = ph_root if scope == "project" else (ph_root / ".project-handbook" / "system")
+    project_root = ph_root / ".project-handbook"
+    ph_data_root = project_root if scope == "project" else (project_root / "system")
 
     if scope == "system":
         for forbidden in ("roadmap", "releases"):
@@ -41,7 +43,7 @@ def build_context(*, ph_root: Path, scope: str) -> Context:
                     f"Found forbidden path: {forbidden_path}\n"
                 )
 
-    return Context(ph_root=ph_root, scope=scope, ph_data_root=ph_data_root)
+    return Context(ph_root=ph_root, scope=scope, ph_project_root=project_root, ph_data_root=ph_data_root)
 
 
 def assert_scope_allows_domain(*, ctx: Context, domain: str) -> None:

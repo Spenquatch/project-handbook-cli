@@ -6,22 +6,23 @@ from pathlib import Path
 
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / ".project-handbook" / "config.json"
+    ph_project_root = ph_root / ".project-handbook"
+    config = ph_project_root / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_project_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def test_release_plan_creates_files_and_hints(tmp_path: Path) -> None:
@@ -49,14 +50,14 @@ def test_release_plan_creates_files_and_hints(tmp_path: Path) -> None:
     )
     assert result.returncode == 0
 
-    plan_path = tmp_path / "releases" / "v1.2.3" / "plan.md"
-    progress_path = tmp_path / "releases" / "v1.2.3" / "progress.md"
-    features_path = tmp_path / "releases" / "v1.2.3" / "features.yaml"
+    plan_path = tmp_path / ".project-handbook" / "releases" / "v1.2.3" / "plan.md"
+    progress_path = tmp_path / ".project-handbook" / "releases" / "v1.2.3" / "progress.md"
+    features_path = tmp_path / ".project-handbook" / "releases" / "v1.2.3" / "features.yaml"
     assert plan_path.exists()
     assert progress_path.exists()
     assert features_path.exists()
 
-    current_link = tmp_path / "releases" / "current"
+    current_link = tmp_path / ".project-handbook" / "releases" / "current"
     assert not current_link.exists()
 
     plan_text = plan_path.read_text(encoding="utf-8")
@@ -74,8 +75,8 @@ def test_release_plan_creates_files_and_hints(tmp_path: Path) -> None:
     assert "- **Slot 1**: ⭕ Planned" in progress_text
     assert "- **Slot 2**: ⭕ Planned" in progress_text
 
-    resolved_release_dir = (tmp_path / "releases" / "v1.2.3").resolve()
-    resolved_plan_path = (tmp_path / "releases" / "v1.2.3" / "plan.md").resolve()
+    resolved_release_dir = (tmp_path / ".project-handbook" / "releases" / "v1.2.3").resolve()
+    resolved_plan_path = (tmp_path / ".project-handbook" / "releases" / "v1.2.3" / "plan.md").resolve()
     expected_stdout = "\n".join(
         [
             "✅ Created release plan: v1.2.3",
@@ -86,7 +87,7 @@ def test_release_plan_creates_files_and_hints(tmp_path: Path) -> None:
             "   2. Add features: ph release add-feature --release v1.2.3 --feature feature-name",
             "   3. Activate when ready: ph release activate --release v1.2.3",
             "   4. Review timeline and adjust if needed",
-            "Release plan scaffold created under releases/<version>/plan.md",
+            "Release plan scaffold created under .project-handbook/releases/<version>/plan.md",
             "  - Assign features via 'ph release add-feature --release <version> --feature <name>'",
             "  - Activate when ready via 'ph release activate --release <version>'",
             "  - Confirm sprint alignment via 'ph release status' (requires an active release)",
@@ -107,7 +108,7 @@ def test_release_plan_activate_sets_current(tmp_path: Path) -> None:
     )
     assert result.returncode == 0
 
-    current_link = tmp_path / "releases" / "current"
+    current_link = tmp_path / ".project-handbook" / "releases" / "current"
     assert current_link.is_symlink()
     assert current_link.readlink().name == "v1.2.3"
 

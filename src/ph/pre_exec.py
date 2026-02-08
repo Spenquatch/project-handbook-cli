@@ -480,6 +480,7 @@ def run_pre_exec_audit(
     def _validate_code() -> int:
         code, _out_path, message = run_validate(
             ph_root=ph_root,
+            ph_project_root=ctx.ph_project_root,
             ph_data_root=ctx.ph_data_root,
             scope=ctx.scope,
             quick=False,
@@ -490,7 +491,11 @@ def run_pre_exec_audit(
         return code
 
     steps: list[tuple[str, str, callable]] = [
-        ("sprint-status", "sprint-status.txt", lambda: run_sprint_status(ph_root=ph_root, ctx=ctx, sprint=None)),
+        (
+            "sprint-status",
+            "sprint-status.txt",
+            lambda: run_sprint_status(ph_project_root=ctx.ph_project_root, ctx=ctx, sprint=None),
+        ),
         ("release-status", "release-status.txt", lambda: run_release_status(ctx=ctx, env=os.environ)),
         ("task-list", "task-list.txt", lambda: run_task_list(ctx=ctx)),
         ("feature-summary", "feature-summary.txt", lambda: run_feature_summary(ctx=ctx, env=os.environ)),

@@ -49,7 +49,7 @@ def run_sprint_capacity(*, ph_root: Path, ctx: Context, sprint: str | None, env:
         return 1
 
     sprint_id = sprint_dir.name
-    config = load_sprint_config(ph_root=ph_root)
+    config = load_sprint_config(ph_project_root=ctx.ph_project_root)
     capacity_config = config.get("sprint_management", {}).get("capacity_allocation", {})
     planned_pct = int(capacity_config.get("default_planned_percentage", 80) or 80)
     reactive_pct = int(capacity_config.get("default_reactive_percentage", 20) or 20)
@@ -58,7 +58,7 @@ def run_sprint_capacity(*, ph_root: Path, ctx: Context, sprint: str | None, env:
 
     tasks = sprint_status.collect_tasks(sprint_dir=sprint_dir)
     metrics = sprint_status.calculate_velocity(tasks)
-    mode = sprint_status._get_sprint_mode(ph_root=ph_root, sprint_dir=sprint_dir)
+    mode = sprint_status._get_sprint_mode(ph_project_root=ctx.ph_project_root, sprint_dir=sprint_dir)
 
     total_points = int(metrics.get("total_points", 0))
     completed_points = int(metrics.get("completed_points", 0))

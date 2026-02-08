@@ -49,8 +49,8 @@ def _normalize_list(value: Any) -> list[str]:
     return []
 
 
-def _load_allowed_statuses(*, ph_root: Path) -> list[str]:
-    rules_path = ph_root / "process" / "checks" / "validation_rules.json"
+def _load_allowed_statuses(*, ph_data_root: Path) -> list[str]:
+    rules_path = ph_data_root / "process" / "checks" / "validation_rules.json"
     try:
         if rules_path.exists():
             rules = json.loads(rules_path.read_text(encoding="utf-8"))
@@ -82,7 +82,7 @@ def run_task_status(*, ctx: Context, task_id: str, new_status: str, force: bool)
     task_id = (task_id or "").strip()
     new_status = (new_status or "").strip()
 
-    valid_statuses = _load_allowed_statuses(ph_root=ctx.ph_root)
+    valid_statuses = _load_allowed_statuses(ph_data_root=ctx.ph_data_root)
     if new_status not in valid_statuses:
         print(f"❌ Invalid status '{new_status}'. Must be one of: {valid_statuses}")
         return 1

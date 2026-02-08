@@ -20,13 +20,13 @@ def _write_legacy_like_package_json(ph_root: Path) -> None:
 
 
 def _write_validation_rules_no_front_matter(ph_root: Path) -> None:
-    rules_path = ph_root / "process" / "checks" / "validation_rules.json"
+    rules_path = ph_root / ".project-handbook" / "process" / "checks" / "validation_rules.json"
     rules_path.parent.mkdir(parents=True, exist_ok=True)
     rules_path.write_text('{\n  "validation": {\n    "require_front_matter": false\n  }\n}\n', encoding="utf-8")
 
 
 def _write_seq_sprint_with_one_task(*, ph_root: Path, sprint_id: str, today: dt.date) -> None:
-    sprint_dir = ph_root / "sprints" / "archive" / "SEQ" / sprint_id
+    sprint_dir = ph_root / ".project-handbook" / "sprints" / "archive" / "SEQ" / sprint_id
     tasks_dir = sprint_dir / "tasks"
     tasks_dir.mkdir(parents=True, exist_ok=True)
 
@@ -88,7 +88,7 @@ def _write_seq_sprint_with_one_task(*, ph_root: Path, sprint_id: str, today: dt.
     for name, content in docs.items():
         (task_dir / name).write_text(content, encoding="utf-8")
 
-    sprints_dir = ph_root / "sprints"
+    sprints_dir = ph_root / ".project-handbook" / "sprints"
     sprints_dir.mkdir(parents=True, exist_ok=True)
     current_link = sprints_dir / "current"
     if current_link.exists() or current_link.is_symlink():
@@ -126,7 +126,7 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
     assert result.returncode == 0
 
     resolved = tmp_path.resolve()
-    evidence_dir = (resolved / "status" / "evidence" / "PRE-EXEC" / sprint_id / date).resolve()
+    evidence_dir = (resolved / ".project-handbook" / "status" / "evidence" / "PRE-EXEC" / sprint_id / date).resolve()
     section = "════════════════════════════════════════════════"
     rule = "=" * 60
 
@@ -163,7 +163,9 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
     )
     feature_summary_out = f"🎯 FEATURE SUMMARY WITH SPRINT DATA\n{rule}\n{feature_summary_line}"
 
-    validate_out = f"validation: 0 error(s), 0 warning(s), report: {resolved}/status/validation.json\n"
+    validate_out = (
+        f"validation: 0 error(s), 0 warning(s), report: {resolved}/.project-handbook/status/validation.json\n"
+    )
     lint_out = "\nPRE-EXEC LINT PASSED\n"
 
     expected_stdout = (
@@ -206,7 +208,8 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
         "PRE-EXEC AUDIT PASSED\n"
         "Next:\n"
         f"- Review evidence bundle: {evidence_dir}\n"
-        "- Update `project-handbook/sprints/current/plan.md` to confirm the audit gate passed (date + evidence path).\n"
+        "- Update `project-handbook/sprints/current/plan.md` to confirm the audit gate passed "
+        "(date + evidence path).\n"
         "- Start execution by claiming the first ready task (typically `TASK-001`) via "
         "`ph task status --id TASK-001 --status doing`.\n"
     )
@@ -231,14 +234,14 @@ def test_release_status_sprint_slots_matches_legacy_format(tmp_path: Path) -> No
     _write_seq_sprint_with_one_task(ph_root=tmp_path, sprint_id=sprint_id, today=today)
 
     version = "v1.0.0"
-    (tmp_path / "releases" / version).mkdir(parents=True, exist_ok=True)
-    releases_dir = tmp_path / "releases"
+    (tmp_path / ".project-handbook" / "releases" / version).mkdir(parents=True, exist_ok=True)
+    releases_dir = tmp_path / ".project-handbook" / "releases"
     current_link = releases_dir / "current"
     if current_link.exists() or current_link.is_symlink():
         current_link.unlink()
     current_link.symlink_to(version)
 
-    (tmp_path / "releases" / version / "plan.md").write_text(
+    (tmp_path / ".project-handbook" / "releases" / version / "plan.md").write_text(
         "\n".join(
             [
                 "---",
@@ -260,7 +263,7 @@ def test_release_status_sprint_slots_matches_legacy_format(tmp_path: Path) -> No
         encoding="utf-8",
     )
 
-    (tmp_path / "releases" / version / "features.yaml").write_text(
+    (tmp_path / ".project-handbook" / "releases" / version / "features.yaml").write_text(
         "\n".join(
             [
                 "version: v1.0.0",
@@ -275,7 +278,7 @@ def test_release_status_sprint_slots_matches_legacy_format(tmp_path: Path) -> No
     )
 
     # Attach the sprint to slot 1.
-    sprint_dir = tmp_path / "sprints" / "archive" / "SEQ" / sprint_id
+    sprint_dir = tmp_path / ".project-handbook" / "sprints" / "archive" / "SEQ" / sprint_id
     plan_path = sprint_dir / "plan.md"
     plan_path.write_text(
         plan_path.read_text(encoding="utf-8").replace("release: null", f"release: {version}\nrelease_sprint_slot: 1"),

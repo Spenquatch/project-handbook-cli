@@ -78,5 +78,5 @@ def run_backlog_rubric(*, ctx: Context, env: dict[str, str]) -> int:
 
 def run_backlog_stats(*, ctx: Context, env: dict[str, str]) -> int:
     manager = BacklogManager(project_root=ctx.ph_data_root, env=env)
-    manager.show_stats(ph_root=ctx.ph_root)
+    manager.show_stats(ph_project_root=ctx.ph_project_root)
     return 0

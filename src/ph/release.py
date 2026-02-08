@@ -12,7 +12,7 @@ _SYSTEM_SCOPE_REMEDIATION = "Releases are project-scope only. Use: ph --scope pr
 
 def _plan_hint_lines() -> tuple[str, ...]:
     return (
-        "Release plan scaffold created under releases/<version>/plan.md",
+        "Release plan scaffold created under .project-handbook/releases/<version>/plan.md",
         "  - Assign features via 'ph release add-feature --release <version> --feature <name>'",
         "  - Activate when ready via 'ph release activate --release <version>'",
         "  - Confirm sprint alignment via 'ph release status' (requires an active release)",
@@ -484,8 +484,8 @@ def run_release_plan(
             start_sprint = f"SPRINT-{clock_today(env=env):%Y-%m-%d}"
 
     if raw_version in {"next", "auto"}:
-        current = get_current_release(ph_root=ctx.ph_root)
-        available = list_release_versions(ph_root=ctx.ph_root)
+        current = get_current_release(ph_root=ctx.ph_data_root)
+        available = list_release_versions(ph_root=ctx.ph_data_root)
         base = current or (available[-1] if available else "v0.1.0")
         raw_version = bump_version(base, bump=raw_bump)
 
@@ -493,7 +493,7 @@ def run_release_plan(
         raw_version = f"v{raw_version}"
 
     release_dir = _ensure_release_files_exist(
-        ph_root=ctx.ph_root,
+        ph_root=ctx.ph_data_root,
         version=raw_version,
         timeline_mode=timeline_mode,
         sprint_count=sprint_count,
@@ -503,7 +503,7 @@ def run_release_plan(
     )
 
     if activate:
-        ok = set_current_release(ph_root=ctx.ph_root, version=raw_version)
+        ok = set_current_release(ph_root=ctx.ph_data_root, version=raw_version)
         if not ok:
             print(f"⚠️  Failed to activate current release (symlink): releases/current → {raw_version}")
 
@@ -534,7 +534,7 @@ def run_release_activate(*, ctx: Context, release: str, env: dict[str, str]) -> 
     if not version.startswith("v"):
         version = f"v{version}"
 
-    if not set_current_release(ph_root=ctx.ph_root, version=version):
+    if not set_current_release(ph_root=ctx.ph_data_root, version=version):
         print(f"❌ Release {version} not found (expected: releases/{version}/)")
         return 1
 
@@ -546,7 +546,7 @@ def run_release_clear(*, ctx: Context) -> int:
     if ctx.scope == "system":
         print(_SYSTEM_SCOPE_REMEDIATION)
         return 1
-    clear_current_release(ph_root=ctx.ph_root)
+    clear_current_release(ph_root=ctx.ph_data_root)
     print("⭐ Cleared current release")
     return 0
 
@@ -556,14 +556,14 @@ def run_release_progress(*, ctx: Context, env: dict[str, str]) -> int:
         print(_SYSTEM_SCOPE_REMEDIATION)
         return 1
 
-    version = _read_current_release_target(ph_root=ctx.ph_root)
+    version = _read_current_release_target(ph_root=ctx.ph_data_root)
     if not version:
         print("❌ No current release found")
         print("💡 Activate one with: ph release activate --release vX.Y.Z")
         return 1
 
     try:
-        path = write_release_progress(ph_root=ctx.ph_root, version=version, env=env)
+        path = write_release_progress(ph_root=ctx.ph_data_root, version=version, env=env)
     except FileNotFoundError:
         print(f"❌ Release {version} not found")
         return 1
@@ -693,13 +693,13 @@ def run_release_show(*, ctx: Context, env: dict[str, str]) -> int:
         print(_SYSTEM_SCOPE_REMEDIATION)
         return 1
 
-    version = _read_current_release_target(ph_root=ctx.ph_root)
+    version = _read_current_release_target(ph_root=ctx.ph_data_root)
     if not version:
         print("❌ No current release found")
         print("💡 Activate one with: ph release activate --release vX.Y.Z")
         return 1
 
-    plan_path = ctx.ph_root / "releases" / version / "plan.md"
+    plan_path = ctx.ph_data_root / "releases" / version / "plan.md"
     if plan_path.exists():
         print(f"📘 RELEASE PLAN: {version}")
         print("=" * 60)
@@ -713,7 +713,7 @@ def run_release_show(*, ctx: Context, env: dict[str, str]) -> int:
 
     exit_code = run_release_status(ctx=ctx, env=env)
 
-    progress_path = write_release_progress(ph_root=ctx.ph_root, version=version, env=env)
+    progress_path = write_release_progress(ph_root=ctx.ph_data_root, version=version, env=env)
     print()
     print(f"📝 Updated: {progress_path.resolve()}")
     return exit_code
@@ -1313,17 +1313,17 @@ def run_release_list(*, ctx: Context) -> int:
         print(_SYSTEM_SCOPE_REMEDIATION)
         return 1
 
-    releases_dir = ctx.ph_root / "releases"
+    releases_dir = ctx.ph_data_root / "releases"
     if not releases_dir.exists():
         print("📦 No releases directory")
         return 0
 
-    releases = list_release_versions(ph_root=ctx.ph_root)
+    releases = list_release_versions(ph_root=ctx.ph_data_root)
     if not releases:
         print("📦 No releases found")
         return 0
 
-    current = _read_current_release_target(ph_root=ctx.ph_root)
+    current = _read_current_release_target(ph_root=ctx.ph_data_root)
 
     print("📦 RELEASES")
     for release in releases:
@@ -1337,10 +1337,10 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
         print(_SYSTEM_SCOPE_REMEDIATION)
         return 1
 
-    version = _read_current_release_target(ph_root=ctx.ph_root)
+    version = _read_current_release_target(ph_root=ctx.ph_data_root)
     if not version:
         print("❌ No current release found")
-        available = list_release_versions(ph_root=ctx.ph_root)
+        available = list_release_versions(ph_root=ctx.ph_data_root)
         if available:
             print("📦 Available releases:")
             for name in available:
@@ -1350,23 +1350,24 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
             print("💡 Create one with: ph release plan --version v1.2.0 --sprints 3 --activate")
         return 1
 
-    release_dir = ctx.ph_root / "releases" / version
+    release_dir = ctx.ph_data_root / "releases" / version
     if not release_dir.exists():
         print(f"❌ Release {version} not found")
         return 1
 
-    features = load_release_features(ph_root=ctx.ph_root, version=version)
-    progress = calculate_release_progress(ph_root=ctx.ph_root, version=version, features=features, env=env)
+    features = load_release_features(ph_root=ctx.ph_data_root, version=version)
+    progress = calculate_release_progress(ph_root=ctx.ph_data_root, version=version, features=features, env=env)
     readiness = calculate_release_readiness(progress=progress)
 
-    timeline = get_release_timeline_info(ph_root=ctx.ph_root, version=version)
+    timeline = get_release_timeline_info(ph_root=ctx.ph_data_root, version=version)
     sprint_count = int(timeline.get("planned_sprints") or 3)
     sprint_timeline = timeline.get("sprint_ids") or []
     if not isinstance(sprint_timeline, list):
         sprint_timeline = []
     sprint_timeline = [str(item) for item in sprint_timeline if str(item)]
     current_sprint = str(
-        timeline.get("current_sprint") or _resolve_current_sprint_id(ph_root=ctx.ph_root, fallback="SPRINT-SEQ-0001")
+        timeline.get("current_sprint")
+        or _resolve_current_sprint_id(ph_root=ctx.ph_data_root, fallback="SPRINT-SEQ-0001")
     )
     current_sprint_index = timeline.get("current_sprint_index")
     if not isinstance(current_sprint_index, int):
@@ -1392,7 +1393,7 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
         progress=progress, current_sprint_index=current_sprint_index, sprint_count=sprint_count
     )
 
-    tagged_tasks = collect_release_tagged_tasks(ph_root=ctx.ph_root, version=version)
+    tagged_tasks = collect_release_tagged_tasks(ph_root=ctx.ph_data_root, version=version)
     tagged_summary = summarize_tagged_tasks(tasks=tagged_tasks, sprint_timeline=sprint_timeline)
     tagged_progress: dict[str, object] = {
         "avg_completion": tagged_summary.get("completion", 0),
@@ -1514,7 +1515,7 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
             label = sprint_id if sprint_id else "(unassigned)"
             if sprint_id == current_sprint:
                 status = "🔄 In progress"
-            elif sprint_id and is_sprint_archived(ph_root=ctx.ph_root, sprint_id=str(sprint_id)):
+            elif sprint_id and is_sprint_archived(ph_root=ctx.ph_data_root, sprint_id=str(sprint_id)):
                 status = "✅ Complete"
             elif current_sprint_index and sprint_id and i < int(current_sprint_index):
                 status = "✅ Complete"
@@ -1555,12 +1556,12 @@ def run_release_add_feature(
     if not version.startswith("v"):
         version = f"v{version}"
 
-    features_file = _release_features_yaml_path(ph_root=ctx.ph_root, version=version)
+    features_file = _release_features_yaml_path(ph_root=ctx.ph_data_root, version=version)
     if not features_file.exists():
         print(f"❌ Release {version} not found. Create with: ph release plan")
         return 1
 
-    features = load_release_features(ph_root=ctx.ph_root, version=version)
+    features = load_release_features(ph_root=ctx.ph_data_root, version=version)
 
     feature_type = "epic" if epic else "regular"
     features[feature] = {
@@ -1616,7 +1617,7 @@ def run_release_suggest(*, ctx: Context, version: str) -> int:
     print(f"💡 SUGGESTED FEATURES FOR {version}")
     print("=" * 50)
 
-    features_dir = ctx.ph_root / "features"
+    features_dir = ctx.ph_data_root / "features"
     if not features_dir.exists():
         return 0
 
@@ -1668,12 +1669,12 @@ def run_release_close(*, ctx: Context, version: str, env: dict[str, str]) -> int
     if not version.startswith("v"):
         version = f"v{version}"
 
-    release_dir = ctx.ph_root / "releases" / version
+    release_dir = ctx.ph_data_root / "releases" / version
     if not release_dir.exists():
         print(f"❌ Release {version} not found")
         return 1
 
-    delivered_sprint = _resolve_required_current_sprint_id(ph_root=ctx.ph_root)
+    delivered_sprint = _resolve_required_current_sprint_id(ph_root=ctx.ph_data_root)
     if not delivered_sprint:
         print("❌ No current sprint found (missing or invalid sprints/current)")
         return 1
@@ -1698,7 +1699,7 @@ Released on {delivered_date_obj.strftime("%B %d, %Y")}
 ## Features Delivered
 """
 
-    features = load_release_features(ph_root=ctx.ph_root, version=version)
+    features = load_release_features(ph_root=ctx.ph_data_root, version=version)
     for feature_name in features.keys():
         changelog_content += f"- **{feature_name}**: Feature description\n"
 
@@ -1795,7 +1796,7 @@ Released on {delivered_date_obj.strftime("%B %d, %Y")}
         except Exception as exc:
             print(f"⚠️ Could not update {plan_file}: {exc}")
 
-    delivered_dir = ctx.ph_root / "releases" / "delivered"
+    delivered_dir = ctx.ph_data_root / "releases" / "delivered"
     delivered_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"✅ Release {version} closed")

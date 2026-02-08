@@ -51,8 +51,8 @@ def _utc_now_iso_z(*, env: dict[str, str]) -> str:
     return dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def _load_config(*, ph_root: Path) -> dict[str, Any]:
-    rules_path = ph_root / "process" / "checks" / "validation_rules.json"
+def _load_config(*, ph_project_root: Path) -> dict[str, Any]:
+    rules_path = ph_project_root / "process" / "checks" / "validation_rules.json"
     try:
         if rules_path.exists():
             return json.loads(rules_path.read_text(encoding="utf-8"))
@@ -412,7 +412,13 @@ def _priority_rank(priority: str) -> int:
 
 
 def _write_status_summary(
-    *, ph_root: Path, sprints_dir: Path, summary_path: Path, status_payload: dict[str, Any], env: dict[str, str]
+    *,
+    ph_project_root: Path,
+    ph_data_root: Path,
+    sprints_dir: Path,
+    summary_path: Path,
+    status_payload: dict[str, Any],
+    env: dict[str, str],
 ) -> None:
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     context = _load_current_sprint_context(sprints_dir=sprints_dir)
@@ -427,7 +433,7 @@ def _write_status_summary(
     day_of_sprint = max(1, (today - start_date).days + 1)
     day_of_sprint = min(day_of_sprint, 5)
 
-    config = _load_config(ph_root=ph_root)
+    config = _load_config(ph_project_root=ph_project_root)
     mode = str(config.get("sprint_management", {}).get("mode") or "timeboxed").strip().lower() or "timeboxed"
     health = _get_sprint_health(tasks=tasks, day_of_sprint=day_of_sprint, config=config, mode=mode)
     velocity = _calculate_velocity(tasks)
@@ -716,7 +722,9 @@ class StatusResult(tuple[Path, Path, str | None]):
         return self[2]
 
 
-def run_status(*, ph_root: Path, ph_data_root: Path, env: dict[str, str] | None = None) -> StatusResult:
+def run_status(
+    *, ph_root: Path, ph_project_root: Path, ph_data_root: Path, env: dict[str, str] | None = None
+) -> StatusResult:
     env = env or os.environ
     status_dir = ph_data_root / "status"
     status_dir.mkdir(parents=True, exist_ok=True)
@@ -727,7 +735,8 @@ def run_status(*, ph_root: Path, ph_data_root: Path, env: dict[str, str] | None 
     payload = _generate_status_payload(ph_data_root=ph_data_root, env=env)
     current_json.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     _write_status_summary(
-        ph_root=ph_root,
+        ph_project_root=ph_project_root,
+        ph_data_root=ph_data_root,
         sprints_dir=ph_data_root / "sprints",
         summary_path=summary_md,
         status_payload=payload,

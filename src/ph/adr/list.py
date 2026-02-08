@@ -46,10 +46,12 @@ def _coerce_non_empty(value: str | None) -> str:
     return normalized if normalized else "?"
 
 
-def list_adrs(*, ph_root: Path) -> list[AdrListItem]:
-    adr_dir = ph_root / "adr"
+def list_adrs(*, ph_data_root: Path) -> list[AdrListItem]:
+    adr_dir = ph_data_root / "adr"
     if not adr_dir.exists():
         return []
+
+    ph_root = ph_data_root.parent
 
     items: list[AdrListItem] = []
     for md in sorted(adr_dir.glob("*.md")):
@@ -93,8 +95,8 @@ def list_adrs(*, ph_root: Path) -> list[AdrListItem]:
     return items
 
 
-def run_adr_list(*, ph_root: Path) -> int:
-    items = list_adrs(ph_root=ph_root)
+def run_adr_list(*, ph_data_root: Path) -> int:
+    items = list_adrs(ph_data_root=ph_data_root)
     if not items:
         print("No ADRs found.")
         return 0
@@ -102,4 +104,3 @@ def run_adr_list(*, ph_root: Path) -> int:
     for item in items:
         print(f"{item.adr_id} | {item.status} | {item.date} | {item.title}")
     return 0
-

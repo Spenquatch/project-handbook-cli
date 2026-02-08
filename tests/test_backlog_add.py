@@ -21,19 +21,20 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _seed_backlog_items(ph_root: Path, *, count: int) -> None:
-    backlog_dir = ph_root / "backlog" / "bugs"
+    backlog_dir = ph_root / ".project-handbook" / "backlog" / "bugs"
     backlog_dir.mkdir(parents=True, exist_ok=True)
     for i in range(count):
         issue_id = f"BUG-P4-20000101-0000{i:02d}"
@@ -91,7 +92,7 @@ def test_backlog_add_creates_issue_updates_index_and_prints_hint_block(tmp_path:
     result = subprocess.run(cmd, capture_output=True, text=True, env=env)
     assert result.returncode == 0
 
-    base = tmp_path if scope == "project" else (tmp_path / ".project-handbook" / "system")
+    base = (tmp_path / ".project-handbook") if scope == "project" else (tmp_path / ".project-handbook" / "system")
     issue_dir = base / "backlog" / "bugs" / expected_id
     assert issue_dir.exists()
     readme = (issue_dir / "README.md").read_text(encoding="utf-8")
@@ -165,6 +166,6 @@ def test_backlog_add_p0_creates_triage_template(tmp_path: Path) -> None:
     result = subprocess.run(cmd, capture_output=True, text=True, env=env)
     assert result.returncode == 0
 
-    triage_path = tmp_path / "backlog" / "bugs" / expected_id / "triage.md"
+    triage_path = tmp_path / ".project-handbook" / "backlog" / "bugs" / expected_id / "triage.md"
     assert triage_path.exists()
     assert "P0 Triage Analysis:" in triage_path.read_text(encoding="utf-8")

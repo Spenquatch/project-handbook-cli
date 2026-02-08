@@ -6,30 +6,31 @@ from pathlib import Path
 
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / ".project-handbook" / "config.json"
+    ph_project_root = ph_root / ".project-handbook"
+    config = ph_project_root / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_project_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _seed_current_sprint(*, ph_root: Path) -> Path:
-    sprint_dir = ph_root / "sprints" / "2099" / "SPRINT-2099-01-01"
+    sprint_dir = ph_root / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01"
     tasks_dir = sprint_dir / "tasks"
     tasks_dir.mkdir(parents=True, exist_ok=True)
 
-    sprints_dir = ph_root / "sprints"
+    sprints_dir = ph_root / ".project-handbook" / "sprints"
     current_link = sprints_dir / "current"
     if current_link.exists() or current_link.is_symlink():
         current_link.unlink()
@@ -64,7 +65,7 @@ def test_post_hook_validation_errors_do_not_change_exit_code(tmp_path: Path) -> 
     )
 
     # Force quick validation to have at least one error (legacy behavior still exits 0).
-    (tmp_path / "INVALID.md").write_text("# Missing front matter\n", encoding="utf-8")
+    (tmp_path / ".project-handbook" / "INVALID.md").write_text("# Missing front matter\n", encoding="utf-8")
 
     env = dict(os.environ)
     cmd = [
@@ -83,4 +84,4 @@ def test_post_hook_validation_errors_do_not_change_exit_code(tmp_path: Path) -> 
 
     assert result.returncode == 0
     assert "validation:" in result.stdout
-    assert "status/validation.json" in result.stdout
+    assert ".project-handbook/status/validation.json" in result.stdout

@@ -36,7 +36,7 @@ def test_adr_add_creates_strict_adr_file(tmp_path: Path) -> None:
     )
     assert result.returncode == 0
 
-    rel = "adr/0007-tribuence-mini-v2-federated-graphql-context-service.md"
+    rel = ".project-handbook/adr/0007-tribuence-mini-v2-federated-graphql-context-service.md"
     assert result.stdout.strip().endswith(rel)
 
     path = tmp_path / rel
@@ -80,7 +80,7 @@ def test_adr_add_refuses_to_overwrite_without_force_and_is_idempotent_with_force
         text=True,
     )
     assert first.returncode == 0
-    rel = "adr/0010-decision-title.md"
+    rel = ".project-handbook/adr/0010-decision-title.md"
     path = tmp_path / rel
     assert path.exists()
     original = path.read_text(encoding="utf-8")
@@ -255,7 +255,7 @@ def test_adr_add_superseded_requires_superseded_by_and_existing_target(tmp_path:
     )
     assert ok.returncode == 0
     rel = ok.stdout.strip()
-    assert rel.startswith("adr/")
+    assert rel.startswith(".project-handbook/adr/")
     text = (tmp_path / rel).read_text(encoding="utf-8")
     assert "status: superseded" in text
     assert "superseded_by: ADR-0001" in text

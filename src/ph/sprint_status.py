@@ -173,8 +173,8 @@ def calculate_velocity(tasks: list[dict[str, Any]]) -> dict[str, int]:
     return metrics
 
 
-def get_sprint_health(*, ph_root: Path, tasks: list[dict[str, Any]], day_of_sprint: int, mode: str) -> str:
-    config = load_sprint_config(ph_root=ph_root)
+def get_sprint_health(*, ph_project_root: Path, tasks: list[dict[str, Any]], day_of_sprint: int, mode: str) -> str:
+    config = load_sprint_config(ph_project_root=ph_project_root)
     thresholds = config.get("sprint_management", {}).get("health_check_thresholds", {})
     red_blocked = thresholds.get("blocked_percentage_red", 30)
     red_progress = thresholds.get("progress_percentage_red", 50)
@@ -228,8 +228,8 @@ def _read_sprint_plan_metadata(*, sprint_dir: Path) -> dict[str, str]:
     return meta
 
 
-def _get_sprint_mode(*, ph_root: Path, sprint_dir: Path) -> str:
-    config = load_sprint_config(ph_root=ph_root)
+def _get_sprint_mode(*, ph_project_root: Path, sprint_dir: Path) -> str:
+    config = load_sprint_config(ph_project_root=ph_project_root)
     meta = _read_sprint_plan_metadata(sprint_dir=sprint_dir)
     if meta.get("mode"):
         mode = (meta.get("mode") or "").strip().lower()
@@ -297,7 +297,7 @@ def _group_tasks_by_lane(tasks: list[dict[str, Any]]) -> dict[str, list[dict[str
     return dict(sorted(lanes.items(), key=lambda kv: kv[0]))
 
 
-def run_sprint_status(*, ph_root: Path, ctx: Context, sprint: str | None) -> int:
+def run_sprint_status(*, ph_project_root: Path, ctx: Context, sprint: str | None) -> int:
     sprint_dir = _resolve_sprint_dir(ctx=ctx, sprint=sprint)
     if sprint_dir is None or not sprint_dir.exists():
         print("No active sprint")
@@ -308,7 +308,7 @@ def run_sprint_status(*, ph_root: Path, ctx: Context, sprint: str | None) -> int
     metrics = calculate_velocity(tasks)
 
     today = dt.date.today()
-    mode = _get_sprint_mode(ph_root=ph_root, sprint_dir=sprint_dir)
+    mode = _get_sprint_mode(ph_project_root=ph_project_root, sprint_dir=sprint_dir)
 
     day_of_sprint = 0
     timeline_line = ""
@@ -318,7 +318,9 @@ def run_sprint_status(*, ph_root: Path, ctx: Context, sprint: str | None) -> int
         created = _resolve_sprint_created_date(sprint_dir=sprint_dir)
         age_days = (today - created).days if created else None
         timeline_line = f"Mode: bounded | Age: {age_days} days" if age_days is not None else "Mode: bounded"
-        health = get_sprint_health(ph_root=ph_root, tasks=tasks, day_of_sprint=day_of_sprint, mode="bounded")
+        health = get_sprint_health(
+            ph_project_root=ph_project_root, tasks=tasks, day_of_sprint=day_of_sprint, mode="bounded"
+        )
     else:
         start_date, end_date = get_sprint_dates(sprint_id)
         duration_days = (end_date - start_date).days + 1
@@ -337,7 +339,9 @@ def run_sprint_status(*, ph_root: Path, ctx: Context, sprint: str | None) -> int
                 "Mode: timeboxed | "
                 f"Ended {days_ago} days ago ({start_date.strftime('%Y-%m-%d')} → {end_date.strftime('%Y-%m-%d')})"
             )
-            health = get_sprint_health(ph_root=ph_root, tasks=tasks, day_of_sprint=day_of_sprint, mode="timeboxed")
+            health = get_sprint_health(
+                ph_project_root=ph_project_root, tasks=tasks, day_of_sprint=day_of_sprint, mode="timeboxed"
+            )
         else:
             day_of_sprint = (today - start_date).days + 1
             timeline_line = (
@@ -345,7 +349,9 @@ def run_sprint_status(*, ph_root: Path, ctx: Context, sprint: str | None) -> int
                 f"Day {day_of_sprint} of {duration_days} ({start_date.strftime('%Y-%m-%d')} → "
                 f"{end_date.strftime('%Y-%m-%d')})"
             )
-            health = get_sprint_health(ph_root=ph_root, tasks=tasks, day_of_sprint=day_of_sprint, mode="timeboxed")
+            health = get_sprint_health(
+                ph_project_root=ph_project_root, tasks=tasks, day_of_sprint=day_of_sprint, mode="timeboxed"
+            )
 
     task_map = {str(t.get("id")): t for t in tasks if t.get("id")}
     dep_errors, dep_warnings = validate_dependencies(tasks)

@@ -18,7 +18,9 @@ def _write_legacy_like_package_json(ph_root: Path) -> None:
 
 
 def _write_passing_task(ph_root: Path) -> None:
-    task_dir = ph_root / "sprints" / "current" / "tasks" / "TASK-001-parity-pre-exec-lint"
+    task_dir = (
+        ph_root / ".project-handbook" / "sprints" / "current" / "tasks" / "TASK-001-parity-pre-exec-lint"
+    )
     task_dir.mkdir(parents=True, exist_ok=True)
 
     (task_dir / "task.yaml").write_text(

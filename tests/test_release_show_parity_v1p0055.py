@@ -6,28 +6,29 @@ from pathlib import Path
 
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / ".project-handbook" / "config.json"
+    ph_project_root = ph_root / ".project-handbook"
+    config = ph_project_root / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_project_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _write_release_show_fixture(ph_root: Path) -> str:
     version = "v1.2.0"
 
-    releases_dir = ph_root / "releases"
+    releases_dir = ph_root / ".project-handbook" / "releases"
     release_dir = releases_dir / version
     release_dir.mkdir(parents=True, exist_ok=True)
     (releases_dir / "current").symlink_to(version)
@@ -67,11 +68,11 @@ def _write_release_show_fixture(ph_root: Path) -> str:
         encoding="utf-8",
     )
 
-    sprint_root = ph_root / "sprints" / "2026" / "SPRINT-SEQ-0001"
+    sprint_root = ph_root / ".project-handbook" / "sprints" / "2026" / "SPRINT-SEQ-0001"
     tasks_root = sprint_root / "tasks"
     tasks_root.mkdir(parents=True, exist_ok=True)
-    (ph_root / "sprints" / "current").parent.mkdir(parents=True, exist_ok=True)
-    (ph_root / "sprints" / "current").symlink_to(Path("2026") / "SPRINT-SEQ-0001")
+    (ph_root / ".project-handbook" / "sprints" / "current").parent.mkdir(parents=True, exist_ok=True)
+    (ph_root / ".project-handbook" / "sprints" / "current").symlink_to(Path("2026") / "SPRINT-SEQ-0001")
 
     task_1 = tasks_root / "TASK-001-ship-check"
     task_1.mkdir(parents=True, exist_ok=True)
@@ -169,7 +170,7 @@ def test_release_show_stdout_parity_v1p0055(tmp_path: Path) -> None:
         "⭕ Planned SPRINT-SEQ-0002 (Sprint 2 of 2)",
     ]
 
-    progress_path = (tmp_path / "releases" / "v1.2.0" / "progress.md").resolve()
+    progress_path = (tmp_path / ".project-handbook" / "releases" / "v1.2.0" / "progress.md").resolve()
     expected_lines = [
         "📘 RELEASE PLAN: v1.2.0",
         "=" * 60,
@@ -182,4 +183,3 @@ def test_release_show_stdout_parity_v1p0055(tmp_path: Path) -> None:
         f"📝 Updated: {progress_path}",
     ]
     assert result.stdout == "\n".join(expected_lines) + "\n"
-

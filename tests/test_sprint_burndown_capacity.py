@@ -15,15 +15,16 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _write_package_json(ph_root: Path) -> None:
@@ -34,7 +35,7 @@ def _write_package_json(ph_root: Path) -> None:
 
 
 def _write_bounded_sprint_config(ph_root: Path) -> None:
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text(
+    (ph_root / ".project-handbook" / "process" / "checks" / "validation_rules.json").write_text(
         '{\n  "sprint_management": {\n    "mode": "bounded"\n  }\n}\n',
         encoding="utf-8",
     )
@@ -43,7 +44,7 @@ def _write_bounded_sprint_config(ph_root: Path) -> None:
 @pytest.mark.parametrize(
     ("scope", "base_rel"),
     [
-        ("project", ""),
+        ("project", ".project-handbook"),
         ("system", ".project-handbook/system"),
     ],
 )
@@ -65,7 +66,7 @@ def test_sprint_burndown_writes_burndown_md_under_scope(tmp_path: Path, scope: s
     result = subprocess.run(cmd, capture_output=True, text=True, env=env)
     assert result.returncode == 0
 
-    base = tmp_path if scope == "project" else (tmp_path / base_rel)
+    base = tmp_path / base_rel
     sprint_dir = base / "sprints" / "2099" / "SPRINT-2099-01-01"
     assert (sprint_dir / "burndown.md").exists()
 
@@ -97,7 +98,7 @@ def test_sprint_burndown_stdout_matches_make_preamble_and_spacing(tmp_path: Path
     )
     assert result.stdout.startswith(expected_prefix)
 
-    saved_path = (tmp_path / "sprints" / "2099" / "SPRINT-2099-01-01" / "burndown.md").resolve()
+    saved_path = (tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "burndown.md").resolve()
     assert result.stdout.endswith(f"\n\nSaved to: {saved_path}\n")
 
 
@@ -106,8 +107,9 @@ def test_sprint_capacity_stdout_matches_make_preamble_and_bounded_output(tmp_pat
     _write_package_json(tmp_path)
     _write_bounded_sprint_config(tmp_path)
 
-    (tmp_path / "backlog").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "backlog" / "index.json").write_text(
+    backlog_dir = tmp_path / ".project-handbook" / "backlog"
+    backlog_dir.mkdir(parents=True, exist_ok=True)
+    (backlog_dir / "index.json").write_text(
         '{\n  "items": [\n    {"severity": "P0"},\n    {"severity": "P1"},\n    {"severity": "P2"}\n  ]\n}\n',
         encoding="utf-8",
     )
@@ -117,7 +119,7 @@ def test_sprint_capacity_stdout_matches_make_preamble_and_bounded_output(tmp_pat
     planned = subprocess.run(cmd, capture_output=True, text=True, env=env)
     assert planned.returncode == 0
 
-    task_root = tmp_path / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
+    task_root = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
 
     task_1 = task_root / "TASK-001-ci"
     task_1.mkdir(parents=True, exist_ok=True)

@@ -8,6 +8,7 @@ from typing import Any
 
 from .clock import today as clock_today
 from .context import Context
+from .release import get_current_release
 
 
 def slugify(value: str, *, max_len: int = 80) -> str:
@@ -116,8 +117,8 @@ def _feature_doc_links(*, ph_data_root: Path, task_dir: Path, feature: str) -> t
     )
 
 
-def _load_validation_rules(*, ph_root: Path) -> dict[str, Any]:
-    rules_path = ph_root / "process" / "checks" / "validation_rules.json"
+def _load_validation_rules(*, ph_project_root: Path) -> dict[str, Any]:
+    rules_path = ph_project_root / "process" / "checks" / "validation_rules.json"
     try:
         if rules_path.exists():
             return json.loads(rules_path.read_text(encoding="utf-8"))
@@ -126,16 +127,16 @@ def _load_validation_rules(*, ph_root: Path) -> dict[str, Any]:
     return {}
 
 
-def _default_story_points(*, ph_root: Path) -> int:
-    rules = _load_validation_rules(ph_root=ph_root)
+def _default_story_points(*, ph_project_root: Path) -> int:
+    rules = _load_validation_rules(ph_project_root=ph_project_root)
     try:
         return int(rules.get("story_points", {}).get("default_story_points", 5))
     except Exception:
         return 5
 
 
-def _task_lane_prefixes_for_system_scope(*, ph_root: Path) -> list[str]:
-    config_path = ph_root / "process" / "automation" / "system_scope_config.json"
+def _task_lane_prefixes_for_system_scope(*, ph_project_root: Path) -> list[str]:
+    config_path = ph_project_root / "process" / "automation" / "system_scope_config.json"
     try:
         config = json.loads(config_path.read_text(encoding="utf-8"))
     except Exception:
@@ -149,9 +150,11 @@ def _task_lane_prefixes_for_system_scope(*, ph_root: Path) -> list[str]:
     return [str(p) for p in prefixes if str(p)]
 
 
-def is_system_scoped_lane(*, ph_root: Path, lane: str) -> bool:
+def is_system_scoped_lane(*, ph_project_root: Path, lane: str) -> bool:
     lane = str(lane)
-    return any(lane.startswith(prefix) for prefix in _task_lane_prefixes_for_system_scope(ph_root=ph_root))
+    return any(
+        lane.startswith(prefix) for prefix in _task_lane_prefixes_for_system_scope(ph_project_root=ph_project_root)
+    )
 
 
 def _require_current_sprint_dir(*, ph_data_root: Path) -> Path | None:
@@ -189,7 +192,7 @@ def _scope_prefix_for_ph_command(*, ctx: Context) -> str:
 def _task_cd_path_for_scope(*, ctx: Context, task_dir_name: str) -> str:
     if ctx.scope == "system":
         return f".project-handbook/system/sprints/current/tasks/{task_dir_name}/"
-    return f"sprints/current/tasks/{task_dir_name}/"
+    return f".project-handbook/sprints/current/tasks/{task_dir_name}/"
 
 
 def run_task_create(
@@ -213,11 +216,11 @@ def run_task_create(
         print("❌ No current sprint found. Run 'ph sprint plan' first.")
         return 1
 
-    if lane and ctx.scope == "project" and is_system_scoped_lane(ph_root=ph_root, lane=lane):
+    if lane and ctx.scope == "project" and is_system_scoped_lane(ph_project_root=ctx.ph_project_root, lane=lane):
         print("Use: ph --scope system task create ...")
         return 1
 
-    story_points = int(points) if points is not None else _default_story_points(ph_root=ph_root)
+    story_points = int(points) if points is not None else _default_story_points(ph_project_root=ctx.ph_project_root)
 
     task_id = _get_next_task_id(sprint_dir=sprint_dir)
     task_slug = slugify(title)
@@ -234,21 +237,12 @@ def run_task_create(
     if release and str(release).strip().lower() not in {"null", "none"}:
         candidate = str(release).strip()
         if candidate.lower() == "current":
-            try:
-                import sys
-
-                sys.path.append(str(ph_root / "process" / "automation"))
-                from release_manager import get_current_release  # type: ignore
-
-                current = get_current_release()
-                if not current:
-                    print("⚠️  release=current requested but no current release is set; leaving task release=null")
-                    normalized_release = None
-                else:
-                    normalized_release = str(current)
-            except Exception:
-                print("⚠️  release=current requested but release_manager is unavailable; leaving task release=null")
+            current = get_current_release(ph_root=ctx.ph_project_root)
+            if not current:
+                print("⚠️  release=current requested but no current release is set; leaving task release=null")
                 normalized_release = None
+            else:
+                normalized_release = str(current)
         else:
             normalized_release = candidate if candidate.startswith("v") else f"v{candidate}"
 
@@ -282,13 +276,9 @@ links: []
     else:
         decision_link = f"`{decision}`"
 
-    if ctx.scope == "project":
-        feature_overview_rel = f"../../../features/{feature}/overview.md"
-        feature_architecture_rel = f"../../../features/{feature}/architecture/ARCHITECTURE.md"
-    else:
-        feature_overview_rel, feature_architecture_rel = _feature_doc_links(
-            ph_data_root=ctx.ph_data_root, task_dir=task_dir, feature=feature
-        )
+    feature_overview_rel, feature_architecture_rel = _feature_doc_links(
+        ph_data_root=ctx.ph_data_root, task_dir=task_dir, feature=feature
+    )
 
     cd_path = _task_cd_path_for_scope(ctx=ctx, task_dir_name=task_dir_name)
     ph_cmd = _scope_prefix_for_ph_command(ctx=ctx)
@@ -439,7 +429,7 @@ links: []
 ## Task Status Updates
 ```bash
 # When starting work
-cd sprints/current/tasks/{task_dir_name}/
+cd {cd_path}
 # Edit task.yaml: change status from "todo" to "doing"
 
 # When ready for review
@@ -639,36 +629,43 @@ links: []
     (task_dir / "checklist.md").write_text(checklist_content, encoding="utf-8")
 
     if ctx.scope == "project":
-        validation_content = f"""---
-title: {title} - Validation Guide
-type: validation
-date: {today.strftime('%Y-%m-%d')}
-task_id: {task_id}
-tags: [validation]
-links: []
----
-
-# Validation Guide: {title}
-
-## Automated Validation
-```bash
-ph validate
-ph sprint status
-```
-
-## Manual Validation (Must Be Task-Specific)
-This file must be updated during sprint planning so an execution agent can validate without inventing steps.
-
-Before the task is marked `review`, add:
-- exact copy/paste command(s),
-- exact pass/fail success criteria,
-- exact evidence file list (under `project-handbook/status/evidence/{task_id}/`).
-
-## Sign-off
-- [ ] All validation steps completed
-- [ ] Evidence documented above
-- [ ] Ready to mark task as \"done\"
-"""
+        validation_content = "\n".join(
+            [
+                "---",
+                f"title: {title} - Validation Guide",
+                "type: validation",
+                f"date: {today.strftime('%Y-%m-%d')}",
+                f"task_id: {task_id}",
+                "tags: [validation]",
+                "links: []",
+                "---",
+                "",
+                f"# Validation Guide: {title}",
+                "",
+                "## Automated Validation",
+                "```bash",
+                "ph validate",
+                "ph sprint status",
+                "```",
+                "",
+                "## Manual Validation (Must Be Task-Specific)",
+                (
+                    "This file must be updated during sprint planning so an execution agent can validate "
+                    "without inventing steps."
+                ),
+                "",
+                "Before the task is marked `review`, add:",
+                "- exact copy/paste command(s),",
+                "- exact pass/fail success criteria,",
+                f"- exact evidence file list (under `.project-handbook/status/evidence/{task_id}/`).",
+                "",
+                "## Sign-off",
+                "- [ ] All validation steps completed",
+                "- [ ] Evidence documented above",
+                '- [ ] Ready to mark task as "done"',
+                "",
+            ]
+        )
     else:
         validation_content = "\n".join(
             [
@@ -763,7 +760,7 @@ Before the task is marked `review`, add:
         print("  - Run 'ph --scope system validate --quick' once initial scaffolding is filled in")
     else:
         print("Next steps:")
-        print("  - Open sprints/current/tasks/ for the new directory, update steps.md + commands.md")
+        print("  - Open .project-handbook/sprints/current/tasks/ for the new directory, update steps.md + commands.md")
         print("  - Set status to 'doing' when work starts and log progress in checklist.md")
         print("  - Run 'ph validate --quick' once initial scaffolding is filled in")
 

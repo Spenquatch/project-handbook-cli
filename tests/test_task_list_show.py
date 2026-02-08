@@ -8,26 +8,27 @@ import pytest
 
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / ".project-handbook" / "config.json"
+    ph_project_root = ph_root / ".project-handbook"
+    config = ph_project_root / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_project_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _seed_current_sprint_with_tasks(*, ph_root: Path, scope: str) -> None:
-    base = ph_root if scope == "project" else (ph_root / ".project-handbook" / "system")
+    base = (ph_root / ".project-handbook") if scope == "project" else (ph_root / ".project-handbook" / "system")
     sprint_dir = base / "sprints" / "2099" / "SPRINT-2099-01-01"
     tasks_dir = sprint_dir / "tasks"
     tasks_dir.mkdir(parents=True, exist_ok=True)
@@ -121,7 +122,15 @@ def test_task_list_and_show_match_v0_formatting_rules(tmp_path: Path, scope: str
         expected_location = ".project-handbook/system/sprints/current/tasks/TASK-001-first"
     else:
         expected_location = str(
-            (tmp_path / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / "TASK-001-first").resolve()
+            (
+                tmp_path
+                / ".project-handbook"
+                / "sprints"
+                / "2099"
+                / "SPRINT-2099-01-01"
+                / "tasks"
+                / "TASK-001-first"
+            ).resolve()
         )
     assert f"Location: {expected_location}" in shown.stdout.splitlines()
 

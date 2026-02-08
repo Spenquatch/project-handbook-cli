@@ -7,7 +7,9 @@ from .sprint import create_sprint_plan_template, get_sprint_id, sprint_dir_from_
 
 
 def sprint_plan(*, ph_root: Path, ctx: Context, sprint_id: str | None, force: bool, env: dict[str, str]) -> int:
-    resolved_id = sprint_id or get_sprint_id(ph_root=ph_root, ph_data_root=ctx.ph_data_root, env=env)
+    resolved_id = sprint_id or get_sprint_id(
+        ph_project_root=ctx.ph_project_root, ph_data_root=ctx.ph_data_root, env=env
+    )
     sprint_dir = sprint_dir_from_id(ph_data_root=ctx.ph_data_root, sprint_id=resolved_id)
     sprint_dir.mkdir(parents=True, exist_ok=True)
     (sprint_dir / "tasks").mkdir(exist_ok=True)
@@ -17,7 +19,7 @@ def sprint_plan(*, ph_root: Path, ctx: Context, sprint_id: str | None, force: bo
         if not plan_file.exists() or force:
             plan_file.write_text(
                 create_sprint_plan_template(
-                    ph_root=ph_root,
+                    ph_project_root=ctx.ph_project_root,
                     ph_data_root=ctx.ph_data_root,
                     scope=ctx.scope,
                     sprint_id=resolved_id,
@@ -39,7 +41,7 @@ def sprint_plan(*, ph_root: Path, ctx: Context, sprint_id: str | None, force: bo
         else:
             plan_file.write_text(
                 create_sprint_plan_template(
-                    ph_root=ph_root,
+                    ph_project_root=ctx.ph_project_root,
                     ph_data_root=ctx.ph_data_root,
                     scope=ctx.scope,
                     sprint_id=resolved_id,
@@ -61,7 +63,7 @@ def sprint_plan(*, ph_root: Path, ctx: Context, sprint_id: str | None, force: bo
         update_current_symlink(ph_data_root=ctx.ph_data_root, sprint_id=resolved_id)
 
         print("Sprint scaffold ready:")
-        print("  1. Edit sprints/current/plan.md with goals, lanes, and integration tasks")
+        print("  1. Edit .project-handbook/sprints/current/plan.md with goals, lanes, and integration tasks")
         print("  2. Seed tasks via 'ph task create --title ... --feature ... --decision ADR-###'")
         print("  3. Re-run 'ph sprint status' to confirm health + next-up ordering")
         print("  4. Run 'ph validate --quick' before handing off to another agent")

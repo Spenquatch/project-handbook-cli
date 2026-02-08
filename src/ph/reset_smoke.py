@@ -37,7 +37,7 @@ def run_reset_smoke(*, ph_root: Path, ctx: Context) -> int:
     print("Running reset smoke verification: docs/RESET_SMOKE.md")
 
     # Step 1: Create system-scope artifacts.
-    sys_feature_dir = ph_root / ".project-handbook" / "system" / "features" / "handbook-reset-smoke"
+    sys_feature_dir = system_ctx.ph_data_root / "features" / "handbook-reset-smoke"
     if not sys_feature_dir.exists():
         rc = run_feature_create(
             ph_root=ph_root,
@@ -72,7 +72,7 @@ def run_reset_smoke(*, ph_root: Path, ctx: Context) -> int:
         return rc
 
     # Step 2: Create project-scope artifacts.
-    proj_feature_dir = ph_root / "features" / "reset-smoke-project"
+    proj_feature_dir = ctx.ph_data_root / "features" / "reset-smoke-project"
     if not proj_feature_dir.exists():
         rc = run_feature_create(
             ph_root=ph_root,
@@ -107,27 +107,29 @@ def run_reset_smoke(*, ph_root: Path, ctx: Context) -> int:
         return rc
 
     # Step 3: Execute reset.
-    rc = run_reset(ctx=ctx, spec="process/automation/reset_spec.json", confirm="RESET", force="true")
+    rc = run_reset(ctx=ctx, spec=".project-handbook/process/automation/reset_spec.json", confirm="RESET", force="true")
     if rc != 0:
         return rc
 
     # Step 4: Verify separation (filesystem asserts).
     checks: list[tuple[int, str]] = []
 
-    checks.append((_assert_not_exists(ph_root / "features" / "reset-smoke-project", "project feature"), "proj_feature"))
+    checks.append(
+        (_assert_not_exists(ctx.ph_data_root / "features" / "reset-smoke-project", "project feature"), "proj_feature")
+    )
     checks.append(
         (
-            _assert_not_exists(ph_root / "sprints" / "2099" / "SPRINT-2099-01-02", "project sprint"),
+            _assert_not_exists(ctx.ph_data_root / "sprints" / "2099" / "SPRINT-2099-01-02", "project sprint"),
             "proj_sprint",
         )
     )
     checks.append(
-        (_assert_not_exists(ph_root / "sprints" / "current", "project current sprint symlink"), "proj_current")
+        (_assert_not_exists(ctx.ph_data_root / "sprints" / "current", "project current sprint symlink"), "proj_current")
     )
     checks.append(
         (
             _assert_exists(
-                ph_root / ".project-handbook" / "system" / "features" / "handbook-reset-smoke",
+                system_ctx.ph_data_root / "features" / "handbook-reset-smoke",
                 "system feature",
             ),
             "sys_feature",
@@ -136,7 +138,7 @@ def run_reset_smoke(*, ph_root: Path, ctx: Context) -> int:
     checks.append(
         (
             _assert_exists(
-                ph_root / ".project-handbook" / "system" / "sprints" / "2099" / "SPRINT-2099-01-01",
+                system_ctx.ph_data_root / "sprints" / "2099" / "SPRINT-2099-01-01",
                 "system sprint",
             ),
             "sys_sprint",
@@ -150,6 +152,7 @@ def run_reset_smoke(*, ph_root: Path, ctx: Context) -> int:
     # Step 5: Confirm repo health.
     validate_exit, _out_path, message = run_validate(
         ph_root=ph_root,
+        ph_project_root=ctx.ph_project_root,
         ph_data_root=ctx.ph_data_root,
         scope=ctx.scope,
         quick=True,

@@ -114,7 +114,7 @@ def _delete_path(path: Path) -> None:
 
 def _rewrite_templates(ph_root: Path, rel_paths: list[str]) -> None:
     templates: dict[str, str] = {
-        "roadmap/now-next-later.md": """---
+        ".project-handbook/roadmap/now-next-later.md": """---
 title: Now / Next / Later Roadmap
 type: roadmap
 date: 2025-09-18
@@ -130,7 +130,7 @@ links: []
 
 ## Later
 """,
-        "process/sessions/logs/latest_summary.md": """---
+        ".project-handbook/process/sessions/logs/latest_summary.md": """---
 title: Latest Session Summary
 type: session-summary
 date: 2025-12-22
@@ -147,9 +147,10 @@ Run:
 ph end-session --log <path-to-rollout-jsonl>
 ```
 """,
-        "process/sessions/session_end/session_end_index.json": json.dumps({"records": []}, indent=2) + "\n",
-        "sprints/archive/index.json": json.dumps({"sprints": []}, indent=2) + "\n",
-        "backlog/index.json": json.dumps(
+        ".project-handbook/process/sessions/session_end/session_end_index.json": json.dumps({"records": []}, indent=2)
+        + "\n",
+        ".project-handbook/sprints/archive/index.json": json.dumps({"sprints": []}, indent=2) + "\n",
+        ".project-handbook/backlog/index.json": json.dumps(
             {
                 "last_updated": None,
                 "total_items": 0,
@@ -160,7 +161,7 @@ ph end-session --log <path-to-rollout-jsonl>
             indent=2,
         )
         + "\n",
-        "parking-lot/index.json": json.dumps(
+        ".project-handbook/parking-lot/index.json": json.dumps(
             {
                 "last_updated": None,
                 "total_items": 0,

@@ -12,20 +12,21 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def test_onboarding_prints_onboarding_md(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
-    onboarding_path = tmp_path / "ONBOARDING.md"
+    onboarding_path = tmp_path / ".project-handbook" / "ONBOARDING.md"
     onboarding_path.write_text("---\ntitle: Onboarding\n---\n# Hello\n", encoding="utf-8")
 
     result = subprocess.run(["ph", "onboarding", "--root", str(tmp_path)], capture_output=True, text=True)
@@ -35,7 +36,7 @@ def test_onboarding_prints_onboarding_md(tmp_path: Path) -> None:
 
 def test_onboarding_session_list_sorts_topics(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
-    templates = tmp_path / "process" / "sessions" / "templates"
+    templates = tmp_path / ".project-handbook" / "process" / "sessions" / "templates"
     (templates / "b-topic.md").write_text("---\ntitle: B\n---\nB\n", encoding="utf-8")
     (templates / "a-topic.md").write_text("---\ntitle: A\n---\nA\n", encoding="utf-8")
 
@@ -74,7 +75,7 @@ def test_onboarding_session_list_sorts_topics(tmp_path: Path) -> None:
 
 def test_onboarding_session_renders_template(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
-    templates = tmp_path / "process" / "sessions" / "templates"
+    templates = tmp_path / ".project-handbook" / "process" / "sessions" / "templates"
     (templates / "sprint-planning.md").write_text("---\ntitle: Sprint\n---\n# Sprint\n", encoding="utf-8")
 
     result = subprocess.run(
@@ -91,7 +92,7 @@ def test_onboarding_session_renders_template(tmp_path: Path) -> None:
 
 def test_onboarding_continue_session_renders_header_and_make_line(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
-    logs_dir = tmp_path / "process" / "sessions" / "logs"
+    logs_dir = tmp_path / ".project-handbook" / "process" / "sessions" / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
     summary = "---\ntitle: Latest\n---\n# Latest\n"
     (logs_dir / "latest_summary.md").write_text(summary, encoding="utf-8")

@@ -6,7 +6,8 @@ from pathlib import Path
 
 
 def _write_minimal_ph_root(ph_root: Path, *, schema: int = 1) -> None:
-    config = ph_root / ".project-handbook" / "config.json"
+    ph_project_root = ph_root / ".project-handbook"
+    config = ph_project_root / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         "{\n"
@@ -17,15 +18,15 @@ def _write_minimal_ph_root(ph_root: Path, *, schema: int = 1) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_project_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _history_path(ph_root: Path) -> Path:
@@ -33,7 +34,7 @@ def _history_path(ph_root: Path) -> Path:
 
 
 def _validation_path(ph_root: Path) -> Path:
-    return ph_root / "status" / "validation.json"
+    return ph_root / ".project-handbook" / "status" / "validation.json"
 
 
 def test_history_appends_default_entry(tmp_path: Path) -> None:
@@ -74,9 +75,13 @@ def test_history_logs_on_failure(tmp_path: Path) -> None:
 def test_history_logs_doctor_failure(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     # remove a required asset so doctor fails
-    (tmp_path / "process" / "checks" / "validation_rules.json").unlink()
-    result = subprocess.run(["ph", "doctor", "--root", str(tmp_path)], capture_output=True, text=True)
+    (tmp_path / ".project-handbook" / "process" / "checks" / "validation_rules.json").unlink()
+    result = subprocess.run(
+        ["ph", "--root", str(tmp_path), "doctor"],
+        capture_output=True,
+        text=True,
+    )
     assert result.returncode == 3
     history_text = _history_path(tmp_path).read_text(encoding="utf-8")
-    assert "ph doctor --root" in history_text
+    assert "ph --root" in history_text and " doctor" in history_text
     assert not _validation_path(tmp_path).exists()

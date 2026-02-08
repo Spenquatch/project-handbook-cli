@@ -16,7 +16,8 @@ class FakeRunner:
 
 
 def test_check_all_invocation_sequence(tmp_path: Path) -> None:
-    ctx = Context(ph_root=tmp_path, scope="project", ph_data_root=tmp_path)
+    ph_project_root = tmp_path / ".project-handbook"
+    ctx = Context(ph_root=tmp_path, scope="project", ph_project_root=ph_project_root, ph_data_root=ph_project_root)
     runner = FakeRunner()
 
     exit_code = run_check_all(ph_root=tmp_path, ctx=ctx, env={}, runner=runner)
@@ -28,7 +29,8 @@ def test_check_all_invocation_sequence(tmp_path: Path) -> None:
 
 
 def test_test_system_invocation_sequence(tmp_path: Path) -> None:
-    ctx = Context(ph_root=tmp_path, scope="project", ph_data_root=tmp_path)
+    ph_project_root = tmp_path / ".project-handbook"
+    ctx = Context(ph_root=tmp_path, scope="project", ph_project_root=ph_project_root, ph_data_root=ph_project_root)
     runner = FakeRunner()
 
     exit_code = run_test_system(ph_root=tmp_path, ctx=ctx, env={}, runner=runner)
@@ -44,7 +46,13 @@ def test_test_system_invocation_sequence(tmp_path: Path) -> None:
 
 
 def test_orchestration_rejects_system_scope(tmp_path: Path, capsys) -> None:
-    ctx = Context(ph_root=tmp_path, scope="system", ph_data_root=tmp_path / ".project-handbook" / "system")
+    ph_project_root = tmp_path / ".project-handbook"
+    ctx = Context(
+        ph_root=tmp_path,
+        scope="system",
+        ph_project_root=ph_project_root,
+        ph_data_root=ph_project_root / "system",
+    )
     runner = FakeRunner()
 
     assert run_check_all(ph_root=tmp_path, ctx=ctx, env={}, runner=runner) == 1

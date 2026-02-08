@@ -16,15 +16,16 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 @pytest.mark.parametrize("scope", ["project", "system"])
@@ -58,7 +59,7 @@ def test_parking_add_creates_item_updates_index_and_prints_hint_block(tmp_path: 
     result = subprocess.run(cmd, capture_output=True, text=True, env=env)
     assert result.returncode == 0
 
-    base = tmp_path if scope == "project" else (tmp_path / ".project-handbook" / "system")
+    base = (tmp_path / ".project-handbook") if scope == "project" else (tmp_path / ".project-handbook" / "system")
     item_dir = base / "parking-lot" / "features" / expected_id
     assert item_dir.exists()
     assert (item_dir / "README.md").read_text(encoding="utf-8").startswith("---")

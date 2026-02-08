@@ -9,22 +9,23 @@ import pytest
 
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / ".project-handbook" / "config.json"
+    ph_project_root = ph_root / ".project-handbook"
+    config = ph_project_root / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_project_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "system_scope_config.json").write_text(
         json.dumps({"routing_rules": {}}), encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _seed_complete_feature(*, base: Path, name: str, stage: str) -> None:
@@ -65,14 +66,15 @@ def _archive_cmd(*, ph_root: Path, scope: str, name: str, force: bool) -> list[s
 
 def test_feature_archive_success_moves_directory(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
-    _seed_complete_feature(base=tmp_path, name="feat-archive", stage="completed")
+    base = tmp_path / ".project-handbook"
+    _seed_complete_feature(base=base, name="feat-archive", stage="completed")
 
     cmd = _archive_cmd(ph_root=tmp_path, scope="project", name="feat-archive", force=False)
     result = subprocess.run(cmd, capture_output=True, text=True, env=dict(os.environ))
     assert result.returncode == 0
 
-    assert not (tmp_path / "features" / "feat-archive").exists()
-    assert (tmp_path / "features" / "implemented" / "feat-archive").exists()
+    assert not (base / "features" / "feat-archive").exists()
+    assert (base / "features" / "implemented" / "feat-archive").exists()
 
 
 def test_feature_archive_prints_pnpm_make_preamble_when_forced(tmp_path: Path) -> None:
@@ -81,7 +83,8 @@ def test_feature_archive_prints_pnpm_make_preamble_when_forced(tmp_path: Path) -
         '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
         encoding="utf-8",
     )
-    _seed_complete_feature(base=tmp_path, name="feat-dev", stage="developing")
+    base = tmp_path / ".project-handbook"
+    _seed_complete_feature(base=base, name="feat-dev", stage="developing")
 
     cmd = _archive_cmd(ph_root=tmp_path, scope="project", name="feat-dev", force=True)
     result = subprocess.run(cmd, capture_output=True, text=True, env=dict(os.environ))
@@ -100,8 +103,9 @@ def test_feature_archive_prints_pnpm_make_preamble_when_forced(tmp_path: Path) -
 
 def test_feature_archive_blocks_on_non_completed_stage(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
-    feature_dir = tmp_path / "features" / "feat-blocked"
-    (tmp_path / "features" / "implemented").mkdir(parents=True, exist_ok=True)
+    base = tmp_path / ".project-handbook"
+    feature_dir = base / "features" / "feat-blocked"
+    (base / "features" / "implemented").mkdir(parents=True, exist_ok=True)
     feature_dir.mkdir(parents=True, exist_ok=True)
     (feature_dir / "status.md").write_text("Stage: developing\n", encoding="utf-8")
 
@@ -117,7 +121,8 @@ def test_feature_archive_blocks_on_non_completed_stage(tmp_path: Path) -> None:
 
 def test_feature_archive_completeness_checks_block_unless_forced(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
-    _seed_incomplete_feature(base=tmp_path, name="feat-incomplete")
+    base = tmp_path / ".project-handbook"
+    _seed_incomplete_feature(base=base, name="feat-incomplete")
 
     cmd = _archive_cmd(ph_root=tmp_path, scope="project", name="feat-incomplete", force=False)
     blocked = subprocess.run(cmd, capture_output=True, text=True, env=dict(os.environ))
@@ -130,7 +135,7 @@ def test_feature_archive_completeness_checks_block_unless_forced(tmp_path: Path)
     cmd = _archive_cmd(ph_root=tmp_path, scope="project", name="feat-incomplete", force=True)
     forced = subprocess.run(cmd, capture_output=True, text=True, env=dict(os.environ))
     assert forced.returncode == 0
-    assert (tmp_path / "features" / "implemented" / "feat-incomplete").exists()
+    assert (base / "features" / "implemented" / "feat-incomplete").exists()
 
 
 @pytest.mark.parametrize("scope", ["system"])

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from .context import Context
 from .sprint_status import run_sprint_status
@@ -16,8 +17,23 @@ def _iter_recent_daily(*, ph_root: Path, ctx: Context) -> list[str]:
     if not daily_dir.exists():
         return []
 
-    paths = [p for p in daily_dir.glob("*.md") if p.is_file()]
-    paths.sort(key=lambda p: p.name)
+    def _sort_key(path: Path) -> Any:
+        rel = path.relative_to(daily_dir)
+        parts = rel.parts
+        if len(parts) == 1:
+            stem = path.stem
+            pieces = stem.split("-")
+            if len(pieces) == 3 and all(p.isdigit() for p in pieces):
+                return (int(pieces[0]), int(pieces[1]), int(pieces[2]), rel.as_posix())
+        if len(parts) >= 3 and parts[-1].endswith(".md"):
+            year, month = parts[-3], parts[-2]
+            day = Path(parts[-1]).stem
+            if year.isdigit() and month.isdigit() and day.isdigit():
+                return (int(year), int(month), int(day), rel.as_posix())
+        return (9999, 99, 99, rel.as_posix())
+
+    paths = [p for p in daily_dir.rglob("*.md") if p.is_file()]
+    paths.sort(key=_sort_key)
     recent = paths[-3:]
     out: list[str] = []
     for path in recent:
@@ -34,7 +50,7 @@ def run_dashboard(*, ph_root: Path, ctx: Context) -> int:
     print(BANNER_LINE)
     print()
 
-    _ = run_sprint_status(ph_root=ph_root, ctx=ctx, sprint="current")
+    _ = run_sprint_status(ph_project_root=ctx.ph_project_root, ctx=ctx, sprint="current")
     print()
 
     print("Recent Daily Status:")
@@ -47,6 +63,7 @@ def run_dashboard(*, ph_root: Path, ctx: Context) -> int:
     print("Validation:")
     exit_code, _out_path, message = run_validate(
         ph_root=ph_root,
+        ph_project_root=ctx.ph_project_root,
         ph_data_root=ctx.ph_data_root,
         scope=ctx.scope,
         quick=False,

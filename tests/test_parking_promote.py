@@ -13,15 +13,16 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def test_parking_promote_defaults_target_later_and_moves_directory(tmp_path: Path) -> None:
@@ -63,8 +64,8 @@ def test_parking_promote_defaults_target_later_and_moves_directory(tmp_path: Pat
     assert result.returncode == 0
     assert f"✅ Promoted {expected_id} to roadmap/later/" in result.stdout
 
-    assert (tmp_path / "roadmap" / "later" / expected_id).exists()
-    assert not (tmp_path / "parking-lot" / "features" / expected_id).exists()
+    assert (tmp_path / ".project-handbook" / "roadmap" / "later" / expected_id).exists()
+    assert not (tmp_path / ".project-handbook" / "parking-lot" / "features" / expected_id).exists()
 
 
 def test_parking_promote_rejects_system_scope(tmp_path: Path) -> None:

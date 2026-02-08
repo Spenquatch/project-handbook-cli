@@ -7,8 +7,8 @@ from .clock import today as clock_today
 from .context import Context
 
 
-def _feature_name_prefixes_for_system_scope(*, ph_root: Path) -> list[str]:
-    config_path = ph_root / "process" / "automation" / "system_scope_config.json"
+def _feature_name_prefixes_for_system_scope(*, ph_data_root: Path) -> list[str]:
+    config_path = ph_data_root / "process" / "automation" / "system_scope_config.json"
     try:
         config = json.loads(config_path.read_text(encoding="utf-8"))
     except Exception:
@@ -22,9 +22,9 @@ def _feature_name_prefixes_for_system_scope(*, ph_root: Path) -> list[str]:
     return [str(p) for p in prefixes if str(p)]
 
 
-def is_system_scoped_feature(*, ph_root: Path, name: str) -> bool:
+def is_system_scoped_feature(*, ph_data_root: Path, name: str) -> bool:
     name = str(name)
-    return any(name.startswith(prefix) for prefix in _feature_name_prefixes_for_system_scope(ph_root=ph_root))
+    return any(name.startswith(prefix) for prefix in _feature_name_prefixes_for_system_scope(ph_data_root=ph_data_root))
 
 
 def _feature_hint_block(*, ctx: Context, name: str) -> list[str]:
@@ -36,7 +36,7 @@ def _feature_hint_block(*, ctx: Context, name: str) -> list[str]:
             "  3. Run 'ph --scope system validate --quick' so docs stay lint-clean",
         ]
     return [
-        f"Next steps for features/{name}/:",
+        f"Next steps for .project-handbook/features/{name}/:",
         "  1. Flesh out overview.md + status.md with owner, goals, and risks",
         "  2. Draft architecture/implementation/testing docs before assigning sprint work",
         "  3. Run 'ph validate --quick' so docs stay lint-clean",
@@ -64,7 +64,7 @@ def run_feature_create(
     owner = (owner or "@owner").strip() or "@owner"
     stage = (stage or "proposed").strip() or "proposed"
 
-    if ctx.scope == "project" and is_system_scoped_feature(ph_root=ph_root, name=name):
+    if ctx.scope == "project" and is_system_scoped_feature(ph_data_root=ctx.ph_data_root, name=name):
         print(f"Use: ph --scope system feature create --name {name}")
         return 1
 

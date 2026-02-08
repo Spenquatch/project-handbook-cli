@@ -7,7 +7,8 @@ from pathlib import Path
 
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / ".project-handbook" / "config.json"
+    ph_project_root = ph_root / ".project-handbook"
+    config = ph_project_root / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
@@ -19,19 +20,19 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_project_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _write_minimal_roadmap(ph_root: Path) -> None:
-    roadmap_dir = ph_root / "roadmap"
+    roadmap_dir = ph_root / ".project-handbook" / "roadmap"
     roadmap_dir.mkdir(parents=True, exist_ok=True)
     roadmap_path = roadmap_dir / "now-next-later.md"
     roadmap_path.write_text(
@@ -80,10 +81,10 @@ def test_test_system_parity_v1p0069(tmp_path: Path) -> None:
     assert result.returncode == 0
 
     resolved = tmp_path.resolve()
-    validation_json = (tmp_path / "status" / "validation.json").resolve()
-    current_json = (tmp_path / "status" / "current.json").resolve()
-    summary_md = (tmp_path / "status" / "current_summary.md").resolve()
-    daily_script = (tmp_path / "process" / "automation" / "daily_status_check.py").resolve()
+    validation_json = (tmp_path / ".project-handbook" / "status" / "validation.json").resolve()
+    current_json = (tmp_path / ".project-handbook" / "status" / "current.json").resolve()
+    summary_md = (tmp_path / ".project-handbook" / "status" / "current_summary.md").resolve()
+    daily_script = (tmp_path / ".project-handbook" / "process" / "automation" / "daily_status_check.py").resolve()
 
     expected = (
         f"\n> project-handbook@0.0.0 ph {resolved}\n"
@@ -125,5 +126,5 @@ def test_test_system_parity_v1p0069(tmp_path: Path) -> None:
     )
     assert result.stdout == expected
 
-    payload = json.loads((tmp_path / "status" / "current.json").read_text(encoding="utf-8"))
+    payload = json.loads((tmp_path / ".project-handbook" / "status" / "current.json").read_text(encoding="utf-8"))
     assert payload["generated_at"] == "2026-02-04T09:00:00Z"

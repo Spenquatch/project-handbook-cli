@@ -18,16 +18,17 @@ def _write_minimal_ph_root(ph_root: Path, *, routing_rules: dict | None = None) 
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
     system_scope_config = {"routing_rules": routing_rules or {}}
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         __import__("json").dumps(system_scope_config), encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _plan_sprint(*, ph_root: Path, scope: str) -> None:
@@ -78,7 +79,9 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
     assert result.returncode == 0
 
     resolved = tmp_path.resolve()
-    task_dir = resolved / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / "TASK-001-t"
+    task_dir = (
+        resolved / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / "TASK-001-t"
+    )
 
     expected_stdout = (
         "\n"
@@ -95,7 +98,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "   4. Run 'ph validate --quick' before pushing changes\n"
         "   5. Set status to 'doing' when starting work\n"
         "Next steps:\n"
-        "  - Open sprints/current/tasks/ for the new directory, update steps.md + commands.md\n"
+        "  - Open .project-handbook/sprints/current/tasks/ for the new directory, update steps.md + commands.md\n"
         "  - Set status to 'doing' when work starts and log progress in checklist.md\n"
         "  - Run 'ph validate --quick' once initial scaffolding is filled in\n"
     )
@@ -145,13 +148,13 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "feature: f\n"
         "session: task-execution\n"
         "tags: [task, f]\n"
-        "links: [../../../features/f/overview.md]\n"
+        "links: [../../../../../features/f/overview.md]\n"
         "---\n"
         "\n"
         "# Task TASK-001: T\n"
         "\n"
         "## Overview\n"
-        "**Feature**: [f](../../../features/f/overview.md)\n"
+        "**Feature**: [f](../../../../../features/f/overview.md)\n"
         "**Decision**: `ADR-0000`\n"
         "**Story Points**: 5\n"
         "**Owner**: @a\n"
@@ -174,7 +177,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "## Quick Start\n"
         "```bash\n"
         "# Update status when starting\n"
-        "cd sprints/current/tasks/TASK-001-t/\n"
+        "cd .project-handbook/sprints/current/tasks/TASK-001-t/\n"
         "# Edit task.yaml: status: doing\n"
         "\n"
         "# Follow implementation\n"
@@ -241,7 +244,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "## Task Status Updates\n"
         "```bash\n"
         "# When starting work\n"
-        "cd sprints/current/tasks/TASK-001-t/\n"
+        "cd .project-handbook/sprints/current/tasks/TASK-001-t/\n"
         "# Edit task.yaml: change status from \"todo\" to \"doing\"\n"
         "\n"
         "# When ready for review\n"
@@ -318,7 +321,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "Before the task is marked `review`, add:\n"
         "- exact copy/paste command(s),\n"
         "- exact pass/fail success criteria,\n"
-        "- exact evidence file list (under `project-handbook/status/evidence/TASK-001/`).\n"
+        "- exact evidence file list (under `.project-handbook/status/evidence/TASK-001/`).\n"
         "\n"
         "## Sign-off\n"
         "- [ ] All validation steps completed\n"
@@ -342,8 +345,8 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "\n"
         "### Decision Context\n"
         "- **Decision**: `ADR-0000`\n"
-        "- **Feature**: [Feature overview](../../../features/f/overview.md)\n"
-        "- **Architecture**: [Feature architecture](../../../features/f/architecture/ARCHITECTURE.md)\n"
+        "- **Feature**: [Feature overview](../../../../../features/f/overview.md)\n"
+        "- **Architecture**: [Feature architecture](../../../../../features/f/architecture/ARCHITECTURE.md)\n"
         "\n"
         "### Sprint Context\n"
         "- **Sprint Plan**: [Current sprint](../../plan.md)\n"
@@ -429,5 +432,5 @@ def test_task_create_guardrail_rejects_system_scoped_lanes_in_project_scope(tmp_
         "Use: ph --scope system task create ...\n"
     )
 
-    tasks_dir = tmp_path / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
+    tasks_dir = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
     assert not any(p.is_dir() for p in tasks_dir.iterdir())

@@ -16,15 +16,16 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _write_package_json(ph_root: Path) -> None:
@@ -37,7 +38,7 @@ def _write_package_json(ph_root: Path) -> None:
 @pytest.mark.parametrize(
     ("scope", "base_rel"),
     [
-        ("project", ""),
+        ("project", ".project-handbook"),
         ("system", ".project-handbook/system"),
     ],
 )
@@ -59,7 +60,7 @@ def test_sprint_archive_moves_directory_into_sprints_archive(tmp_path: Path, sco
     archived = subprocess.run(cmd, capture_output=True, text=True, env=env)
     assert archived.returncode == 0
 
-    base = tmp_path if scope == "project" else (tmp_path / base_rel)
+    base = tmp_path / base_rel
     original = base / "sprints" / "2099" / "SPRINT-2099-01-01"
     target = base / "sprints" / "archive" / "2099" / "SPRINT-2099-01-01"
     assert not original.exists()
@@ -79,7 +80,7 @@ def test_sprint_archive_stdout_and_index_match_make_convention_for_seq_sprint(tm
     expected_today = parsed.astimezone(local_tz).date().isoformat()
 
     sprint_id = "SPRINT-SEQ-0004"
-    sprint_dir = tmp_path / "sprints" / "SEQ" / sprint_id
+    sprint_dir = tmp_path / ".project-handbook" / "sprints" / "SEQ" / sprint_id
     sprint_dir.mkdir(parents=True, exist_ok=True)
     (sprint_dir / "tasks").mkdir(exist_ok=True)
     (sprint_dir / "plan.md").write_text(
@@ -102,7 +103,7 @@ def test_sprint_archive_stdout_and_index_match_make_convention_for_seq_sprint(tm
         encoding="utf-8",
     )
 
-    current_link = tmp_path / "sprints" / "current"
+    current_link = tmp_path / ".project-handbook" / "sprints" / "current"
     current_link.parent.mkdir(parents=True, exist_ok=True)
     current_link.symlink_to(Path("SEQ") / sprint_id)
 
@@ -114,7 +115,7 @@ def test_sprint_archive_stdout_and_index_match_make_convention_for_seq_sprint(tm
     )
     assert archived.returncode == 0
 
-    target = (tmp_path / "sprints" / "archive" / "SEQ" / sprint_id).resolve()
+    target = (tmp_path / ".project-handbook" / "sprints" / "archive" / "SEQ" / sprint_id).resolve()
     expected_stdout = (
         f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n"
         f"> ph sprint archive --sprint {sprint_id}\n\n"
@@ -122,11 +123,11 @@ def test_sprint_archive_stdout_and_index_match_make_convention_for_seq_sprint(tm
     )
     assert archived.stdout == expected_stdout
 
-    assert not (tmp_path / "sprints" / "SEQ" / sprint_id).exists()
+    assert not (tmp_path / ".project-handbook" / "sprints" / "SEQ" / sprint_id).exists()
     assert target.exists()
     assert not current_link.exists()
 
-    index_path = tmp_path / "sprints" / "archive" / "index.json"
+    index_path = tmp_path / ".project-handbook" / "sprints" / "archive" / "index.json"
     expected_index = {
         "sprints": [
             {

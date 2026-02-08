@@ -15,15 +15,16 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 @pytest.mark.parametrize("scope", ["project", "system"])
@@ -74,8 +75,9 @@ def test_backlog_stats_prints_make_preamble_when_package_json_present(tmp_path: 
     _write_minimal_ph_root(tmp_path)
     (tmp_path / "package.json").write_text('{"name":"project-handbook","version":"0.0.0"}\n', encoding="utf-8")
 
-    (tmp_path / "backlog").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "backlog" / "index.json").write_text(
+    backlog_dir = tmp_path / ".project-handbook" / "backlog"
+    backlog_dir.mkdir(parents=True, exist_ok=True)
+    (backlog_dir / "index.json").write_text(
         (
             "{\n"
             '  "last_updated": "2099-01-01T00:00:00.000000",\n'

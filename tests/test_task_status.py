@@ -8,26 +8,27 @@ import pytest
 
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / ".project-handbook" / "config.json"
+    ph_project_root = ph_root / ".project-handbook"
+    config = ph_project_root / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_project_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _seed_current_sprint(*, ph_root: Path, scope: str) -> Path:
-    base = ph_root if scope == "project" else (ph_root / ".project-handbook" / "system")
+    base = (ph_root / ".project-handbook") if scope == "project" else (ph_root / ".project-handbook" / "system")
     sprint_dir = base / "sprints" / "2099" / "SPRINT-2099-01-01"
     tasks_dir = sprint_dir / "tasks"
     tasks_dir.mkdir(parents=True, exist_ok=True)
@@ -159,7 +160,7 @@ def test_task_status_dependency_enforcement_and_archiving(tmp_path: Path, scope:
     assert forced.returncode == 0
     assert forced.stdout.splitlines()[0] == "⚠️  Forcing status update despite unresolved dependencies: TASK-001"
 
-    base = tmp_path if scope == "project" else (tmp_path / ".project-handbook" / "system")
+    base = (tmp_path / ".project-handbook") if scope == "project" else (tmp_path / ".project-handbook" / "system")
     _write_backlog_item(base=base)
     _write_parking_item(base=base)
 

@@ -13,15 +13,16 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
     (ph_root / "package.json").write_text(
         "{\n"
@@ -38,8 +39,8 @@ def test_status_writes_outputs_and_prints_expected_format(tmp_path: Path) -> Non
     env = dict(os.environ)
     env["PH_FAKE_NOW"] = "2026-01-01T00:00:00Z"
 
-    expected_json = (tmp_path / "status" / "current.json").resolve()
-    expected_summary = (tmp_path / "status" / "current_summary.md").resolve()
+    expected_json = (tmp_path / ".project-handbook" / "status" / "current.json").resolve()
+    expected_summary = (tmp_path / ".project-handbook" / "status" / "current_summary.md").resolve()
 
     result = subprocess.run(
         ["ph", "--root", str(tmp_path), "--no-post-hook", "status"],

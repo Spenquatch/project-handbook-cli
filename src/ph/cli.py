@@ -249,7 +249,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     reset_parser.add_argument(
         "--spec",
-        default="process/automation/reset_spec.json",
+        default=".project-handbook/process/automation/reset_spec.json",
         help="Repo-relative path to reset spec JSON",
     )
     reset_parser.add_argument("--confirm", default="", help="Must be exactly RESET to execute")
@@ -642,24 +642,24 @@ def main(argv: list[str] | None = None) -> int:
                     sys.stdout.write(text)
             elif args.command == "onboarding":
                 if args.onboarding_command is None:
-                    sys.stdout.write(render_onboarding(ph_root=ph_root))
+                    sys.stdout.write(render_onboarding(ph_data_root=ctx.ph_data_root))
                     exit_code = 0
                 elif args.onboarding_command == "session":
                     session_topic = str(args.session_topic).strip() if args.session_topic is not None else ""
                     if session_topic == "list":
-                        topics = list_session_topics(ph_root=ph_root)
+                        topics = list_session_topics(ph_data_root=ctx.ph_data_root)
                         print(SessionList(topics=topics).render(), end="")
                         print("ph: Nothing to be done for `list`.")
                         exit_code = 0
                     elif session_topic == "continue-session":
-                        summary = read_latest_session_summary(ph_root=ph_root)
+                        summary = read_latest_session_summary(ph_data_root=ctx.ph_data_root)
                         header = "SESSION CONTINUITY SUMMARY"
                         underline = "=" * len(header)
                         sys.stdout.write(f"{header}\n{underline}\n{summary}\n")
                         sys.stdout.write("ph: Nothing to be done for `continue-session`.\n")
                         exit_code = 0
                     else:
-                        sys.stdout.write(render_session_template(ph_root=ph_root, topic=session_topic))
+                        sys.stdout.write(render_session_template(ph_data_root=ctx.ph_data_root, topic=session_topic))
                         exit_code = 0
             elif args.command == "hooks":
                 if args.hooks_command == "install":
@@ -740,7 +740,12 @@ def main(argv: list[str] | None = None) -> int:
                     sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["status"]))
                     sys.stdout.flush()
 
-                status_result = run_status(ph_root=ph_root, ph_data_root=ctx.ph_data_root, env=os.environ)
+                status_result = run_status(
+                    ph_root=ph_root,
+                    ph_project_root=ctx.ph_project_root,
+                    ph_data_root=ctx.ph_data_root,
+                    env=os.environ,
+                )
                 print(f"Generated: {status_result.json_path.resolve()}")
                 print(f"Updated: {status_result.summary_path.resolve()}")
 
@@ -818,7 +823,9 @@ def main(argv: list[str] | None = None) -> int:
                         if sprint_id:
                             cmd_args.extend(["--sprint", str(sprint_id)])
                         sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
-                    exit_code = run_sprint_status(ph_root=ph_root, ctx=ctx, sprint=getattr(args, "sprint", None))
+                    exit_code = run_sprint_status(
+                        ph_project_root=ctx.ph_project_root, ctx=ctx, sprint=getattr(args, "sprint", None)
+                    )
                 elif args.sprint_command == "tasks":
                     if ctx.scope == "project":
                         cmd_args = ["sprint", "tasks"]
@@ -835,7 +842,7 @@ def main(argv: list[str] | None = None) -> int:
                             cmd_args.extend(["--sprint", str(sprint_id)])
                         sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     exit_code = run_sprint_burndown(
-                        ph_root=ph_root,
+                        ph_project_root=ctx.ph_project_root,
                         ctx=ctx,
                         sprint=getattr(args, "sprint", None),
                         env=os.environ,
@@ -874,7 +881,7 @@ def main(argv: list[str] | None = None) -> int:
                             cmd_args.extend(["--sprint", str(sprint_id)])
                         sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                     exit_code = run_sprint_close(
-                        ph_root=ph_root,
+                        ph_project_root=ctx.ph_project_root,
                         ctx=ctx,
                         sprint=getattr(args, "sprint", None),
                         env=os.environ,
@@ -1068,6 +1075,7 @@ def main(argv: list[str] | None = None) -> int:
 
                     exit_code = run_adr_add(
                         ph_root=ph_root,
+                        ph_data_root=ctx.ph_data_root,
                         adr_id=str(getattr(args, "id")),
                         title=str(getattr(args, "title")),
                         status=str(getattr(args, "status")),
@@ -1078,7 +1086,7 @@ def main(argv: list[str] | None = None) -> int:
                 elif args.adr_command == "list":
                     if ctx.scope == "project":
                         sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["adr", "list"]))
-                    exit_code = run_adr_list(ph_root=ph_root)
+                    exit_code = run_adr_list(ph_data_root=ctx.ph_data_root)
                 else:
                     print("Usage: ph adr <add|list>\n", file=sys.stderr, end="")
                     exit_code = 2
@@ -1333,6 +1341,7 @@ def main(argv: list[str] | None = None) -> int:
                     cmd_args.append("--silent-success")
                 exit_code, _out_path, message = run_validate(
                     ph_root=ph_root,
+                    ph_project_root=ctx.ph_project_root,
                     ph_data_root=ctx.ph_data_root,
                     scope=ctx.scope,
                     quick=bool(args.quick),

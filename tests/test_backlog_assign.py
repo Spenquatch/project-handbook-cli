@@ -15,15 +15,16 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    ph_data_root = config.parent
+    (ph_data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_data_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _plan_sprint(*, ph_root: Path, scope: str) -> None:
@@ -80,7 +81,7 @@ def test_backlog_assign_defaults_to_current_and_updates_front_matter(tmp_path: P
     assert assigned.returncode == 0
     assert f"✅ Recorded assignment: {issue_id} → SPRINT-2099-01-01" in assigned.stdout
 
-    data_root = tmp_path if scope == "project" else (tmp_path / ".project-handbook" / "system")
+    data_root = (tmp_path / ".project-handbook") if scope == "project" else (tmp_path / ".project-handbook" / "system")
     readme = data_root / "backlog" / "bugs" / issue_id / "README.md"
     content = readme.read_text(encoding="utf-8")
     assert "sprint: SPRINT-2099-01-01" in content

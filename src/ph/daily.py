@@ -22,8 +22,8 @@ def relative_markdown_link(*, from_dir: Path, target: Path) -> str:
     return rel.replace(os.sep, "/")
 
 
-def _load_rules_or_default(*, ph_root: Path) -> dict[str, Any]:
-    rules_path = ph_root / "process" / "checks" / "validation_rules.json"
+def _load_rules_or_default(*, ph_data_root: Path) -> dict[str, Any]:
+    rules_path = ph_data_root / "process" / "checks" / "validation_rules.json"
     default_config: dict[str, Any] = {
         "daily_status": {
             "skip_weekends": True,
@@ -82,8 +82,8 @@ def _guess_current_sprint_dir(*, ph_data_root: Path, env: dict[str, str]) -> Pat
     return candidate if candidate.exists() else None
 
 
-def should_generate_daily(*, ph_root: Path, env: dict[str, str]) -> bool:
-    config = _load_rules_or_default(ph_root=ph_root)
+def should_generate_daily(*, ph_data_root: Path, env: dict[str, str]) -> bool:
+    config = _load_rules_or_default(ph_data_root=ph_data_root)
     daily_config = config.get("daily_status", {}) if isinstance(config, dict) else {}
 
     if not daily_config.get("skip_weekends", True):
@@ -268,7 +268,7 @@ links: [{sprint_plan_rel}]
 def create_daily_status(*, ph_root: Path, ph_data_root: Path, force: bool, env: dict[str, str]) -> Path | None:
     day = clock_today(env=env)
 
-    if not force and not should_generate_daily(ph_root=ph_root, env=env):
+    if not force and not should_generate_daily(ph_data_root=ph_data_root, env=env):
         print(f"Skipping daily status for {day.strftime('%A')} (weekend)")
         return None
 
@@ -351,7 +351,7 @@ def hours_since_last_daily(*, ph_data_root: Path, env: dict[str, str]) -> float:
 
 
 def check_status(*, ph_root: Path, ph_data_root: Path, verbose: bool, env: dict[str, str]) -> int:
-    if not should_generate_daily(ph_root=ph_root, env=env):
+    if not should_generate_daily(ph_data_root=ph_data_root, env=env):
         if verbose:
             print("Weekend - no daily status required")
         return 0
@@ -362,7 +362,7 @@ def check_status(*, ph_root: Path, ph_data_root: Path, verbose: bool, env: dict[
             print("⚠️  No daily status found!")
         else:
             print(f"⚠️  Daily status is {int(hours)} hours old!")
-        script = (ph_root / "process" / "automation" / "daily_status_check.py").resolve()
+        script = (ph_data_root / "process" / "automation" / "daily_status_check.py").resolve()
         print(f"Run: python3 {script} --generate")
         return 1
 

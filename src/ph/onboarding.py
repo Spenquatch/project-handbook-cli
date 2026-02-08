@@ -65,25 +65,25 @@ class SessionList:
         return "\n".join(lines) + "\n"
 
 
-def read_onboarding_markdown(*, ph_root: Path) -> str:
-    path = ph_root / "ONBOARDING.md"
+def read_onboarding_markdown(*, ph_data_root: Path) -> str:
+    path = ph_data_root / "ONBOARDING.md"
     try:
         return path.read_text(encoding="utf-8")
     except FileNotFoundError as exc:
         raise OnboardingError(f"Missing onboarding file: {path}\n") from exc
 
 
-def render_onboarding(*, ph_root: Path) -> str:
-    markdown = read_onboarding_markdown(ph_root=ph_root)
+def render_onboarding(*, ph_data_root: Path) -> str:
+    markdown = read_onboarding_markdown(ph_data_root=ph_data_root)
     title = _extract_frontmatter_title(markdown) or "Project Handbook Onboarding"
     header = title.upper()
     underline = "=" * len(header)
     return f"{header}\n{underline}\n{markdown}\n"
 
 
-def build_session_topic_map(*, ph_root: Path) -> dict[str, str | None]:
+def build_session_topic_map(*, ph_data_root: Path) -> dict[str, str | None]:
     topic_map: dict[str, str | None] = dict(STATIC_SESSION_TOPIC_MAP)
-    templates_dir = ph_root / "process" / "sessions" / "templates"
+    templates_dir = ph_data_root / "process" / "sessions" / "templates"
     if templates_dir.exists():
         for template_path in templates_dir.glob("*.md"):
             if template_path.is_file():
@@ -91,33 +91,33 @@ def build_session_topic_map(*, ph_root: Path) -> dict[str, str | None]:
     return topic_map
 
 
-def list_session_topics(*, ph_root: Path) -> list[str]:
-    topic_map = build_session_topic_map(ph_root=ph_root)
+def list_session_topics(*, ph_data_root: Path) -> list[str]:
+    topic_map = build_session_topic_map(ph_data_root=ph_data_root)
     return sorted({topic for topic, template_name in topic_map.items() if template_name is not None})
 
 
-def read_session_template(*, ph_root: Path, topic: str) -> str:
-    topic_map = build_session_topic_map(ph_root=ph_root)
+def read_session_template(*, ph_data_root: Path, topic: str) -> str:
+    topic_map = build_session_topic_map(ph_data_root=ph_data_root)
     template_name = topic_map.get(topic)
     if template_name is None:
         raise OnboardingError(f"Unknown session topic: {topic}\nUse: ph onboarding session list\n")
 
-    path = ph_root / "process" / "sessions" / "templates" / template_name
+    path = ph_data_root / "process" / "sessions" / "templates" / template_name
     try:
         return path.read_text(encoding="utf-8")
     except FileNotFoundError as exc:
         raise OnboardingError(f"Unknown session topic: {topic}\nUse: ph onboarding session list\n") from exc
 
 
-def render_session_template(*, ph_root: Path, topic: str) -> str:
-    body = read_session_template(ph_root=ph_root, topic=topic)
+def render_session_template(*, ph_data_root: Path, topic: str) -> str:
+    body = read_session_template(ph_data_root=ph_data_root, topic=topic)
     header = f"ONBOARDING TOPIC: {topic}"
     underline = "=" * len(header)
     return f"{header}\n{underline}\n{body}\n"
 
 
-def read_latest_session_summary(*, ph_root: Path) -> str:
-    path = ph_root / "process" / "sessions" / "logs" / "latest_summary.md"
+def read_latest_session_summary(*, ph_data_root: Path) -> str:
+    path = ph_data_root / "process" / "sessions" / "logs" / "latest_summary.md"
     try:
         return path.read_text(encoding="utf-8")
     except FileNotFoundError as exc:

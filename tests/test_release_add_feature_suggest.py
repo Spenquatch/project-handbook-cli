@@ -6,22 +6,23 @@ from pathlib import Path
 
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / ".project-handbook" / "config.json"
+    ph_project_root = ph_root / ".project-handbook"
+    config = ph_project_root / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_project_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def test_release_add_feature_updates_yaml_and_suggest_lists_feature(tmp_path: Path) -> None:
@@ -51,7 +52,7 @@ def test_release_add_feature_updates_yaml_and_suggest_lists_feature(tmp_path: Pa
     )
     assert plan.returncode == 0
 
-    feature_dir = tmp_path / "features" / "feat-a"
+    feature_dir = tmp_path / ".project-handbook" / "features" / "feat-a"
     feature_dir.mkdir(parents=True, exist_ok=True)
     (feature_dir / "status.md").write_text("Stage: developing\n", encoding="utf-8")
 
@@ -74,7 +75,9 @@ def test_release_add_feature_updates_yaml_and_suggest_lists_feature(tmp_path: Pa
     )
     assert add_feature.returncode == 0
 
-    features_yaml = (tmp_path / "releases" / "v1.2.3" / "features.yaml").read_text(encoding="utf-8")
+    features_yaml = (tmp_path / ".project-handbook" / "releases" / "v1.2.3" / "features.yaml").read_text(
+        encoding="utf-8"
+    )
     assert "  feat-a:" in features_yaml
     assert "    type: regular" in features_yaml
     assert "    critical_path: False" in features_yaml
@@ -125,8 +128,8 @@ def test_release_add_feature_rejects_system_scope(tmp_path: Path) -> None:
 def test_release_add_feature_matches_legacy_duplication_bug(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
 
-    (tmp_path / "releases" / "v0.0.1").mkdir(parents=True, exist_ok=True)
-    features_path = tmp_path / "releases" / "v0.0.1" / "features.yaml"
+    (tmp_path / ".project-handbook" / "releases" / "v0.0.1").mkdir(parents=True, exist_ok=True)
+    features_path = tmp_path / ".project-handbook" / "releases" / "v0.0.1" / "features.yaml"
     features_path.write_text(
         "\n".join(
             [

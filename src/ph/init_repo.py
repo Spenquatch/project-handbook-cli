@@ -12,9 +12,9 @@ DEFAULT_REQUIRES_PH_VERSION = ">=0.0.1,<0.1.0"
 
 _DEFAULT_GITIGNORE_LINES = (
     ".project-handbook/history.log",
-    "process/sessions/logs/*",
-    "!process/sessions/logs/.gitkeep",
-    "status/exports",
+    ".project-handbook/process/sessions/logs/*",
+    "!.project-handbook/process/sessions/logs/.gitkeep",
+    ".project-handbook/status/exports",
     ".DS_Store",
 )
 
@@ -368,45 +368,45 @@ _DEFAULT_RESET_SPEC = {
     "description": "Project-scope reset spec (MUST preserve .project-handbook/system/**).",
     "forbidden_subtrees": [".project-handbook/system"],
     "delete_contents_roots": [
-        "sprints",
-        "features",
-        "adr",
-        "decision-register",
-        "backlog",
-        "parking-lot",
-        "releases",
-        "contracts",
-        "status",
-        "process/sessions/logs",
-        "process/sessions/session_end",
+        ".project-handbook/sprints",
+        ".project-handbook/features",
+        ".project-handbook/adr",
+        ".project-handbook/decision-register",
+        ".project-handbook/backlog",
+        ".project-handbook/parking-lot",
+        ".project-handbook/releases",
+        ".project-handbook/contracts",
+        ".project-handbook/status",
+        ".project-handbook/process/sessions/logs",
+        ".project-handbook/process/sessions/session_end",
     ],
     "delete_paths": [".project-handbook/history.log"],
     "preserve_paths": [
         ".project-handbook/.gitkeep",
-        "process/sessions/logs/.gitkeep",
-        "sprints/archive/.gitkeep",
+        ".project-handbook/process/sessions/logs/.gitkeep",
+        ".project-handbook/sprints/archive/.gitkeep",
     ],
     "rewrite_paths": [
-        "roadmap/now-next-later.md",
-        "backlog/index.json",
-        "parking-lot/index.json",
-        "sprints/archive/index.json",
-        "process/sessions/logs/latest_summary.md",
-        "process/sessions/session_end/session_end_index.json",
+        ".project-handbook/roadmap/now-next-later.md",
+        ".project-handbook/backlog/index.json",
+        ".project-handbook/parking-lot/index.json",
+        ".project-handbook/sprints/archive/index.json",
+        ".project-handbook/process/sessions/logs/latest_summary.md",
+        ".project-handbook/process/sessions/session_end/session_end_index.json",
     ],
     "recreate_dirs": [
         ".project-handbook",
-        "backlog",
-        "parking-lot",
-        "process/sessions/logs",
-        "process/sessions/session_end",
-        "roadmap",
-        "sprints/archive",
+        ".project-handbook/backlog",
+        ".project-handbook/parking-lot",
+        ".project-handbook/process/sessions/logs",
+        ".project-handbook/process/sessions/session_end",
+        ".project-handbook/roadmap",
+        ".project-handbook/sprints/archive",
     ],
     "recreate_files": [
         ".project-handbook/.gitkeep",
-        "process/sessions/logs/.gitkeep",
-        "sprints/archive/.gitkeep",
+        ".project-handbook/process/sessions/logs/.gitkeep",
+        ".project-handbook/sprints/archive/.gitkeep",
     ],
 }
 
@@ -472,67 +472,69 @@ def run_init(*, target_root: Path, update_gitignore: bool) -> int:
     target_root.mkdir(parents=True, exist_ok=True)
 
     config_path = target_root / PH_CONFIG_RELATIVE_PATH
+    data_root = config_path.parent
 
     if update_gitignore:
         _ensure_gitignore(target_root=target_root)
 
-    # Internals (safe to create unconditionally).
+    # Handbook root (safe to create unconditionally).
     _ensure_dirs(
         target_root=target_root,
         rel_dirs=[
             ".project-handbook",
-            "process/playbooks",
-            "process/sessions/logs",
-            "process/sessions/session_end",
+            ".project-handbook/system",
+            ".project-handbook/process/playbooks",
+            ".project-handbook/process/sessions/logs",
+            ".project-handbook/process/sessions/session_end",
         ],
     )
-    _write_text_if_missing(path=target_root / ".project-handbook" / ".gitkeep", text="")
-    _write_text_if_missing(path=target_root / "process" / "sessions" / "logs" / ".gitkeep", text="")
+    _write_text_if_missing(path=data_root / ".gitkeep", text="")
+    _write_text_if_missing(path=data_root / "process" / "sessions" / "logs" / ".gitkeep", text="")
 
     # Required boot assets.
     _write_json_if_missing(
-        path=target_root / "process" / "checks" / "validation_rules.json",
+        path=data_root / "process" / "checks" / "validation_rules.json",
         payload=_DEFAULT_VALIDATION_RULES,
     )
     _write_json_if_missing(
-        path=target_root / "process" / "automation" / "system_scope_config.json",
+        path=data_root / "process" / "automation" / "system_scope_config.json",
         payload=_DEFAULT_SYSTEM_SCOPE_CONFIG,
     )
     _write_json_if_missing(
-        path=target_root / "process" / "automation" / "reset_spec.json",
+        path=data_root / "process" / "automation" / "reset_spec.json",
         payload=_DEFAULT_RESET_SPEC,
     )
-    (target_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (data_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
     _write_json_if_missing(
-        path=target_root / "process" / "sessions" / "session_end" / "session_end_index.json",
+        path=data_root / "process" / "sessions" / "session_end" / "session_end_index.json",
         payload=_DEFAULT_SESSION_END_INDEX,
     )
 
     today = dt.date.today().isoformat()
     _write_text_if_missing(
-        path=target_root / "process" / "sessions" / "logs" / "latest_summary.md",
+        path=data_root / "process" / "sessions" / "logs" / "latest_summary.md",
         text=_DEFAULT_LATEST_SESSION_SUMMARY.format(date=today),
     )
 
-    _write_text_if_missing(path=target_root / "ONBOARDING.md", text=_DEFAULT_ONBOARDING_MD.format(date=today))
+    _write_text_if_missing(path=data_root / "ONBOARDING.md", text=_DEFAULT_ONBOARDING_MD.format(date=today))
     _write_text_if_missing(
-        path=target_root / "process" / "AI_AGENT_START_HERE.md",
+        path=data_root / "process" / "AI_AGENT_START_HERE.md",
         text=_DEFAULT_PROCESS_AGENT_GUIDE.format(date=today),
     )
     for name, text in _DEFAULT_SESSION_TEMPLATES.items():
         _write_text_if_missing(
-            path=target_root / "process" / "sessions" / "templates" / f"{name}.md",
+            path=data_root / "process" / "sessions" / "templates" / f"{name}.md",
             text=text,
         )
     for name, text in _DEFAULT_PLAYBOOKS.items():
         _write_text_if_missing(
-            path=target_root / "process" / "playbooks" / f"{name}.md",
+            path=data_root / "process" / "playbooks" / f"{name}.md",
             text=text.format(date=today),
         )
 
-    # Content roots (repo-root handbook layout).
+    # Content roots (handbook layout under .project-handbook/).
     _ensure_dirs(
-        target_root=target_root,
+        target_root=data_root,
         rel_dirs=[
             "adr",
             "assets",
@@ -564,13 +566,13 @@ def run_init(*, target_root: Path, update_gitignore: bool) -> int:
             "tools",
         ],
     )
-    _write_text_if_missing(path=target_root / "assets" / ".gitkeep", text="")
-    _write_text_if_missing(path=target_root / "docs" / "logs" / ".gitkeep", text="")
-    _write_text_if_missing(path=target_root / "tools" / ".gitkeep", text="")
-    _write_json_if_missing(path=target_root / "backlog" / "index.json", payload=_DEFAULT_BACKLOG_INDEX)
-    _write_json_if_missing(path=target_root / "parking-lot" / "index.json", payload=_DEFAULT_PARKING_INDEX)
+    _write_text_if_missing(path=data_root / "assets" / ".gitkeep", text="")
+    _write_text_if_missing(path=data_root / "docs" / "logs" / ".gitkeep", text="")
+    _write_text_if_missing(path=data_root / "tools" / ".gitkeep", text="")
+    _write_json_if_missing(path=data_root / "backlog" / "index.json", payload=_DEFAULT_BACKLOG_INDEX)
+    _write_json_if_missing(path=data_root / "parking-lot" / "index.json", payload=_DEFAULT_PARKING_INDEX)
     _write_json_if_missing(
-        path=target_root / "sprints" / "archive" / "index.json",
+        path=data_root / "sprints" / "archive" / "index.json",
         payload=_DEFAULT_SPRINTS_ARCHIVE_INDEX,
     )
 
@@ -588,9 +590,9 @@ links: []
 
 ## Next
 
-## Later
-"""
-    _write_text_if_missing(path=target_root / "roadmap" / "now-next-later.md", text=roadmap_seed)
+	## Later
+	"""
+    _write_text_if_missing(path=data_root / "roadmap" / "now-next-later.md", text=roadmap_seed)
 
     if config_path.exists():
         print(f"Already exists: {PH_CONFIG_RELATIVE_PATH.as_posix()}")

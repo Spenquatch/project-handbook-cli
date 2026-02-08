@@ -13,11 +13,12 @@ def _write_ph_root_for_migrate(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    data_root = config.parent
+    (data_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (data_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (data_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (data_root / "process" / "automation" / "system_scope_config.json").write_text(
         json.dumps(
             {
                 "routing_rules": {
@@ -36,14 +37,14 @@ def _write_ph_root_for_migrate(ph_root: Path) -> None:
 def test_migrate_system_scope_moves_artifacts_and_emits_json_contract(tmp_path: Path) -> None:
     _write_ph_root_for_migrate(tmp_path)
 
-    feature_dir = tmp_path / "features" / "handbook-a"
+    feature_dir = tmp_path / ".project-handbook" / "features" / "handbook-a"
     feature_dir.mkdir(parents=True, exist_ok=True)
     (feature_dir / "overview.md").write_text(
         "---\ntitle: handbook-a\ntags: [feature]\n---\n",
         encoding="utf-8",
     )
 
-    adr_dir = tmp_path / "adr"
+    adr_dir = tmp_path / ".project-handbook" / "adr"
     adr_dir.mkdir(parents=True, exist_ok=True)
     (adr_dir / "ADR-2099-system.md").write_text(
         "---\n"
@@ -58,7 +59,15 @@ def test_migrate_system_scope_moves_artifacts_and_emits_json_contract(tmp_path: 
         encoding="utf-8",
     )
 
-    task_dir = tmp_path / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / "TASK-001-x"
+    task_dir = (
+        tmp_path
+        / ".project-handbook"
+        / "sprints"
+        / "2099"
+        / "SPRINT-2099-01-01"
+        / "tasks"
+        / "TASK-001-x"
+    )
     task_dir.mkdir(parents=True, exist_ok=True)
     (task_dir / "task.yaml").write_text(
         "id: TASK-001\nlane: handbook/automation\n",
@@ -99,10 +108,10 @@ def test_migrate_system_scope_moves_artifacts_and_emits_json_contract(tmp_path: 
     for entry in data["errors"]:
         _assert_rel_posix(entry["path"])
 
-    assert not (tmp_path / "features" / "handbook-a").exists()
+    assert not (tmp_path / ".project-handbook" / "features" / "handbook-a").exists()
     assert (tmp_path / ".project-handbook" / "system" / "features" / "handbook-a").exists()
 
-    assert not (tmp_path / "adr" / "ADR-2099-system.md").exists()
+    assert not (tmp_path / ".project-handbook" / "adr" / "ADR-2099-system.md").exists()
     assert (tmp_path / ".project-handbook" / "system" / "adr" / "ADR-2099-system.md").exists()
 
     assert not task_dir.exists()

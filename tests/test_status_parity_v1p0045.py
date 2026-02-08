@@ -7,22 +7,23 @@ from pathlib import Path
 
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / ".project-handbook" / "config.json"
+    ph_project_root = ph_root / ".project-handbook"
+    config = ph_project_root / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_project_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
     (ph_root / "package.json").write_text(
         "{\n"
@@ -35,7 +36,7 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
 
 
 def _write_minimal_feature(ph_root: Path) -> None:
-    feature_dir = ph_root / "features" / "feature-a"
+    feature_dir = ph_root / ".project-handbook" / "features" / "feature-a"
     feature_dir.mkdir(parents=True, exist_ok=True)
     (feature_dir / "overview.md").write_text(
         "\n".join(
@@ -76,7 +77,7 @@ def _write_minimal_feature(ph_root: Path) -> None:
 
 
 def _write_minimal_sprint(ph_root: Path) -> None:
-    sprint_dir = ph_root / "sprints" / "2026" / "SPRINT-2026-01-01"
+    sprint_dir = ph_root / ".project-handbook" / "sprints" / "2026" / "SPRINT-2026-01-01"
     (sprint_dir / "tasks").mkdir(parents=True, exist_ok=True)
     task_dir = sprint_dir / "tasks" / "TASK-001-minimal"
     task_dir.mkdir(parents=True, exist_ok=True)
@@ -104,7 +105,7 @@ def _write_minimal_sprint(ph_root: Path) -> None:
 
 
 def _write_minimal_roadmap(ph_root: Path) -> None:
-    roadmap_dir = ph_root / "roadmap"
+    roadmap_dir = ph_root / ".project-handbook" / "roadmap"
     roadmap_dir.mkdir(parents=True, exist_ok=True)
     (roadmap_dir / "now-next-later.md").write_text(
         "\n".join(
@@ -143,8 +144,8 @@ def test_status_stdout_and_outputs_match_expected_shape(tmp_path: Path) -> None:
     expected_preamble = f"\n> project-handbook@0.0.0 ph {resolved}\n> ph status\n\n"
     assert result.stdout.startswith(expected_preamble)
 
-    current_json = (tmp_path / "status" / "current.json").resolve()
-    summary_md = (tmp_path / "status" / "current_summary.md").resolve()
+    current_json = (tmp_path / ".project-handbook" / "status" / "current.json").resolve()
+    summary_md = (tmp_path / ".project-handbook" / "status" / "current_summary.md").resolve()
     assert current_json.exists()
     assert summary_md.exists()
 

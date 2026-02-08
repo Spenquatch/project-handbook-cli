@@ -11,8 +11,8 @@ from .clock import today as clock_today
 from .release import get_current_release, load_release_features, parse_plan_front_matter
 
 
-def load_sprint_config(*, ph_root: Path) -> dict[str, Any]:
-    rules_path = ph_root / "process" / "checks" / "validation_rules.json"
+def load_sprint_config(*, ph_project_root: Path) -> dict[str, Any]:
+    rules_path = ph_project_root / "process" / "checks" / "validation_rules.json"
     try:
         if rules_path.exists():
             return json.loads(rules_path.read_text(encoding="utf-8"))
@@ -34,6 +34,7 @@ def load_sprint_config(*, ph_root: Path) -> dict[str, Any]:
 
 def use_iso_week_ids(config: dict[str, Any]) -> bool:
     return bool(config.get("sprint_management", {}).get("enforce_iso_week_ids", False))
+
 
 def sprint_id_scheme(config: dict[str, Any]) -> str:
     """
@@ -59,8 +60,8 @@ def sprint_dir_from_id(*, ph_data_root: Path, sprint_id: str) -> Path:
     return ph_data_root / "sprints" / year / sprint_id
 
 
-def get_sprint_id(*, ph_root: Path, ph_data_root: Path, env: dict[str, str]) -> str:
-    config = load_sprint_config(ph_root=ph_root)
+def get_sprint_id(*, ph_project_root: Path, ph_data_root: Path, env: dict[str, str]) -> str:
+    config = load_sprint_config(ph_project_root=ph_project_root)
     now = clock_now(env=env)
     scheme = sprint_id_scheme(config)
     if scheme == "sequence":
@@ -144,30 +145,32 @@ def update_current_symlink(*, ph_data_root: Path, sprint_id: str) -> None:
     if sprint_path.exists():
         current_link.symlink_to(sprint_path.relative_to(sprints_dir))
 
-def _get_release_timeline_info(*, ph_root: Path, version: str) -> dict[str, object]:
-    plan_path = ph_root / "releases" / version / "plan.md"
+
+def _get_release_timeline_info(*, ph_project_root: Path, version: str) -> dict[str, object]:
+    plan_path = ph_project_root / "releases" / version / "plan.md"
     return parse_plan_front_matter(plan_path=plan_path)
 
-def _get_current_release_context(*, ph_root: Path) -> dict[str, object]:
-    version = get_current_release(ph_root=ph_root)
+
+def _get_current_release_context(*, ph_project_root: Path) -> dict[str, object]:
+    version = get_current_release(ph_root=ph_project_root)
     if not version:
         return {}
-    features = load_release_features(ph_root=ph_root, version=version)
-    timeline = _get_release_timeline_info(ph_root=ph_root, version=version)
+    features = load_release_features(ph_root=ph_project_root, version=version)
+    timeline = _get_release_timeline_info(ph_project_root=ph_project_root, version=version)
     return {"version": version, "features": features, "timeline": timeline}
 
 
 def create_sprint_plan_template(
-    *, ph_root: Path, ph_data_root: Path, scope: str, sprint_id: str, env: dict[str, str]
+    *, ph_project_root: Path, ph_data_root: Path, scope: str, sprint_id: str, env: dict[str, str]
 ) -> str:
-    config = load_sprint_config(ph_root=ph_root)
+    config = load_sprint_config(ph_project_root=ph_project_root)
     mode = (config.get("sprint_management", {}).get("mode") or "timeboxed").strip().lower()
     if mode not in {"bounded", "timeboxed"}:
         mode = "timeboxed"
 
     release_context: dict[str, object] = {}
     if scope != "system":
-        release_context = _get_current_release_context(ph_root=ph_root)
+        release_context = _get_current_release_context(ph_project_root=ph_project_root)
 
     template = f"""---
 title: Sprint Plan - {sprint_id}

@@ -152,6 +152,7 @@ def _validate_generated_adr(*, path: Path, content: str, expected_number: str) -
 def run_adr_add(
     *,
     ph_root: Path,
+    ph_data_root: Path,
     adr_id: str,
     title: str,
     status: str,
@@ -206,7 +207,7 @@ def run_adr_add(
         print(f"❌ {exc}\n", end="")
         return 2
 
-    adr_dir = ph_root / "adr"
+    adr_dir = ph_data_root / "adr"
     adr_dir.mkdir(parents=True, exist_ok=True)
 
     existing_by_id = _find_existing_adr_by_id(adr_dir=adr_dir, adr_id=spec.adr_id)

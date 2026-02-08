@@ -6,22 +6,23 @@ from pathlib import Path
 
 
 def _write_minimal_ph_root(ph_root: Path) -> None:
-    config = ph_root / ".project-handbook" / "config.json"
+    ph_project_root = ph_root / ".project-handbook"
+    config = ph_project_root / "config.json"
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
 
-    (ph_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
-    (ph_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "checks").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "automation").mkdir(parents=True, exist_ok=True)
+    (ph_project_root / "process" / "sessions" / "templates").mkdir(parents=True, exist_ok=True)
 
-    (ph_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
-    (ph_root / "process" / "automation" / "system_scope_config.json").write_text(
+    (ph_project_root / "process" / "checks" / "validation_rules.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "system_scope_config.json").write_text(
         '{"routing_rules": {}}', encoding="utf-8"
     )
-    (ph_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
+    (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
 def _daily_section_lines(stdout: str) -> list[str]:
@@ -73,10 +74,10 @@ def test_dashboard_banner_matches_project_and_system(tmp_path: Path) -> None:
 def test_dashboard_prints_only_last_three_daily_files(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
 
-    daily_dir = tmp_path / "status" / "daily"
-    daily_dir.mkdir(parents=True)
-    for name in ("2026-01-01.md", "2026-01-02.md", "2026-01-03.md", "2026-01-04.md"):
-        (daily_dir / name).write_text("---\ntitle: test\n---\n\n# Daily\n", encoding="utf-8")
+    daily_root = tmp_path / ".project-handbook" / "status" / "daily" / "2026" / "01"
+    daily_root.mkdir(parents=True)
+    for name in ("01.md", "02.md", "03.md", "04.md"):
+        (daily_root / name).write_text("---\ntitle: test\n---\n\n# Daily\n", encoding="utf-8")
 
     result = subprocess.run(
         ["ph", "--root", str(tmp_path), "--no-post-hook", "dashboard"],
@@ -86,9 +87,9 @@ def test_dashboard_prints_only_last_three_daily_files(tmp_path: Path) -> None:
     )
     assert result.returncode == 0
     assert _daily_section_lines(result.stdout) == [
-        "status/daily/2026-01-02.md",
-        "status/daily/2026-01-03.md",
-        "status/daily/2026-01-04.md",
+        ".project-handbook/status/daily/2026/01/02.md",
+        ".project-handbook/status/daily/2026/01/03.md",
+        ".project-handbook/status/daily/2026/01/04.md",
     ]
 
 

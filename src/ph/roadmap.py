@@ -10,6 +10,7 @@ from .context import Context
 _SYSTEM_SCOPE_REMEDIATION = "Roadmap is project-scope only. Use: ph --scope project roadmap ..."
 _MISSING_ROADMAP_MESSAGE = "❌ No roadmap found. Run 'ph roadmap create' to create one."
 
+
 def _roadmap_template(*, env: dict[str, str] | None = None) -> str:
     date_text = clock.today(env=env).isoformat()
     return (
@@ -42,8 +43,8 @@ def _roadmap_template(*, env: dict[str, str] | None = None) -> str:
     )
 
 
-def _roadmap_path(*, ph_root: Path) -> Path:
-    return ph_root / "roadmap" / "now-next-later.md"
+def _roadmap_path(*, ph_data_root: Path) -> Path:
+    return ph_data_root / "roadmap" / "now-next-later.md"
 
 
 def run_roadmap_create(*, ctx: Context) -> int:
@@ -51,7 +52,7 @@ def run_roadmap_create(*, ctx: Context) -> int:
         print(_SYSTEM_SCOPE_REMEDIATION)
         return 1
 
-    roadmap_path = _roadmap_path(ph_root=ctx.ph_root)
+    roadmap_path = _roadmap_path(ph_data_root=ctx.ph_data_root)
     roadmap_path.parent.mkdir(parents=True, exist_ok=True)
     roadmap_path.write_text(_roadmap_template(env=os.environ), encoding="utf-8")
     print(f"📋 Created roadmap template: {roadmap_path.resolve()}")
@@ -63,7 +64,7 @@ def run_roadmap_show(*, ctx: Context) -> int:
         print(_SYSTEM_SCOPE_REMEDIATION)
         return 1
 
-    roadmap_path = _roadmap_path(ph_root=ctx.ph_root)
+    roadmap_path = _roadmap_path(ph_data_root=ctx.ph_data_root)
     if not roadmap_path.exists():
         print(_MISSING_ROADMAP_MESSAGE)
         return 1
@@ -104,7 +105,7 @@ def run_roadmap_validate(*, ctx: Context) -> int:
         print(_SYSTEM_SCOPE_REMEDIATION)
         return 1
 
-    roadmap_path = _roadmap_path(ph_root=ctx.ph_root)
+    roadmap_path = _roadmap_path(ph_data_root=ctx.ph_data_root)
     if not roadmap_path.exists():
         print("❌ No roadmap found")
         return 1

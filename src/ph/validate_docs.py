@@ -7,8 +7,8 @@ from pathlib import Path
 from .adr.validate import validate_adrs
 
 
-def load_validation_rules(*, ph_root: Path) -> dict:
-    rules_path = ph_root / "process" / "checks" / "validation_rules.json"
+def load_validation_rules(*, ph_project_root: Path) -> dict:
+    rules_path = ph_project_root / "process" / "checks" / "validation_rules.json"
     default_rules = {
         "validation": {"require_front_matter": True, "skip_docs_directory": True},
         "system_scope_enforcement": {
@@ -194,8 +194,8 @@ def validate_front_matter(*, issues: list[dict], rules: dict, root: Path, ph_roo
             issues.append({"path": str(md), "code": "front_matter_missing", "severity": "error"})
 
 
-def validate_session_end_index(*, issues: list[dict], ph_root: Path) -> None:
-    index_path = ph_root / "process" / "sessions" / "session_end" / "session_end_index.json"
+def validate_session_end_index(*, issues: list[dict], ph_project_root: Path, ph_root: Path) -> None:
+    index_path = ph_project_root / "process" / "sessions" / "session_end" / "session_end_index.json"
     if not index_path.exists():
         return
 
@@ -283,7 +283,7 @@ def validate_session_end_index(*, issues: list[dict], ph_root: Path) -> None:
                 )
 
 
-def _load_system_scope_routing(*, rules: dict, issues: list[dict], ph_root: Path) -> dict | None:
+def _load_system_scope_routing(*, rules: dict, issues: list[dict], ph_data_root: Path) -> dict | None:
     enforcement_raw = rules.get("system_scope_enforcement")
     if enforcement_raw is None:
         return None
@@ -307,8 +307,8 @@ def _load_system_scope_routing(*, rules: dict, issues: list[dict], ph_root: Path
         config_rel = "process/automation/system_scope_config.json"
 
     try:
-        config_path = (ph_root / Path(config_rel)).resolve()
-        config_path.relative_to(ph_root.resolve())
+        config_path = (ph_data_root / Path(config_rel)).resolve()
+        config_path.relative_to(ph_data_root.resolve())
     except Exception:
         issues.append(
             {
@@ -415,7 +415,7 @@ def validate_system_scope_artifacts_in_project_scope(
     if scope != "project":
         return
 
-    routing = _load_system_scope_routing(rules=rules, issues=issues, ph_root=ph_root)
+    routing = _load_system_scope_routing(rules=rules, issues=issues, ph_data_root=root)
     if not routing:
         return
 
@@ -776,21 +776,22 @@ def validate_phase(*, issues: list[dict], root: Path) -> None:
 def run_validate(
     *,
     ph_root: Path,
+    ph_project_root: Path,
     ph_data_root: Path,
     scope: str,
     quick: bool,
     silent_success: bool,
 ) -> tuple[int, Path, str]:
-    rules = load_validation_rules(ph_root=ph_root)
+    rules = load_validation_rules(ph_project_root=ph_project_root)
 
-    normalized_count = normalize_roadmap_links(rules=rules, root=ph_data_root, scope=scope, quick=quick)
+    normalized_count = normalize_roadmap_links(rules=rules, root=ph_project_root, scope=scope, quick=quick)
     normalization_message = f"Normalized {normalized_count} roadmap link(s)\n" if normalized_count else ""
 
     issues: list[dict] = []
     validate_front_matter(issues=issues, rules=rules, root=ph_data_root, ph_root=ph_root, scope=scope)
-    validate_session_end_index(issues=issues, ph_root=ph_root)
+    validate_session_end_index(issues=issues, ph_project_root=ph_project_root, ph_root=ph_root)
     validate_system_scope_artifacts_in_project_scope(
-        issues=issues, rules=rules, root=ph_data_root, ph_root=ph_root, scope=scope
+        issues=issues, rules=rules, root=ph_project_root, ph_root=ph_root, scope=scope
     )
     validate_adrs(issues=issues, root=ph_data_root)
 

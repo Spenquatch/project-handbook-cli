@@ -26,6 +26,8 @@ def run_doctor(ph_root: Path) -> DoctorResult:
     lines.append(f"Marker: {marker.as_posix() if marker is not None else '(missing)'}")
     lines.append(f"ph version: {__version__}")
 
+    ph_data_root = ph_root / ".project-handbook"
+
     config_check: ConfigCheckResult = check_handbook_config(ph_root)
     if config_check.config is not None:
         lines.append(f"handbook_schema_version: {config_check.config.handbook_schema_version}")
@@ -49,10 +51,10 @@ def run_doctor(ph_root: Path) -> DoctorResult:
         lines.append(f"- OK {marker.as_posix()}")
 
     for rel in REQUIRED_ASSET_PATHS:
-        p = ph_root / rel
+        p = ph_data_root / rel
         ok = p.exists()
         status = "OK" if ok else "MISSING"
-        lines.append(f"- {status} {rel}")
+        lines.append(f"- {status} .project-handbook/{rel}")
         if not ok:
             missing.append(str(p))
 
