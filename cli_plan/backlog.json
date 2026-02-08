@@ -1,19 +1,13 @@
 {
   "version": 1,
-  "generated_at": "2026-02-06T19:03:41Z",
+  "generated_at": "2026-02-08T20:40:03Z",
   "owner": "project-handbook",
   "purpose": "Backlog of v1 CLI planning items that are not yet scheduled into cli_plan/tasks_v1_parity.json (or require contract/spec changes first).",
-  "status_values": [
-    "todo",
-    "in_progress",
-    "done",
-    "blocked",
-    "deferred"
-  ],
+  "status_values": ["todo", "in_progress", "done", "blocked", "deferred"],
   "items": [
     {
       "id": "BL-0001",
-      "status": "todo",
+      "status": "done",
       "title": "Add first-class ADR commands + stronger ADR validation",
       "description": "Elevate ADRs to a first-class CLI surface by adding a dedicated `ph adr ...` command family (at minimum `ph adr add`) and strengthening ADR validation beyond the current minimal checks.",
       "scope": [
@@ -53,7 +47,7 @@
       "requires_contract_changes": false,
       "impacted_sources_of_truth": [
         "tests/ (refactor assertions + naming)",
-        "cli_plan/backlog.md (remove strict-parity assumptions if referenced)"
+        "cli_plan/backlog.json"
       ],
       "acceptance_criteria": [
         "All tests still pass with `uv run pytest -q` and `uv run ruff check .`.",
@@ -81,6 +75,204 @@
       "acceptance_criteria": [
         "A single doc exists that engineers can follow when adding/changing CLI tests.",
         "Test suite follows the policy (strict output tests limited to the explicitly stable outputs)."
+      ]
+    },
+    {
+      "id": "BL-0004",
+      "status": "todo",
+      "title": "Make bounded planning the default sprint model (v1)",
+      "description": "Bounded planning (ADR-0013) should be the default sprint model for v1. New repos initialized with `ph init` should generate bounded sprint plan templates by default (lanes + integration + explicit goals), not timeboxed templates.",
+      "scope": [
+        "Update `ph init` seeded `.project-handbook/process/checks/validation_rules.json` to include `sprint_management.mode = \"bounded\"` (and remove any ambiguity about defaults when the file exists but omits sprint config).",
+        "Update `ph sprint plan` template selection so that missing `sprint_management` in `validation_rules.json` still results in bounded mode (defensive fallback).",
+        "Update docs/contracts to state that v1 defaults to bounded planning and that timeboxed mode must be opted into via `validation_rules.json`.",
+        "Add/adjust tests so a fresh `ph init` repo produces `mode: bounded` sprint plans (no `start`/`end` fields) unless explicitly configured otherwise."
+      ],
+      "notes": [
+        "This is a v1 behavioral default, not just a template preference: downstream health/status and pre-exec expectations should assume bounded mode unless configured.",
+        "Timeboxed sprints remain supported, but must be explicit and test-backed."
+      ],
+      "requires_contract_changes": true,
+      "impacted_sources_of_truth": [
+        "cli_plan/v1_cli/CLI_CONTRACT.md (default sprint model statement)",
+        "cli_plan/ph_spec/ph/sprints/contract.md (bounded default + config override)",
+        "src/ph/init_repo.py (seed validation_rules.json)",
+        "src/ph/sprint.py (template mode selection fallback)",
+        "tests/ (init + sprint plan expectations)"
+      ],
+      "acceptance_criteria": [
+        "In a fresh repo created by `ph init`, running `ph sprint plan` produces `plan.md` with `mode: bounded` and the bounded sections (Sprint Goal, Boundaries (Lanes), Integration Tasks).",
+        "Timeboxed sprint plans are generated only when `validation_rules.json` explicitly sets `sprint_management.mode = \"timeboxed\"` (or equivalent).",
+        "`ph sprint status` and `ph pre-exec audit` work unchanged in bounded-default repos."
+      ]
+    },
+    {
+      "id": "BL-0005",
+      "status": "todo",
+      "title": "Enforce DR-first decision workflow (research-discovery -> DR -> ADR/FDR)",
+      "description": "Enforce the workflow that ADRs and FDRs cannot exist without an upstream Decision Register (DR). This implies that discovery work must be modeled as `session=research-discovery` tasks that produce DR entries, which are then reviewed/approved and promoted into ADRs (cross-cutting) or FDRs (feature-scoped).",
+      "scope": [
+        "Strengthen task semantics: require `session: research-discovery` tasks to use `decision: DR-XXXX` (disallow ADR/FDR as the primary decision id for discovery tasks).",
+        "Strengthen task semantics: require `session: task-execution` tasks to reference `decision: ADR-XXXX` or `decision: FDR-...` (disallow DR as an execution decision id).",
+        "Add DR existence/link validation: when a task references `DR-XXXX`, validation should ensure a corresponding DR file exists either in `decision-register/` (project-level) or `features/<feature>/decision-register/` (feature-level).",
+        "Require DR linkage for ADR/FDR: validation should enforce that every ADR and FDR links back to at least one DR (e.g., via front matter `links:` containing a `decision-register/DR-...` path).",
+        "Add scaffolding helpers (v1): introduce `ph dr add` for DR creation, and extend `ph adr add` / add `ph fdr add` so ADR/FDR creation requires an existing DR reference and writes the backlink into `links:`.",
+        "Document the workflow and invariants in contract/spec, including filename/id conventions and how approval is recorded (e.g., status lines in DRs)."
+      ],
+      "notes": [
+        "This is a strict workflow gate: ADR/FDR are outputs of discovery, not substitutes for it.",
+        "The current v1 spec includes decision-register contracts, but does not yet define an FDR contract; this work should formalize FDR file layout and id conventions.",
+        "Keep `ph` deterministic: it must not execute repo-local scripts for DR/ADR/FDR scaffolding or validation."
+      ],
+      "requires_contract_changes": true,
+      "impacted_sources_of_truth": [
+        "cli_plan/v1_cli/CLI_CONTRACT.md (workflow invariants + command surface updates)",
+        "cli_plan/ph_spec/ph/decision-register/contract.md (DR creation + validation rules)",
+        "cli_plan/ph_spec/ph/adr/contract.md (ADR must link to DR)",
+        "cli_plan/ph_spec/ph/features/contract.md (add/clarify feature-scoped DR + FDR conventions)",
+        "src/ph/pre_exec.py (session/decision enforcement)",
+        "src/ph/validate_docs.py (existence checks + ADR/FDR->DR backlink checks)",
+        "src/ph/task_create.py (decision resolution + error messaging for missing DRs)",
+        "src/ph/adr/add.py (require DR reference for ADR creation)",
+        "tests/ (new validation + CLI command tests)"
+      ],
+      "acceptance_criteria": [
+        "`ph pre-exec lint` fails if a `session: research-discovery` task uses an ADR/FDR decision id instead of `DR-XXXX`.",
+        "`ph pre-exec lint` fails if a `session: task-execution` task uses `decision: DR-XXXX`.",
+        "`ph validate` reports an error when tasks reference a missing DR file (with remediation that names the expected path).",
+        "`ph validate` reports an error when an ADR or FDR does not link back to at least one DR entry.",
+        "`ph dr add` scaffolds a DR markdown file that passes `ph validate` and contains an Option A/Option B structure suitable for operator approval.",
+        "`ph adr add` (and `ph fdr add`) refuse to create an ADR/FDR unless an upstream DR exists and is explicitly linked."
+      ]
+    },
+    {
+      "id": "BL-0006",
+      "status": "todo",
+      "title": "Release plans must specify per-sprint-slot goals + enablement (release drives sprints)",
+      "description": "Release planning must do more than set the number of sprints: the release plan must specify the goal of each sprint slot and how it enables/moves forward the release. Sprint planning should pull these slot goals forward into sprint plans, and validation/status should surface misalignment.",
+      "scope": [
+        "Update the release plan scaffold (`ph release plan`) to include a required section per slot/sprint in the release timeline: goal/purpose, scope boundaries, intended gates, and explicit enablement description (how it advances the release).",
+        "Update `ph sprint plan` to auto-populate Sprint Goal and Release Alignment sections when a release is active and a slot is assigned, pulling text from the release plan slot section.",
+        "Update `ph release status` / `ph release show` / `ph release progress` outputs to surface: slot goals, current slot, and whether the active sprint has a matching `release_sprint_slot` and relevant gate tasks.",
+        "Add validation rules that ensure: (1) release plan includes a section for each slot, (2) each slot has at least one explicit gate intention, (3) any sprint assigned to a slot links back to the release slot goal (e.g., via a required `Release Alignment (Explicit)` table or a required marker line)."
+      ],
+      "notes": [
+        "This is about making release planning actionable for bounded sprints: each sprint should have a clear release-contributing purpose and a measurable exit criteria.",
+        "Keep human authorship: `ph` should scaffold and validate structure, not rewrite plan bodies without explicit intent."
+      ],
+      "requires_contract_changes": true,
+      "impacted_sources_of_truth": [
+        "cli_plan/v1_cli/CLI_CONTRACT.md (release->sprint alignment requirements)",
+        "cli_plan/ph_spec/ph/releases/contract.md (slot goal sections + validation expectations)",
+        "cli_plan/ph_spec/ph/sprints/contract.md (release slot linkage + required alignment markers)",
+        "src/ph/release.py (release plan scaffold + status/progress behavior)",
+        "src/ph/sprint.py (sprint plan scaffold auto-population)",
+        "src/ph/validate_docs.py (alignment validation)",
+        "tests/ (release/sprint scaffold + validation tests)"
+      ],
+      "acceptance_criteria": [
+        "A release plan created by `ph release plan --sprints N` contains a filled structural section for each sprint slot (Slot 1..N) with placeholders for goal + enablement + intended gate(s).",
+        "When a release is active, `ph sprint plan` sets `release` and `release_sprint_slot` and includes the slot goal/enablement text in the sprint plan template.",
+        "`ph validate` reports actionable errors when a release plan is missing slot goal sections or when a sprint assigned to a release slot lacks the required alignment markers.",
+        "`ph release status` surfaces the current slot goal and warns if the active sprint is not aligned to the timeline (missing slot assignment or mismatched slot)."
+      ]
+    },
+    {
+      "id": "BL-0007",
+      "status": "todo",
+      "title": "Add first-class task types and sessions: sprint-gate, feature-research-planning, task-docs-deep-dive",
+      "description": "Introduce explicit task types tied to onboarding session templates so the handbook can enforce workflow stages beyond just `research-discovery` vs `task-execution`. Add at least: `sprint-gate` (per-sprint exit criteria), `feature-research-planning` (post-decision planning), and `task-docs-deep-dive` (documentation-only prep before execution).",
+      "scope": [
+        "Extend `task.yaml` schema to include `task_type: <string>` and define allowed values (including backwards-compatible defaults for existing tasks).",
+        "Update `ph task create` to accept `--type <task_type>` and set sensible defaults: required session/template, required acceptance scaffold, and recommended lane prefixes.",
+        "Add/seed new onboarding session templates in `ph init` (under `.project-handbook/process/sessions/templates/`):",
+        "- `research-planning.md` (feature-level planning after DR->ADR/FDR, resulting in contract updates + execution task creation)",
+        "- `task-docs-deep-dive.md` (documentation-only session; port from legacy template `process/sessions/templates/task-docs-deep-dive.md`)",
+        "Update `ph pre-exec lint` to validate allowed session values expand beyond the current two when task_type requires it, and add type-specific lint rules (e.g., docs-deep-dive forbids implementation language; sprint-gate requires explicit gate/validation statements).",
+        "Update `ph validate` to enforce task_type/session consistency and required fields per type."
+      ],
+      "notes": [
+        "This item defines the taxonomy and scaffolding; sprint-gate enforcement (\"every sprint must have a gate\") is tracked separately to keep scope manageable.",
+        "Keep compatibility: existing tasks without `task_type` should be treated as `execution` (or equivalent) and continue to validate until migrated."
+      ],
+      "requires_contract_changes": true,
+      "impacted_sources_of_truth": [
+        "cli_plan/v1_cli/CLI_CONTRACT.md (task type taxonomy + session mapping)",
+        "cli_plan/ph_spec/ph/sprints/contract.md (task.yaml schema update)",
+        "src/ph/task_create.py (new `--type` + YAML fields + docs scaffolds)",
+        "src/ph/init_repo.py (seed new session templates)",
+        "src/ph/onboarding.py (optional: alias map updates for new templates)",
+        "src/ph/pre_exec.py (task-type aware lint)",
+        "src/ph/validate_docs.py (schema + consistency validation)",
+        "tests/ (task create + lint/validate tests)"
+      ],
+      "acceptance_criteria": [
+        "`ph task create --type sprint-gate ...` produces a task directory whose `task.yaml` includes `task_type: sprint-gate` and passes `ph validate --quick`.",
+        "`ph task create --type feature-research-planning ...` produces a task with a planning-oriented scaffold and passes `ph pre-exec lint` when its docs match the required outputs (contract updates + execution task creation plan).",
+        "`ph task create --type task-docs-deep-dive ...` produces a task intended for documentation-only work and `ph pre-exec lint` enforces that it does not contain discovery/execution mismatches.",
+        "A fresh `ph init` repo includes the new session template markdown files and `ph onboarding session list` shows them."
+      ]
+    },
+    {
+      "id": "BL-0008",
+      "status": "todo",
+      "title": "Require sprint gates for every sprint (sprint-goal gating)",
+      "description": "Add sprint gates as a required part of sprint execution: every sprint must include at least one gate task that validates sprint goals and provides evidence-friendly exit criteria. Sprint close should warn or block when gates are missing or incomplete.",
+      "scope": [
+        "Define sprint gate requirements: each sprint must contain >=1 task with `task_type: sprint-gate` (or equivalent) and explicit acceptance criteria that reference sprint goals and evidence paths.",
+        "Update `ph sprint status` to surface gate readiness: show which gate tasks exist and whether they are dependency-ready/done.",
+        "Update `ph pre-exec lint` to fail if the current sprint lacks a gate task, and to validate that gate tasks reference the sprint goal(s) and required evidence artifacts (including `secret-scan.txt`).",
+        "Update `ph sprint close` to block (or require an explicit force mode) if: (a) no sprint gate exists, or (b) sprint gate tasks are not `done`.",
+        "Update release/sprint docs/contracts to define the gate semantics and how they relate to release gates (`release_gate`) when a release is active."
+      ],
+      "notes": [
+        "Sprint gates are distinct from release gates: every sprint must have at least one gate; only some gates are release gates (burn-up tracked on the release).",
+        "The intent is to make sprint goals measurable and enforce that a sprint cannot silently close without an exit criteria check."
+      ],
+      "requires_contract_changes": true,
+      "impacted_sources_of_truth": [
+        "cli_plan/v1_cli/CLI_CONTRACT.md (gate semantics + close behavior)",
+        "cli_plan/ph_spec/ph/sprints/contract.md (sprint gate requirement)",
+        "cli_plan/ph_spec/ph/releases/contract.md (relationship to release gates)",
+        "src/ph/sprint_status.py (gate visibility)",
+        "src/ph/pre_exec.py (gate requirement + lint rules)",
+        "src/ph/sprint_close.py (close blocking/warnings)",
+        "src/ph/validate_docs.py (validation rules)",
+        "tests/ (sprint gate enforcement tests)"
+      ],
+      "acceptance_criteria": [
+        "`ph pre-exec lint` fails with an actionable message when the current sprint has no sprint gate task.",
+        "`ph sprint status` prints a gate section listing gate tasks and their readiness (dependency-ready + status).",
+        "`ph sprint close` refuses to close a sprint when sprint gate tasks are not complete (or requires an explicit, documented override).",
+        "A sprint with a completed sprint-gate task closes successfully and produces consistent retrospective/archiving artifacts."
+      ]
+    },
+    {
+      "id": "TD-0001",
+      "status": "todo",
+      "title": "Post-hook validation exit code policy (strict parity vs strict validation)",
+      "description": "Clarify and lock the v1 policy for whether post-command quick validation failures change the overall `ph` exit code. The legacy Make workflow prints validation errors but still exits 0 for the original command; v1 should either preserve that strict parity or intentionally diverge (and document it explicitly).",
+      "scope": [
+        "Document the policy explicitly in the CLI contract: after a successful command, post-hook quick validation runs but MUST (parity) or MUST NOT (delta) affect the command exit code; pick one and make it non-ambiguous.",
+        "Ensure implementation matches the chosen policy in `src/ph/hooks.py` (post-command hook return value).",
+        "Add tests that cover both: (1) a successful command where post-hook validation finds errors, and (2) a successful command where validation is skipped via `--no-validate`; ensure exit codes match the policy.",
+        "If policy is configurable, define the flag/env toggle, its default, and the contract text; add tests for both modes."
+      ],
+      "notes": [
+        "As of 2026-02-05, the preferred policy is strict parity with Make: post-hook quick validation MUST NOT change the original command exit code, even when it prints errors and writes `status/validation.json`.",
+        "This item is considered complete only when the policy is documented in contract and is test-backed (not just implemented)."
+      ],
+      "requires_contract_changes": true,
+      "impacted_sources_of_truth": [
+        "cli_plan/v1_cli/CLI_CONTRACT.md (exit code policy text)",
+        "src/ph/hooks.py (post-hook return semantics)",
+        "src/ph/validate_docs.py (validation exit codes remain unchanged; this item is about propagation)",
+        "tests/ (policy coverage)"
+      ],
+      "acceptance_criteria": [
+        "CLI contract explicitly states the post-hook validation exit code policy (parity vs delta vs configurable), with no ambiguity.",
+        "Test suite includes a case where post-hook quick validation reports errors but the overall command exit code matches the documented policy.",
+        "`ph --no-validate <command>` behavior remains unchanged and is covered by tests."
       ]
     }
   ]

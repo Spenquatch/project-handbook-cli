@@ -56,7 +56,7 @@ The `ph` CLI MUST treat the directory that contains `project_handbook.config.jso
 There are two primary workstreams under `cli_plan/`:
 
 1. **Next tasks (active)**: incremental v1 improvements in `cli_plan/tasks_v1_next.json`.
-2. **Backlog (active)**: items that require contract/spec decisions first in `cli_plan/backlog.json` (+ tech-debt notes in `cli_plan/backlog.md`).
+2. **Backlog (active)**: items that require contract/spec decisions first in `cli_plan/backlog.json` (including any tech-debt backlog items).
 
 Historical (kept for audit trail):
 - Due diligence queue: `cli_plan/archive/strict_parity_2026-02/due-diligence.json` (complete).
