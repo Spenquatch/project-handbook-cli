@@ -142,7 +142,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_common_args(sub_common, suppress_defaults=True)
 
     parser = argparse.ArgumentParser(prog="ph", description="Project Handbook CLI", parents=[main_common])
-    subparsers = parser.add_subparsers(dest="command")
+    subparsers = parser.add_subparsers(dest="command", title="Commands", metavar="<command>")
 
     version_parser = subparsers.add_parser("version", help="Print installed ph version", parents=[sub_common])
     version_parser.set_defaults(_handler=_handle_version)
@@ -180,7 +180,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Show onboarding docs and sessions",
         parents=[sub_common],
     )
-    onboarding_subparsers = onboarding_parser.add_subparsers(dest="onboarding_command")
+    onboarding_subparsers = onboarding_parser.add_subparsers(
+        dest="onboarding_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
     onboarding_session = onboarding_subparsers.add_parser(
         "session",
         help="Show onboarding session templates",
@@ -189,7 +193,11 @@ def build_parser() -> argparse.ArgumentParser:
     onboarding_session.add_argument("session_topic", nargs="?", help="Session topic (or 'list' / 'continue-session')")
 
     hooks_parser = subparsers.add_parser("hooks", help="Install repo git hooks", parents=[sub_common])
-    hooks_subparsers = hooks_parser.add_subparsers(dest="hooks_command")
+    hooks_subparsers = hooks_parser.add_subparsers(
+        dest="hooks_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
     hooks_subparsers.add_parser("install", help="Install repo git hooks", parents=[sub_common])
 
     end_session_parser = subparsers.add_parser(
@@ -258,7 +266,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Migrate artifacts between scopes",
         parents=[sub_common],
     )
-    migrate_subparsers = migrate_parser.add_subparsers(dest="migrate_command")
+    migrate_subparsers = migrate_parser.add_subparsers(
+        dest="migrate_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
     migrate_system = migrate_subparsers.add_parser(
         "system-scope",
         help="Migrate system-scoped artifacts out of project scope",
@@ -272,11 +284,19 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("check-all", help="Run validate + status", parents=[sub_common])
 
     test_parser = subparsers.add_parser("test", help="Run automation smoke suites", parents=[sub_common])
-    test_subparsers = test_parser.add_subparsers(dest="test_command")
+    test_subparsers = test_parser.add_subparsers(
+        dest="test_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
     test_subparsers.add_parser("system", help="Run handbook system smoke suite", parents=[sub_common])
 
     sprint_parser = subparsers.add_parser("sprint", help="Manage sprint lifecycle", parents=[sub_common])
-    sprint_subparsers = sprint_parser.add_subparsers(dest="sprint_command")
+    sprint_subparsers = sprint_parser.add_subparsers(
+        dest="sprint_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
     sprint_plan_parser = sprint_subparsers.add_parser("plan", help="Create sprint plan", parents=[sub_common])
     sprint_plan_parser.add_argument("--sprint", help="Sprint ID (default: computed)")
     sprint_plan_parser.add_argument("--force", action="store_true", help="Overwrite existing plan.md")
@@ -306,7 +326,11 @@ def build_parser() -> argparse.ArgumentParser:
     sprint_close_parser.add_argument("--sprint", help="Sprint ID (default: current)")
 
     task_parser = subparsers.add_parser("task", help="Manage sprint tasks", parents=[sub_common])
-    task_subparsers = task_parser.add_subparsers(dest="task_command")
+    task_subparsers = task_parser.add_subparsers(
+        dest="task_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
     task_create_parser = task_subparsers.add_parser(
         "create", help="Create a new task in current sprint", parents=[sub_common]
     )
@@ -340,7 +364,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     feature_parser = subparsers.add_parser("feature", help="Manage features", parents=[sub_common])
-    feature_subparsers = feature_parser.add_subparsers(dest="feature_command")
+    feature_subparsers = feature_parser.add_subparsers(
+        dest="feature_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
     feature_subparsers.add_parser("list", help="List features", parents=[sub_common])
     feature_create_parser = feature_subparsers.add_parser("create", help="Create a new feature", parents=[sub_common])
     feature_create_parser.add_argument("--name", required=True, help="Feature name (kebab-case)")
@@ -363,13 +391,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     adr_parser = subparsers.add_parser("adr", help="Manage ADRs", parents=[sub_common])
-    adr_subparsers = adr_parser.add_subparsers(dest="adr_command")
+    adr_subparsers = adr_parser.add_subparsers(
+        dest="adr_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
     adr_add_parser = adr_subparsers.add_parser("add", help="Create an ADR file", parents=[sub_common])
     add_adr_add_arguments(adr_add_parser)
     adr_subparsers.add_parser("list", help="List ADRs", parents=[sub_common])
 
     backlog_parser = subparsers.add_parser("backlog", help="Manage issue backlog", parents=[sub_common])
-    backlog_subparsers = backlog_parser.add_subparsers(dest="backlog_command")
+    backlog_subparsers = backlog_parser.add_subparsers(
+        dest="backlog_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
     backlog_add_parser = backlog_subparsers.add_parser("add", help="Create a backlog entry", parents=[sub_common])
     backlog_add_parser.add_argument(
         "--type",
@@ -402,7 +438,11 @@ def build_parser() -> argparse.ArgumentParser:
     backlog_subparsers.add_parser("stats", help="Show backlog statistics", parents=[sub_common])
 
     parking_parser = subparsers.add_parser("parking", help="Manage parking lot items", parents=[sub_common])
-    parking_subparsers = parking_parser.add_subparsers(dest="parking_command")
+    parking_subparsers = parking_parser.add_subparsers(
+        dest="parking_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
     parking_add_parser = parking_subparsers.add_parser("add", help="Create a parking lot item", parents=[sub_common])
     parking_add_parser.add_argument(
         "--type",
@@ -440,13 +480,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     roadmap_parser = subparsers.add_parser("roadmap", help="Manage the project roadmap", parents=[sub_common])
-    roadmap_subparsers = roadmap_parser.add_subparsers(dest="roadmap_command")
+    roadmap_subparsers = roadmap_parser.add_subparsers(
+        dest="roadmap_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
     roadmap_subparsers.add_parser("show", help="Show roadmap now/next/later", parents=[sub_common])
     roadmap_subparsers.add_parser("create", help="Create roadmap template", parents=[sub_common])
     roadmap_subparsers.add_parser("validate", help="Validate roadmap links", parents=[sub_common])
 
     release_parser = subparsers.add_parser("release", help="Manage project releases", parents=[sub_common])
-    release_subparsers = release_parser.add_subparsers(dest="release_command")
+    release_subparsers = release_parser.add_subparsers(
+        dest="release_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
     release_plan_parser = release_subparsers.add_parser("plan", help="Create a release plan", parents=[sub_common])
     release_plan_parser.add_argument("--version", help="Release version (vX.Y.Z or 'next')")
     release_plan_parser.add_argument("--activate", action="store_true", help="Activate this release as current")
@@ -476,7 +524,11 @@ def build_parser() -> argparse.ArgumentParser:
     release_close.add_argument("--version", required=True, help="Release version (vX.Y.Z)")
 
     daily_parser = subparsers.add_parser("daily", help="Manage daily status cadence", parents=[sub_common])
-    daily_subparsers = daily_parser.add_subparsers(dest="daily_command")
+    daily_subparsers = daily_parser.add_subparsers(
+        dest="daily_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
     daily_generate = daily_subparsers.add_parser("generate", help="Generate daily status", parents=[sub_common])
     daily_generate.add_argument("--force", action="store_true", help="Generate even on weekends or overwrite")
     daily_check = daily_subparsers.add_parser("check", help="Check daily status freshness", parents=[sub_common])
@@ -489,7 +541,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     pre_exec_parser = subparsers.add_parser("pre-exec", help="Pre-execution lint/audit gate", parents=[sub_common])
-    pre_exec_subparsers = pre_exec_parser.add_subparsers(dest="pre_exec_command")
+    pre_exec_subparsers = pre_exec_parser.add_subparsers(
+        dest="pre_exec_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
     pre_exec_subparsers.add_parser("lint", help="Strict task-doc lint gate", parents=[sub_common])
     pre_exec_audit = pre_exec_subparsers.add_parser(
         "audit",
