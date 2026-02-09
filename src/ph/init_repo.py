@@ -327,6 +327,15 @@ _DEFAULT_VALIDATION_RULES = {
         "enabled": True,
         "config_path": "process/automation/system_scope_config.json",
     },
+    "sprint_management": {
+        "mode": "bounded",
+        "health_check_thresholds": {
+            "blocked_percentage_red": 30,
+            "progress_percentage_red": 50,
+            "progress_check_day": 3,
+        },
+        "sprint_duration_days": 5,
+    },
     "sprint_tasks": {
         "require_task_yaml": True,
         "require_story_points": True,

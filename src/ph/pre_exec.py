@@ -244,6 +244,7 @@ def _lint_task_dir(*, ph_data_root: Path, task_dir: Path) -> list[Finding]:
 
     task_meta = _parse_task_yaml_top_level(_read_text(task_yaml_path))
     session = task_meta.get("session", "").strip()
+    decision = task_meta.get("decision", "").strip()
 
     required_yaml_keys = [
         "id",
@@ -286,6 +287,33 @@ def _lint_task_dir(*, ph_data_root: Path, task_dir: Path) -> list[Finding]:
                 file=task_yaml_path,
             )
         )
+
+    if session and decision:
+        session_norm = session.strip().lower()
+        decision_norm = decision.strip().upper()
+        if session_norm == "research-discovery":
+            if not re.match(r"^DR-\d{4}$", decision_norm):
+                findings.append(
+                    Finding(
+                        task_id=task_id,
+                        severity="FAIL",
+                        message=f"Decision id mismatch for session research-discovery: expected DR-XXXX, found {decision}",
+                        file=task_yaml_path,
+                    )
+                )
+        elif session_norm == "task-execution":
+            if not (decision_norm.startswith("ADR-") or decision_norm.startswith("FDR-")):
+                findings.append(
+                    Finding(
+                        task_id=task_id,
+                        severity="FAIL",
+                        message=(
+                            "Decision id mismatch for session task-execution: "
+                            f"expected ADR-XXXX or FDR-..., found {decision}"
+                        ),
+                        file=task_yaml_path,
+                    )
+                )
 
     readme_path = task_dir / "README.md"
     if readme_path.exists():

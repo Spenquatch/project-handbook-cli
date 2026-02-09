@@ -22,10 +22,30 @@ tags: [ph, spec]
 
 ## Creation
 - Created/updated by:
-  - Humans create/edit DR Markdown files directly (no dedicated `ph decision ...` commands in v1).
-  - DR entries are typically created during `session=research-discovery` tasks and later referenced/promoted into ADRs or feature decision records (FDRs).
+  - Humans create/edit DR Markdown files directly.
+  - The CLI MAY scaffold a new DR entry via `ph dr add` (non-destructive; creation only).
+  - DR entries are typically created during `session=research-discovery` tasks and later referenced/promoted into ADRs (cross-cutting) or Feature Decision Records (FDRs; feature-scoped).
 - Non-destructive:
-  - The CLI MUST NOT overwrite decision register entries without explicit `--force` (and v1 provides no default update command for DRs).
+  - The CLI MUST NOT overwrite decision register entries without explicit `--force`.
+  - The CLI MUST NOT modify DR files after creation (creation-only scaffolding).
+
+## Command surface
+
+### `ph dr add --id DR-#### --title <t> [--feature <name>] [--date YYYY-MM-DD]`
+
+Behavior:
+- Scaffold a new DR markdown file and print its path.
+- If `--feature` is omitted, the DR MUST be created under `decision-register/`.
+- If `--feature <name>` is provided, the DR MUST be created under `features/<name>/decision-register/`.
+- Filename MUST be `DR-####-<slug>.md` where `<slug>` is derived deterministically from `--title` as lowercase kebab-case.
+- Front matter MUST include at least:
+  - `title: DR-#### — <t>`
+  - `type: decision-register`
+  - `date: YYYY-MM-DD`
+
+Guardrails:
+- `--id` MUST be exactly `DR-NNNN` where `NNNN` is 4 digits.
+- The CLI MUST refuse to create the DR if the target file already exists (non-destructive).
 
 ## Required Files and Directories
 - Required files: (none)
@@ -63,6 +83,8 @@ tags: [ph, spec]
 ## Invariants
 - One decision per file: each `DR-*.md` file represents exactly one DR.
 - Filename/title alignment: `DR-XXXX` in the filename MUST match the `DR-XXXX` in the front matter `title`.
+- Workflow invariant (BL-0005):
+  - DR ids (`DR-####`) are the only allowed `decision:` values for `session: research-discovery` tasks.
 
 ## Validation Rules
 - `ph validate` SHOULD enforce:

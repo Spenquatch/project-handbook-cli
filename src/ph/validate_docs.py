@@ -657,17 +657,36 @@ def validate_sprints(*, issues: list[dict], rules: dict, root: Path) -> None:
                 if decision and sprint_rules.get("require_single_decision_per_task", True):
                     session = str(task_data.get("session", "")).strip().lower()
                     decision = str(decision).strip()
+                    decision_norm = decision.upper()
                     if session == "research-discovery":
-                        if not (
-                            decision.startswith("DR-") or decision.startswith("ADR-") or decision.startswith("FDR-")
-                        ):
+                        if not re.match(r"^DR-\d{4}$", decision_norm):
                             issues.append(
-                                {"path": str(task_yaml), "code": "task_decision_invalid", "severity": "error"}
+                                {
+                                    "path": str(task_yaml),
+                                    "code": "task_decision_invalid",
+                                    "severity": "error",
+                                    "expected": "DR-XXXX",
+                                    "found": decision,
+                                    "message": (
+                                        "Decision id mismatch for session research-discovery: "
+                                        f"expected DR-XXXX, found {decision}"
+                                    ),
+                                }
                             )
-                    else:
-                        if not (decision.startswith("ADR-") or decision.startswith("FDR-")):
+                    elif session == "task-execution":
+                        if not (decision_norm.startswith("ADR-") or decision_norm.startswith("FDR-")):
                             issues.append(
-                                {"path": str(task_yaml), "code": "task_decision_invalid", "severity": "error"}
+                                {
+                                    "path": str(task_yaml),
+                                    "code": "task_decision_invalid",
+                                    "severity": "error",
+                                    "expected": "ADR-XXXX or FDR-...",
+                                    "found": decision,
+                                    "message": (
+                                        "Decision id mismatch for session task-execution: "
+                                        f"expected ADR-XXXX or FDR-..., found {decision}"
+                                    ),
+                                }
                             )
 
                 story_points = task_data.get("story_points")

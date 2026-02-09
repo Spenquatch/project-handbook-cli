@@ -107,7 +107,7 @@ Behavior:
   - `.project-handbook/` (directory; includes `.gitkeep`)
   - `.project-handbook/config.json`
   - `ONBOARDING.md` (seeded)
-  - `process/checks/validation_rules.json`
+  - `process/checks/validation_rules.json` (seeded; v1 default MUST include `sprint_management.mode = "bounded"`)
   - `process/automation/system_scope_config.json` (optional; routing prefixes and exclusions)
   - `process/automation/reset_spec.json` (CLI-only maintenance utility)
   - `process/AI_AGENT_START_HERE.md` (seeded; lightweight agent workflow guide)
@@ -280,6 +280,12 @@ Behavior:
 - Run full validation.
 - Write report to: `status/validation.json`
 - Validation MUST include strict ADR checks for `adr/*.md` (see `ph adr`).
+- Validation MUST be able to deterministically detect release/sprint misalignment by looking for exact headings/markers in Markdown bodies:
+  - Release plan slot sections:
+    - For each `releases/vX.Y.Z/plan.md`, validate the presence and shape of slot sections as defined in `cli_plan/ph_spec/ph/releases/contract.md` (“Release plan slot sections”).
+  - Sprint plan release alignment sections:
+    - For each sprint plan with front matter `release` (non-null) and `release_sprint_slot` (integer), validate the presence and shape of the alignment section as defined in `cli_plan/ph_spec/ph/sprints/contract.md` (“Sprint plan release alignment section”).
+    - If the referenced release plan is resolvable (e.g. `release: current` with a valid `releases/current` pointer, or `release: vX.Y.Z`), validation MUST confirm the release plan contains the corresponding `## Slot N: ...` section for `N = release_sprint_slot`.
 
 Flags:
 - `--quick` (equivalent to `make validate-quick`)
@@ -303,6 +309,9 @@ Commands:
 Behavior:
 - `lint`:
   - Strict task-doc lint gate for the active sprint (session↔purpose alignment + ambiguity language detection).
+  - Sprint gates (BL-0008):
+    - MUST fail non-zero if the active sprint has **zero** tasks with `task_type: sprint-gate`.
+    - For each `task_type: sprint-gate` task, MUST validate the deterministic gate-doc rules under “Task types (BL-0007)” and fail non-zero on any missing marker.
   - MUST fail non-zero if any blocking findings are present.
 - `audit`:
   - Capture an evidence bundle (command outputs + validation report), then run `lint` and tee its output into the bundle.
@@ -380,6 +389,13 @@ Behavior:
   - Windows: directory junction (preferred) or symlink (if permitted)
   - If a directory link cannot be created, command MUST fail with remediation (enable Developer Mode / run elevated / filesystem must support links).
 
+Sprint planning mode (v1 default is bounded):
+- The sprint plan template MUST be selected via `PH_ROOT/process/checks/validation_rules.json`:
+  - Config key: `sprint_management.mode`
+  - Allowed values: `bounded` (default), `timeboxed` (explicit opt-in)
+- Defensive fallback:
+  - If `validation_rules.json` exists but omits `sprint_management` (or `mode` is missing/empty/invalid), `ph sprint plan` MUST treat the mode as `bounded`.
+
 Hints:
 - MUST print exactly these lines:
   - `Sprint scaffold ready:`
@@ -404,6 +420,9 @@ Hints:
 
 Behavior:
 - Show sprint status.
+- MUST include a “Sprint gates” summary derived from tasks with `task_type: sprint-gate` (see “Task types (BL-0007)”):
+  - If zero sprint-gate tasks exist: print a blocking finding (the sprint is not closeable by default).
+  - Else: list each sprint-gate task id + status, and whether it passes the deterministic gate-doc rules.
 
 Hints:
 - Include “Tip” lines already present in sprint_manager output.
@@ -418,11 +437,20 @@ Behavior:
 Behavior:
 - Print burndown and write it under the sprint dir.
 
-### `ph sprint close [--sprint <id|current>]`
+### `ph sprint close [--sprint <id|current>] [--force]`
 
 Behavior:
 - Create retrospective and archive sprint into `sprints/archive/...`.
 - Rewrite `sprints/current/tasks/...` links to archived sprint paths.
+- Sprint gates (BL-0008; close blocker by default):
+  - The target sprint MUST contain **at least 1** task with `task_type: sprint-gate`.
+  - Every `task_type: sprint-gate` task MUST have `status: done`.
+  - Every `task_type: sprint-gate` task MUST satisfy the deterministic gate-doc rules under “Task types (BL-0007)”.
+  - If any of the above checks fail and `--force` is **not** provided: command MUST fail non-zero and print remediation:
+    - `Sprint close blocked: sprint gates missing/incomplete.`
+    - `Run: ph sprint status`
+    - `Override (not recommended): ph sprint close --force`
+  - If `--force` is provided: command MUST still print the same findings as warnings, then proceed with close/archival.
 
 Hints:
 - MUST print exactly:
@@ -447,14 +475,36 @@ Behavior:
 
 Equivalent: `make task-*`
 
-### `ph task create --title <t> --feature <f> --decision <d> [--points N] [--owner @x] [--prio Px] [--lane <lane>] [--session <name>]`
+### `ph task create --title <t> --feature <f> --decision <d> [--points N] [--owner @x] [--prio Px] [--lane <lane>] [--task-type <task_type>] [--session <name>]`
 
 Behavior:
 - Create a new task directory under `sprints/current/tasks/...` with required files.
+- The created `task.yaml` MUST include both:
+  - `session: <string>` (legacy; BL-0005 decision invariants)
+  - `task_type: <string>` (BL-0007 task taxonomy)
+
+Defaults:
+- If `--task-type` is provided:
+  - Tooling MUST set `session` deterministically from the mapping table under “Task types (BL-0007)”.
+  - If `--session` is also provided, it MUST match the mapped `session` for the chosen `task_type` (else fail).
+- Else, if `--task-type` is omitted and `--session` is provided:
+  - Tooling MUST set `task_type` deterministically from `session`:
+    - `session: task-execution` → `task_type: implementation`
+    - `session: research-discovery` → `task_type: research-discovery`
+- Else, if both `--task-type` and `--session` are omitted:
+  - Tooling MUST default to `task_type: implementation` and `session: task-execution`.
 
 Guardrails:
 - If `--lane` begins with `handbook/`, command MUST fail with remediation:
   - `Lane prefix 'handbook/' is reserved. Use a project lane like: ops, eng, product, etc.`
+- If `--task-type` is provided, it MUST be one of the allowed `task_type` values under “Task types (BL-0007)”.
+- If `--session` is provided, it MUST be one of: `task-execution`, `research-discovery`, `sprint-gate`, `feature-research-planning`, `task-docs-deep-dive`.
+- Decision/session workflow invariants (BL-0005):
+  - If `--session research-discovery`, then `--decision` MUST be `DR-####` (4 digits).
+  - If `--session task-execution`, then `--decision` MUST be either:
+    - `ADR-####` (4 digits), or
+    - an FDR id starting with `FDR-` (see FDR conventions under `ph fdr add`).
+  - For `DR-####` decisions, the referenced DR MUST exist (see “DR existence + lookup” below).
 
 Hints:
 - Print the task directory path.
@@ -463,6 +513,66 @@ Hints:
   - `  - Open sprints/current/tasks/ for the new directory, update steps.md + commands.md`
   - `  - Set status to 'doing' when work starts and log progress in checklist.md`
   - `  - Run 'ph validate --quick' once initial scaffolding is filled in`
+
+### Task types (BL-0007)
+
+`task_type` provides explicit task taxonomy and deterministic, string-checkable doc requirements.
+
+Relationship to onboarding session templates:
+- `session` is the onboarding session template key.
+- For every allowed `session` value, a same-named onboarding session template file MUST exist:
+  - `process/sessions/templates/<session>.md`
+- `task_type` MUST map deterministically to a required `session` value via the mapping table below.
+
+Relationship to `session` (legacy, BL-0005):
+- `task_type` is the primary taxonomy field.
+- `session` exists to drive BL-0005 decision invariants (and is also the onboarding session template key).
+- Tooling MUST enforce that `task_type` and `session` are consistent via the mapping table below.
+
+Allowed `task_type` values (explicit list):
+- `implementation` (default for legacy execution tasks)
+- `research-discovery` (default for legacy discovery tasks)
+- `sprint-gate`
+- `feature-research-planning`
+- `task-docs-deep-dive`
+
+Defaulting when `task_type` is missing (legacy tasks):
+- If `session: task-execution`, tooling MUST treat the task as `task_type: implementation`.
+- If `session: research-discovery`, tooling MUST treat the task as `task_type: research-discovery`.
+
+Allowed `session` values (explicit list; onboarding template keys, BL-0007):
+- `task-execution`
+- `research-discovery`
+- `sprint-gate`
+- `feature-research-planning`
+- `task-docs-deep-dive`
+
+Mapping table (`task_type` → required `session`):
+
+| `task_type` | `session` |
+|---|---|
+| `implementation` | `task-execution` |
+| `research-discovery` | `research-discovery` |
+| `sprint-gate` | `sprint-gate` |
+| `feature-research-planning` | `feature-research-planning` |
+| `task-docs-deep-dive` | `task-docs-deep-dive` |
+
+Deterministic per-type doc rules (string/heading checks):
+- `task_type: sprint-gate`
+  - `validation.md` MUST include the literal string: `Sprint Goal:`
+  - `validation.md` MUST include the literal string: `Exit criteria:`
+  - `validation.md` MUST mention the literal filename: `secret-scan.txt`
+  - `validation.md` MUST mention the evidence root path prefix: `status/evidence/`
+  - `task.yaml` MUST mention the evidence root path prefix: `status/evidence/`
+  - `validation.md` MUST reference the sprint plan so the goal is traceable, by including **at least one** of these literal strings:
+    - `sprints/current/plan.md`
+    - `../../plan.md`
+- `task_type: task-docs-deep-dive`
+  - `steps.md` MUST NOT contain any of these words (case-insensitive, whole-word match): `implement`, `refactor`, `deploy`, `ship`
+  - `validation.md` MUST NOT contain any of these words (case-insensitive, whole-word match): `implement`, `refactor`, `deploy`, `ship`
+- `task_type: feature-research-planning`
+  - `steps.md` MUST contain a heading line exactly: `## Contract updates`
+  - `steps.md` MUST contain a heading line exactly: `## Execution tasks to create`
 
 ### `ph task list`
 
@@ -478,6 +588,66 @@ Behavior:
 
 Behavior:
 - Update status with dependency checks (repo-local).
+
+## Decision workflow invariants (BL-0005)
+
+These rules make the discovery → decision → execution pipeline deterministic and enforceable by validation.
+
+### Task decision invariants
+
+- Discovery tasks are defined as tasks with one of these session values:
+  - `session: research-discovery`
+  - `session: feature-research-planning`
+  - `session: task-docs-deep-dive`
+  - These tasks MUST reference discovery-only decisions:
+    - `decision: DR-####`
+- Execution tasks are defined as tasks with one of these session values:
+  - `session: task-execution`
+  - `session: sprint-gate`
+  - These tasks MUST reference execution decisions:
+    - `decision: ADR-####`, or
+    - `decision: FDR-...`
+
+### ADR/FDR existence + lookup (validation rule)
+
+When validating a task with an execution decision:
+
+- `decision: ADR-####`
+  - MUST resolve to exactly one ADR doc under:
+    - `PH_ROOT/adr/NNNN-*.md` where `NNNN` is the numeric portion of the ADR id
+  - The ADR doc front matter `id` MUST equal the task’s `decision` value.
+- `decision: FDR-...-NNNN`
+  - MUST resolve to exactly one FDR doc under:
+    - `PH_ROOT/features/<feature>/fdr/NNNN-*.md` where `NNNN` is the trailing numeric segment of the FDR id
+  - The FDR doc front matter `id` MUST equal the task’s `decision` value.
+
+Outcomes (deterministic):
+- If **zero** matches are found: **error** (`missing decision doc for <decision>`).
+- If **more than one** match is found: **error** (`ambiguous decision id <decision>; multiple docs found`).
+
+### DR existence + lookup (validation rule)
+
+When validating a task with `decision: DR-####`, `ph validate` MUST confirm the referenced DR exists as exactly one Markdown file in one of these locations:
+
+- Project-level decision register (always searched):
+  - `PH_ROOT/decision-register/DR-####-*.md`
+- Feature-level decision register (searched only when `task.yaml` has `feature: <feature>`):
+  - `PH_ROOT/features/<feature>/decision-register/DR-####-*.md`
+
+Outcomes (deterministic):
+- If **zero** matches are found: **error** (`missing DR doc for DR-####`).
+- If **more than one** match is found (including a project + feature duplicate): **error** (`ambiguous DR id DR-####; multiple DR docs found`).
+- If **exactly one** match is found: success.
+
+### ADR/FDR backlink invariant (validation rule)
+
+For any ADR or FDR referenced by tasks, `ph validate` MUST enforce the ADR/FDR backlink rule defined under `ph adr add` / `ph fdr add`:
+
+- ADR/FDR front matter MUST include a `links:` list containing at least one repo-relative path to a `DR-####-*.md` file.
+  - Repo-relative means PH_ROOT-relative and normalized:
+    - MUST NOT start with `./` or `../`
+    - MUST NOT be an absolute path
+    - MUST point to a `DR-####-*.md` file (not just `DR-####`)
 
 ## `ph feature`
 
@@ -518,12 +688,38 @@ Behavior:
 Behavior:
 - Completeness check, then move to `features/implemented/<name>/`.
 
+## `ph dr`
+
+### `ph dr add --id DR-#### --title <t> [--feature <name>] [--date YYYY-MM-DD]`
+
+Behavior:
+- Scaffold a new Decision Register (DR) entry and print its path.
+- Target directory:
+  - If `--feature` is omitted: write to `PH_ROOT/decision-register/`.
+  - If `--feature <name>` is provided: write to `PH_ROOT/features/<name>/decision-register/` (create the directory if missing).
+- Target filename MUST be: `DR-####-<slug>.md` where `<slug>` is derived from `--title` as lowercase kebab-case (same slug rules as `ph adr add`).
+- The generated file MUST include YAML front matter with at least:
+  - `title: DR-#### — <t>` (MUST include the same `DR-####` as `--id`)
+  - `type: decision-register`
+  - `date: YYYY-MM-DD` (default: today, local time)
+  - `links: []` (optional; may be used for cross-linking)
+- The generated body SHOULD follow the standard DR structure from the decision-register spec (Problem/Context, Options, Recommendation, Follow-ups).
+
+Guardrails:
+- `--id` MUST be exactly `DR-NNNN` where `NNNN` is 4 digits (`0000`–`9999`); otherwise fail non-zero with remediation.
+- The CLI MUST refuse to create the DR if the target path already exists (non-destructive).
+
+Internal-only escape hatch (MUST exist, MUST NOT appear in CLI help output):
+- `--force`:
+  - Non-destructive override only.
+  - If the target DR file already exists, `ph dr add --force ...` MUST succeed without modifying the file (idempotent “already exists” success).
+
 ## `ph adr`
 
 Rationale + conventions reference:
 - `cli_plan/v1_cli/ADR-CLI-0006-adr-commands-and-validation.md`
 
-### `ph adr add --id ADR-#### --title <t> [--status draft] [--superseded-by ADR-####] [--date YYYY-MM-DD]`
+### `ph adr add --id ADR-#### --title <t> --dr DR-#### [--dr DR-####] [--status draft] [--superseded-by ADR-####] [--date YYYY-MM-DD]`
 
 Behavior:
 - Create a new ADR markdown file under `PH_ROOT/adr/` and print its path.
@@ -541,6 +737,7 @@ Behavior:
   - `type: adr`
   - `status: draft|accepted|rejected|superseded` (default: `draft`)
   - `date: YYYY-MM-DD` (default: today, local time)
+  - `links: [<dr_path>, ...]` (MUST include at least one DR backlink; see rule below)
   - If `status: superseded`, then `superseded_by: ADR-NNNN` (MUST reference an existing ADR id)
 - The generated file body MUST include these H1 sections (exact spelling, H1 only):
   - `# Context`
@@ -551,6 +748,11 @@ Behavior:
 
 Guardrails:
 - `--id` MUST be exactly `ADR-NNNN` where `NNNN` is 4 digits (`0000`–`9999`); otherwise fail non-zero with remediation.
+- `--dr DR-####` MUST be provided at least once.
+- Each `--dr DR-####` MUST resolve to exactly one existing DR markdown file path:
+  - `decision-register/DR-####-*.md`, or
+  - `features/*/decision-register/DR-####-*.md`
+  - If zero or multiple matches are found, `ph adr add` MUST fail non-zero with remediation.
 - The CLI MUST refuse to create the ADR if the target path already exists (non-destructive).
 - If `--status superseded`, then `--superseded-by ADR-NNNN` MUST be provided and MUST reference an existing ADR in `adr/*.md`.
 
@@ -573,6 +775,13 @@ Validation requirements for ADR markdown files:
   - front matter `id` exists and equals `ADR-NNNN` for the filename prefix
   - front matter `id` is not duplicated across multiple files
   - if `status: superseded`, then `superseded_by` exists and references an existing ADR
+- DR backlink checks (**errors**) (BL-0005):
+  - front matter `links` exists and is a YAML list
+  - `links` MUST contain at least one DR backlink entry that is a repo-relative path (PH_ROOT-relative) to an existing DR markdown file:
+    - `decision-register/DR-####-*.md`, or
+    - `features/<feature>/decision-register/DR-####-*.md`
+  - A DR backlink MUST be a path to a `DR-####-*.md` file (not just `DR-####`).
+  - Backlink paths MUST be PH_ROOT-relative and normalized (no `./`, no `../`, no absolute paths).
 - Required H1 headings (missing any is an **error**):
   - `# Context`
   - `# Decision`
@@ -586,6 +795,38 @@ Actionable validation output:
   - ADR file path,
   - what was expected vs what was found (e.g., `expected id ADR-0007, found ADR-0008`),
   - for heading checks: an explicit `missing:` list and a `found_h1:` list (in document order).
+
+## `ph fdr`
+
+### `ph fdr add --feature <name> --id FDR-... --title <t> --dr DR-#### [--date YYYY-MM-DD]`
+
+Behavior:
+- Scaffold a new Feature Decision Record (FDR) under the owning feature directory and print its path.
+- Target directory:
+  - `PH_ROOT/features/<name>/fdr/` (create the directory if missing).
+- Target filename MUST be: `NNNN-<slug>.md` where:
+  - `NNNN` is derived from the trailing 4-digit numeric segment of `--id`:
+    - allowed: `FDR-NNNN` or `FDR-<slug>-NNNN`
+  - `<slug>` is derived deterministically from `--title` as lowercase kebab-case (same slug rules as `ph adr add`).
+- The generated file MUST include YAML front matter with at least:
+  - `id: <FDR id>` (MUST start with `FDR-` and end with `-NNNN` matching the filename prefix)
+  - `title: <t>`
+  - `type: fdr`
+  - `date: YYYY-MM-DD` (default: today, local time)
+  - `links: [<dr_path>, ...]` (MUST include at least one DR backlink; see rule below)
+- The generated body SHOULD include the same core sections as ADRs (Context/Decision/Consequences/Acceptance Criteria) unless the feature contract defines a more specific FDR template.
+
+Guardrails:
+- `--feature` MUST reference an existing feature directory under `features/<name>/` (or `ph fdr add` MUST fail with remediation to create the feature first).
+- `--id` MUST start with `FDR-` and MUST end with `-NNNN` where `NNNN` is 4 digits; otherwise fail non-zero with remediation.
+- `--dr DR-####` MUST be provided (at least one).
+- Each `--dr DR-####` MUST resolve to exactly one existing DR markdown file path, using feature-aware lookup:
+  - First search `features/<name>/decision-register/DR-####-*.md`
+  - Then search `decision-register/DR-####-*.md`
+  - If zero or multiple matches are found, `ph fdr add` MUST fail non-zero with remediation.
+
+Validation requirements for FDR markdown files (BL-0005):
+- The referenced DR backlink(s) MUST be present in front matter `links:` as repo-relative paths to DR markdown files (not ids).
 
 ## `ph backlog`
 
@@ -814,6 +1055,7 @@ Files:
   - `releases/<version>/plan.md`
   - `releases/<version>/progress.md`
   - `releases/<version>/features.yaml`
+- If `releases/<version>/plan.md` is created, it MUST include release slot sections in its body using the exact headings/markers defined in `cli_plan/ph_spec/ph/releases/contract.md` (“Release plan slot sections”), so `ph validate` can detect missing/malformed slots deterministically.
 - If `--activate` is set, also set `releases/current` to point at `releases/<version>/`.
 
 `ph release activate`:

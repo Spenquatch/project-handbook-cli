@@ -23,11 +23,19 @@ tags: [ph, spec]
 ## Creation
 - Created/updated by:
   - Humans create/edit ADR Markdown files directly.
-  - The CLI MAY scaffold a new ADR file via `ph adr add`.
+  - The CLI MAY scaffold a new ADR file via `ph adr add` (creation-only; non-destructive).
 - Non-destructive:
   - The CLI MUST NOT overwrite or modify existing ADR files.
   - If `ph adr add` targets an existing ADR path, it MUST fail unless `--force` is provided.
   - With `--force`, `ph adr add` MUST succeed without modifying the existing file (idempotent “already exists” success).
+
+## Command surface
+
+### `ph adr add --id ADR-#### --title <t> --dr DR-#### [--dr DR-####] [--status draft] [--superseded-by ADR-####] [--date YYYY-MM-DD]`
+
+Behavior:
+- Create a new ADR markdown file under `PH_ROOT/adr/`.
+- `--dr` MUST be provided at least once and MUST be written as DR backlinks into front matter `links:` (see BL-0005 rule below).
 
 ## Required Files and Directories
 - Required files: (none)
@@ -43,11 +51,29 @@ tags: [ph, spec]
   - `type: adr`
   - `status: draft|accepted|rejected|superseded`
   - `date: YYYY-MM-DD`
+- ADRs MUST include DR backlink metadata (BL-0005):
+  - `links: [<path>, ...]` (MUST include at least one DR backlink; see rule below)
 - Optional front matter fields (recommended):
   - `tags: [<tag>, ...]`
-  - `links: [<relative path>, ...]`
   - `supersedes: ADR-NNNN | null`
   - `superseded_by: ADR-NNNN | null`
+
+## DR backlink rule (BL-0005)
+
+Purpose:
+- ADRs are promotions of discovery work. Every ADR MUST link back to at least one DR entry that captured the discovery.
+
+Backlink field:
+- ADR front matter MUST include `links:` as a YAML list of strings.
+
+Required backlink format (deterministic):
+- At least one entry in `links:` MUST be a repo-relative path (PH_ROOT-relative) to an existing DR markdown file, not just a DR id.
+- Repo-relative backlink paths MUST be normalized:
+  - MUST NOT start with `./` or `../`
+  - MUST NOT be an absolute path
+- The path MUST point to a file named `DR-####-*.md` under one of:
+  - `decision-register/DR-####-*.md`
+  - `features/<feature>/decision-register/DR-####-*.md`
 
 ## Invariants
 - One decision per file: each ADR file represents exactly one ADR (`id` is unique within the repo).
@@ -62,6 +88,9 @@ tags: [ph, spec]
   - ADR filename matches `NNNN-<slug>.md` and `id: ADR-NNNN` matches the filename numeric prefix
   - `type: adr`
   - `status` is one of `draft|accepted|rejected|superseded`
+  - DR backlink rule (BL-0005):
+    - `links` exists and is a YAML list
+    - `links` contains at least one repo-relative path to an existing `DR-####-*.md` file (not just `DR-####`)
   - Required H1 headings exist (exact spelling, H1 only):
     - `# Context`
     - `# Decision`
