@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "generated_at": "2026-02-09T16:22:28Z",
+  "plan_root": "cli_plan",
+  "initiatives": [
+    {
+      "id": "INIT-0001",
+      "slug": "workflow-foundations",
+      "title": "CLI Plan \u2013 Initiative Task Queue (Workflow Foundations: BL-0004..BL-0008)",
+      "path": "cli_plan/initiatives/INIT-0001-workflow-foundations/tasks.json",
+      "source_backlog_items": [
+        "BL-0004",
+        "BL-0005",
+        "BL-0006",
+        "BL-0007",
+        "BL-0008"
+      ],
+      "status": "active"
+    }
+  ]
+}

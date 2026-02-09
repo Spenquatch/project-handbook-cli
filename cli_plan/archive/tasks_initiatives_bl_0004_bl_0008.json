@@ -1,0 +1,15 @@
+{
+  "deprecated": true,
+  "redirect_to": "cli_plan/initiatives/INIT-0001-workflow-foundations/tasks.json",
+  "initiative_id": "INIT-0001",
+  "initiative_slug": "workflow-foundations",
+  "source_backlog_items": [
+    "BL-0004",
+    "BL-0005",
+    "BL-0006",
+    "BL-0007",
+    "BL-0008"
+  ],
+  "reason": "Initiative queues now live under cli_plan/initiatives/<initiative-id>-<slug>/tasks.json.",
+  "edit_instructions": "Edit the canonical tasks file at redirect_to; do not edit this redirect stub."
+}

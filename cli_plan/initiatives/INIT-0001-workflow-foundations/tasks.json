@@ -1,0 +1,579 @@
+{
+  "meta": {
+    "title": "CLI Plan \u2013 Initiative Task Queue (Workflow Foundations: BL-0004..BL-0008)",
+    "type": "task-queue",
+    "date": "2026-02-09",
+    "tags": [
+      "cli",
+      "plan",
+      "initiatives",
+      "backlog",
+      "v1"
+    ],
+    "sources_of_truth": [
+      "cli_plan/backlog.json",
+      "cli_plan/v1_cli/CLI_CONTRACT.md",
+      "cli_plan/ph_spec/"
+    ],
+    "legacy_reference_repo": null,
+    "notes": [
+      "Canonical location: cli_plan/initiatives/INIT-0001-workflow-foundations/tasks.json",
+      "This queue converts backlog items BL-0004..BL-0008 into an executable, dependency-aware task list.",
+      "Each task is intended to be a single-owner, single-PR unit of work with concrete verification commands.",
+      "Dependencies are directional and explicit (contract/spec tasks block implementation tasks)."
+    ],
+    "initiative": {
+      "id": "INIT-0001",
+      "slug": "workflow-foundations",
+      "status": "active",
+      "source_backlog_items": [
+        "BL-0004",
+        "BL-0005",
+        "BL-0006",
+        "BL-0007",
+        "BL-0008"
+      ],
+      "canonical_path": "cli_plan/initiatives/INIT-0001-workflow-foundations/tasks.json"
+    }
+  },
+  "phases": [
+    {
+      "id": "PHASE-I00",
+      "order": 0,
+      "title": "Planning",
+      "goals": [
+        "Decompose BL-0004..BL-0008 into small, executable tasks.",
+        "Make contract/spec dependencies explicit before implementation."
+      ]
+    },
+    {
+      "id": "PHASE-I04",
+      "order": 4,
+      "title": "Initiative \u2014 BL-0004 Bounded Planning Default (v1)",
+      "goals": [
+        "Make bounded planning the default sprint model for v1.",
+        "Ensure `ph init` seeds bounded defaults and `ph sprint plan` is defensively bounded when config omits sprint settings.",
+        "Keep timeboxed mode supported but opt-in and test-backed."
+      ]
+    },
+    {
+      "id": "PHASE-I05",
+      "order": 5,
+      "title": "Initiative \u2014 BL-0005 Enforce DR-First Decision Workflow (DR \u2192 ADR/FDR)",
+      "goals": [
+        "Enforce that discovery tasks produce DRs and execution tasks reference ADR/FDR (not DR).",
+        "Add validation for DR existence and ADR/FDR backlinks to DR(s).",
+        "Add scaffolding helpers: `ph dr add` (and `ph fdr add` if needed) while keeping `ph` deterministic."
+      ]
+    },
+    {
+      "id": "PHASE-I06",
+      "order": 6,
+      "title": "Initiative \u2014 BL-0006 Release Plan Slot Goals + Enablement (Release Drives Sprints)",
+      "goals": [
+        "Require release plans to specify per-slot goals/enablement and intended gates.",
+        "Auto-populate sprint plans from release slot goals when a release is active and a slot is assigned.",
+        "Validate/surface misalignment in status and lint/validate."
+      ]
+    },
+    {
+      "id": "PHASE-I07",
+      "order": 7,
+      "title": "Initiative \u2014 BL-0007 First-Class Task Types + Sessions",
+      "goals": [
+        "Add explicit `task_type` to task.yaml with a defined taxonomy and backwards-compatible defaults.",
+        "Add `ph task create --type <task_type>` with sensible scaffolding defaults.",
+        "Seed additional session templates and enforce type/session consistency in lint/validate."
+      ]
+    },
+    {
+      "id": "PHASE-I08",
+      "order": 8,
+      "title": "Initiative \u2014 BL-0008 Require Sprint Gates for Every Sprint (Sprint Goal Gating)",
+      "goals": [
+        "Require at least one sprint gate task per sprint with explicit evidence-friendly acceptance criteria.",
+        "Surface gate readiness in `ph sprint status` and enforce via `ph pre-exec lint`.",
+        "Block `ph sprint close` when sprint gates are missing or incomplete (with explicit override semantics if allowed)."
+      ]
+    }
+  ],
+  "workstreams": [
+    {
+      "id": "WS-PLN",
+      "title": "Planning",
+      "concurrency": "N/A",
+      "notes": [
+        "Queue authoring / decomposition tasks.",
+        "Typically completed once, then other workstreams can proceed."
+      ]
+    },
+    {
+      "id": "WS-I04",
+      "title": "BL-0004 \u2014 Bounded Sprint Default",
+      "concurrency": "Can run in parallel with WS-I05/WS-I06; touches sprint/init behavior.",
+      "notes": [
+        "Contract/spec first, then code, then tests.",
+        "May conflict with WS-I07/WS-I08 if both modify sprint semantics; rely on depends_on for behavioral coupling."
+      ]
+    },
+    {
+      "id": "WS-I05",
+      "title": "BL-0005 \u2014 DR-First Workflow (DR \u2192 ADR/FDR)",
+      "concurrency": "Can run in parallel with WS-I04/WS-I06; touches decision docs + adr/fdr/dr commands + validation.",
+      "notes": [
+        "Lock explicit contract outputs (flags/paths/backlink rules) before implementation."
+      ]
+    },
+    {
+      "id": "WS-I06",
+      "title": "BL-0006 \u2014 Release Slot Goals + Enablement",
+      "concurrency": "Can run in parallel with WS-I04/WS-I05; touches release scaffold + sprint scaffold + validation/status.",
+      "notes": [
+        "Contract defines deterministic headings/markers used by parsing/validation."
+      ]
+    },
+    {
+      "id": "WS-I07",
+      "title": "BL-0007 \u2014 Task Types + Sessions",
+      "concurrency": "Can run in parallel with WS-I04/WS-I05/WS-I06; blocks WS-I08 via explicit depends_on.",
+      "notes": [
+        "Defines taxonomy/mapping; unblocks sprint-gate enforcement work."
+      ]
+    },
+    {
+      "id": "WS-I08",
+      "title": "BL-0008 \u2014 Sprint Gates Required",
+      "concurrency": "Starts after WS-I07 contract foundations; then can proceed largely independently.",
+      "notes": [
+        "Enforcement spans sprint status, pre-exec lint, sprint close, and validate."
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "INIT-PLN-0002",
+      "phase_id": "PHASE-I00",
+      "order": 1,
+      "title": "Plan: decompose BL-0004..BL-0008 into executable tasks",
+      "status": "done",
+      "started_at": "2026-02-09T14:12:03Z",
+      "completed_at": "2026-02-09T14:12:03Z",
+      "depends_on": [],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Convert backlog items BL-0004..BL-0008 (bounded sprint default, DR-first workflow, release slot goals, task types/sessions, sprint gates) into an executable task queue.\n\nFiles likely to change:\n- cli_plan/tasks_initiatives_bl_0004_bl_0008.json\n\nVerification steps:\n- Validate JSON: `python -m json.tool cli_plan/tasks_initiatives_bl_0004_bl_0008.json`.\n\nAcceptance criteria:\n- Each initiative has an ordered, dependency-aware list of small tasks.\n- Each task has a concrete Goal, likely files, verification commands, and pass/fail acceptance criteria.\n",
+      "workstream_id": "WS-PLN"
+    },
+    {
+      "id": "I04-BND-0001",
+      "phase_id": "PHASE-I04",
+      "order": 10,
+      "title": "Contract: bounded planning is the v1 default sprint model (timeboxed is opt-in)",
+      "status": "todo",
+      "depends_on": [
+        "INIT-PLN-0002"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Feature brief (BL-0004): New repos should default to bounded sprint planning (ADR-0013), and `ph sprint plan` should produce bounded plans unless the repo explicitly opts into timeboxed mode.\n\nAssumptions:\n- Bounded mode is the safe default for v1.\n- Timeboxed mode remains supported but requires explicit configuration.\n\nGoal:\n- Update contract/spec docs so defaults and override semantics are unambiguous.\n\nFiles likely to change:\n- cli_plan/v1_cli/CLI_CONTRACT.md\n- cli_plan/ph_spec/ph/sprints/contract.md\n- cli_plan/ph_spec/ph/sprints/examples/** (if examples are used as executable references)\n\nBehaviors to implement/adjust:\n- Document that v1 default is `sprint_management.mode = bounded`.\n- Document opt-in for timeboxed (exact config keys and allowed values).\n- Document defensive fallback behavior when `validation_rules.json` exists but omits `sprint_management`.\n\nVerification steps:\n- Doc review for internal consistency.\n- Grep: `rg -n \"sprint_management\\.mode|bounded|timeboxed\" cli_plan/v1_cli/CLI_CONTRACT.md cli_plan/ph_spec/ph/sprints/contract.md`.\n\nAcceptance criteria:\n- Contract text clearly states the default and the opt-in override (no ambiguity).\n- Spec describes the exact config key and allowed values.\n",
+      "workstream_id": "WS-I04"
+    },
+    {
+      "id": "I04-BND-0010",
+      "phase_id": "PHASE-I04",
+      "order": 20,
+      "title": "Code: seed bounded sprint defaults in `ph init` validation_rules.json",
+      "status": "todo",
+      "depends_on": [
+        "I04-BND-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Ensure `ph init` seeds `.project-handbook/process/checks/validation_rules.json` with `sprint_management.mode = \"bounded\"` so the default is explicit.\n\nFiles likely to change:\n- src/ph/init_repo.py\n\nBehaviors to implement/adjust:\n- Add a `sprint_management` section to `_DEFAULT_VALIDATION_RULES` with at least:\n  - `mode: \"bounded\"`\n  - (optional) any existing bounded defaults already assumed by code (`health_check_thresholds`, `sprint_duration_days`) if they should live in validation_rules.json.\n- Preserve non-destructive behavior: existing validation_rules.json is not overwritten.\n\nVerification steps:\n- Unit/integration: run init in a temp dir and inspect generated JSON.\n- `uv run pytest -q` (targeted tests if added).\n\nAcceptance criteria:\n- Fresh `ph init` repo includes `sprint_management.mode` set to `bounded` in validation_rules.json.\n- No behavior changes for repos that already have explicit sprint_management config.\n",
+      "workstream_id": "WS-I04"
+    },
+    {
+      "id": "I04-BND-0020",
+      "phase_id": "PHASE-I04",
+      "order": 30,
+      "title": "Code: make `ph sprint plan` default to bounded when sprint config is missing",
+      "status": "todo",
+      "depends_on": [
+        "I04-BND-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Make `ph sprint plan` produce bounded plans when `validation_rules.json` exists but omits `sprint_management` (defensive fallback).\n\nFiles likely to change:\n- src/ph/sprint.py\n\nBehaviors to implement/adjust:\n- In `create_sprint_plan_template`, treat missing/empty `sprint_management.mode` as `bounded` (not `timeboxed`).\n- Keep validation: if mode is set but invalid, fall back to bounded (and optionally warn in output).\n- Ensure timeboxed mode still works when explicitly configured.\n\nVerification steps:\n- Create a repo with validation_rules.json missing `sprint_management` and run `ph sprint plan`; verify `mode: bounded` and no `start/end` fields.\n- Create a repo with `sprint_management.mode=timeboxed`; verify `start/end` are present.\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- Missing sprint_management results in bounded mode plans.\n- Explicit timeboxed config generates timeboxed plans.\n",
+      "workstream_id": "WS-I04"
+    },
+    {
+      "id": "I04-BND-0030",
+      "phase_id": "PHASE-I04",
+      "order": 40,
+      "title": "Tests: bounded default sprint plan behavior (init + sprint plan)",
+      "status": "todo",
+      "depends_on": [
+        "I04-BND-0010",
+        "I04-BND-0020"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Add test coverage so bounded default behavior does not regress.\n\nFiles likely to change:\n- tests/ (new or existing sprint/init tests)\n\nBehaviors to implement/adjust:\n- Test that a fresh `ph init` repo produces bounded plans by default.\n- Test that a repo with validation_rules.json present but missing `sprint_management` still produces bounded plans.\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- Tests fail on old behavior and pass on new behavior.\n",
+      "workstream_id": "WS-I04"
+    },
+    {
+      "id": "I04-BND-0040",
+      "phase_id": "PHASE-I04",
+      "order": 50,
+      "title": "Tests: timeboxed sprint plans are opt-in and include start/end",
+      "status": "todo",
+      "depends_on": [
+        "I04-BND-0020"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Preserve timeboxed mode as an explicit opt-in.\n\nFiles likely to change:\n- tests/ (sprint plan tests)\n\nBehaviors to implement/adjust:\n- Add a test repo config that sets `sprint_management.mode = timeboxed`.\n- Assert that generated sprint plan includes `mode: timeboxed` and `start:` / `end:`.\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- Timeboxed only occurs when explicitly configured.\n",
+      "workstream_id": "WS-I04"
+    },
+    {
+      "id": "I05-DRWF-0001",
+      "phase_id": "PHASE-I05",
+      "order": 10,
+      "title": "Contract: enforce DR-first workflow and define DR\u2194ADR/FDR linking invariants",
+      "status": "todo",
+      "depends_on": [
+        "INIT-PLN-0002"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Feature brief (BL-0005): Discovery is captured in Decision Register (DR) entries, which are then promoted into ADRs (cross-cutting) or FDRs (feature-scoped). Enforce that discovery tasks reference DRs, execution tasks reference ADR/FDR, and ADR/FDR must link back to DR(s).\n\nGoal:\n- Document the strict workflow invariants and the CLI command surface changes needed to support them.\n\nFiles likely to change:\n- cli_plan/v1_cli/CLI_CONTRACT.md\n- cli_plan/ph_spec/ph/decision-register/contract.md\n- cli_plan/ph_spec/ph/adr/contract.md\n- cli_plan/ph_spec/ph/features/contract.md\n\nOutputs (must be explicit after this task):\n- Exact CLI synopses (copy/paste-ready) for:\n  - `ph dr add ...`\n  - `ph adr add ... --dr DR-#### ...`\n  - `ph fdr add ... --dr DR-#### ...`\n- Exact DR backlink rule for ADR/FDR docs:\n  - which front matter field holds backlinks (recommend `links:`)\n  - required backlink format (MUST be a repo-relative path to a DR markdown file, not just an id)\n- Exact DR existence rule for validation:\n  - searched directories (project-level vs feature-level)\n  - how `feature:` in task.yaml affects DR lookup\n- Exact FDR conventions:\n  - required front matter keys (at minimum `id`, `type`, `date`, and backlink field)\n  - allowed `id` shapes (must start with `FDR-`)\n  - file path where FDRs live\n\nBehaviors to implement/adjust (contract/spec):\n- Discovery tasks (`session=research-discovery`) MUST use `decision: DR-XXXX`.\n- Execution tasks (`session=task-execution`) MUST use `decision: ADR-XXXX` or `decision: FDR-...`.\n- DR existence rule: referenced DR ids must have a corresponding DR doc in project-level or feature-level decision-register.\n- Backlink rule: ADR/FDR front matter MUST include at least one DR backlink as defined above.\n- Command surface:\n  - Add `ph dr add` (DR scaffolding).\n  - Update `ph adr add` to require `--dr DR-####` and write the DR backlink.\n  - Add `ph fdr add` to require `--dr DR-####` and write the DR backlink.\n\nVerification steps:\n- Doc review for consistency across contracts.\n\nAcceptance criteria:\n- CLI_CONTRACT.md + spec contracts include the explicit synopses and exact backlink/existence rules (no placeholder language).\n- The DR backlink rule is deterministic (a concrete path pattern) and implementable in lint/validate.\n",
+      "workstream_id": "WS-I05"
+    },
+    {
+      "id": "I05-DRWF-0010",
+      "phase_id": "PHASE-I05",
+      "order": 20,
+      "title": "Code: enforce session\u2194decision semantics (research-discovery uses DR; task-execution uses ADR/FDR)",
+      "status": "todo",
+      "depends_on": [
+        "I05-DRWF-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Enforce strict decision id semantics in lint/validate.\n\nFiles likely to change:\n- src/ph/pre_exec.py\n- src/ph/validate_docs.py\n- tests/\n\nBehaviors to implement/adjust:\n- `ph pre-exec lint` fails if:\n  - `session: research-discovery` task uses `ADR-`/`FDR-` decision ids (must be `DR-XXXX`).\n  - `session: task-execution` task uses a `DR-` decision id (must be `ADR-` or `FDR-`).\n- Error messages are actionable (include expected vs found).\n\nVerification steps:\n- `uv run pytest -q` (targeted tests).\n\nAcceptance criteria:\n- Lint/validate behavior matches the contract rules and has test coverage.\n",
+      "workstream_id": "WS-I05"
+    },
+    {
+      "id": "I05-DRWF-0020",
+      "phase_id": "PHASE-I05",
+      "order": 30,
+      "title": "Code: validate DR existence + ADR/FDR backlinks to DR(s)",
+      "status": "todo",
+      "depends_on": [
+        "I05-DRWF-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Add deterministic validation rules so DR-first workflow is enforceable.\n\nFiles likely to change:\n- src/ph/validate_docs.py\n- src/ph/task_create.py (optional: reuse decision resolution helpers)\n- tests/\n\nBehaviors to implement/adjust:\n- When a task references `DR-XXXX`, `ph validate` must confirm a corresponding DR doc exists in:\n  - `.project-handbook/decision-register/` OR\n  - `.project-handbook/features/<feature>/decision-register/`.\n- For ADR and FDR docs, validate that their YAML front matter `links:` includes at least one DR path.\n- Validation errors include:\n  - the missing DR id and the searched directories\n  - the ADR/FDR doc path missing backlinks\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- `ph validate` reports actionable errors for missing DR docs and missing ADR/FDR\u2192DR backlinks.\n",
+      "workstream_id": "WS-I05"
+    },
+    {
+      "id": "I05-DRWF-0030",
+      "phase_id": "PHASE-I05",
+      "order": 40,
+      "title": "Code: add `ph dr add` scaffolding command (project-level or feature-scoped)",
+      "status": "todo",
+      "depends_on": [
+        "I05-DRWF-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Introduce `ph dr add` to scaffold a new DR entry.\n\nFiles likely to change:\n- src/ph/cli.py\n- src/ph/dr/add.py (new)\n- tests/\n\nBehaviors to implement/adjust:\n- Command creates `DR-XXXX-<slug>.md` in the correct decision-register folder based on flags (as defined in contract).\n- File includes required front matter and the standard DR body template.\n- CLI refuses to overwrite existing files unless `--force` is provided.\n\nVerification steps:\n- `uv run pytest -q`.\n- Manual: run `ph dr add ...` in a temp handbook root and confirm file path/content.\n\nAcceptance criteria:\n- `ph dr add` produces a DR file that passes `ph validate --quick`.\n",
+      "workstream_id": "WS-I05"
+    },
+    {
+      "id": "I05-DRWF-0040",
+      "phase_id": "PHASE-I05",
+      "order": 50,
+      "title": "Code: require DR reference for `ph adr add` and write backlink into `links:`",
+      "status": "todo",
+      "depends_on": [
+        "I05-DRWF-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Update `ph adr add` to enforce DR-first workflow.\n\nFiles likely to change:\n- src/ph/adr/add.py\n- src/ph/cli.py\n- tests/\n\nInputs/outputs:\n- Input: DR-first contract outputs from I05-DRWF-0001 (explicit CLI synopsis + backlink rule).\n- Output: `ph adr add` requires `--dr DR-####` and writes a DR backlink into the ADR front matter.\n\nBehaviors to implement/adjust:\n- CLI requires `--dr DR-####` (missing flag is an error).\n- CLI validates the referenced DR exists before creating the ADR.\n- ADR front matter backlink field (recommend `links:`) includes the DR markdown path (repo-relative path as specified in I05-DRWF-0001).\n- Do not provide an override mode: missing DR reference is a hard error (this is a strict workflow gate).\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- ADRs created via CLI include the DR backlink and pass `ph validate --quick`.\n- Missing/invalid `--dr` fails with an actionable error message.\n",
+      "workstream_id": "WS-I05"
+    },
+    {
+      "id": "I05-DRWF-0050",
+      "phase_id": "PHASE-I05",
+      "order": 60,
+      "title": "Code: add `ph fdr add` (feature decision record) requiring DR backlink",
+      "status": "todo",
+      "depends_on": [
+        "I05-DRWF-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Introduce `ph fdr add` to create feature-scoped durable decisions, enforcing DR backlink.\n\nFiles likely to change:\n- src/ph/cli.py\n- src/ph/fdr/add.py (new)\n- src/ph/feature.py (if feature scaffolding needs FDR folder guarantees)\n- tests/\n\nInputs/outputs:\n- Input: FDR conventions + DR backlink rule written by I05-DRWF-0001.\n- Output: `ph fdr add --feature <feature> --id <FDR-...> --title <t> --dr DR-####` creates a new markdown file under `.project-handbook/features/<feature>/fdr/` with required front matter and DR backlink.\n\nBehaviors to implement/adjust:\n- CLI requires:\n  - `--feature <feature>`\n  - `--id <FDR-...>` (must start with `FDR-`)\n  - `--title <t>`\n  - `--dr DR-####`\n- CLI validates the referenced DR exists before creating the FDR.\n- FDR front matter includes:\n  - `id: <FDR-...>`\n  - `type: <exact type from contract>`\n  - `date: YYYY-MM-DD`\n  - backlink field (recommend `links:`) that includes the DR markdown path.\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- `ph fdr add` produces an FDR doc that passes `ph validate --quick`.\n- Missing/invalid inputs fail with actionable errors (including missing DR).\n",
+      "workstream_id": "WS-I05"
+    },
+    {
+      "id": "I05-DRWF-0060",
+      "phase_id": "PHASE-I05",
+      "order": 70,
+      "title": "Tests: DR-first workflow enforcement (lint + validate + dr/adr/fdr add)",
+      "status": "todo",
+      "depends_on": [
+        "I05-DRWF-0010",
+        "I05-DRWF-0020",
+        "I05-DRWF-0030",
+        "I05-DRWF-0040",
+        "I05-DRWF-0050"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Ensure DR-first workflow is test-backed and stable.\n\nFiles likely to change:\n- tests/\n\nBehaviors to implement/adjust:\n- Add tests for:\n  - pre-exec lint session\u2194decision enforcement\n  - validate DR existence checks\n  - validate ADR/FDR backlink requirements\n  - `ph dr add`, `ph adr add --dr ...`, `ph fdr add --dr ...`\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- Tests cover positive and negative paths with actionable assertions.\n",
+      "workstream_id": "WS-I05"
+    },
+    {
+      "id": "I06-RLSLOT-0001",
+      "phase_id": "PHASE-I06",
+      "order": 10,
+      "title": "Contract: release plans must include per-slot goal/enablement + gate intentions; sprints must link explicitly",
+      "status": "todo",
+      "depends_on": [
+        "INIT-PLN-0002"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Feature brief (BL-0006): Release plans must define the goal of each sprint slot and how it enables/moves the release forward; sprint plans should pull these slot goals forward; validation/status should surface misalignment.\n\nGoal:\n- Define the required release plan slot section format and the required sprint plan alignment structure so validation can be deterministic.\n\nFiles likely to change:\n- cli_plan/v1_cli/CLI_CONTRACT.md\n- cli_plan/ph_spec/ph/releases/contract.md\n- cli_plan/ph_spec/ph/sprints/contract.md\n\nOutputs (must be explicit after this task):\n- Release plan slot section structure (exact headings/markers), for example:\n  - `## Slot <n>: <label>`\n  - `### Slot Goal`\n  - `### Enablement`\n  - `### Scope Boundaries` (with `In scope:` / `Out of scope:`)\n  - `### Intended Gates` (MUST contain at least one list item that starts with `- Gate:`)\n- Sprint plan alignment section structure (exact headings/markers), for example:\n  - `## Release Alignment (Slot <n>)`\n  - `Slot goal: ...`\n  - `Enablement: ...`\n  - `Intended gates:` list\n\nBehaviors to implement/adjust (contract/spec):\n- Release plans MUST include a slot section for each slot in the release timeline, using the exact structure above.\n- Sprint plans (when `release` is active and `release_sprint_slot` is set) MUST include the sprint alignment section above.\n- Validation MUST be able to detect missing/malformed sections deterministically by looking for those headings/markers.\n\nVerification steps:\n- Doc review + consistency scan.\n\nAcceptance criteria:\n- Contracts include the exact headings/markers for release slots and sprint alignment (no placeholders).\n",
+      "workstream_id": "WS-I06"
+    },
+    {
+      "id": "I06-RLSLOT-0010",
+      "phase_id": "PHASE-I06",
+      "order": 20,
+      "title": "Code: extend `ph release plan` scaffold with required per-slot sections (goal/enablement/gates)",
+      "status": "todo",
+      "depends_on": [
+        "I06-RLSLOT-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Update the release plan scaffold to include required section skeleton per slot.\n\nFiles likely to change:\n- src/ph/release.py\n- tests/\n\nBehaviors to implement/adjust:\n- When timeline_mode is sprint_slots, scaffold each slot with a consistent structure:\n  - Slot header\n  - Goal / Purpose\n  - Scope boundaries (in/out)\n  - Intended gate(s)\n  - Enablement (how it advances the release)\n- Preserve non-destructive behavior: do not overwrite existing plan.md.\n\nVerification steps:\n- `uv run pytest -q`.\n- Manual: `ph release plan --version vX.Y.Z --sprints N` and inspect plan.md.\n\nAcceptance criteria:\n- Plan contains required slot sections with placeholders for each slot.\n",
+      "workstream_id": "WS-I06"
+    },
+    {
+      "id": "I06-RLSLOT-0020",
+      "phase_id": "PHASE-I06",
+      "order": 30,
+      "title": "Code: auto-populate sprint plan goal + release alignment from active release slot",
+      "status": "todo",
+      "depends_on": [
+        "I06-RLSLOT-0001",
+        "I06-RLSLOT-0010"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: When a release is active and a sprint slot is assigned, `ph sprint plan` pulls slot goal/enablement into the sprint plan scaffold.\n\nFiles likely to change:\n- src/ph/sprint.py\n- src/ph/release.py (helpers to parse slot sections)\n- tests/\n\nInputs/outputs:\n- Input: Release plan has per-slot sections with exact headings/markers defined by I06-RLSLOT-0001.\n- Output: Sprint plan contains `## Release Alignment (Slot <n>)` with:\n  - `Slot goal: <text>`\n  - `Enablement: <text>`\n  - `Intended gates:` list copied from the release plan slot.\n\nBehaviors to implement/adjust:\n- Parse the active release plan and extract the assigned slot's `Slot Goal`, `Enablement`, and `Intended Gates` content.\n- Populate the sprint plan section `## Release Alignment (Slot <n>)` at scaffold time.\n- Keep human authorship: do not rewrite existing plan bodies; only scaffold at creation time unless `--force`.\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- New sprint plans include slot-derived goal/enablement and intended gate list when a release is active.\n",
+      "workstream_id": "WS-I06"
+    },
+    {
+      "id": "I06-RLSLOT-0030",
+      "phase_id": "PHASE-I06",
+      "order": 40,
+      "title": "Code: surface slot goals and slot alignment in `ph release status` / `ph release progress`",
+      "status": "todo",
+      "depends_on": [
+        "I06-RLSLOT-0001",
+        "I06-RLSLOT-0010"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Make release status outputs show slot goals/current slot and detect mismatches.\n\nFiles likely to change:\n- src/ph/release.py\n- tests/\n\nBehaviors to implement/adjust:\n- Display per-slot goal summaries and highlight the current slot.\n- Warn when the active sprint is missing/mismatched `release_sprint_slot` or missing required alignment markers.\n\nVerification steps:\n- `uv run pytest -q` (targeted tests).\n\nAcceptance criteria:\n- `ph release status` / `ph release progress` show slot goal context and warnings for misalignment.\n",
+      "workstream_id": "WS-I06"
+    },
+    {
+      "id": "I06-RLSLOT-0040",
+      "phase_id": "PHASE-I06",
+      "order": 50,
+      "title": "Code: validate release slot sections + sprint alignment markers",
+      "status": "todo",
+      "depends_on": [
+        "I06-RLSLOT-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Add validation to enforce release\u2192sprint alignment.\n\nFiles likely to change:\n- src/ph/validate_docs.py\n- tests/\n\nInputs/outputs:\n- Input: Deterministic headings/markers defined by I06-RLSLOT-0001.\n- Output: Validation errors that point to the missing section/marker.\n\nBehaviors to implement/adjust:\n- Validate release plan includes a `## Slot <n>:` section for each slot.\n- Validate each slot has a `### Intended Gates` subsection that contains at least one list item starting with `- Gate:`.\n- Validate that a sprint assigned to a slot contains a `## Release Alignment (Slot <n>)` section.\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- `ph validate` reports actionable errors when slot sections/markers are missing or malformed.\n",
+      "workstream_id": "WS-I06"
+    },
+    {
+      "id": "I06-RLSLOT-0050",
+      "phase_id": "PHASE-I06",
+      "order": 60,
+      "title": "Tests: release slot scaffolding, sprint auto-population, and alignment validation",
+      "status": "todo",
+      "depends_on": [
+        "I06-RLSLOT-0010",
+        "I06-RLSLOT-0020",
+        "I06-RLSLOT-0030",
+        "I06-RLSLOT-0040"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Lock in BL-0006 behavior with focused tests.\n\nFiles likely to change:\n- tests/\n\nBehaviors to implement/adjust:\n- Cover:\n  - release plan slot section scaffold\n  - sprint plan auto-population from slot\n  - validation errors for missing slot sections/markers\n  - status warnings for misalignment\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- Tests cover both happy path and common misconfigurations.\n",
+      "workstream_id": "WS-I06"
+    },
+    {
+      "id": "I07-TTYPE-0001",
+      "phase_id": "PHASE-I07",
+      "order": 10,
+      "title": "Contract: define `task_type` taxonomy and session mapping (backwards compatible)",
+      "status": "todo",
+      "depends_on": [
+        "INIT-PLN-0002"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Feature brief (BL-0007): Introduce explicit task types tied to onboarding session templates. Add at least: `sprint-gate`, `feature-research-planning`, `task-docs-deep-dive`.\n\nGoal:\n- Define allowed task types, defaults for legacy tasks, and deterministic mapping to sessions + lint/validate rules.\n\nFiles likely to change:\n- cli_plan/v1_cli/CLI_CONTRACT.md\n- cli_plan/ph_spec/ph/sprints/contract.md\n\nOutputs (must be explicit after this task):\n- Allowed `task_type` values (explicit list) and default when missing.\n- Allowed `session` values (explicit list) and a mapping table:\n  - `task_type` \u2192 `session` (or allowed set)\n- Deterministic per-type lint/validate rules expressed as concrete requirements, not vague adjectives. For example:\n  - sprint-gate tasks MUST include the literal `Sprint Goal:` in `validation.md` and MUST mention `secret-scan.txt`.\n  - task-docs-deep-dive tasks MUST NOT contain words: `implement`, `refactor`, `deploy`, `ship` (case-insensitive) in `steps.md` and `validation.md`.\n  - feature-research-planning tasks MUST contain headings `## Contract updates` and `## Execution tasks to create` in `steps.md`.\n\nBehaviors to implement/adjust (contract/spec):\n- Add `task_type: <string>` to task.yaml schema with allowed values.\n- Define default when `task_type` is missing.\n- Define mapping from `task_type` \u2192 required/allowed `session` value(s).\n- Define deterministic doc expectations per type (exact required strings/headings and forbidden tokens/phrases).\n\nVerification steps:\n- Doc review.\n\nAcceptance criteria:\n- Contract/spec include the explicit lists and mapping table, plus deterministic per-type lint rules that can be implemented as string/heading checks.\n",
+      "workstream_id": "WS-I07"
+    },
+    {
+      "id": "I07-TTYPE-0010",
+      "phase_id": "PHASE-I07",
+      "order": 20,
+      "title": "Code: seed new onboarding session templates in `ph init`",
+      "status": "todo",
+      "depends_on": [
+        "I07-TTYPE-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Seed session templates required by new task types.\n\nFiles likely to change:\n- src/ph/init_repo.py\n- src/ph/onboarding.py (if onboarding session listing needs updates)\n- tests/\n\nBehaviors to implement/adjust:\n- Add templates under `.project-handbook/process/sessions/templates/`:\n  - `research-planning.md`\n  - `task-docs-deep-dive.md`\n- Ensure `ph onboarding session list` includes them (if the list is driven by a known allowlist).\n\nVerification steps:\n- `uv run pytest -q`.\n- Manual: run `ph init` and confirm templates exist.\n\nAcceptance criteria:\n- Fresh init includes the new templates and `ph onboarding session list` shows them.\n",
+      "workstream_id": "WS-I07"
+    },
+    {
+      "id": "I07-TTYPE-0020",
+      "phase_id": "PHASE-I07",
+      "order": 30,
+      "title": "Code: add `task_type` to task.yaml and `ph task create --type <task_type>`",
+      "status": "todo",
+      "depends_on": [
+        "I07-TTYPE-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Implement task type scaffolding while preserving backwards compatibility.\n\nFiles likely to change:\n- src/ph/cli.py\n- src/ph/task_create.py\n- tests/\n\nBehaviors to implement/adjust:\n- Add CLI flag: `ph task create --type <task_type>`.\n- Write `task_type: <task_type>` into task.yaml.\n- Apply sensible defaults based on type:\n  - set/override `session` default when type implies a session template\n  - set recommended lane prefix when applicable\n  - scaffold acceptance/validation language appropriate for type\n- Keep compatibility:\n  - existing usage with `--session` still works\n  - missing task_type is treated as the default type\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- Creating tasks with each new type produces task.yaml that passes `ph validate --quick`.\n",
+      "workstream_id": "WS-I07"
+    },
+    {
+      "id": "I07-TTYPE-0030",
+      "phase_id": "PHASE-I07",
+      "order": 40,
+      "title": "Code: validate task_type/session consistency in `ph validate`",
+      "status": "todo",
+      "depends_on": [
+        "I07-TTYPE-0001",
+        "I07-TTYPE-0020"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Enforce task_type semantics in validation.\n\nFiles likely to change:\n- src/ph/validate_docs.py\n- tests/\n\nInputs/outputs:\n- Input: Explicit task_type list + session mapping table written by I07-TTYPE-0001.\n- Output: Deterministic validation errors that cite the expected vs found values.\n\nBehaviors to implement/adjust:\n- Validate allowed `task_type` values when present.\n- Enforce `task_type`\u2192`session` mapping rules from I07-TTYPE-0001.\n- Treat missing task_type as default type (backwards compatible).\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- Validation flags mismatches with actionable errors and keeps legacy tasks valid.\n",
+      "workstream_id": "WS-I07"
+    },
+    {
+      "id": "I07-TTYPE-0040",
+      "phase_id": "PHASE-I07",
+      "order": 50,
+      "title": "Code: make `ph pre-exec lint` task-type aware (expanded sessions + type-specific lint rules)",
+      "status": "todo",
+      "depends_on": [
+        "I07-TTYPE-0001",
+        "I07-TTYPE-0020"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Update pre-exec lint so it supports new session values and type-specific rules.\n\nFiles likely to change:\n- src/ph/pre_exec.py\n- tests/\n\nInputs/outputs:\n- Input: Explicit allowed sessions + task_type mapping table + deterministic per-type lint rules written by I07-TTYPE-0001.\n- Output: Pre-exec lint accepts the new session values and enforces the per-type rules deterministically.\n\nBehaviors to implement/adjust:\n- Accept additional session values listed in I07-TTYPE-0001.\n- Enforce session mapping rules for task_type.\n- Enforce deterministic per-type lint rules from I07-TTYPE-0001 (required headings/strings and forbidden tokens).\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- Lint enforces the mapping and per-type rules without breaking existing tasks.\n",
+      "workstream_id": "WS-I07"
+    },
+    {
+      "id": "I07-TTYPE-0050",
+      "phase_id": "PHASE-I07",
+      "order": 60,
+      "title": "Tests: `ph task create --type` + init template seeding + lint/validate mapping",
+      "status": "todo",
+      "depends_on": [
+        "I07-TTYPE-0010",
+        "I07-TTYPE-0020",
+        "I07-TTYPE-0030",
+        "I07-TTYPE-0040"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Ensure BL-0007 behaviors are stable and regression-proof.\n\nFiles likely to change:\n- tests/\n\nBehaviors to implement/adjust:\n- Add tests for:\n  - init seeding of new session templates\n  - task create writes task_type and correct session defaults\n  - validate catches mismatched task_type/session\n  - pre-exec lint type-specific rules\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- Tests cover each new type and legacy behavior.\n",
+      "workstream_id": "WS-I07"
+    },
+    {
+      "id": "I08-GATE-0001",
+      "phase_id": "PHASE-I08",
+      "order": 10,
+      "title": "Contract: define sprint gate requirement and close behavior (including evidence expectations)",
+      "status": "todo",
+      "depends_on": [
+        "I07-TTYPE-0001"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Feature brief (BL-0008): Every sprint must include at least one sprint gate task that validates sprint goals and provides evidence-friendly exit criteria. Sprint close should warn/block when gates are missing or incomplete.\n\nGoal:\n- Define gate semantics (task_type, acceptance criteria requirements, evidence paths, relationship to release gates) and how enforcement works in lint/status/close.\n\nFiles likely to change:\n- cli_plan/v1_cli/CLI_CONTRACT.md\n- cli_plan/ph_spec/ph/sprints/contract.md\n- cli_plan/ph_spec/ph/releases/contract.md\n\nOutputs (must be explicit after this task):\n- Exact definition of a sprint gate task:\n  - `task_type: sprint-gate`\n  - expected `session` value (from I07-TTYPE-0001 mapping table)\n- Deterministic gate-doc requirements that can be implemented as string/heading checks, for example (choose exact rules and write them down):\n  - Gate tasks MUST include the literal `Sprint Goal:` in `validation.md` (or another exact file, but specify which).\n  - Gate tasks MUST mention `secret-scan.txt` (already required by pre-exec lint globally; keep it explicit in gate docs).\n  - Gate tasks MUST reference the sprint plan path `sprints/current/plan.md` (or a relative link) so the goal can be traced.\n- Close semantics:\n  - default: block `ph sprint close` when no sprint-gate tasks exist or when any sprint-gate task is not `done`\n  - if override exists: exact flag name + messaging\n- Release relationship:\n  - how sprint gates relate to `release_gate` tasks when `release` is active\n\nBehaviors to implement/adjust (contract/spec):\n- Sprint must have >=1 task with `task_type: sprint-gate`.\n- Gate tasks must meet the deterministic gate-doc requirements defined above.\n- Define `ph sprint close` behavior per the explicit semantics above.\n\nVerification steps:\n- Doc review for consistency.\n\nAcceptance criteria:\n- Contract specifies sprint-gate semantics and gate-doc requirements as concrete markers/strings/headings.\n- Close behavior is explicit (block vs override) and implementable without additional decisions.\n",
+      "workstream_id": "WS-I08"
+    },
+    {
+      "id": "I08-GATE-0010",
+      "phase_id": "PHASE-I08",
+      "order": 20,
+      "title": "Code: show gate readiness in `ph sprint status` (list gate tasks + dependency-ready + status)",
+      "status": "todo",
+      "depends_on": [
+        "I08-GATE-0001",
+        "I07-TTYPE-0020"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Make sprint status surface sprint gate tasks and readiness.\n\nFiles likely to change:\n- src/ph/sprint_status.py\n- tests/\n\nBehaviors to implement/adjust:\n- Identify tasks with `task_type: sprint-gate`.\n- Print a dedicated gate section:\n  - gate task id/title\n  - status\n  - dependency-ready boolean\n- When no gates exist, show an explicit warning line.\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- `ph sprint status` clearly shows whether the sprint is gate-ready.\n",
+      "workstream_id": "WS-I08"
+    },
+    {
+      "id": "I08-GATE-0020",
+      "phase_id": "PHASE-I08",
+      "order": 30,
+      "title": "Code: enforce sprint gate presence and gate doc requirements in `ph pre-exec lint`",
+      "status": "todo",
+      "depends_on": [
+        "I08-GATE-0001",
+        "I07-TTYPE-0040"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Add strict sprint gate enforcement in pre-exec lint.\n\nFiles likely to change:\n- src/ph/pre_exec.py\n- tests/\n\nBehaviors to implement/adjust:\n- Fail lint if current sprint has no `task_type: sprint-gate` tasks.\n- For each sprint-gate task, fail lint if required gate statements are missing:\n  - explicit reference to sprint goal(s)\n  - explicit evidence artifacts, including `secret-scan.txt`\n- Error messages must be actionable (which task, which file, what is missing).\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- Lint fails on missing gates and passes when gate tasks meet requirements.\n",
+      "workstream_id": "WS-I08"
+    },
+    {
+      "id": "I08-GATE-0030",
+      "phase_id": "PHASE-I08",
+      "order": 40,
+      "title": "Code: block `ph sprint close` when sprint gates are missing or incomplete",
+      "status": "todo",
+      "depends_on": [
+        "I08-GATE-0001",
+        "I07-TTYPE-0020"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Prevent silent sprint closure without completing sprint gates.\n\nFiles likely to change:\n- src/ph/sprint_close.py\n- tests/\n\nBehaviors to implement/adjust:\n- Before archiving/closing, detect gate tasks (`task_type: sprint-gate`) in the sprint.\n- Block close if:\n  - no gate tasks exist, OR\n  - any gate task is not `done`.\n- If an override is allowed, implement it explicitly and document it (flag name + messaging).\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- Sprint close refuses to proceed when gates are missing/incomplete (unless explicit override is used and documented).\n",
+      "workstream_id": "WS-I08"
+    },
+    {
+      "id": "I08-GATE-0040",
+      "phase_id": "PHASE-I08",
+      "order": 50,
+      "title": "Code: validate sprint gate semantics in `ph validate` (gate tasks + required markers)",
+      "status": "todo",
+      "depends_on": [
+        "I08-GATE-0001",
+        "I07-TTYPE-0030"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Ensure sprint gate requirements are enforceable outside of pre-exec lint.\n\nFiles likely to change:\n- src/ph/validate_docs.py\n- tests/\n\nInputs/outputs:\n- Input: Sprint gate contract with deterministic gate-doc requirements from I08-GATE-0001.\n- Output: Validation errors that cite the missing gate task(s) or missing required gate-doc markers.\n\nBehaviors to implement/adjust:\n- Validate that each sprint contains at least one sprint-gate task (`task_type: sprint-gate`).\n- Validate that sprint-gate tasks satisfy the deterministic gate-doc requirements from I08-GATE-0001 (exact file + required strings/headings).\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- `ph validate` reports actionable errors for missing gates or missing gate-doc markers.\n",
+      "workstream_id": "WS-I08"
+    },
+    {
+      "id": "I08-GATE-0050",
+      "phase_id": "PHASE-I08",
+      "order": 60,
+      "title": "Tests: sprint gate enforcement across status/lint/close/validate",
+      "status": "todo",
+      "depends_on": [
+        "I08-GATE-0010",
+        "I08-GATE-0020",
+        "I08-GATE-0030",
+        "I08-GATE-0040"
+      ],
+      "work_location": "cli_repo",
+      "kickoff_prompt": "Goal: Test the full sprint gate enforcement story.\n\nFiles likely to change:\n- tests/\n\nInputs/outputs:\n- Input: Deterministic gate-doc requirements defined by I08-GATE-0001.\n- Output: Tests that fail with actionable assertions when requirements are violated.\n\nBehaviors to implement/adjust:\n- Cover:\n  - sprint status gate section\n  - pre-exec lint failure when no sprint-gate tasks exist\n  - lint failure when sprint-gate docs are missing the required gate-doc markers\n  - sprint close blocking when sprint-gate tasks are incomplete\n  - validate errors for gate requirements\n\nVerification steps:\n- `uv run pytest -q`.\n\nAcceptance criteria:\n- Tests cover positive and negative paths; failures are actionable.\n",
+      "workstream_id": "WS-I08"
+    }
+  ]
+}
