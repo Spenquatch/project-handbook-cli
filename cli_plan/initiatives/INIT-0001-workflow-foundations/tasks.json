@@ -168,13 +168,14 @@
       "phase_id": "PHASE-I04",
       "order": 10,
       "title": "Contract: bounded planning is the v1 default sprint model (timeboxed is opt-in)",
-      "status": "todo",
+      "status": "in_progress",
       "depends_on": [
         "INIT-PLN-0002"
       ],
       "work_location": "cli_repo",
       "kickoff_prompt": "Feature brief (BL-0004): New repos should default to bounded sprint planning (ADR-0013), and `ph sprint plan` should produce bounded plans unless the repo explicitly opts into timeboxed mode.\n\nAssumptions:\n- Bounded mode is the safe default for v1.\n- Timeboxed mode remains supported but requires explicit configuration.\n\nGoal:\n- Update contract/spec docs so defaults and override semantics are unambiguous.\n\nFiles likely to change:\n- cli_plan/v1_cli/CLI_CONTRACT.md\n- cli_plan/ph_spec/ph/sprints/contract.md\n- cli_plan/ph_spec/ph/sprints/examples/** (if examples are used as executable references)\n\nBehaviors to implement/adjust:\n- Document that v1 default is `sprint_management.mode = bounded`.\n- Document opt-in for timeboxed (exact config keys and allowed values).\n- Document defensive fallback behavior when `validation_rules.json` exists but omits `sprint_management`.\n\nVerification steps:\n- Doc review for internal consistency.\n- Grep: `rg -n \"sprint_management\\.mode|bounded|timeboxed\" cli_plan/v1_cli/CLI_CONTRACT.md cli_plan/ph_spec/ph/sprints/contract.md`.\n\nAcceptance criteria:\n- Contract text clearly states the default and the opt-in override (no ambiguity).\n- Spec describes the exact config key and allowed values.\n",
-      "workstream_id": "WS-I04"
+      "workstream_id": "WS-I04",
+      "started_at": "2026-02-09T16:47:57Z"
     },
     {
       "id": "I04-BND-0010",
@@ -234,13 +235,14 @@
       "phase_id": "PHASE-I05",
       "order": 10,
       "title": "Contract: enforce DR-first workflow and define DR\u2194ADR/FDR linking invariants",
-      "status": "todo",
+      "status": "in_progress",
       "depends_on": [
         "INIT-PLN-0002"
       ],
       "work_location": "cli_repo",
       "kickoff_prompt": "Feature brief (BL-0005): Discovery is captured in Decision Register (DR) entries, which are then promoted into ADRs (cross-cutting) or FDRs (feature-scoped). Enforce that discovery tasks reference DRs, execution tasks reference ADR/FDR, and ADR/FDR must link back to DR(s).\n\nGoal:\n- Document the strict workflow invariants and the CLI command surface changes needed to support them.\n\nFiles likely to change:\n- cli_plan/v1_cli/CLI_CONTRACT.md\n- cli_plan/ph_spec/ph/decision-register/contract.md\n- cli_plan/ph_spec/ph/adr/contract.md\n- cli_plan/ph_spec/ph/features/contract.md\n\nOutputs (must be explicit after this task):\n- Exact CLI synopses (copy/paste-ready) for:\n  - `ph dr add ...`\n  - `ph adr add ... --dr DR-#### ...`\n  - `ph fdr add ... --dr DR-#### ...`\n- Exact DR backlink rule for ADR/FDR docs:\n  - which front matter field holds backlinks (recommend `links:`)\n  - required backlink format (MUST be a repo-relative path to a DR markdown file, not just an id)\n- Exact DR existence rule for validation:\n  - searched directories (project-level vs feature-level)\n  - how `feature:` in task.yaml affects DR lookup\n- Exact FDR conventions:\n  - required front matter keys (at minimum `id`, `type`, `date`, and backlink field)\n  - allowed `id` shapes (must start with `FDR-`)\n  - file path where FDRs live\n\nBehaviors to implement/adjust (contract/spec):\n- Discovery tasks (`session=research-discovery`) MUST use `decision: DR-XXXX`.\n- Execution tasks (`session=task-execution`) MUST use `decision: ADR-XXXX` or `decision: FDR-...`.\n- DR existence rule: referenced DR ids must have a corresponding DR doc in project-level or feature-level decision-register.\n- Backlink rule: ADR/FDR front matter MUST include at least one DR backlink as defined above.\n- Command surface:\n  - Add `ph dr add` (DR scaffolding).\n  - Update `ph adr add` to require `--dr DR-####` and write the DR backlink.\n  - Add `ph fdr add` to require `--dr DR-####` and write the DR backlink.\n\nVerification steps:\n- Doc review for consistency across contracts.\n\nAcceptance criteria:\n- CLI_CONTRACT.md + spec contracts include the explicit synopses and exact backlink/existence rules (no placeholder language).\n- The DR backlink rule is deterministic (a concrete path pattern) and implementable in lint/validate.\n",
-      "workstream_id": "WS-I05"
+      "workstream_id": "WS-I05",
+      "started_at": "2026-02-09T16:47:57Z"
     },
     {
       "id": "I05-DRWF-0010",
@@ -329,13 +331,14 @@
       "phase_id": "PHASE-I06",
       "order": 10,
       "title": "Contract: release plans must include per-slot goal/enablement + gate intentions; sprints must link explicitly",
-      "status": "todo",
+      "status": "in_progress",
       "depends_on": [
         "INIT-PLN-0002"
       ],
       "work_location": "cli_repo",
       "kickoff_prompt": "Feature brief (BL-0006): Release plans must define the goal of each sprint slot and how it enables/moves the release forward; sprint plans should pull these slot goals forward; validation/status should surface misalignment.\n\nGoal:\n- Define the required release plan slot section format and the required sprint plan alignment structure so validation can be deterministic.\n\nFiles likely to change:\n- cli_plan/v1_cli/CLI_CONTRACT.md\n- cli_plan/ph_spec/ph/releases/contract.md\n- cli_plan/ph_spec/ph/sprints/contract.md\n\nOutputs (must be explicit after this task):\n- Release plan slot section structure (exact headings/markers), for example:\n  - `## Slot <n>: <label>`\n  - `### Slot Goal`\n  - `### Enablement`\n  - `### Scope Boundaries` (with `In scope:` / `Out of scope:`)\n  - `### Intended Gates` (MUST contain at least one list item that starts with `- Gate:`)\n- Sprint plan alignment section structure (exact headings/markers), for example:\n  - `## Release Alignment (Slot <n>)`\n  - `Slot goal: ...`\n  - `Enablement: ...`\n  - `Intended gates:` list\n\nBehaviors to implement/adjust (contract/spec):\n- Release plans MUST include a slot section for each slot in the release timeline, using the exact structure above.\n- Sprint plans (when `release` is active and `release_sprint_slot` is set) MUST include the sprint alignment section above.\n- Validation MUST be able to detect missing/malformed sections deterministically by looking for those headings/markers.\n\nVerification steps:\n- Doc review + consistency scan.\n\nAcceptance criteria:\n- Contracts include the exact headings/markers for release slots and sprint alignment (no placeholders).\n",
-      "workstream_id": "WS-I06"
+      "workstream_id": "WS-I06",
+      "started_at": "2026-02-09T16:47:57Z"
     },
     {
       "id": "I06-RLSLOT-0010",
@@ -412,13 +415,14 @@
       "phase_id": "PHASE-I07",
       "order": 10,
       "title": "Contract: define `task_type` taxonomy and session mapping (backwards compatible)",
-      "status": "todo",
+      "status": "in_progress",
       "depends_on": [
         "INIT-PLN-0002"
       ],
       "work_location": "cli_repo",
       "kickoff_prompt": "Feature brief (BL-0007): Introduce explicit task types tied to onboarding session templates. Add at least: `sprint-gate`, `feature-research-planning`, `task-docs-deep-dive`.\n\nGoal:\n- Define allowed task types, defaults for legacy tasks, and deterministic mapping to sessions + lint/validate rules.\n\nFiles likely to change:\n- cli_plan/v1_cli/CLI_CONTRACT.md\n- cli_plan/ph_spec/ph/sprints/contract.md\n\nOutputs (must be explicit after this task):\n- Allowed `task_type` values (explicit list) and default when missing.\n- Allowed `session` values (explicit list) and a mapping table:\n  - `task_type` \u2192 `session` (or allowed set)\n- Deterministic per-type lint/validate rules expressed as concrete requirements, not vague adjectives. For example:\n  - sprint-gate tasks MUST include the literal `Sprint Goal:` in `validation.md` and MUST mention `secret-scan.txt`.\n  - task-docs-deep-dive tasks MUST NOT contain words: `implement`, `refactor`, `deploy`, `ship` (case-insensitive) in `steps.md` and `validation.md`.\n  - feature-research-planning tasks MUST contain headings `## Contract updates` and `## Execution tasks to create` in `steps.md`.\n\nBehaviors to implement/adjust (contract/spec):\n- Add `task_type: <string>` to task.yaml schema with allowed values.\n- Define default when `task_type` is missing.\n- Define mapping from `task_type` \u2192 required/allowed `session` value(s).\n- Define deterministic doc expectations per type (exact required strings/headings and forbidden tokens/phrases).\n\nVerification steps:\n- Doc review.\n\nAcceptance criteria:\n- Contract/spec include the explicit lists and mapping table, plus deterministic per-type lint rules that can be implemented as string/heading checks.\n",
-      "workstream_id": "WS-I07"
+      "workstream_id": "WS-I07",
+      "started_at": "2026-02-09T16:47:57Z"
     },
     {
       "id": "I07-TTYPE-0010",
