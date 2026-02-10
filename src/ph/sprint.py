@@ -8,7 +8,13 @@ from typing import Any
 
 from .clock import now as clock_now
 from .clock import today as clock_today
-from .release import get_current_release, load_release_features, parse_plan_front_matter
+from .release import (
+    get_current_release,
+    get_release_timeline_info,
+    load_release_features,
+    parse_plan_front_matter,
+    parse_release_plan_slot_alignment,
+)
 
 
 def load_sprint_config(*, ph_project_root: Path) -> dict[str, Any]:
@@ -147,8 +153,11 @@ def update_current_symlink(*, ph_data_root: Path, sprint_id: str) -> None:
 
 
 def _get_release_timeline_info(*, ph_project_root: Path, version: str) -> dict[str, object]:
-    plan_path = ph_project_root / "releases" / version / "plan.md"
-    return parse_plan_front_matter(plan_path=plan_path)
+    try:
+        return get_release_timeline_info(ph_root=ph_project_root, version=version)
+    except Exception:
+        plan_path = ph_project_root / "releases" / version / "plan.md"
+        return parse_plan_front_matter(plan_path=plan_path)
 
 
 def _get_current_release_context(*, ph_project_root: Path) -> dict[str, object]:
@@ -164,9 +173,18 @@ def create_sprint_plan_template(
     *, ph_project_root: Path, ph_data_root: Path, scope: str, sprint_id: str, env: dict[str, str]
 ) -> str:
     config = load_sprint_config(ph_project_root=ph_project_root)
-    mode = (config.get("sprint_management", {}).get("mode") or "timeboxed").strip().lower()
-    if mode not in {"bounded", "timeboxed"}:
-        mode = "timeboxed"
+    sprint_management = config.get("sprint_management")
+    sprint_management_dict = sprint_management if isinstance(sprint_management, dict) else {}
+    raw_mode = sprint_management_dict.get("mode")
+
+    # Defensive fallback: when validation_rules.json exists but omits sprint_management (or mode),
+    # default sprint planning to bounded (not timeboxed).
+    if raw_mode is None or (isinstance(raw_mode, str) and not raw_mode.strip()):
+        mode = "bounded"
+    else:
+        mode = str(raw_mode).strip().lower()
+        if mode not in {"bounded", "timeboxed"}:
+            mode = "bounded"
 
     release_context: dict[str, object] = {}
     if scope != "system":
@@ -180,6 +198,8 @@ sprint: {sprint_id}
 mode: {mode}
 tags: [sprint, planning]
 """
+
+    release_slot: int | None = None
 
     # System scope MUST NOT include release context.
     if scope == "system":
@@ -203,6 +223,7 @@ tags: [sprint, planning]
                         next_slot = slot_int
                         break
                 if next_slot is not None:
+                    release_slot = next_slot
                     template += f"release_sprint_slot: {next_slot}\n"
 
     if mode == "timeboxed":
@@ -233,6 +254,30 @@ tags: [sprint, planning]
             critical_note = " (Critical Path)" if feature_dict.get("critical_path") else ""
             template += f"- {feature_name}: {feature_dict.get('type', 'regular')}{critical_note}\n"
         template += "\n"
+
+    slot_alignment_lines: list[str] | None = None
+    release_version_value = str(release_context.get("version") or "").strip()
+    if scope != "system" and release_version_value and release_slot is not None:
+        alignment = parse_release_plan_slot_alignment(
+            plan_path=ph_project_root / "releases" / release_version_value / "plan.md",
+            slot=release_slot,
+        )
+        slot_goal = str(alignment.get("slot_goal") or "").strip() or "TBD"
+        enablement = str(alignment.get("enablement") or "").strip() or "TBD"
+        intended_gates_raw = alignment.get("intended_gates")
+        intended_gates = intended_gates_raw if isinstance(intended_gates_raw, list) else []
+        intended_gates = [str(item).rstrip() for item in intended_gates if str(item).strip()]
+        if not intended_gates:
+            intended_gates = ["- TBD"]
+
+        slot_alignment_lines = [
+            f"## Release Alignment (Slot {release_slot})",
+            f"Slot goal: {slot_goal}",
+            f"Enablement: {enablement}",
+            "Intended gates:",
+            *intended_gates,
+            "",
+        ]
 
     if mode == "bounded":
         if scope == "system":
@@ -286,6 +331,22 @@ tags: [sprint, planning]
             template += "\n".join(bounded_lines) + "\n"
             return template
 
+        release_alignment_lines = (
+            slot_alignment_lines
+            if slot_alignment_lines
+            else [
+                "## Release Alignment (Explicit)",
+                "If you have an active release, it is a *measurement context* — not an automatic scope cap.",
+                "",
+                "| Bucket | Intention | Notes |",
+                "|--------|-----------|-------|",
+                "| Release-critical | Work that must move critical-path features | |",
+                "| Release-support | Work that enables the release but lives outside assigned features | |",
+                "| Non-release | Necessary work that does not serve the active release | |",
+                "",
+            ]
+        )
+
         project_bounded_lines = [
             "## Sprint Model",
             (
@@ -298,15 +359,7 @@ tags: [sprint, planning]
             "2. [ ] Secondary outcome",
             "3. [ ] Integration outcome (if multiple lanes)",
             "",
-            "## Release Alignment (Explicit)",
-            "If you have an active release, it is a *measurement context* — not an automatic scope cap.",
-            "",
-            "| Bucket | Intention | Notes |",
-            "|--------|-----------|-------|",
-            "| Release-critical | Work that must move critical-path features | |",
-            "| Release-support | Work that enables the release but lives outside assigned features | |",
-            "| Non-release | Necessary work that does not serve the active release | |",
-            "",
+            *release_alignment_lines,
             "## Boundaries (Lanes)",
             "Define lanes to maximize parallel execution and minimize cross-lane coupling.",
             "",
@@ -360,12 +413,11 @@ tags: [sprint, planning]
     ]
     if scope != "system" and str(release_context.get("version") or "").strip():
         timeboxed_lines.append("*(Align with release features above)*")
-    timeboxed_lines.extend(
-        [
-            "1. [ ] Primary goal",
-            "2. [ ] Secondary goal",
-            "3. [ ] Stretch goal",
-            "",
+
+    release_alignment_timeboxed_lines = (
+        slot_alignment_lines
+        if slot_alignment_lines
+        else [
             "## Release Alignment (Optional)",
             "| Bucket | Intention | Notes |",
             "|--------|-----------|-------|",
@@ -373,6 +425,15 @@ tags: [sprint, planning]
             "| Release-support | | |",
             "| Non-release | | |",
             "",
+        ]
+    )
+    timeboxed_lines.extend(
+        [
+            "1. [ ] Primary goal",
+            "2. [ ] Secondary goal",
+            "3. [ ] Stretch goal",
+            "",
+            *release_alignment_timeboxed_lines,
             "## Task Creation Guide",
             "```bash",
             (

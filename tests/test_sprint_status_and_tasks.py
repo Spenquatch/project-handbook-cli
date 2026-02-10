@@ -192,3 +192,135 @@ def test_sprint_tasks_project_scope_includes_make_preamble_and_release_tags(tmp_
         "✅ TASK-001: Rel task  [ci/evidence] (task-execution) [rel:v0.6.0] [3pts] (depends: FIRST_TASK)\n"
         "✅ TASK-002: Gate task  [ci/evidence] (task-execution) [gate] [1pts] (depends: TASK-001)\n"
     )
+
+
+def test_sprint_status_warns_when_no_sprint_gate_tasks_exist(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _seed_sprint_with_task(ph_root=tmp_path, scope="project")
+
+    status = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "status"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert status.returncode == 0
+    assert "Sprint gates:\n" in status.stdout
+    assert "No sprint gate tasks found (task_type: sprint-gate)." in status.stdout
+    assert "Gate-ready: NO\n" in status.stdout
+
+
+def test_sprint_status_includes_sprint_gate_tasks_and_readiness(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+
+    res = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "plan", "--sprint", "SPRINT-2099-01-01"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert res.returncode == 0
+
+    task_root = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
+
+    task_a = task_root / "TASK-001-base"
+    task_a.mkdir(parents=True, exist_ok=True)
+    (task_a / "task.yaml").write_text(
+        "\n".join(
+            [
+                "id: TASK-001",
+                "title: Base task",
+                "status: done",
+                "story_points: 1",
+                "depends_on: [FIRST_TASK]",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    task_gate = task_root / "TASK-002-gate"
+    task_gate.mkdir(parents=True, exist_ok=True)
+    (task_gate / "task.yaml").write_text(
+        "\n".join(
+            [
+                "id: TASK-002",
+                "title: Sprint gate task",
+                "task_type: sprint-gate",
+                "status: todo",
+                "story_points: 1",
+                "depends_on: [TASK-001]",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    status = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "status"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert status.returncode == 0
+    assert "Sprint gates:\n" in status.stdout
+    assert "Gate-ready: NO (0/1 done)\n" in status.stdout
+    assert "- TASK-002: Sprint gate task | status todo | dependency-ready True\n" in status.stdout
+
+
+def test_sprint_status_gate_ready_yes_when_all_sprint_gates_done(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+
+    res = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "plan", "--sprint", "SPRINT-2099-01-01"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert res.returncode == 0
+
+    task_root = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
+
+    base = task_root / "TASK-001-base"
+    base.mkdir(parents=True, exist_ok=True)
+    (base / "task.yaml").write_text(
+        "\n".join(
+            [
+                "id: TASK-001",
+                "title: Base task",
+                "status: done",
+                "story_points: 1",
+                "depends_on: [FIRST_TASK]",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    gate = task_root / "TASK-002-gate"
+    gate.mkdir(parents=True, exist_ok=True)
+    (gate / "task.yaml").write_text(
+        "\n".join(
+            [
+                "id: TASK-002",
+                "title: Sprint gate task",
+                "task_type: sprint-gate",
+                "status: done",
+                "story_points: 1",
+                "depends_on: [TASK-001]",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    status = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "status"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert status.returncode == 0
+    assert "Sprint gates:\n" in status.stdout
+    assert "Gate-ready: YES (1/1 done)\n" in status.stdout
+    assert "- TASK-002: Sprint gate task | status done | dependency-ready True\n" in status.stdout

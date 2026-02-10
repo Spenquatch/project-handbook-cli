@@ -155,6 +155,106 @@ def test_sprint_plan_bounded_template_matches_legacy(tmp_path: Path) -> None:
     assert plan_path.read_text(encoding="utf-8") == expected
 
 
+def test_sprint_plan_scaffolds_release_slot_alignment_when_release_active(tmp_path: Path) -> None:
+    _write_minimal_ph_root(
+        tmp_path,
+        validation_rules='{"sprint_management": {"mode": "bounded"}}\n',
+    )
+    env = dict(os.environ)
+    env["PH_FAKE_TODAY"] = "2099-01-01"
+
+    release = subprocess.run(
+        [
+            "ph",
+            "--root",
+            str(tmp_path),
+            "--no-post-hook",
+            "release",
+            "plan",
+            "--version",
+            "v1.2.3",
+            "--sprints",
+            "2",
+            "--activate",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert release.returncode == 0
+
+    release_plan_path = tmp_path / ".project-handbook" / "releases" / "v1.2.3" / "plan.md"
+    release_plan_text = release_plan_path.read_text(encoding="utf-8")
+    release_lines = release_plan_text.splitlines()
+    assert release_lines and release_lines[0].strip() == "---"
+    end_front_matter = release_lines.index("---", 1)
+    front_matter = "\n".join(release_lines[: end_front_matter + 1]) + "\n\n"
+
+    release_plan_path.write_text(
+        front_matter
+        + "\n".join(
+            [
+                "# Release v1.2.3",
+                "",
+                "## Slot Plans",
+                "",
+                "### Slot 1",
+                "",
+                "#### Goal / Purpose",
+                "- Build login flow",
+                "",
+                "#### Scope boundaries (in/out)",
+                "- In: TBD",
+                "- Out: TBD",
+                "",
+                "#### Intended gate(s)",
+                "- Gate: Login smoke",
+                "- Gate: SSO ready",
+                "",
+                "#### Enablement",
+                "- Unlocks onboarding",
+                "",
+                "### Slot 2",
+                "",
+                "#### Goal / Purpose",
+                "- TBD",
+                "",
+                "#### Scope boundaries (in/out)",
+                "- In: TBD",
+                "- Out: TBD",
+                "",
+                "#### Intended gate(s)",
+                "- TBD",
+                "",
+                "#### Enablement",
+                "- How this slot advances the release: TBD",
+                "",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    sprint = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "plan", "--sprint", "SPRINT-2099-01-01"],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert sprint.returncode == 0
+
+    sprint_plan_path = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "plan.md"
+    sprint_plan_text = sprint_plan_path.read_text(encoding="utf-8")
+    assert "release: v1.2.3" in sprint_plan_text
+    assert "release_sprint_slot: 1" in sprint_plan_text
+    assert "## Release Alignment (Slot 1)" in sprint_plan_text
+    assert "Slot goal: Build login flow" in sprint_plan_text
+    assert "Enablement: Unlocks onboarding" in sprint_plan_text
+    assert "Intended gates:" in sprint_plan_text
+    assert "- Gate: Login smoke" in sprint_plan_text
+    assert "- Gate: SSO ready" in sprint_plan_text
+
+
 def test_sprint_plan_prints_pnpm_make_preamble_when_package_json_present(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     (tmp_path / "package.json").write_text(

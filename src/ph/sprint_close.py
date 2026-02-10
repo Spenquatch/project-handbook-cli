@@ -10,6 +10,8 @@ from .sprint import get_sprint_dates, sprint_dir_from_id
 from .sprint_archive import archive_sprint_directory
 from .work_item_archiver import archive_done_tasks_in_sprint
 
+_SPRINT_CLOSE_GATES_OVERRIDE_ENV = "PH_SPRINT_CLOSE_ALLOW_INCOMPLETE_GATES"
+
 
 def _get_current_sprint_path(*, ph_data_root: Path) -> Path | None:
     link = ph_data_root / "sprints" / "current"
@@ -119,20 +121,66 @@ def _rewrite_sprint_current_task_links(*, ph_data_root: Path, sprint_id: str) ->
     return changed_files
 
 
-def _create_retrospective(*, ph_project_root: Path, sprint_dir: Path, env: dict[str, str]) -> str:
+def _truthy_env(env: dict[str, str], key: str) -> bool:
+    return (env.get(key) or "").strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _enforce_sprint_gates_or_block(
+    *,
+    sprint_id: str,
+    tasks: list[dict[str, object]],
+    env: dict[str, str],
+) -> bool:
+    if _truthy_env(env, _SPRINT_CLOSE_GATES_OVERRIDE_ENV):
+        print(f"⚠️  Sprint close override enabled: skipping sprint gate checks ({_SPRINT_CLOSE_GATES_OVERRIDE_ENV}=1).")
+        return True
+
+    gate_tasks = [t for t in tasks if sprint_status.is_sprint_gate_task(t)]  # type: ignore[arg-type]
+    incomplete: list[dict[str, object]] = []
+    for task in gate_tasks:
+        status = str(task.get("status", "todo") or "todo").strip().lower()
+        if status != "done":
+            incomplete.append(task)
+
+    if gate_tasks and not incomplete:
+        return True
+
+    print("❌ Sprint close blocked: sprint gates missing/incomplete.")
+    if not gate_tasks:
+        print("  - No sprint gate tasks found (task_type: sprint-gate).")
+    if incomplete:
+        print(f"  - {len(incomplete)}/{len(gate_tasks)} sprint gate task(s) are not status: done.")
+        for task in incomplete:
+            task_id = str(task.get("id") or "(missing id)")
+            title = str(task.get("title") or "(missing title)")
+            status = str(task.get("status", "todo") or "todo").strip().lower()
+            print(f"    - {task_id}: {title} (status: {status})")
+
+    print(f"Complete sprint gate task(s) and rerun: ph sprint close (sprint: {sprint_id}).")
+    print(f"Override (not recommended): set {_SPRINT_CLOSE_GATES_OVERRIDE_ENV}=1.")
+    return False
+
+
+def _create_retrospective(
+    *,
+    ph_project_root: Path,
+    sprint_dir: Path,
+    tasks: list[dict[str, object]] | None,
+    env: dict[str, str],
+) -> str:
     sprint_id = sprint_dir.name
-    tasks = _collect_tasks_legacy_order(sprint_dir=sprint_dir)
-    metrics = sprint_status.calculate_velocity(tasks)  # type: ignore[arg-type]
+    use_tasks = tasks if tasks is not None else _collect_tasks_legacy_order(sprint_dir=sprint_dir)
+    metrics = sprint_status.calculate_velocity(use_tasks)  # type: ignore[arg-type]
     mode = sprint_status._get_sprint_mode(ph_project_root=ph_project_root, sprint_dir=sprint_dir)
     if mode == "bounded":
         health = sprint_status.get_sprint_health(
-            ph_project_root=ph_project_root, tasks=tasks, day_of_sprint=0, mode="bounded"  # type: ignore[arg-type]
+            ph_project_root=ph_project_root, tasks=use_tasks, day_of_sprint=0, mode="bounded"  # type: ignore[arg-type]
         )
     else:
         start_date, end_date = get_sprint_dates(sprint_id)
         duration_days = (end_date - start_date).days + 1
         health = sprint_status.get_sprint_health(
-            ph_project_root=ph_project_root, tasks=tasks, day_of_sprint=duration_days, mode="timeboxed"  # type: ignore[arg-type]
+            ph_project_root=ph_project_root, tasks=use_tasks, day_of_sprint=duration_days, mode="timeboxed"  # type: ignore[arg-type]
         )
 
     template = "\n".join(
@@ -174,12 +222,12 @@ def _create_retrospective(*, ph_project_root: Path, sprint_dir: Path, env: dict[
         ]
     )
 
-    completed = [t for t in tasks if t.get("status") == "done"]
+    completed = [t for t in use_tasks if t.get("status") == "done"]
     for task in completed:
         template += f"\n- ✅ {task.get('id')}: {task.get('title')}"
 
     template += "\n\n## Carried Over\n"
-    carried = [t for t in tasks if t.get("status") != "done"]
+    carried = [t for t in use_tasks if t.get("status") != "done"]
     for task in carried[:5]:
         template += f"- ⏩ {task.get('id')}: {task.get('title')} (Status: {task.get('status')})\n"
 
@@ -193,6 +241,10 @@ def run_sprint_close(*, ph_project_root: Path, ctx: Context, sprint: str | None,
         return 1
 
     sprint_id = sprint_dir.name
+
+    tasks = _collect_tasks_legacy_order(sprint_dir=sprint_dir)
+    if not _enforce_sprint_gates_or_block(sprint_id=sprint_id, tasks=tasks, env=env):
+        return 1
 
     sprint_meta = _read_sprint_plan_metadata(sprint_dir=sprint_dir)
     sprint_release = (sprint_meta.get("release") or "").strip()
@@ -218,11 +270,11 @@ def run_sprint_close(*, ph_project_root: Path, ctx: Context, sprint: str | None,
 
     retro_path = sprint_dir / "retrospective.md"
     retro_path.write_text(
-        _create_retrospective(ph_project_root=ph_project_root, sprint_dir=sprint_dir, env=env), encoding="utf-8"
+        _create_retrospective(ph_project_root=ph_project_root, sprint_dir=sprint_dir, tasks=tasks, env=env),
+        encoding="utf-8",
     )
     print(f"Created retrospective: {retro_path}")
 
-    tasks = _collect_tasks_legacy_order(sprint_dir=sprint_dir)
     metrics = sprint_status.calculate_velocity(tasks)  # type: ignore[arg-type]
     print(
         "Sprint velocity: "

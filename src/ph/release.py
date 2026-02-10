@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import re
 from pathlib import Path
 from typing import Any
 
@@ -223,6 +224,25 @@ This release uses **sprint slots** (not calendar dates). Assign a concrete sprin
 """
             for slot in range(2, sprint_count + 1):
                 plan_content += f"- **Slot {slot}** (Sprint {slot} of {sprint_count}): Sprint theme/focus\n"
+
+            plan_content += "\n\n## Slot Plans\n"
+            for slot in range(1, sprint_count + 1):
+                plan_content += f"""
+### Slot {slot}
+
+#### Goal / Purpose
+- TBD
+
+#### Scope boundaries (in/out)
+- In: TBD
+- Out: TBD
+
+#### Intended gate(s)
+- TBD
+
+#### Enablement
+- How this slot advances the release: TBD
+"""
 
             plan_content += f"""
 
@@ -627,20 +647,46 @@ links: [{", ".join(links)}]
 # Release {resolved} Progress
 
 *This file is auto-generated. Do not edit manually.*
-
-## Sprint Progress
 """
 
     planned_sprints = int(timeline.get("planned_sprints") or 0)
     if timeline_mode == "sprint_slots":
-        slots = timeline.get("sprint_slots") or list(range(1, planned_sprints + 1))
+        slot_list_raw = timeline.get("sprint_slots") or list(range(1, planned_sprints + 1))
+        if not isinstance(slot_list_raw, list):
+            slot_list_raw = list(range(1, planned_sprints + 1))
+        slots = [
+            int(slot)
+            for slot in slot_list_raw
+            if isinstance(slot, int) or (isinstance(slot, str) and str(slot).isdigit())
+        ]
         assignments = timeline.get("slot_assignments") or {}
+        if not isinstance(assignments, dict):
+            assignments = {}
+
+        slot_alignments = _collect_release_slot_alignments(plan_path=plan_file, slots=slots)
+        warnings = _release_alignment_warnings_for_active_sprint(
+            ph_root=ph_root,
+            version=resolved,
+            timeline=timeline,
+            slots=slots,
+            slot_alignments=slot_alignments,
+        )
+        if warnings:
+            content += "\n## Alignment Warnings\n"
+            for w in warnings:
+                content += f"- ⚠️ {w}\n"
+
+        content += "\n## Sprint Progress\n"
+        current_slot = timeline.get("current_sprint_slot") if isinstance(timeline.get("current_sprint_slot"), int) else None
         for i, slot in enumerate(slots, 1):
             sprint_id = assignments.get(slot)
             status = status_for_sprint_id(sprint_id)
             label = sprint_id or "(unassigned)"
-            content += f"- **Slot {slot}**: {status} — {label} (Sprint {i} of {len(slots)})\n"
+            marker = "▶ " if current_slot == slot else ""
+            goal = _slot_alignment_goal(slot_alignments.get(slot))
+            content += f"- {marker}**Slot {slot}**: {status} — {label} (Sprint {i} of {len(slots)}) — Goal: {goal}\n"
     else:
+        content += "\n## Sprint Progress\n"
         sprint_ids = timeline.get("sprint_ids") or []
         for i, sprint_id in enumerate(sprint_ids, 1):
             status = status_for_sprint_id(sprint_id)
@@ -766,6 +812,253 @@ def parse_plan_front_matter(*, plan_path: Path) -> dict[str, object]:
         else:
             meta[key] = value
     return meta
+
+
+def parse_release_plan_slot_alignment(*, plan_path: Path, slot: int) -> dict[str, object]:
+    """
+    Extract slot-derived alignment fields from a sprint-slots release plan.
+
+    Expected markers (I06-RLSLOT-0001):
+    - Slot header: "### Slot <n>"
+    - Subsections: "#### Goal / Purpose", "#### Intended gate(s)", "#### Enablement"
+
+    Returns:
+      {
+        "slot_goal": str,
+        "enablement": str,
+        "intended_gates": list[str],  # markdown list items (e.g. "- Gate: ...")
+      }
+    """
+    if slot <= 0:
+        return {}
+    if not plan_path.exists():
+        return {}
+    try:
+        text = plan_path.read_text(encoding="utf-8")
+    except Exception:
+        return {}
+
+    lines = text.splitlines()
+    slot_header_re = re.compile(rf"^###\s+Slot\s+{slot}\b", re.IGNORECASE)
+    next_slot_header_re = re.compile(r"^###\s+Slot\s+\d+\b", re.IGNORECASE)
+
+    start_idx: int | None = None
+    for i, raw in enumerate(lines):
+        if slot_header_re.match(raw.strip()):
+            start_idx = i + 1
+            break
+    if start_idx is None:
+        return {}
+
+    end_idx = len(lines)
+    for j in range(start_idx, len(lines)):
+        if next_slot_header_re.match(lines[j].strip()):
+            end_idx = j
+            break
+
+    slot_lines = lines[start_idx:end_idx]
+    heading_re = re.compile(r"^####\s+", re.IGNORECASE)
+
+    def section_lines(*, section_header: re.Pattern[str]) -> list[str]:
+        header_idx: int | None = None
+        for i2, raw in enumerate(slot_lines):
+            if section_header.match(raw.strip()):
+                header_idx = i2
+                break
+        if header_idx is None:
+            return []
+        content_start = header_idx + 1
+        content_end = len(slot_lines)
+        for k in range(content_start, len(slot_lines)):
+            if heading_re.match(slot_lines[k].strip()):
+                content_end = k
+                break
+        return slot_lines[content_start:content_end]
+
+    goal_lines = section_lines(section_header=re.compile(r"^####\s+Goal\s*/\s*Purpose\s*$", re.IGNORECASE))
+    enablement_lines = section_lines(section_header=re.compile(r"^####\s+Enablement\s*$", re.IGNORECASE))
+    intended_gate_lines = section_lines(
+        section_header=re.compile(r"^####\s+Intended\s+gate\(s\)\s*$", re.IGNORECASE)
+    )
+
+    def first_meaningful_line(raw_lines: list[str]) -> str:
+        for raw in raw_lines:
+            stripped = raw.strip()
+            if not stripped:
+                continue
+            if stripped.startswith(("- ", "* ")):
+                return stripped[2:].strip()
+            if stripped.startswith("-") and len(stripped) > 1 and stripped[1].isspace():
+                return stripped[1:].strip()
+            return stripped
+        return ""
+
+    intended_gates: list[str] = []
+    for raw in intended_gate_lines:
+        stripped = raw.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("- "):
+            intended_gates.append(stripped)
+            continue
+        if stripped.startswith("* "):
+            intended_gates.append("- " + stripped[2:].strip())
+            continue
+        intended_gates.append("- " + stripped)
+
+    if not intended_gates:
+        intended_gates = ["- TBD"]
+
+    return {
+        "slot_goal": first_meaningful_line(goal_lines),
+        "enablement": first_meaningful_line(enablement_lines),
+        "intended_gates": intended_gates,
+    }
+
+
+def _slot_alignment_goal(alignment: dict[str, object] | None) -> str:
+    if not alignment:
+        return "TBD"
+    raw = alignment.get("slot_goal")
+    if not isinstance(raw, str):
+        return "TBD"
+    value = raw.strip()
+    return value or "TBD"
+
+
+def _slot_alignment_enablement(alignment: dict[str, object] | None) -> str:
+    if not alignment:
+        return "TBD"
+    raw = alignment.get("enablement")
+    if not isinstance(raw, str):
+        return "TBD"
+    value = raw.strip()
+    return value or "TBD"
+
+
+def _collect_release_slot_alignments(*, plan_path: Path, slots: list[int]) -> dict[int, dict[str, object]]:
+    alignments: dict[int, dict[str, object]] = {}
+    for slot in slots:
+        if slot <= 0:
+            continue
+        alignment = parse_release_plan_slot_alignment(plan_path=plan_path, slot=slot)
+        alignments[slot] = alignment if alignment else {}
+    return alignments
+
+
+def _resolve_current_sprint_dir(*, ph_root: Path, current_sprint_id: str) -> Path | None:
+    link = ph_root / "sprints" / "current"
+    if link.exists():
+        try:
+            resolved = link.resolve()
+        except Exception:
+            resolved = None
+        if resolved and resolved.exists() and resolved.is_dir() and resolved.name == current_sprint_id:
+            return resolved
+
+    for sprint_dir in iter_sprint_dirs(sprints_dir=ph_root / "sprints"):
+        if sprint_dir.name == current_sprint_id:
+            return sprint_dir
+    return None
+
+
+def _sprint_plan_has_release_alignment_heading(*, sprint_plan_path: Path, slot: int) -> bool:
+    if slot <= 0:
+        return False
+    if not sprint_plan_path.exists():
+        return False
+    try:
+        text = sprint_plan_path.read_text(encoding="utf-8")
+    except Exception:
+        return False
+    heading_re = re.compile(rf"^##\s+Release\s+Alignment\s+\(Slot\s+{slot}\)\s*$", flags=re.MULTILINE)
+    return bool(heading_re.search(text))
+
+
+def _release_alignment_warnings_for_active_sprint(
+    *,
+    ph_root: Path,
+    version: str,
+    timeline: dict[str, object],
+    slots: list[int],
+    slot_alignments: dict[int, dict[str, object]],
+) -> list[str]:
+    warnings: list[str] = []
+
+    current_sprint_id = str(timeline.get("current_sprint") or "").strip()
+    if not current_sprint_id:
+        return warnings
+
+    current_sprint_dir = _resolve_current_sprint_dir(ph_root=ph_root, current_sprint_id=current_sprint_id)
+    current_plan_path = (current_sprint_dir / "plan.md") if current_sprint_dir else None
+    meta = parse_sprint_plan_front_matter(plan_path=current_plan_path) if current_plan_path else {}
+
+    raw_release = meta.get("release")
+    release = raw_release.strip() if isinstance(raw_release, str) else ""
+    slot_meta = parse_int(meta.get("release_sprint_slot"))
+
+    assignments = timeline.get("slot_assignments") if isinstance(timeline.get("slot_assignments"), dict) else {}
+    current_slot = timeline.get("current_sprint_slot") if isinstance(timeline.get("current_sprint_slot"), int) else None
+    slot_to_check = current_slot or slot_meta
+
+    if not release or release.lower() in {"null", "none"}:
+        warnings.append(
+            f"Current sprint `{current_sprint_id}` is missing `release: {version}` in its front matter."
+        )
+    else:
+        normalized_release = normalize_version(release)
+        if release.strip().lower() == "current":
+            warnings.append(
+                f"Current sprint `{current_sprint_id}` uses `release: current`; use `release: {version}` for slot matching."
+            )
+        elif normalized_release != normalize_version(version):
+            warnings.append(
+                f"Current sprint `{current_sprint_id}` is aligned to `{normalized_release}`, not `{version}`."
+            )
+
+    if slot_meta is None:
+        warnings.append(f"Current sprint `{current_sprint_id}` is missing `release_sprint_slot: <n>` in its front matter.")
+    else:
+        if slot_meta not in slots:
+            warnings.append(
+                f"Current sprint `{current_sprint_id}` has `release_sprint_slot: {slot_meta}`, but release plan slots are {slots}."
+            )
+        assigned = assignments.get(slot_meta) if isinstance(assignments, dict) else None
+        if assigned and str(assigned) != current_sprint_id:
+            warnings.append(
+                f"Slot {slot_meta} is assigned to `{assigned}`, but current sprint is `{current_sprint_id}`."
+            )
+        if current_slot is not None and current_slot != slot_meta:
+            warnings.append(
+                f"Current sprint `{current_sprint_id}` front matter says slot {slot_meta}, but computed current slot is {current_slot}."
+            )
+        if current_plan_path and not _sprint_plan_has_release_alignment_heading(sprint_plan_path=current_plan_path, slot=slot_meta):
+            warnings.append(
+                f"Current sprint plan is missing required heading: `## Release Alignment (Slot {slot_meta})`."
+            )
+
+    if slot_to_check is not None:
+        alignment = slot_alignments.get(int(slot_to_check), {})
+        if not alignment:
+            warnings.append(
+                f"Release plan is missing required slot markers for Slot {slot_to_check} (expected `### Slot {slot_to_check}` + subsections)."
+            )
+        else:
+            if _slot_alignment_goal(alignment) == "TBD":
+                warnings.append(f"Release plan Slot {slot_to_check} is missing a `#### Goal / Purpose` value.")
+            if _slot_alignment_enablement(alignment) == "TBD":
+                warnings.append(f"Release plan Slot {slot_to_check} is missing a `#### Enablement` value.")
+
+    duplicates = timeline.get("slot_duplicates") if isinstance(timeline.get("slot_duplicates"), dict) else {}
+    if duplicates:
+        for dup_slot, sprint_ids in sorted(duplicates.items(), key=lambda t: t[0]):
+            if not isinstance(dup_slot, int):
+                continue
+            if not isinstance(sprint_ids, list):
+                continue
+            warnings.append(f"Slot {dup_slot} has multiple sprint assignments: {', '.join(str(s) for s in sprint_ids)}.")
+
+    return warnings
 
 
 def parse_int(value: object) -> int | None:
@@ -1373,8 +1666,20 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
     if not isinstance(current_sprint_index, int):
         current_sprint_index = None
     timeline_mode = str(timeline.get("timeline_mode") or "sprint_ids").strip().lower()
+    slot_alignments: dict[int, dict[str, object]] = {}
+    slot_list: list[int] = []
 
     if timeline_mode == "sprint_slots":
+        slot_list_raw = timeline.get("sprint_slots") or list(range(1, sprint_count + 1))
+        if not isinstance(slot_list_raw, list):
+            slot_list_raw = list(range(1, sprint_count + 1))
+        slot_list = [
+            int(slot)
+            for slot in slot_list_raw
+            if isinstance(slot, int) or (isinstance(slot, str) and str(slot).isdigit())
+        ]
+        slot_alignments = _collect_release_slot_alignments(plan_path=release_dir / "plan.md", slots=slot_list)
+
         current_slot = timeline.get("current_sprint_slot")
         slot_suffix = f" (slot {current_slot})" if current_slot else ""
         current_sprint_label = (
@@ -1382,7 +1687,8 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
             if current_sprint_index
             else f"n/a of {sprint_count}"
         )
-        target = f"Slot {sprint_count}"
+        target_slot = slot_list[-1] if slot_list else sprint_count
+        target = f"Slot {target_slot}"
     else:
         current_sprint_label = (
             f"{current_sprint_index} of {sprint_count}" if current_sprint_index else f"n/a of {sprint_count}"
@@ -1406,6 +1712,22 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
     print(f"📦 RELEASE STATUS: {version}")
     print("=" * 60)
     print(f"Sprint: {current_sprint_label} ({current_sprint})")
+    if timeline_mode == "sprint_slots":
+        current_slot = timeline.get("current_sprint_slot")
+        if isinstance(current_slot, int) and current_slot in slot_list:
+            goal = _slot_alignment_goal(slot_alignments.get(current_slot))
+            print(f"Slot Goal: {goal}")
+        warnings = _release_alignment_warnings_for_active_sprint(
+            ph_root=ctx.ph_data_root,
+            version=version,
+            timeline=timeline,
+            slots=slot_list,
+            slot_alignments=slot_alignments,
+        )
+        if warnings:
+            print("⚠️ Alignment warnings:")
+            for w in warnings:
+                print(f"  - {w}")
     print(
         f"Overall Progress: {progress.get('avg_completion', 0)}% complete "
         f"({progress.get('started_features', 0)}/{progress.get('total_features', 0)} features started)"
@@ -1499,17 +1821,15 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
         remaining = len(tagged_tasks) - show_n
         if remaining > 0:
             print(f"...and {remaining} more")
-        print()
+    print()
 
     print("📅 Sprint Breakdown:")
     if timeline_mode == "sprint_slots":
-        slots = timeline.get("sprint_slots") or list(range(1, sprint_count + 1))
-        if not isinstance(slots, list):
-            slots = list(range(1, sprint_count + 1))
-        slots = [int(slot) for slot in slots if isinstance(slot, int) or (isinstance(slot, str) and slot.isdigit())]
+        slots = slot_list or list(range(1, sprint_count + 1))
         assignments = timeline.get("slot_assignments") or {}
         if not isinstance(assignments, dict):
             assignments = {}
+        current_slot = timeline.get("current_sprint_slot") if isinstance(timeline.get("current_sprint_slot"), int) else None
         for i, slot in enumerate(slots, 1):
             sprint_id = assignments.get(slot)
             label = sprint_id if sprint_id else "(unassigned)"
@@ -1521,7 +1841,9 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
                 status = "✅ Complete"
             else:
                 status = "⭕ Planned"
-            print(f"{status} Slot {slot}: {label} (Sprint {i} of {sprint_count})")
+            marker = "▶ " if current_slot == slot else ""
+            goal = _slot_alignment_goal(slot_alignments.get(slot))
+            print(f"{status} {marker}Slot {slot}: {label} — Goal: {goal} (Sprint {i} of {sprint_count})")
     else:
         for i, sprint_id in enumerate(sprint_timeline, 1):
             if sprint_id == current_sprint:

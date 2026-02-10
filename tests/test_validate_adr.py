@@ -36,13 +36,17 @@ def _write_adr(
     status: str | None = None,
     superseded_by: str | None = None,
     include_superseded_by_key: bool = True,
+    links: list[str] | None = None,
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    if links is None:
+        links = ["decision-register/DR-0000-placeholder.md"]
     front_matter = [
         "---",
         f"id: {adr_id}",
         "title: Test ADR",
         "type: adr",
+        f"links: [{', '.join(links)}]" if links else "links: []",
     ]
     if status is not None:
         front_matter.append(f"status: {status}")
@@ -215,3 +219,70 @@ def test_validate_adr_superseded_by_missing_target_is_error_with_actionable_mess
     assert err.get("expected") == {"id": "ADR-9999", "exists": True}
     assert err.get("found") == {"id": "ADR-9999", "exists": False}
     assert "ADR-9999" in str(err.get("message", ""))
+
+
+def test_validate_adr_requires_dr_backlink(tmp_path: Path) -> None:
+    _write_basic_ph_root(tmp_path)
+    _write_adr(tmp_path / ".project-handbook" / "adr" / "0001-valid-adr.md", adr_id="ADR-0001", links=[])
+
+    code, report = _run_validate_and_read_report(tmp_path)
+    assert code == 1
+    err = next(i for i in report["issues"] if i.get("code") == "adr_missing_dr_backlink")
+    assert err.get("severity") == "error"
+    assert err.get("path") == "adr/0001-valid-adr.md"
+
+
+def test_validate_fdr_requires_dr_backlink(tmp_path: Path) -> None:
+    _write_basic_ph_root(tmp_path)
+    fdr = tmp_path / ".project-handbook" / "features" / "f" / "fdr" / "0001-test.md"
+    fdr.parent.mkdir(parents=True, exist_ok=True)
+    fdr.write_text(
+        "\n".join(
+            [
+                "---",
+                "id: FDR-0001",
+                "title: Test FDR",
+                "type: fdr",
+                "date: 2099-01-01",
+                "links: []",
+                "---",
+                "",
+                "# FDR",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    code, report = _run_validate_and_read_report(tmp_path)
+    assert code == 1
+    err = next(i for i in report["issues"] if i.get("code") == "fdr_missing_dr_backlink")
+    assert err.get("severity") == "error"
+    assert err.get("path") == "features/f/fdr/0001-test.md"
+
+
+def test_validate_fdr_with_dr_backlink_passes(tmp_path: Path) -> None:
+    _write_basic_ph_root(tmp_path)
+    fdr = tmp_path / ".project-handbook" / "features" / "f" / "fdr" / "0001-test.md"
+    fdr.parent.mkdir(parents=True, exist_ok=True)
+    fdr.write_text(
+        "\n".join(
+            [
+                "---",
+                "id: FDR-0001",
+                "title: Test FDR",
+                "type: fdr",
+                "date: 2099-01-01",
+                "links: [decision-register/DR-0001-placeholder.md]",
+                "---",
+                "",
+                "# FDR",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    code, report = _run_validate_and_read_report(tmp_path)
+    assert code == 0
+    assert report == {"issues": []}

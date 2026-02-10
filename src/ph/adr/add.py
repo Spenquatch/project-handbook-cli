@@ -8,6 +8,7 @@ from pathlib import Path
 
 ADR_ID_RE = re.compile(r"^ADR-(\d{4})$")
 ADR_FILENAME_RE = re.compile(r"^(\d{4})-([a-z0-9]+(?:-[a-z0-9]+)*)\.md$")
+DR_ID_RE = re.compile(r"^DR-(\d{4})$")
 
 REQUIRED_H1 = ["Context", "Decision", "Consequences", "Acceptance Criteria"]
 RECOMMENDED_H1 = ["Rollout"]
@@ -17,6 +18,7 @@ RECOMMENDED_H1 = ["Rollout"]
 class AdrAddSpec:
     adr_id: str
     number: str
+    dr_links: list[str]
     title: str
     status: str
     date: str
@@ -39,6 +41,14 @@ def _parse_adr_id(value: str) -> tuple[str, str]:
         raise ValueError(f"Invalid --id: {value!r}. Expected ADR-NNNN (4 digits).")
     number = match.group(1)
     return value, number
+
+
+def _parse_dr_id(value: str) -> str:
+    value = (value or "").strip()
+    match = DR_ID_RE.match(value)
+    if not match:
+        raise ValueError(f"Invalid --dr: {value!r}. Expected DR-NNNN (4 digits).")
+    return value
 
 
 def _parse_date(value: str | None) -> str:
@@ -77,8 +87,38 @@ def _find_existing_adr_by_id(*, adr_dir: Path, adr_id: str) -> Path | None:
     return None
 
 
+def _find_dr_markdown_matches(*, ph_data_root: Path, dr_id: str) -> list[Path]:
+    matches: list[Path] = []
+
+    project_dr_dir = ph_data_root / "decision-register"
+    if project_dr_dir.exists():
+        matches.extend(sorted(project_dr_dir.glob(f"{dr_id}-*.md")))
+
+    features_dir = ph_data_root / "features"
+    if features_dir.exists():
+        for entry in sorted(features_dir.iterdir()):
+            if not entry.is_dir():
+                continue
+            if entry.name == "implemented":
+                for implemented in sorted(entry.iterdir()):
+                    if not implemented.is_dir():
+                        continue
+                    folder = implemented / "decision-register"
+                    if folder.exists():
+                        matches.extend(sorted(folder.glob(f"{dr_id}-*.md")))
+                continue
+
+            folder = entry / "decision-register"
+            if folder.exists():
+                matches.extend(sorted(folder.glob(f"{dr_id}-*.md")))
+
+    return matches
+
+
 def _render_adr_markdown(*, spec: AdrAddSpec) -> str:
     superseded_by = spec.superseded_by if spec.superseded_by is not None else "null"
+    links = spec.dr_links
+    links_yaml = "[]" if not links else "[" + ", ".join(links) + "]"
     lines = [
         "---",
         f"id: {spec.adr_id}",
@@ -89,7 +129,7 @@ def _render_adr_markdown(*, spec: AdrAddSpec) -> str:
         "supersedes: null",
         f"superseded_by: {superseded_by}",
         "tags: []",
-        "links: []",
+        f"links: {links_yaml}",
         "---",
         "",
         "# Context",
@@ -155,6 +195,7 @@ def run_adr_add(
     ph_data_root: Path,
     adr_id: str,
     title: str,
+    dr: list[str],
     status: str,
     date: str | None,
     superseded_by: str | None,
@@ -193,10 +234,56 @@ def run_adr_add(
         elif normalized_superseded_by is not None:
             raise ValueError("--superseded-by is only valid when --status is superseded.")
 
+        if not dr:
+            raise ValueError(
+                "Missing required --dr.\n"
+                "  expected: --dr DR-NNNN (4 digits)\n"
+                "  remediation: Create a DR first via 'ph dr add --id DR-NNNN --title <t>', then re-run.\n"
+            )
+
+        seen_dr_ids: set[str] = set()
+        normalized_dr_ids: list[str] = []
+        for raw in dr:
+            parsed_dr = _parse_dr_id(str(raw))
+            if parsed_dr in seen_dr_ids:
+                continue
+            seen_dr_ids.add(parsed_dr)
+            normalized_dr_ids.append(parsed_dr)
+
         parsed_date = _parse_date(date)
+
+        resolved_dr_links: list[str] = []
+        for dr_id in normalized_dr_ids:
+            matches = _find_dr_markdown_matches(ph_data_root=ph_data_root, dr_id=dr_id)
+            if not matches:
+                print("❌ Referenced DR does not exist (DR-first workflow gate).\n", end="")
+                print(f"  dr: {dr_id}")
+                print("  expected: exactly one matching markdown file in either:")
+                print(f"    - decision-register/{dr_id}-*.md")
+                print(f"    - features/*/decision-register/{dr_id}-*.md")
+                print("  remediation: Create the DR first, then re-run with the correct --dr.\n")
+                return 1
+            if len(matches) > 1:
+                print("❌ Referenced DR id is ambiguous (multiple matches found).\n", end="")
+                print(f"  dr: {dr_id}")
+                print("  found:")
+                for candidate in matches:
+                    try:
+                        rel = candidate.relative_to(ph_data_root).as_posix()
+                    except Exception:
+                        rel = str(candidate)
+                    print(f"    - {rel}")
+                print(
+                    "  expected: exactly one matching markdown file.\n"
+                    "  remediation: Remove/rename duplicates so the DR id maps to a single file.\n"
+                )
+                return 1
+            resolved_dr_links.append(matches[0].relative_to(ph_data_root).as_posix())
+
         spec = AdrAddSpec(
             adr_id=parsed_id,
             number=number,
+            dr_links=resolved_dr_links,
             title=normalized_title,
             status=normalized_status,
             date=parsed_date,
@@ -257,6 +344,12 @@ def run_adr_add(
 def add_adr_add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--id", required=True, help="ADR id (ADR-NNNN)")
     parser.add_argument("--title", required=True, help="ADR title")
+    parser.add_argument(
+        "--dr",
+        action="append",
+        required=True,
+        help="Upstream DR id (DR-NNNN). May be repeated (DR-first workflow gate).",
+    )
     parser.add_argument(
         "--status",
         default="draft",

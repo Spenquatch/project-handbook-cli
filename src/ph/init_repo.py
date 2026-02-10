@@ -62,6 +62,8 @@ Prefer using `ph` commands so the system remains deterministic and searchable.
    - `ph onboarding session sprint-planning`
    - `ph onboarding session task-execution`
    - `ph onboarding session research-discovery`
+   - `ph onboarding session research-planning`
+   - `ph onboarding session task-docs-deep-dive`
    - `ph onboarding session pre-execution-audit`
    - `ph onboarding session quality-gate`
 3. Follow the playbooks:
@@ -144,6 +146,66 @@ Rules:
 1) The deliverable is a Decision Register entry (DR-XXXX) or ADR when appropriate.
 2) Document exactly two options (Option A / Option B) and a recommendation.
 3) Convert outcomes into execution tasks (task-execution) with no ambiguity.
+""",
+    "research-planning": """---
+title: Research Planning Session
+type: prompt-template
+mode: planning
+tags: [research, planning]
+---
+
+You are planning a research effort for a feature or problem area.
+
+Purpose:
+- Produce a crisp research plan and the artifacts needed to turn outcomes into execution tasks.
+
+Hard rules:
+1) Do NOT implement code in this session.
+2) Eliminate ambiguity: explicit deliverables, explicit timeboxes, explicit validation/evidence.
+3) Keep terminology clean:
+   - `task_type` is taxonomy (what kind of work)
+   - `session` is the onboarding template key (how we run the work)
+
+Mapping table (`task_type` → required/allowed `session`):
+| `task_type` | `session` |
+|---|---|
+| `implementation` | `task-execution` |
+| `research-discovery` | `research-discovery` |
+| `feature-research-planning` | `research-planning` |
+
+Checklist:
+- Define the problem statement and success criteria.
+- List research questions (what must be answered to de-risk execution).
+- Define deliverables (Decision Register/ADR, updated contract/spec, and a list of execution tasks to create).
+- Timebox the work and specify evidence locations under `status/evidence/...` when applicable.
+""",
+    "task-docs-deep-dive": """---
+title: Task Docs Deep Dive
+type: prompt-template
+mode: planning
+tags: [task, docs, planning]
+---
+
+You are improving task documentation quality (not implementing the task itself).
+
+Hard rules:
+1) Do NOT implement code in this session.
+2) Every task doc must be deterministic: no TBD/TODO, no open questions, no vague verbs.
+3) Keep `task_type` and `session` distinct:
+
+Mapping table (`task_type` → required/allowed `session`):
+| `task_type` | `session` |
+|---|---|
+| `implementation` | `task-execution` |
+| `research-discovery` | `research-discovery` |
+| `task-docs-deep-dive` | `task-docs-deep-dive` |
+
+Deep-dive checklist:
+- `README.md`: exact goal + scope boundaries.
+- `steps.md`: numbered, atomic steps with concrete file paths/commands; remove words like “implement/refactor/deploy/ship”.
+- `commands.md`: copy/paste runnable commands; include expected outputs when critical.
+- `checklist.md`: binary checkboxes, not prose.
+- `validation.md`: explicit validations (tests, manual checks) and evidence paths.
 """,
     "pre-execution-audit": """---
 title: Pre-execution Audit

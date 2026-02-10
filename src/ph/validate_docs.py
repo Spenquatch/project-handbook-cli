@@ -7,6 +7,32 @@ from pathlib import Path
 from .adr.validate import validate_adrs
 
 
+_DR_ID_RE = re.compile(r"^DR-\d{4}$", re.IGNORECASE)
+
+_ALLOWED_TASK_TYPES: set[str] = {
+    "implementation",
+    "research-discovery",
+    "sprint-gate",
+    "feature-research-planning",
+    "task-docs-deep-dive",
+}
+
+_TASK_TYPE_TO_REQUIRED_SESSION: dict[str, str] = {
+    "implementation": "task-execution",
+    "research-discovery": "research-discovery",
+    "sprint-gate": "sprint-gate",
+    "feature-research-planning": "feature-research-planning",
+    "task-docs-deep-dive": "task-docs-deep-dive",
+}
+
+# Backwards compatibility for legacy tasks that predate `task_type`.
+# Mapping is defined in cli_plan/v1_cli/CLI_CONTRACT.md ("Task types (BL-0007)").
+_LEGACY_DEFAULT_TASK_TYPE_BY_SESSION: dict[str, str] = {
+    "task-execution": "implementation",
+    "research-discovery": "research-discovery",
+}
+
+
 def load_validation_rules(*, ph_project_root: Path) -> dict:
     rules_path = ph_project_root / "process" / "checks" / "validation_rules.json"
     default_rules = {
@@ -164,6 +190,168 @@ def parse_front_matter(text: str) -> tuple[dict, int, int]:
             k, v = line.split(":", 1)
             fm[k.strip()] = v.strip().strip('"')
     return fm, 0, end
+
+
+def _extract_front_matter_list_field(text: str, field: str) -> list[str]:
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return []
+    try:
+        end = lines[1:].index("---") + 1
+    except ValueError:
+        return []
+
+    i = 1
+    n = end
+    prefix = f"{field}:"
+    while i < n:
+        raw = lines[i].rstrip("\n")
+        if not raw.strip():
+            i += 1
+            continue
+        if not raw.startswith(prefix):
+            i += 1
+            continue
+
+        rest = raw.split(":", 1)[1].strip()
+        if rest.startswith("[") and rest.endswith("]"):
+            inner = rest[1:-1].strip()
+            if not inner:
+                return []
+            return [_strip(part) for part in inner.split(",") if _strip(part)]
+
+        items: list[str] = []
+        if rest:
+            items.append(_strip(rest))
+            return items
+
+        j = i + 1
+        while j < n:
+            line = lines[j]
+            stripped = line.strip()
+            if not stripped:
+                j += 1
+                continue
+            if stripped.startswith("- "):
+                items.append(_strip(stripped[2:]))
+                j += 1
+                continue
+            break
+        return items
+
+    return []
+
+
+def _looks_like_dr_backlink(link: str) -> bool:
+    candidate = (link or "").strip().strip('"').strip("'").strip()
+    if not candidate:
+        return False
+    if "://" in candidate:
+        return False
+    if "decision-register/" not in candidate:
+        return False
+    if ".md" not in candidate:
+        return False
+    return bool(re.search(r"DR-\d{4}", candidate, flags=re.IGNORECASE))
+
+
+def validate_adr_fdr_backlinks(*, issues: list[dict], root: Path) -> None:
+    adr_dir = root / "adr"
+    if adr_dir.exists():
+        for md in sorted(adr_dir.rglob("*.md")):
+            rel_path = md.relative_to(root).as_posix()
+            text = read(md)
+            _fm, start, end = parse_front_matter(text)
+            if start == -1 or end == -1:
+                continue
+            links = _extract_front_matter_list_field(text, "links")
+            if not any(_looks_like_dr_backlink(link) for link in links):
+                issues.append(
+                    {
+                        "path": rel_path,
+                        "code": "adr_missing_dr_backlink",
+                        "severity": "error",
+                        "message": (
+                            "ADR YAML front matter must include at least one DR backlink in `links:`.\n"
+                            "  expected: links contains a path like decision-register/DR-0001-....md\n"
+                            f"  found_links: {links}\n"
+                        ),
+                        "found_links": links,
+                    }
+                )
+
+    features_dir = root / "features"
+    if not features_dir.exists():
+        return
+
+    for md in sorted(features_dir.rglob("fdr/*.md")):
+        try:
+            rel_path = md.relative_to(root).as_posix()
+        except Exception:
+            rel_path = str(md)
+        text = read(md)
+        _fm, start, end = parse_front_matter(text)
+        if start == -1 or end == -1:
+            continue
+        links = _extract_front_matter_list_field(text, "links")
+        if not any(_looks_like_dr_backlink(link) for link in links):
+            issues.append(
+                {
+                    "path": rel_path,
+                    "code": "fdr_missing_dr_backlink",
+                    "severity": "error",
+                    "message": (
+                        "FDR YAML front matter must include at least one DR backlink in `links:`.\n"
+                        "  expected: links contains a path like decision-register/DR-0001-....md\n"
+                        f"  found_links: {links}\n"
+                    ),
+                    "found_links": links,
+                }
+            )
+
+
+def _iter_dr_search_dirs(*, ph_data_root: Path, feature: str | None) -> tuple[list[Path], list[str]]:
+    feature = (feature or "").strip()
+    dirs: list[Path] = []
+    labels: list[str] = []
+
+    if feature:
+        labels.append(f"features/{feature}/decision-register")
+        dirs.append(ph_data_root / "features" / feature / "decision-register")
+    else:
+        labels.append("features/*/decision-register")
+        features_dir = ph_data_root / "features"
+        if features_dir.exists():
+            for entry in sorted(features_dir.iterdir()):
+                if not entry.is_dir() or entry.name == "implemented":
+                    continue
+                dirs.append(entry / "decision-register")
+            implemented = features_dir / "implemented"
+            if implemented.exists():
+                for entry in sorted(implemented.iterdir()):
+                    if entry.is_dir():
+                        dirs.append(entry / "decision-register")
+
+    labels.append("decision-register")
+    dirs.append(ph_data_root / "decision-register")
+
+    return dirs, labels
+
+
+def _dr_entry_exists(*, ph_data_root: Path, dr_id: str, feature: str | None) -> bool:
+    dr_id = (dr_id or "").strip().upper()
+    if not _DR_ID_RE.match(dr_id):
+        return False
+
+    pattern = re.compile(rf"^#{{1,6}}\s+{re.escape(dr_id)}\b", flags=re.MULTILINE)
+    dirs, _labels = _iter_dr_search_dirs(ph_data_root=ph_data_root, feature=feature)
+    for folder in dirs:
+        if not folder.exists():
+            continue
+        for candidate in sorted(folder.rglob("*.md")):
+            if pattern.search(read(candidate)):
+                return True
+    return False
 
 
 def validate_front_matter(*, issues: list[dict], rules: dict, root: Path, ph_root: Path, scope: str) -> None:
@@ -558,6 +746,82 @@ def normalize_roadmap_links(*, rules: dict, root: Path, scope: str, quick: bool)
     return count
 
 
+_SPRINT_GATE_EVIDENCE_PREFIX = "status/evidence/"
+_SPRINT_GATE_VALIDATION_REQUIRED_LITERALS: tuple[str, ...] = (
+    "Sprint Goal:",
+    "Exit criteria:",
+    "secret-scan.txt",
+    _SPRINT_GATE_EVIDENCE_PREFIX,
+)
+_SPRINT_GATE_VALIDATION_SPRINT_PLAN_REFERENCE_OPTIONS: tuple[str, ...] = (
+    "sprints/current/plan.md",
+    "../../plan.md",
+)
+
+
+def _validate_sprint_gate_task_docs(*, issues: list[dict], task_dir: Path, task_yaml: Path, task_id: str) -> None:
+    validation_md = task_dir / "validation.md"
+    if not validation_md.exists():
+        issues.append(
+            {
+                "path": str(task_dir),
+                "code": "sprint_gate_validation_missing",
+                "severity": "error",
+                "task_id": task_id,
+                "message": (
+                    "Sprint gate task is missing required gate doc.\n"
+                    f"  task_id: {task_id or '<unknown>'}\n"
+                    "  expected_file: validation.md\n"
+                ),
+            }
+        )
+        return
+
+    validation_text = read(validation_md)
+    missing_markers = [marker for marker in _SPRINT_GATE_VALIDATION_REQUIRED_LITERALS if marker not in validation_text]
+    if not any(opt in validation_text for opt in _SPRINT_GATE_VALIDATION_SPRINT_PLAN_REFERENCE_OPTIONS):
+        missing_markers.append(
+            "sprint plan reference (one of: "
+            + ", ".join(_SPRINT_GATE_VALIDATION_SPRINT_PLAN_REFERENCE_OPTIONS)
+            + ")"
+        )
+
+    if missing_markers:
+        issues.append(
+            {
+                "path": str(validation_md),
+                "code": "sprint_gate_validation_markers_missing",
+                "severity": "error",
+                "task_id": task_id,
+                "missing_markers": missing_markers,
+                "message": (
+                    "Sprint gate validation.md is missing required marker(s).\n"
+                    f"  task_id: {task_id or '<unknown>'}\n"
+                    f"  missing: {missing_markers}\n"
+                    f"  required_literals: {list(_SPRINT_GATE_VALIDATION_REQUIRED_LITERALS)}\n"
+                    "  required_plan_reference: include at least one of "
+                    f"{list(_SPRINT_GATE_VALIDATION_SPRINT_PLAN_REFERENCE_OPTIONS)}\n"
+                ),
+            }
+        )
+
+    task_yaml_text = read(task_yaml)
+    if _SPRINT_GATE_EVIDENCE_PREFIX not in task_yaml_text:
+        issues.append(
+            {
+                "path": str(task_yaml),
+                "code": "sprint_gate_task_yaml_missing_evidence_prefix",
+                "severity": "error",
+                "task_id": task_id,
+                "message": (
+                    "Sprint gate task.yaml must mention the evidence root path prefix.\n"
+                    f"  task_id: {task_id or '<unknown>'}\n"
+                    f"  required_literal: {_SPRINT_GATE_EVIDENCE_PREFIX}\n"
+                ),
+            }
+        )
+
+
 def validate_sprints(*, issues: list[dict], rules: dict, root: Path) -> None:
     sprint_rules = rules.get("sprint_tasks", {})
     story_rules = rules.get("story_points", {})
@@ -581,7 +845,7 @@ def validate_sprints(*, issues: list[dict], rules: dict, root: Path) -> None:
             sprint_task_ids = set()
             sprint_tasks: list[tuple[Path, dict]] = []
 
-            for task_dir in tasks_dir.iterdir():
+            for task_dir in sorted(tasks_dir.iterdir()):
                 if not task_dir.is_dir():
                     continue
 
@@ -629,6 +893,8 @@ def validate_sprints(*, issues: list[dict], rules: dict, root: Path) -> None:
                     continue
                 status_map[task_id] = str(task.get("status", "")).strip().lower()
 
+            sprint_gate_task_ids: list[str] = []
+
             for task_dir, task_data in sprint_tasks:
                 task_yaml = task_dir / "task.yaml"
 
@@ -653,9 +919,98 @@ def validate_sprints(*, issues: list[dict], rules: dict, root: Path) -> None:
                         {"path": str(task_yaml), "code": "task_missing_fields", "severity": "error", "missing": missing}
                     )
 
+                session = _strip(str(task_data.get("session", ""))).strip().lower()
+                raw_task_type = _strip(str(task_data.get("task_type", ""))).strip().lower()
+
+                effective_task_type: str | None = None
+                if raw_task_type:
+                    if raw_task_type not in _ALLOWED_TASK_TYPES:
+                        issues.append(
+                            {
+                                "path": str(task_yaml),
+                                "code": "task_type_invalid",
+                                "severity": "error",
+                                "expected": sorted(_ALLOWED_TASK_TYPES),
+                                "found": raw_task_type,
+                                "message": (
+                                    "Invalid task_type value in task.yaml.\n"
+                                    f"  expected: one of {sorted(_ALLOWED_TASK_TYPES)}\n"
+                                    f"  found: {raw_task_type}\n"
+                                ),
+                            }
+                        )
+                    else:
+                        effective_task_type = raw_task_type
+                else:
+                    if session in _LEGACY_DEFAULT_TASK_TYPE_BY_SESSION:
+                        effective_task_type = _LEGACY_DEFAULT_TASK_TYPE_BY_SESSION[session]
+                    elif session:
+                        issues.append(
+                            {
+                                "path": str(task_yaml),
+                                "code": "task_type_missing",
+                                "severity": "error",
+                                "expected": sorted(_ALLOWED_TASK_TYPES),
+                                "found": "<missing>",
+                                "message": (
+                                    "Missing task_type in task.yaml.\n"
+                                    f"  session: {session}\n"
+                                    f"  expected: one of {sorted(_ALLOWED_TASK_TYPES)}\n"
+                                    "  found: <missing>\n"
+                                ),
+                            }
+                        )
+
+                if effective_task_type:
+                    expected_session = _TASK_TYPE_TO_REQUIRED_SESSION.get(effective_task_type)
+                    if expected_session and session and session != expected_session:
+                        issues.append(
+                            {
+                                "path": str(task_yaml),
+                                "code": "task_type_session_mismatch",
+                                "severity": "error",
+                                "task_type": effective_task_type,
+                                "expected": expected_session,
+                                "found": session,
+                                "message": (
+                                    "task_type and session are inconsistent.\n"
+                                    f"  task_type: {effective_task_type}\n"
+                                    f"  expected_session: {expected_session}\n"
+                                    f"  found_session: {session}\n"
+                                ),
+                            }
+                        )
+                    elif expected_session and not session:
+                        issues.append(
+                            {
+                                "path": str(task_yaml),
+                                "code": "task_type_session_mismatch",
+                                "severity": "error",
+                                "task_type": effective_task_type,
+                                "expected": expected_session,
+                                "found": "<missing>",
+                                "message": (
+                                    "task_type requires a session value but session is missing.\n"
+                                    f"  task_type: {effective_task_type}\n"
+                                    f"  expected_session: {expected_session}\n"
+                                    "  found_session: <missing>\n"
+                                ),
+                            }
+                        )
+
+                if effective_task_type == "sprint-gate":
+                    task_id = _strip(str(task_data.get("id", ""))).strip()
+                    if task_id:
+                        sprint_gate_task_ids.append(task_id)
+                    _validate_sprint_gate_task_docs(
+                        issues=issues,
+                        task_dir=task_dir,
+                        task_yaml=task_yaml,
+                        task_id=task_id,
+                    )
+
                 decision = task_data.get("decision")
                 if decision and sprint_rules.get("require_single_decision_per_task", True):
-                    session = str(task_data.get("session", "")).strip().lower()
                     decision = str(decision).strip()
                     decision_norm = decision.upper()
                     if session == "research-discovery":
@@ -673,6 +1028,24 @@ def validate_sprints(*, issues: list[dict], rules: dict, root: Path) -> None:
                                     ),
                                 }
                             )
+                        else:
+                            feature = str(task_data.get("feature", "")).strip()
+                            if not _dr_entry_exists(ph_data_root=root, dr_id=decision_norm, feature=feature):
+                                _dirs, dir_labels = _iter_dr_search_dirs(ph_data_root=root, feature=feature)
+                                issues.append(
+                                    {
+                                        "path": str(task_yaml),
+                                        "code": "task_dr_missing",
+                                        "severity": "error",
+                                        "dr_id": decision_norm,
+                                        "searched_dirs": dir_labels,
+                                        "message": (
+                                            "Task references missing Decision Register entry.\n"
+                                            f"  dr_id: {decision_norm}\n"
+                                            f"  searched_dirs: {dir_labels}\n"
+                                        ),
+                                    }
+                                )
                     elif session == "task-execution":
                         if not (decision_norm.startswith("ADR-") or decision_norm.startswith("FDR-")):
                             issues.append(
@@ -770,6 +1143,201 @@ def validate_sprints(*, issues: list[dict], rules: dict, root: Path) -> None:
                                 }
                             )
 
+            if not sprint_gate_task_ids:
+                issues.append(
+                    {
+                        "path": str(sprint_dir),
+                        "code": "sprint_gate_task_missing",
+                        "severity": "error",
+                        "message": (
+                            "Sprint is missing a sprint gate task.\n"
+                            f"  sprint: {sprint_dir.name}\n"
+                            "  expected: at least 1 task under tasks/ with `task_type: sprint-gate`\n"
+                        ),
+                    }
+                )
+
+
+def _as_int(val: object) -> int | None:
+    try:
+        s = str(val).strip()
+    except Exception:
+        return None
+    if not s or s.lower() in {"null", "none"}:
+        return None
+    try:
+        return int(s)
+    except Exception:
+        return None
+
+
+def validate_release_plan_slots(*, issues: list[dict], root: Path) -> None:
+    releases_dir = root / "releases"
+    if not releases_dir.exists():
+        return
+
+    slot_heading_re = re.compile(r"^## Slot ([1-9][0-9]*):\s*(.+)$")
+
+    for release_dir in sorted(releases_dir.iterdir()):
+        if not release_dir.is_dir():
+            continue
+        if not release_dir.name.startswith("v"):
+            continue
+
+        plan_path = release_dir / "plan.md"
+        if not plan_path.exists():
+            continue
+
+        text = read(plan_path)
+        fm, _, _ = parse_front_matter(text)
+        planned_sprints = _as_int(fm.get("planned_sprints"))
+        if planned_sprints is None or planned_sprints < 1:
+            continue
+
+        lines = text.splitlines()
+        slot_starts: list[tuple[int, int]] = []
+        for idx, line in enumerate(lines):
+            match = slot_heading_re.match(line)
+            if not match:
+                continue
+            slot_starts.append((int(match.group(1)), idx))
+
+        by_slot: dict[int, list[int]] = {}
+        for slot, idx in slot_starts:
+            by_slot.setdefault(slot, []).append(idx)
+
+        for slot, idxs in sorted(by_slot.items()):
+            if len(idxs) > 1:
+                issues.append(
+                    {
+                        "path": str(plan_path),
+                        "code": "release_slot_duplicate",
+                        "severity": "error",
+                        "slot": slot,
+                        "message": (
+                            "Release plan has duplicate slot section headings.\n"
+                            f"  slot: {slot}\n"
+                            "  expected: exactly one `## Slot <n>: <label>` per slot\n"
+                        ),
+                    }
+                )
+
+        for slot in range(1, planned_sprints + 1):
+            if slot not in by_slot:
+                issues.append(
+                    {
+                        "path": str(plan_path),
+                        "code": "release_slot_missing",
+                        "severity": "error",
+                        "slot": slot,
+                        "message": (
+                            "Release plan missing required slot section.\n"
+                            f"  expected_heading: ## Slot {slot}: <label>\n"
+                            "  required_subsection: ### Intended Gates (must include at least one `- Gate:` bullet)\n"
+                        ),
+                    }
+                )
+
+        if not slot_starts:
+            continue
+
+        slot_starts_sorted = sorted(slot_starts, key=lambda t: t[1])
+        for i, (slot, start_idx) in enumerate(slot_starts_sorted):
+            if slot < 1 or slot > planned_sprints:
+                continue
+
+            end_idx = slot_starts_sorted[i + 1][1] if i + 1 < len(slot_starts_sorted) else len(lines)
+            section_lines = lines[start_idx:end_idx]
+
+            intended_gates_idx = None
+            for j, line in enumerate(section_lines):
+                if line.strip() == "### Intended Gates":
+                    intended_gates_idx = j
+                    break
+
+            if intended_gates_idx is None:
+                issues.append(
+                    {
+                        "path": str(plan_path),
+                        "code": "release_slot_intended_gates_missing",
+                        "severity": "error",
+                        "slot": slot,
+                        "message": (
+                            "Release plan slot section missing required subsection.\n"
+                            f"  slot: {slot}\n"
+                            "  expected_subsection: ### Intended Gates\n"
+                            "  expected_list_item: - Gate: ...\n"
+                        ),
+                    }
+                )
+                continue
+
+            gate_lines: list[str] = []
+            for line in section_lines[intended_gates_idx + 1 :]:
+                if re.match(r"^##\s", line) or re.match(r"^###\s", line):
+                    break
+                gate_lines.append(line)
+
+            if not any(re.match(r"^\s*-\s*Gate:", line) for line in gate_lines):
+                issues.append(
+                    {
+                        "path": str(plan_path),
+                        "code": "release_slot_intended_gates_missing_gate_item",
+                        "severity": "error",
+                        "slot": slot,
+                        "message": (
+                            "Release plan slot '### Intended Gates' must include at least one gate bullet.\n"
+                            f"  slot: {slot}\n"
+                            "  expected_list_item_prefix: - Gate:\n"
+                        ),
+                    }
+                )
+
+
+def validate_sprint_release_alignment(*, issues: list[dict], root: Path) -> None:
+    sprints_dir = root / "sprints"
+    if not sprints_dir.exists():
+        return
+
+    for plan_path in sorted(sprints_dir.rglob("plan.md")):
+        # Avoid double-validating through `sprints/current` when it is a link.
+        try:
+            rel = plan_path.relative_to(sprints_dir).as_posix()
+        except Exception:
+            rel = str(plan_path)
+        if rel.startswith("current/"):
+            continue
+
+        text = read(plan_path)
+        fm, _, _ = parse_front_matter(text)
+
+        release = str(fm.get("release", "")).strip()
+        if not release or release.lower() in {"null", "none"}:
+            continue
+
+        slot = _as_int(fm.get("release_sprint_slot"))
+        if slot is None:
+            continue
+
+        heading_re = re.compile(rf"^## Release Alignment \\(Slot {slot}\\)\\s*$", flags=re.MULTILINE)
+        if not heading_re.search(text):
+            sprint_id = str(fm.get("sprint", "")).strip()
+            issues.append(
+                {
+                    "path": str(plan_path),
+                    "code": "sprint_release_alignment_missing",
+                    "severity": "error",
+                    "slot": slot,
+                    "release": release,
+                    "message": (
+                        "Sprint plan is assigned to a release slot but missing the required alignment section.\n"
+                        f"  sprint: {sprint_id or '<unknown>'}\n"
+                        f"  release: {release}\n"
+                        f"  expected_heading: ## Release Alignment (Slot {slot})\n"
+                    ),
+                }
+            )
+
 
 def validate_phase(*, issues: list[dict], root: Path) -> None:
     exec_dir = root / "execution"
@@ -813,6 +1381,13 @@ def run_validate(
         issues=issues, rules=rules, root=ph_project_root, ph_root=ph_root, scope=scope
     )
     validate_adrs(issues=issues, root=ph_data_root)
+    validate_adr_fdr_backlinks(issues=issues, root=ph_data_root)
+
+    try:
+        validate_release_plan_slots(issues=issues, root=ph_data_root)
+        validate_sprint_release_alignment(issues=issues, root=ph_data_root)
+    except Exception:
+        pass
 
     try:
         validate_sprints(issues=issues, rules=rules, root=ph_data_root)

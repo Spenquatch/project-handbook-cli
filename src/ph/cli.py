@@ -25,7 +25,10 @@ from .daily import check_status as check_daily_status
 from .daily import create_daily_status
 from .dashboard import run_dashboard
 from .doctor import run_doctor
+from .dr.add import add_dr_add_arguments, run_dr_add
 from .end_session import EndSessionError, run_end_session_codex, run_end_session_skip_codex
+from .fdr import run_fdr_add
+from .fdr.add import add_fdr_add_arguments
 from .feature import run_feature_create, run_feature_list, run_feature_status
 from .feature_archive import run_feature_archive
 from .feature_status_updater import run_feature_summary, run_feature_update_status
@@ -341,6 +344,13 @@ def build_parser() -> argparse.ArgumentParser:
     task_create_parser.add_argument("--owner", default="@owner", help="Task owner (default: @owner)")
     task_create_parser.add_argument("--prio", default="P2", help="Priority (default: P2)")
     task_create_parser.add_argument("--lane", help="Optional lane/workstream label")
+    task_create_parser.add_argument(
+        "--type",
+        "--task-type",
+        dest="task_type",
+        default=None,
+        help="Task taxonomy (e.g. implementation, research-discovery, sprint-gate)",
+    )
     task_create_parser.add_argument("--session", default="task-execution", help="Recommended session template")
     task_create_parser.add_argument(
         "--release",
@@ -399,6 +409,24 @@ def build_parser() -> argparse.ArgumentParser:
     adr_add_parser = adr_subparsers.add_parser("add", help="Create an ADR file", parents=[sub_common])
     add_adr_add_arguments(adr_add_parser)
     adr_subparsers.add_parser("list", help="List ADRs", parents=[sub_common])
+
+    dr_parser = subparsers.add_parser("dr", help="Manage Decision Register entries", parents=[sub_common])
+    dr_subparsers = dr_parser.add_subparsers(
+        dest="dr_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
+    dr_add_parser = dr_subparsers.add_parser("add", help="Create a DR file", parents=[sub_common])
+    add_dr_add_arguments(dr_add_parser)
+
+    fdr_parser = subparsers.add_parser("fdr", help="Manage Feature Decision Records", parents=[sub_common])
+    fdr_subparsers = fdr_parser.add_subparsers(
+        dest="fdr_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
+    fdr_add_parser = fdr_subparsers.add_parser("add", help="Create an FDR file", parents=[sub_common])
+    add_fdr_add_arguments(fdr_add_parser)
 
     backlog_parser = subparsers.add_parser("backlog", help="Manage issue backlog", parents=[sub_common])
     backlog_subparsers = backlog_parser.add_subparsers(
@@ -917,6 +945,8 @@ def main(argv: list[str] | None = None) -> int:
                             cmd_args.extend(["--prio", str(args.prio)])
                         if "--lane" in invocation_args and getattr(args, "lane", None) is not None:
                             cmd_args.extend(["--lane", str(args.lane)])
+                        if "--type" in invocation_args or "--task-type" in invocation_args:
+                            cmd_args.extend(["--type", str(getattr(args, "task_type", ""))])
                         if "--session" in invocation_args:
                             cmd_args.extend(["--session", str(args.session)])
                         if "--release" in invocation_args and getattr(args, "release", None) is not None:
@@ -937,6 +967,8 @@ def main(argv: list[str] | None = None) -> int:
                         prio=str(args.prio),
                         lane=getattr(args, "lane", None),
                         session=str(args.session),
+                        session_was_provided=("--session" in invocation_args),
+                        task_type=getattr(args, "task_type", None),
                         release=getattr(args, "release", None),
                         gate=bool(getattr(args, "gate", False)),
                         env=os.environ,
@@ -1063,6 +1095,8 @@ def main(argv: list[str] | None = None) -> int:
                             "--title",
                             str(getattr(args, "title")),
                         ]
+                        for dr_id in list(getattr(args, "dr", []) or []):
+                            cmd_args.extend(["--dr", str(dr_id)])
                         if "--status" in invocation_args:
                             cmd_args.extend(["--status", str(getattr(args, "status"))])
                         if "--superseded-by" in invocation_args and getattr(args, "superseded_by", None) is not None:
@@ -1078,6 +1112,7 @@ def main(argv: list[str] | None = None) -> int:
                         ph_data_root=ctx.ph_data_root,
                         adr_id=str(getattr(args, "id")),
                         title=str(getattr(args, "title")),
+                        dr=[str(value) for value in list(getattr(args, "dr", []) or [])],
                         status=str(getattr(args, "status")),
                         date=getattr(args, "date", None),
                         superseded_by=getattr(args, "superseded_by", None),
@@ -1089,6 +1124,74 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = run_adr_list(ph_data_root=ctx.ph_data_root)
                 else:
                     print("Usage: ph adr <add|list>\n", file=sys.stderr, end="")
+                    exit_code = 2
+            elif args.command == "dr":
+                if getattr(args, "dr_command", None) is None:
+                    print("Usage: ph dr <add>\n", file=sys.stderr, end="")
+                    exit_code = 2
+                elif args.dr_command == "add":
+                    if ctx.scope == "project":
+                        cmd_args = [
+                            "dr",
+                            "add",
+                            "--id",
+                            str(getattr(args, "id")),
+                            "--title",
+                            str(getattr(args, "title")),
+                        ]
+                        if "--feature" in invocation_args and getattr(args, "feature", None) is not None:
+                            cmd_args.extend(["--feature", str(getattr(args, "feature"))])
+                        if "--date" in invocation_args and getattr(args, "date", None) is not None:
+                            cmd_args.extend(["--date", str(getattr(args, "date"))])
+                        if "--force" in invocation_args and bool(getattr(args, "force", False)):
+                            cmd_args.append("--force")
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
+
+                    exit_code = run_dr_add(
+                        ph_root=ph_root,
+                        ph_data_root=ctx.ph_data_root,
+                        dr_id=str(getattr(args, "id")),
+                        title=str(getattr(args, "title")),
+                        feature=getattr(args, "feature", None),
+                        date=getattr(args, "date", None),
+                        force=bool(getattr(args, "force", False)),
+                    )
+                else:
+                    print("Usage: ph dr <add>\n", file=sys.stderr, end="")
+                    exit_code = 2
+            elif args.command == "fdr":
+                if getattr(args, "fdr_command", None) is None:
+                    print("Usage: ph fdr <add>\n", file=sys.stderr, end="")
+                    exit_code = 2
+                elif args.fdr_command == "add":
+                    if ctx.scope == "project":
+                        cmd_args = [
+                            "fdr",
+                            "add",
+                            "--feature",
+                            str(getattr(args, "feature")),
+                            "--id",
+                            str(getattr(args, "id")),
+                            "--title",
+                            str(getattr(args, "title")),
+                        ]
+                        for dr_id in list(getattr(args, "dr", []) or []):
+                            cmd_args.extend(["--dr", str(dr_id)])
+                        if "--date" in invocation_args and getattr(args, "date", None) is not None:
+                            cmd_args.extend(["--date", str(getattr(args, "date"))])
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
+
+                    exit_code = run_fdr_add(
+                        ph_root=ph_root,
+                        ph_data_root=ctx.ph_data_root,
+                        feature=str(getattr(args, "feature")),
+                        fdr_id=str(getattr(args, "id")),
+                        title=str(getattr(args, "title")),
+                        dr=[str(value) for value in list(getattr(args, "dr", []) or [])],
+                        date=getattr(args, "date", None),
+                    )
+                else:
+                    print("Usage: ph fdr <add>\n", file=sys.stderr, end="")
                     exit_code = 2
             elif args.command == "backlog":
                 if args.backlog_command is None:

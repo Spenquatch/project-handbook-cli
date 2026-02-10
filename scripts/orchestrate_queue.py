@@ -188,7 +188,15 @@ def pick_dispatchable(
             continue
         if ws not in per_ws:
             per_ws[ws] = t
-    return sorted(per_ws.values(), key=lambda t: int(t.get("order", 10**9)))
+
+    def sort_key(t: dict[str, Any]) -> tuple[int, int]:
+        # Primary: always honor `order` among runnable tasks.
+        # Secondary: prefer non-integration workstreams when orders tie.
+        ws = t.get("workstream_id") or "WS-UNKNOWN"
+        is_int = 1 if ws == "WS-INT" else 0
+        return (int(t.get("order", 10**9)), is_int)
+
+    return sorted(per_ws.values(), key=sort_key)
 
 
 def ensure_prompt(run_dir: Path, task_id: str, repo_root: Path, kickoff_prompt: str) -> Path:
@@ -337,7 +345,16 @@ def run_verification(repo_root: Path, task: dict[str, Any]) -> tuple[bool, list[
     ran: list[str] = []
     for cmd in cmds:
         ran.append(cmd)
-        res = subprocess.run(cmd, cwd=str(repo_root), shell=True)
+        env = os.environ.copy()
+        # In CI/sandbox contexts, uv may fail to write to default cache locations.
+        # Default these to writable paths unless the user already provided values.
+        env.setdefault("UV_CACHE_DIR", "/tmp/uv-cache")
+        env.setdefault("XDG_CACHE_HOME", "/tmp")
+        try:
+            Path(env["UV_CACHE_DIR"]).mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
+        res = subprocess.run(cmd, cwd=str(repo_root), shell=True, env=env)
         if res.returncode != 0:
             return False, ran
     return True, ran
@@ -347,24 +364,41 @@ def queue_complete(queue: dict[str, Any]) -> bool:
     return all(t.get("status") == "done" for t in queue["tasks"])
 
 
-def kqueue_wait_for_change(path: Path, timeout_s: int) -> int:
+def kqueue_wait_for_change(paths: list[Path], timeout_s: int) -> int:
     try:
         import select  # noqa: PLC0415
 
         kq = select.kqueue()
-        fd = os.open(str(path), os.O_RDONLY)
+        fds: list[int] = []
         try:
-            kev = select.kevent(
-                fd,
-                filter=select.KQ_FILTER_VNODE,
-                flags=select.KQ_EV_ADD | select.KQ_EV_CLEAR,
-                fflags=select.KQ_NOTE_WRITE | select.KQ_NOTE_EXTEND | select.KQ_NOTE_ATTRIB | select.KQ_NOTE_LINK,
-            )
-            kq.control([kev], 0, 0)
+            kevs: list[Any] = []
+            for path in paths:
+                if not path.exists():
+                    continue
+                fd = os.open(str(path), os.O_RDONLY)
+                fds.append(fd)
+                kevs.append(
+                    select.kevent(
+                        fd,
+                        filter=select.KQ_FILTER_VNODE,
+                        flags=select.KQ_EV_ADD | select.KQ_EV_CLEAR,
+                        fflags=select.KQ_NOTE_WRITE
+                        | select.KQ_NOTE_EXTEND
+                        | select.KQ_NOTE_ATTRIB
+                        | select.KQ_NOTE_LINK,
+                    )
+                )
+            if not kevs:
+                return -1
+            kq.control(kevs, 0, 0)
             events = kq.control(None, 1, timeout_s)
             return 1 if events else 0
         finally:
-            os.close(fd)
+            for fd in fds:
+                try:
+                    os.close(fd)
+                except Exception:
+                    pass
     except Exception:
         return -1
 
@@ -388,6 +422,65 @@ def main() -> int:
 
     blocked_seen = False
     stall_state: dict[str, tuple[tuple[float, int] | None, int]] = {}
+    last_stall_check = time.monotonic()
+
+    def maybe_stall_check() -> None:
+        """
+        Detect stalled workers without high-frequency polling.
+
+        We check at most once per tick window, even if filesystem activity is frequent,
+        so a single stalled task can't be masked by other tasks continuing to write logs.
+        """
+        nonlocal blocked_seen, last_stall_check, stall_state
+        now = time.monotonic()
+        if now - last_stall_check < args.tick_seconds:
+            return
+        last_stall_check = now
+
+        queue = load_queue(queue_path)
+        active = active_tasks_from_runs(run_state_root, queue)
+        for task_id, a in active.items():
+            if a.done_path.exists():
+                stall_state.pop(task_id, None)
+                continue
+            stat = None
+            if a.log_path.exists():
+                st = a.log_path.stat()
+                stat = (st.st_mtime, st.st_size)
+            prev, unchanged = stall_state.get(task_id, (None, 0))
+            if prev == stat:
+                unchanged += 1
+            else:
+                unchanged = 0
+            stall_state[task_id] = (stat, unchanged)
+            if unchanged < 2:
+                continue
+
+            if a.pid is not None and is_process_running(a.pid):
+                kill_process(a.pid)
+            failure_path = a.run_dir / "failure.md"
+            write_text(
+                failure_path,
+                "# Worker stalled\n\n"
+                f"- task_id: {task_id}\n"
+                f"- detected_at: {utc_now_iso()}\n\n"
+                "## Last 200 log lines\n\n"
+                "```text\n"
+                + tail_lines(a.log_path, 200)
+                + "\n```\n",
+            )
+            mark_blocked(
+                queue,
+                task_id,
+                blockers=["Worker appears stalled (no log activity for 20+ minutes)."],
+                unblock_steps=[
+                    f"Inspect {a.log_path} and {a.last_message_path}.",
+                    "Re-run the task and ensure Codex can execute required commands.",
+                ],
+            )
+            write_json(queue_path, queue)
+            print(f"BLOCKED {task_id} reason=stalled")
+            blocked_seen = True
 
     while True:
         queue = load_queue(queue_path)
@@ -535,54 +628,15 @@ def main() -> int:
             print(f"STOP_ON_BLOCKED {queue_path}")
             return 1
 
-        wait_result = kqueue_wait_for_change(run_state_root, timeout_s=args.tick_seconds)
-        if wait_result == 0:
-            # 10-minute tick without filesystem activity → stall detection.
-            queue = load_queue(queue_path)
-            active = active_tasks_from_runs(run_state_root, queue)
-            for task_id, a in active.items():
-                if a.done_path.exists():
-                    stall_state.pop(task_id, None)
-                    continue
-                stat = None
-                if a.log_path.exists():
-                    st = a.log_path.stat()
-                    stat = (st.st_mtime, st.st_size)
-                prev, unchanged = stall_state.get(task_id, (None, 0))
-                if prev == stat:
-                    unchanged += 1
-                else:
-                    unchanged = 0
-                stall_state[task_id] = (stat, unchanged)
-                if unchanged >= 2:
-                    if a.pid is not None and is_process_running(a.pid):
-                        kill_process(a.pid)
-                    failure_path = a.run_dir / "failure.md"
-                    write_text(
-                        failure_path,
-                        "# Worker stalled\n\n"
-                        f"- task_id: {task_id}\n"
-                        f"- detected_at: {utc_now_iso()}\n\n"
-                        "## Last 200 log lines\n\n"
-                        "```text\n"
-                        + tail_lines(a.log_path, 200)
-                        + "\n```\n",
-                    )
-                    mark_blocked(
-                        queue,
-                        task_id,
-                        blockers=["Worker appears stalled (no log activity for 20+ minutes)."],
-                        unblock_steps=[
-                            f"Inspect {a.log_path} and {a.last_message_path}.",
-                            "Re-run the task and ensure Codex can execute required commands.",
-                        ],
-                    )
-                    write_json(queue_path, queue)
-                    print(f"BLOCKED {task_id} reason=stalled")
-                    blocked_seen = True
-
+        # Watch `.runs/` plus each active run directory, so task-local DONE sentinels wake us immediately.
+        queue = load_queue(queue_path)
+        active = active_tasks_from_runs(run_state_root, queue)
+        watch_paths = [run_state_root] + [a.run_dir for a in active.values()]
+        wait_result = kqueue_wait_for_change(watch_paths, timeout_s=args.tick_seconds)
         if wait_result == -1:
             time.sleep(args.tick_seconds)
+
+        maybe_stall_check()
 
 
 if __name__ == "__main__":

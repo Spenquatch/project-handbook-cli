@@ -123,7 +123,7 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
         text=True,
         env={**os.environ},
     )
-    assert result.returncode == 0
+    assert result.returncode == 1
 
     resolved = tmp_path.resolve()
     evidence_dir = (resolved / ".project-handbook" / "status" / "evidence" / "PRE-EXEC" / sprint_id / date).resolve()
@@ -135,6 +135,10 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
         "Mode: bounded | Age: 0 days\n"
         "Health: 🟢 GREEN - Flowing\n"
         "Progress: 3/3 points (100%)\n"
+        "\n"
+        "Sprint gates:\n"
+        "⚠️  No sprint gate tasks found (task_type: sprint-gate).\n"
+        "Gate-ready: NO\n"
         "\n"
         "Current focus:\n"
         "- No active tasks. Pull the next planned item.\n"
@@ -166,7 +170,16 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
     validate_out = (
         f"validation: 0 error(s), 0 warning(s), report: {resolved}/.project-handbook/status/validation.json\n"
     )
-    lint_out = "\nPRE-EXEC LINT PASSED\n"
+    lint_out = (
+        "FAIL SPRINT: Current sprint is missing a required sprint gate task (task_type: sprint-gate). "
+        "Create one (recommended: `ph task create --gate`) and ensure its validation.md references sprint goal(s) "
+        "and required evidence artifacts (including secret-scan.txt). (sprints/current/tasks)\n"
+        "\n"
+        "PRE-EXEC LINT FAILED: 1 issue(s)\n"
+        "Next:\n"
+        "- Fix the flagged task docs/metadata (remove ambiguity, align session↔purpose, fill required fields/files).\n"
+        "- Re-run: `ph pre-exec lint`\n"
+    )
 
     expected_stdout = (
         "\n"
@@ -204,14 +217,7 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
         "PRE-EXEC: lint\n"
         f"{section}\n"
         f"{lint_out}"
-        "\n"
-        "PRE-EXEC AUDIT PASSED\n"
-        "Next:\n"
-        f"- Review evidence bundle: {evidence_dir}\n"
-        "- Update `project-handbook/sprints/current/plan.md` to confirm the audit gate passed "
-        "(date + evidence path).\n"
-        "- Start execution by claiming the first ready task (typically `TASK-001`) via "
-        "`ph task status --id TASK-001 --status doing`.\n"
+        f"\n❌ PRE-EXEC AUDIT FAILED: Pre-exec lint failed. Evidence: {evidence_dir}\n"
     )
     assert result.stdout == expected_stdout
 
@@ -341,6 +347,10 @@ def test_release_status_sprint_slots_matches_legacy_format(tmp_path: Path) -> No
         + "=" * 60
         + "\n"
         f"Sprint: 1 of 2 (slot 1) ({sprint_id})\n"
+        "Slot Goal: TBD\n"
+        "⚠️ Alignment warnings:\n"
+        "  - Current sprint plan is missing required heading: `## Release Alignment (Slot 1)`.\n"
+        "  - Release plan is missing required slot markers for Slot 1 (expected `### Slot 1` + subsections).\n"
         "Overall Progress: 100% complete (1/1 features started)\n"
         "Target: Slot 2\n"
         "Release Trajectory: 🟢 GREEN - Ahead of expected completion for Sprint 1\n"
@@ -359,7 +369,7 @@ def test_release_status_sprint_slots_matches_legacy_format(tmp_path: Path) -> No
         "✅ TASK-001: Implement minimal task (3pts) [feature-a] SPRINT-SEQ-0001\n"
         "\n"
         "📅 Sprint Breakdown:\n"
-        f"🔄 In progress Slot 1: {sprint_id} (Sprint 1 of 2)\n"
-        "⭕ Planned Slot 2: (unassigned) (Sprint 2 of 2)\n"
+        f"🔄 In progress ▶ Slot 1: {sprint_id} — Goal: TBD (Sprint 1 of 2)\n"
+        "⭕ Planned Slot 2: (unassigned) — Goal: TBD (Sprint 2 of 2)\n"
     )
     assert result.stdout == expected

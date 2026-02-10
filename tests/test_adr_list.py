@@ -11,6 +11,9 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
         '{\n  "handbook_schema_version": 1,\n  "requires_ph_version": ">=0.0.1,<0.1.0",\n  "repo_root": "."\n}\n',
         encoding="utf-8",
     )
+    dr = ph_root / ".project-handbook" / "decision-register" / "DR-0001-seed.md"
+    dr.parent.mkdir(parents=True, exist_ok=True)
+    dr.write_text("# DR-0001\n", encoding="utf-8")
 
 
 def test_adr_list_prints_id_status_date_title(tmp_path: Path) -> None:
@@ -28,6 +31,8 @@ def test_adr_list_prints_id_status_date_title(tmp_path: Path) -> None:
             "ADR-0010",
             "--title",
             "Tenth Decision",
+            "--dr",
+            "DR-0001",
             "--status",
             "accepted",
             "--date",
@@ -50,6 +55,8 @@ def test_adr_list_prints_id_status_date_title(tmp_path: Path) -> None:
             "ADR-0007",
             "--title",
             "Seventh Decision",
+            "--dr",
+            "DR-0001",
             "--status",
             "draft",
             "--date",
@@ -99,4 +106,3 @@ def test_adr_list_empty_is_ok(tmp_path: Path) -> None:
     )
     assert result.returncode == 0
     assert "No ADRs found." in result.stdout
-

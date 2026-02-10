@@ -23,6 +23,8 @@ STATIC_SESSION_TOPIC_MAP: dict[str, str | None] = {
     "research-discovery": "research-discovery.md",
     "research": "research-discovery.md",
     "discovery": "research-discovery.md",
+    "research-planning": "research-planning.md",
+    "task-docs-deep-dive": "task-docs-deep-dive.md",
     "quality-gate": "quality-gate.md",
     "testing": "quality-gate.md",
     "continue-session": None,

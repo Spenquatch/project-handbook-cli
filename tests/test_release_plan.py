@@ -65,6 +65,13 @@ def test_release_plan_creates_files_and_hints(tmp_path: Path) -> None:
     assert "timeline_mode: sprint_slots" in plan_text
     assert "planned_sprints: 2" in plan_text
     assert "sprint_slots: [1, 2]" in plan_text
+    assert "## Slot Plans" in plan_text
+    assert "### Slot 1" in plan_text
+    assert "### Slot 2" in plan_text
+    assert plan_text.count("#### Goal / Purpose") == 2
+    assert plan_text.count("#### Scope boundaries (in/out)") == 2
+    assert plan_text.count("#### Intended gate(s)") == 2
+    assert plan_text.count("#### Enablement") == 2
 
     features_text = features_path.read_text(encoding="utf-8")
     assert "timeline_mode: sprint_slots" in features_text
@@ -126,3 +133,53 @@ def test_release_plan_rejects_system_scope(tmp_path: Path) -> None:
     )
     assert result.returncode == 1
     assert result.stdout.strip() == "Releases are project-scope only. Use: ph --scope project release ..."
+
+
+def test_release_plan_does_not_overwrite_existing_plan_md(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+
+    env = dict(os.environ)
+    env["PH_FAKE_TODAY"] = "2099-01-01"
+
+    result = subprocess.run(
+        [
+            "ph",
+            "--root",
+            str(tmp_path),
+            "--no-post-hook",
+            "release",
+            "plan",
+            "--version",
+            "v1.2.3",
+            "--sprints",
+            "2",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0
+
+    plan_path = tmp_path / ".project-handbook" / "releases" / "v1.2.3" / "plan.md"
+    plan_path.write_text("custom-plan\n", encoding="utf-8")
+
+    env["PH_FAKE_TODAY"] = "2099-01-02"
+    rerun = subprocess.run(
+        [
+            "ph",
+            "--root",
+            str(tmp_path),
+            "--no-post-hook",
+            "release",
+            "plan",
+            "--version",
+            "v1.2.3",
+            "--sprints",
+            "2",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert rerun.returncode == 0
+    assert plan_path.read_text(encoding="utf-8") == "custom-plan\n"

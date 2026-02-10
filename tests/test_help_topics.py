@@ -97,6 +97,22 @@ def test_adr_add_help_does_not_show_force_flag() -> None:
 
 def test_adr_add_force_flag_is_accepted_but_hidden(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
+    dr_dir = tmp_path / ".project-handbook" / "decision-register"
+    dr_dir.mkdir(parents=True, exist_ok=True)
+    (dr_dir / "DR-0001-test-decision.md").write_text(
+        "---\n"
+        "title: DR-0001 — Test Decision\n"
+        "type: decision-register\n"
+        "date: 2099-01-01\n"
+        "tags: [decision-register]\n"
+        "links: []\n"
+        "---\n"
+        "\n"
+        "# Decision Register Entry\n"
+        "\n"
+        "### DR-0001 — Test Decision\n",
+        encoding="utf-8",
+    )
     cmd = [
         "ph",
         "adr",
@@ -108,6 +124,8 @@ def test_adr_add_force_flag_is_accepted_but_hidden(tmp_path: Path) -> None:
         "ADR-0001",
         "--title",
         "Test ADR",
+        "--dr",
+        "DR-0001",
     ]
     first = subprocess.run(cmd, capture_output=True, text=True)
     assert first.returncode == 0

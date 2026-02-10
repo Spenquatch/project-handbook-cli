@@ -125,11 +125,13 @@ def test_sprint_close_stdout_archive_and_retrospective_match_make_convention(tmp
         task_dir = tasks_dir / dirname
         task_dir.mkdir(parents=True, exist_ok=True)
         task_num = dirname.split("-", 2)[1]
+        task_type_line = "task_type: sprint-gate" if task_num == "001" else "task_type: implementation"
         (task_dir / "task.yaml").write_text(
             "\n".join(
                 [
                     f"id: TASK-{task_num}",
                     f"title: Task {task_num}",
+                    task_type_line,
                     "status: done",
                     "story_points: 1",
                     "depends_on: [FIRST_TASK]",
@@ -213,3 +215,195 @@ def test_sprint_close_stdout_archive_and_retrospective_match_make_convention(tmp
     retro_text = (archived_dir / "retrospective.md").read_text(encoding="utf-8")
     assert f"date: {expected_today}\n" in retro_text
     assert _extract_completed_task_lines(retro_text) == expected_done_lines
+
+
+def test_sprint_close_blocks_when_sprint_gates_missing(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _write_package_json(tmp_path)
+    ph_data_root = tmp_path / ".project-handbook"
+
+    sprint_id = "SPRINT-SEQ-0005"
+    sprint_dir = ph_data_root / "sprints" / "SEQ" / sprint_id
+    tasks_dir = sprint_dir / "tasks"
+    tasks_dir.mkdir(parents=True, exist_ok=True)
+    (sprint_dir / "plan.md").write_text(
+        "\n".join(
+            [
+                "---",
+                f"title: Sprint Plan - {sprint_id}",
+                "type: sprint-plan",
+                "date: 2099-01-23",
+                f"sprint: {sprint_id}",
+                "mode: bounded",
+                "tags: [sprint, planning]",
+                "---",
+                "",
+                f"# Sprint Plan: {sprint_id}",
+                "",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    task_dir = tasks_dir / "TASK-001"
+    task_dir.mkdir(parents=True, exist_ok=True)
+    (task_dir / "task.yaml").write_text(
+        "\n".join(
+            [
+                "id: TASK-001",
+                "title: Task 001",
+                "task_type: implementation",
+                "status: done",
+                "story_points: 1",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    current_link = ph_data_root / "sprints" / "current"
+    current_link.parent.mkdir(parents=True, exist_ok=True)
+    current_link.symlink_to(Path("SEQ") / sprint_id)
+
+    res = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "close"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert res.returncode == 1
+    assert "❌ Sprint close blocked: sprint gates missing/incomplete." in res.stdout
+    assert "No sprint gate tasks found (task_type: sprint-gate)." in res.stdout
+
+    assert current_link.exists()
+    assert sprint_dir.exists()
+    assert not (sprint_dir / "retrospective.md").exists()
+    assert not (ph_data_root / "sprints" / "archive" / "SEQ" / sprint_id).exists()
+
+
+def test_sprint_close_blocks_when_any_sprint_gate_incomplete(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _write_package_json(tmp_path)
+    ph_data_root = tmp_path / ".project-handbook"
+
+    sprint_id = "SPRINT-SEQ-0006"
+    sprint_dir = ph_data_root / "sprints" / "SEQ" / sprint_id
+    tasks_dir = sprint_dir / "tasks"
+    tasks_dir.mkdir(parents=True, exist_ok=True)
+    (sprint_dir / "plan.md").write_text(
+        "\n".join(
+            [
+                "---",
+                f"title: Sprint Plan - {sprint_id}",
+                "type: sprint-plan",
+                "date: 2099-01-23",
+                f"sprint: {sprint_id}",
+                "mode: bounded",
+                "tags: [sprint, planning]",
+                "---",
+                "",
+                f"# Sprint Plan: {sprint_id}",
+                "",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    gate_dir = tasks_dir / "TASK-001-gate"
+    gate_dir.mkdir(parents=True, exist_ok=True)
+    (gate_dir / "task.yaml").write_text(
+        "\n".join(
+            [
+                "id: TASK-001",
+                "title: Gate task",
+                "task_type: sprint-gate",
+                "status: doing",
+                "story_points: 1",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    current_link = ph_data_root / "sprints" / "current"
+    current_link.parent.mkdir(parents=True, exist_ok=True)
+    current_link.symlink_to(Path("SEQ") / sprint_id)
+
+    res = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "close"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert res.returncode == 1
+    assert "❌ Sprint close blocked: sprint gates missing/incomplete." in res.stdout
+    assert "sprint gate task(s) are not status: done." in res.stdout
+    assert "TASK-001: Gate task (status: doing)" in res.stdout
+
+    assert current_link.exists()
+    assert sprint_dir.exists()
+    assert not (ph_data_root / "sprints" / "archive" / "SEQ" / sprint_id).exists()
+
+
+def test_sprint_close_override_allows_close_without_gates(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _write_package_json(tmp_path)
+    ph_data_root = tmp_path / ".project-handbook"
+
+    sprint_id = "SPRINT-SEQ-0007"
+    sprint_dir = ph_data_root / "sprints" / "SEQ" / sprint_id
+    tasks_dir = sprint_dir / "tasks"
+    tasks_dir.mkdir(parents=True, exist_ok=True)
+    (sprint_dir / "plan.md").write_text(
+        "\n".join(
+            [
+                "---",
+                f"title: Sprint Plan - {sprint_id}",
+                "type: sprint-plan",
+                "date: 2099-01-23",
+                f"sprint: {sprint_id}",
+                "mode: bounded",
+                "tags: [sprint, planning]",
+                "---",
+                "",
+                f"# Sprint Plan: {sprint_id}",
+                "",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    task_dir = tasks_dir / "TASK-001"
+    task_dir.mkdir(parents=True, exist_ok=True)
+    (task_dir / "task.yaml").write_text(
+        "\n".join(
+            [
+                "id: TASK-001",
+                "title: Task 001",
+                "task_type: implementation",
+                "status: done",
+                "story_points: 1",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    current_link = ph_data_root / "sprints" / "current"
+    current_link.parent.mkdir(parents=True, exist_ok=True)
+    current_link.symlink_to(Path("SEQ") / sprint_id)
+
+    env = dict(os.environ)
+    env["PH_SPRINT_CLOSE_ALLOW_INCOMPLETE_GATES"] = "1"
+    res = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "close"],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert res.returncode == 0
+    assert "skipping sprint gate checks (PH_SPRINT_CLOSE_ALLOW_INCOMPLETE_GATES=1)." in res.stdout
+    assert (ph_data_root / "sprints" / "archive" / "SEQ" / sprint_id).exists()

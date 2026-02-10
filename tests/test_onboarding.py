@@ -56,12 +56,14 @@ def test_onboarding_session_list_sorts_topics(tmp_path: Path) -> None:
         "quality-gate",
         "research",
         "research-discovery",
+        "research-planning",
         "retro",
         "retrospective",
         "sprint-close",
         "sprint-closing",
         "sprint-planning",
         "task-execution",
+        "task-docs-deep-dive",
         "testing",
     }
     expected_topics = sorted(static_topics | {"a-topic", "b-topic"})

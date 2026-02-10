@@ -207,6 +207,8 @@ def run_task_create(
     prio: str,
     lane: str | None,
     session: str,
+    session_was_provided: bool = True,
+    task_type: str | None = None,
     release: str | None = None,
     gate: bool = False,
     env: dict[str, str],
@@ -219,6 +221,85 @@ def run_task_create(
     if lane and ctx.scope == "project" and is_system_scoped_lane(ph_project_root=ctx.ph_project_root, lane=lane):
         print("Use: ph --scope system task create ...")
         return 1
+
+    TASK_TYPE_TO_SESSION: dict[str, str] = {
+        "implementation": "task-execution",
+        "research-discovery": "research-discovery",
+        "sprint-gate": "sprint-gate",
+        "feature-research-planning": "feature-research-planning",
+        "task-docs-deep-dive": "task-docs-deep-dive",
+    }
+    SESSION_TO_TASK_TYPE: dict[str, str] = {v: k for k, v in TASK_TYPE_TO_SESSION.items()}
+    DEFAULT_TASK_TYPE = "implementation"
+    DEFAULT_SESSION = "task-execution"
+
+    normalized_task_type = (str(task_type).strip().lower() if task_type is not None else "") or None
+    normalized_session = (str(session).strip() if session is not None else "").strip()
+
+    if normalized_task_type:
+        if normalized_task_type not in TASK_TYPE_TO_SESSION:
+            allowed = ", ".join(sorted(TASK_TYPE_TO_SESSION.keys()))
+            print(f"❌ Unknown task type '{normalized_task_type}'. Allowed: {allowed}")
+            return 2
+        mapped = TASK_TYPE_TO_SESSION[normalized_task_type]
+        if session_was_provided and normalized_session and normalized_session != mapped:
+            print(
+                "❌ session/task_type mismatch.\n"
+                f"  task_type: {normalized_task_type}\n"
+                f"  session: {normalized_session}\n"
+                f"  expected session for type: {mapped}"
+            )
+            return 1
+        effective_task_type = normalized_task_type
+        effective_session = mapped
+    else:
+        effective_session = normalized_session or DEFAULT_SESSION
+        if session_was_provided and effective_session:
+            effective_task_type = SESSION_TO_TASK_TYPE.get(effective_session, DEFAULT_TASK_TYPE)
+        else:
+            effective_task_type = DEFAULT_TASK_TYPE
+            effective_session = DEFAULT_SESSION
+
+    TASK_TYPE_TO_DEFAULT_LANE: dict[str, str] = {
+        "sprint-gate": "ops/gates",
+        "research-discovery": "product/research",
+        "feature-research-planning": "product/research",
+        "task-docs-deep-dive": "docs/quality",
+    }
+    effective_lane = lane
+    if not effective_lane and effective_task_type in TASK_TYPE_TO_DEFAULT_LANE:
+        effective_lane = TASK_TYPE_TO_DEFAULT_LANE[effective_task_type]
+
+    def acceptance_items_for(task_type_value: str, *, task_id_value: str) -> list[str]:
+        if task_type_value == "sprint-gate":
+            return [
+                "Sprint Goal and exit criteria captured in validation.md",
+                "Automated validation complete (include secret-scan.txt evidence)",
+                f"Evidence recorded under status/evidence/{task_id_value}/",
+            ]
+        if task_type_value == "research-discovery":
+            return [
+                "Decision Register entry (DR-XXXX) created/updated with recommendation",
+                "Exactly two options documented (Option A / Option B)",
+                "Follow-on execution tasks created with unambiguous scope",
+            ]
+        if task_type_value == "feature-research-planning":
+            return [
+                "Research plan written with explicit deliverables and timebox",
+                "Contract/spec updates captured (as needed)",
+                "Execution tasks to create enumerated with titles + owners",
+            ]
+        if task_type_value == "task-docs-deep-dive":
+            return [
+                "Task docs updated to be deterministic (no TBD/TODO/ambiguity)",
+                "steps.md and validation.md avoid implementation language",
+                "Validation steps and evidence paths made explicit",
+            ]
+        return [
+            "Implementation complete and tested",
+            "Code review passed",
+            "Documentation updated",
+        ]
 
     story_points = int(points) if points is not None else _default_story_points(ph_project_root=ctx.ph_project_root)
 
@@ -249,23 +330,26 @@ def run_task_create(
     release_line = f"release: {normalized_release}\n" if normalized_release else "release: null\n"
     release_gate_line = f"release_gate: {'true' if gate else 'false'}\n"
 
-    lane_line = f"lane: {lane}\n" if lane else ""
-    session_line = f"session: {session}\n" if session else ""
+    lane_line = f"lane: {effective_lane}\n" if effective_lane else ""
+    session_line = f"session: {effective_session}\n" if effective_session else ""
+    task_type_line = f"task_type: {effective_task_type}\n"
+
+    acceptance_lines = "\n".join(
+        [f"  - {item}" for item in acceptance_items_for(effective_task_type, task_id_value=task_id)]
+    )
 
     task_yaml = f"""id: {task_id}
 title: {title}
 feature: {feature}
 {lane_line}decision: {decision}
-{session_line}owner: {owner}
+{session_line}{task_type_line}owner: {owner}
 status: todo
 story_points: {story_points}
 depends_on: []
 prio: {prio}
 due: {due_date.strftime('%Y-%m-%d')}
 {release_line}{release_gate_line}acceptance:
-  - Implementation complete and tested
-  - Code review passed
-  - Documentation updated
+{acceptance_lines}
 links: []
 """
     (task_dir / "task.yaml").write_text(task_yaml, encoding="utf-8")
@@ -291,7 +375,7 @@ links: []
             f"date: {today.strftime('%Y-%m-%d')}",
             f"task_id: {task_id}",
             f"feature: {feature}",
-            f"session: {session}",
+            f"session: {effective_session}",
             f"tags: [task, {feature}]",
             f"links: [{feature_overview_rel}]",
             "---",
@@ -303,8 +387,8 @@ links: []
             f"**Decision**: {decision_link}",
             f"**Story Points**: {story_points}",
             f"**Owner**: {owner}",
-            f"**Lane**: {lane or '(unset)'}",
-            f"**Session**: `{session}`",
+            f"**Lane**: {effective_lane or '(unset)'}",
+            f"**Session**: `{effective_session}`",
             f"**Release**: {normalized_release or '(none)'}",
             f"**Release Gate**: `{str(gate).lower()}`",
             "",
@@ -341,77 +425,180 @@ links: []
     )
     (task_dir / "README.md").write_text(readme_content, encoding="utf-8")
 
-    steps_content = "\n".join(
-        [
-            "---",
-            f"title: {title} - Implementation Steps",
-            "type: implementation",
-            f"date: {today.strftime('%Y-%m-%d')}",
-            f"task_id: {task_id}",
-            "tags: [implementation]",
-            "links: []",
-            "---",
-            "",
-            f"# Implementation Steps: {title}",
-            "",
-            "## Overview",
-            "Detailed step-by-step implementation guide for this task.",
-            "",
-            "## Prerequisites",
-            "- [ ] All dependent tasks completed (check task.yaml depends_on)",
-            "- [ ] Development environment ready",
-            "- [ ] Required permissions/access available",
-            "",
-            "## Step 1: Analysis & Planning",
-            "**Estimated Time**: 1-2 hours",
-            "",
-            "### Actions",
-            f"- [ ] Review feature requirements in features/{feature}/",
-            f"- [ ] Read decision rationale in {decision_link}",
-            "- [ ] Identify implementation approach",
-            "- [ ] Plan testing strategy",
-            "",
-            "### Expected Outcome",
-            "- Clear understanding of requirements",
-            "- Implementation approach decided",
-            "- Test plan outlined",
-            "",
-            "## Step 2: Core Implementation",
-            "**Estimated Time**: 4-6 hours",
-            "",
-            "### Actions",
-            "- [ ] Implement core functionality",
-            "- [ ] Add error handling",
-            "- [ ] Write unit tests",
-            "- [ ] Update documentation",
-            "",
-            "### Expected Outcome",
-            "- Core functionality working",
-            "- Tests passing",
-            "- Basic documentation updated",
-            "",
-            "## Step 3: Integration & Validation",
-            "**Estimated Time**: 1-2 hours",
-            "",
-            "### Actions",
-            "- [ ] Integration testing",
-            "- [ ] Performance validation",
-            "- [ ] Security review (if applicable)",
-            "- [ ] Final documentation pass",
-            "",
-            "### Expected Outcome",
-            "- All tests passing",
-            "- Performance acceptable",
-            "- Documentation complete",
-            "- Ready for review",
-            "",
-            "## Notes",
-            "- Update task.yaml status as you progress through steps",
-            "- Document any blockers or decisions in daily status",
-            "- Link any PRs/commits back to this task",
-            "",
-        ]
-    )
+    if effective_task_type == "feature-research-planning":
+        steps_content = "\n".join(
+            [
+                "---",
+                f"title: {title} - Research Planning Steps",
+                "type: planning",
+                f"date: {today.strftime('%Y-%m-%d')}",
+                f"task_id: {task_id}",
+                "tags: [planning, research]",
+                "links: []",
+                "---",
+                "",
+                f"# Research Planning Steps: {title}",
+                "",
+                "## Overview",
+                "Produce a crisp research plan and the artifacts needed to turn outcomes into execution tasks.",
+                "",
+                "## Contract updates",
+                "- [ ] Identify any contract/spec documents that must change",
+                "- [ ] Record concrete updates with links and exact wording",
+                "",
+                "## Execution tasks to create",
+                "- [ ] List the execution tasks that will be created after this planning completes",
+                "- [ ] Include titles, owners, and expected validations/evidence paths",
+                "",
+            ]
+        )
+    elif effective_task_type == "task-docs-deep-dive":
+        steps_content = "\n".join(
+            [
+                "---",
+                f"title: {title} - Task Docs Deep Dive",
+                "type: planning",
+                f"date: {today.strftime('%Y-%m-%d')}",
+                f"task_id: {task_id}",
+                "tags: [docs, planning]",
+                "links: []",
+                "---",
+                "",
+                f"# Task Docs Deep Dive: {title}",
+                "",
+                "## Overview",
+                "Improve task docs so they are deterministic and executable without guesswork.",
+                "",
+                "## Checklist",
+                "- [ ] README.md: exact goal + scope boundaries",
+                "- [ ] steps.md: numbered, atomic steps with concrete file paths/commands",
+                "- [ ] commands.md: copy/paste runnable commands",
+                "- [ ] checklist.md: binary checkboxes, not prose",
+                "- [ ] validation.md: explicit validations and evidence paths",
+                "",
+            ]
+        )
+    elif effective_task_type == "research-discovery":
+        steps_content = "\n".join(
+            [
+                "---",
+                f"title: {title} - Research/Discovery Steps",
+                "type: discovery",
+                f"date: {today.strftime('%Y-%m-%d')}",
+                f"task_id: {task_id}",
+                "tags: [research, discovery]",
+                "links: []",
+                "---",
+                "",
+                f"# Research/Discovery Steps: {title}",
+                "",
+                "## Overview",
+                "Deliverable: a Decision Register entry (DR-XXXX) with exactly two options and a recommendation.",
+                "",
+                "## Steps",
+                "- [ ] Capture problem statement + success criteria",
+                "- [ ] Document Option A and Option B",
+                "- [ ] Recommend one option with rationale",
+                "- [ ] Create follow-on execution tasks with no ambiguity",
+                "",
+            ]
+        )
+    elif effective_task_type == "sprint-gate":
+        steps_content = "\n".join(
+            [
+                "---",
+                f"title: {title} - Sprint Gate Steps",
+                "type: gate",
+                f"date: {today.strftime('%Y-%m-%d')}",
+                f"task_id: {task_id}",
+                "tags: [sprint, gate]",
+                "links: []",
+                "---",
+                "",
+                f"# Sprint Gate Steps: {title}",
+                "",
+                "## Overview",
+                "Define a sprint goal and deterministic exit criteria, then record evidence under status/evidence/.",
+                "",
+                "## Steps",
+                "- [ ] Update validation.md with Sprint Goal and Exit criteria",
+                f"- [ ] Record evidence under status/evidence/{task_id}/",
+                "- [ ] Include secret-scan.txt evidence (or reference it if produced by automation)",
+                "",
+            ]
+        )
+    else:
+        steps_content = "\n".join(
+            [
+                "---",
+                f"title: {title} - Implementation Steps",
+                "type: implementation",
+                f"date: {today.strftime('%Y-%m-%d')}",
+                f"task_id: {task_id}",
+                "tags: [implementation]",
+                "links: []",
+                "---",
+                "",
+                f"# Implementation Steps: {title}",
+                "",
+                "## Overview",
+                "Detailed step-by-step implementation guide for this task.",
+                "",
+                "## Prerequisites",
+                "- [ ] All dependent tasks completed (check task.yaml depends_on)",
+                "- [ ] Development environment ready",
+                "- [ ] Required permissions/access available",
+                "",
+                "## Step 1: Analysis & Planning",
+                "**Estimated Time**: 1-2 hours",
+                "",
+                "### Actions",
+                f"- [ ] Review feature requirements in features/{feature}/",
+                f"- [ ] Read decision rationale in {decision_link}",
+                "- [ ] Identify implementation approach",
+                "- [ ] Plan testing strategy",
+                "",
+                "### Expected Outcome",
+                "- Clear understanding of requirements",
+                "- Implementation approach decided",
+                "- Test plan outlined",
+                "",
+                "## Step 2: Core Implementation",
+                "**Estimated Time**: 4-6 hours",
+                "",
+                "### Actions",
+                "- [ ] Implement core functionality",
+                "- [ ] Add error handling",
+                "- [ ] Write unit tests",
+                "- [ ] Update documentation",
+                "",
+                "### Expected Outcome",
+                "- Core functionality working",
+                "- Tests passing",
+                "- Basic documentation updated",
+                "",
+                "## Step 3: Integration & Validation",
+                "**Estimated Time**: 1-2 hours",
+                "",
+                "### Actions",
+                "- [ ] Integration testing",
+                "- [ ] Performance validation",
+                "- [ ] Security review (if applicable)",
+                "- [ ] Final documentation pass",
+                "",
+                "### Expected Outcome",
+                "- All tests passing",
+                "- Performance acceptable",
+                "- Documentation complete",
+                "- Ready for review",
+                "",
+                "## Notes",
+                "- Update task.yaml status as you progress through steps",
+                "- Document any blockers or decisions in daily status",
+                "- Link any PRs/commits back to this task",
+                "",
+            ]
+        )
     (task_dir / "steps.md").write_text(steps_content, encoding="utf-8")
 
     if ctx.scope == "project":
@@ -628,82 +815,87 @@ links: []
         )
     (task_dir / "checklist.md").write_text(checklist_content, encoding="utf-8")
 
+    def default_validation_lines(*, scope_cmd: str, evidence_prefix: str) -> list[str]:
+        return [
+            "---",
+            f"title: {title} - Validation Guide",
+            "type: validation",
+            f"date: {today.strftime('%Y-%m-%d')}",
+            f"task_id: {task_id}",
+            "tags: [validation]",
+            "links: []",
+            "---",
+            "",
+            f"# Validation Guide: {title}",
+            "",
+            "## Automated Validation",
+            "```bash",
+            f"{scope_cmd} validate",
+            f"{scope_cmd} sprint status",
+            "```",
+            "",
+            "## Manual Validation (Must Be Task-Specific)",
+            (
+                "This file must be updated during sprint planning so an execution agent can validate "
+                "without inventing steps."
+            ),
+            "",
+            "Before the task is marked `review`, add:",
+            "- exact copy/paste command(s),",
+            "- exact pass/fail success criteria,",
+            f"- exact evidence file list (under `{evidence_prefix}{task_id}/`).",
+            "",
+            "## Sign-off",
+            "- [ ] All validation steps completed",
+            "- [ ] Evidence documented above",
+            '- [ ] Ready to mark task as "done"' if ctx.scope == "project" else '- [ ] Ready to mark task as \"done\"',
+            "",
+        ]
+
     if ctx.scope == "project":
+        scope_cmd = "ph"
+        evidence_prefix = ".project-handbook/status/evidence/"
+    else:
+        scope_cmd = ph_cmd
+        evidence_prefix = "status/evidence/"
+
+    if effective_task_type == "sprint-gate":
         validation_content = "\n".join(
             [
                 "---",
-                f"title: {title} - Validation Guide",
+                f"title: {title} - Sprint Gate Validation",
                 "type: validation",
                 f"date: {today.strftime('%Y-%m-%d')}",
                 f"task_id: {task_id}",
-                "tags: [validation]",
+                "tags: [validation, sprint, gate]",
                 "links: []",
                 "---",
                 "",
-                f"# Validation Guide: {title}",
+                f"# Sprint Gate Validation: {title}",
+                "",
+                "Sprint Goal:",
+                "- <fill in>",
+                "",
+                "Exit criteria:",
+                "- [ ] <fill in>",
+                "",
+                "## Evidence",
+                f"- Evidence root: {evidence_prefix}{task_id}/",
+                "- Include: secret-scan.txt",
+                "",
+                "## Sprint plan reference",
+                "- See: ../../plan.md",
                 "",
                 "## Automated Validation",
                 "```bash",
-                "ph validate",
-                "ph sprint status",
+                f"{scope_cmd} validate",
+                f"{scope_cmd} sprint status",
                 "```",
-                "",
-                "## Manual Validation (Must Be Task-Specific)",
-                (
-                    "This file must be updated during sprint planning so an execution agent can validate "
-                    "without inventing steps."
-                ),
-                "",
-                "Before the task is marked `review`, add:",
-                "- exact copy/paste command(s),",
-                "- exact pass/fail success criteria,",
-                f"- exact evidence file list (under `.project-handbook/status/evidence/{task_id}/`).",
-                "",
-                "## Sign-off",
-                "- [ ] All validation steps completed",
-                "- [ ] Evidence documented above",
-                '- [ ] Ready to mark task as "done"',
                 "",
             ]
         )
     else:
-        validation_content = "\n".join(
-            [
-                "---",
-                f"title: {title} - Validation Guide",
-                "type: validation",
-                f"date: {today.strftime('%Y-%m-%d')}",
-                f"task_id: {task_id}",
-                "tags: [validation]",
-                "links: []",
-                "---",
-                "",
-                f"# Validation Guide: {title}",
-                "",
-                "## Automated Validation",
-                "```bash",
-                f"{ph_cmd} validate",
-                f"{ph_cmd} sprint status",
-                "```",
-                "",
-                "## Manual Validation (Must Be Task-Specific)",
-                (
-                    "This file must be updated during sprint planning so an execution agent can validate "
-                    "without inventing steps."
-                ),
-                "",
-                "Before the task is marked `review`, add:",
-                "- exact copy/paste command(s),",
-                "- exact pass/fail success criteria,",
-                f"- exact evidence file list (under `status/evidence/{task_id}/`).",
-                "",
-                "## Sign-off",
-                "- [ ] All validation steps completed",
-                "- [ ] Evidence documented above",
-                '- [ ] Ready to mark task as \"done\"',
-                "",
-            ]
-        )
+        validation_content = "\n".join(default_validation_lines(scope_cmd=scope_cmd, evidence_prefix=evidence_prefix))
     (task_dir / "validation.md").write_text(validation_content, encoding="utf-8")
 
     references_content = "\n".join(

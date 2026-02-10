@@ -124,6 +124,8 @@ def validate_dependencies(tasks: list[dict[str, Any]]) -> tuple[list[str], list[
 
 def dependency_ready(task: dict[str, Any], task_map: dict[str, dict[str, Any]]) -> bool:
     deps = normalize_dependencies(task)
+    if not deps:
+        return False
     if "FIRST_TASK" in deps and len(deps) == 1:
         return True
     for dep in deps:
@@ -133,6 +135,19 @@ def dependency_ready(task: dict[str, Any], task_map: dict[str, dict[str, Any]]) 
         if dep_status != "done":
             return False
     return True
+
+
+def _task_status(task: dict[str, Any]) -> str:
+    return str(task.get("status", "todo") or "todo").strip().lower()
+
+
+def is_sprint_gate_task(task: dict[str, Any]) -> bool:
+    value = task.get("task_type")
+    if value is None:
+        return False
+    if isinstance(value, list):
+        return any(str(v).strip().lower() == "sprint-gate" for v in value)
+    return str(value).strip().lower() == "sprint-gate"
 
 
 def _task_points(task: dict[str, Any]) -> int:
@@ -363,6 +378,24 @@ def run_sprint_status(*, ph_project_root: Path, ctx: Context, sprint: str | None
     print(
         f"Progress: {metrics['completed_points']}/{metrics['total_points']} points ({metrics['velocity_percentage']}%)"
     )
+
+    gate_tasks = [t for t in tasks if is_sprint_gate_task(t)]
+    print("\nSprint gates:")
+    if not gate_tasks:
+        print("⚠️  No sprint gate tasks found (task_type: sprint-gate).")
+        print("Gate-ready: NO")
+    else:
+        gate_done = sum(1 for t in gate_tasks if _task_status(t) == "done")
+        gate_ready = gate_done == len(gate_tasks)
+        print(f"Gate-ready: {'YES' if gate_ready else 'NO'} ({gate_done}/{len(gate_tasks)} done)")
+        for gate in gate_tasks:
+            gate_id = gate.get("id", "TASK-???")
+            gate_title = gate.get("title", "<untitled>")
+            gate_status = _task_status(gate)
+            gate_dep_ready = dependency_ready(gate, task_map)
+            print(
+                f"- {gate_id}: {gate_title} | status {gate_status} | dependency-ready {gate_dep_ready}"
+            )
 
     active_task = pick_task_by_status(tasks, ["doing", "review"])
     upcoming_task = None

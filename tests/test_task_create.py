@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -124,6 +125,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "lane: ops\n"
         "decision: ADR-0000\n"
         "session: task-execution\n"
+        "task_type: implementation\n"
         "owner: @a\n"
         "status: todo\n"
         "story_points: 5\n"
@@ -434,3 +436,102 @@ def test_task_create_guardrail_rejects_system_scoped_lanes_in_project_scope(tmp_
 
     tasks_dir = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
     assert not any(p.is_dir() for p in tasks_dir.iterdir())
+
+
+def _write_minimal_dr_entry(*, ph_root: Path, dr_id: str, feature: str | None = None) -> None:
+    ph_data_root = ph_root / ".project-handbook"
+    if feature:
+        dr_dir = ph_data_root / "features" / feature / "decision-register"
+    else:
+        dr_dir = ph_data_root / "decision-register"
+    dr_dir.mkdir(parents=True, exist_ok=True)
+    (dr_dir / f"{dr_id}.md").write_text(
+        "\n".join(
+            [
+                "---",
+                f"title: {dr_id}",
+                "type: decision-register",
+                "date: 2099-01-01",
+                f"id: {dr_id}",
+                "tags: [dr]",
+                "links: []",
+                "---",
+                "",
+                f"### {dr_id}",
+                "",
+                "Option A",
+                "- A",
+                "",
+                "Option B",
+                "- B",
+                "",
+                "Recommendation",
+                "- A",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_task_create_each_task_type_passes_validate_quick(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _plan_sprint(ph_root=tmp_path, scope="project")
+    _write_minimal_dr_entry(ph_root=tmp_path, dr_id="DR-0000", feature="f")
+
+    env = dict(os.environ)
+    env["PH_FAKE_TODAY"] = "2099-01-01"
+
+    cases = [
+        ("implementation", "ADR-0000"),
+        ("research-discovery", "DR-0000"),
+        ("sprint-gate", "ADR-0000"),
+        ("feature-research-planning", "DR-0000"),
+        ("task-docs-deep-dive", "DR-0000"),
+    ]
+
+    task_type_to_session = {
+        "implementation": "task-execution",
+        "research-discovery": "research-discovery",
+        "sprint-gate": "sprint-gate",
+        "feature-research-planning": "feature-research-planning",
+        "task-docs-deep-dive": "task-docs-deep-dive",
+    }
+
+    for task_type, decision in cases:
+        result = subprocess.run(
+            [
+                "ph",
+                "--root",
+                str(tmp_path),
+                "--no-post-hook",
+                "task",
+                "create",
+                "--title",
+                f"T {task_type}",
+                "--feature",
+                "f",
+                "--decision",
+                decision,
+                "--type",
+                task_type,
+            ],
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        assert result.returncode == 0
+        m = re.search(r"^📁 Location: (?P<path>.+)$", result.stdout, flags=re.MULTILINE)
+        assert m is not None, result.stdout
+        task_dir = Path(m.group("path"))
+        task_yaml = (task_dir / "task.yaml").read_text(encoding="utf-8")
+        assert f"task_type: {task_type}\n" in task_yaml
+        assert f"session: {task_type_to_session[task_type]}\n" in task_yaml
+
+    validate = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "validate", "--quick"],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert validate.returncode == 0
