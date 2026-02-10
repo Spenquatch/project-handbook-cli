@@ -124,12 +124,15 @@ def format_worker_prompt(task_id: str, repo_root: Path, kickoff_prompt: str) -> 
         "- Do not proceed to any other task IDs.\n"
         "- Follow the task’s kickoff_prompt exactly.\n"
         "- Only edit files under `cli_plan/` unless the kickoff_prompt explicitly lists non-`cli_plan/` paths.\n"
-        "- Do NOT modify task queue JSON files (anything under `cli_plan/**/tasks*.json`, `cli_plan/backlog.json`) or anything under `.runs/`.\n"
+        "- Do NOT modify task queue JSON files (anything under `cli_plan/**/tasks*.json`, `cli_plan/backlog.json`) "
+        "or anything under `.runs/`.\n"
         "- Do NOT edit/delete `scripts/` or `references/` unless the kickoff_prompt explicitly asks.\n"
-        "- Do NOT run git commands that change state (`git restore|reset|checkout|clean|commit|rebase|merge`). Read-only is OK (`git diff`, `git status`).\n"
+        "- Do NOT run git commands that change state (`git restore|reset|checkout|clean|commit|rebase|merge`). "
+        "Read-only is OK (`git diff`, `git status`).\n"
         "- If you notice unrelated working-tree changes, IGNORE them and continue; do not attempt to revert them.\n"
         "- Run the verification commands listed in the kickoff_prompt.\n"
-        "- Produce a concise final message including: files changed, commands run, verification results, and any follow-ups.\n\n"
+        "- Produce a concise final message including: files changed, commands run, verification results, and any "
+        "follow-ups.\n\n"
         + note_block
         + "Task kickoff_prompt (verbatim):\n"
         + kickoff_prompt.strip()

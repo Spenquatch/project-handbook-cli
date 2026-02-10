@@ -239,7 +239,11 @@ def run_fdr_add(
 
     resolved_dr_links: list[str] = []
     for dr_id in normalized_dr_ids:
-        resolved, matches = _resolve_dr_markdown_match(feature_root=feature_root, ph_data_root=ph_data_root, dr_id=dr_id)
+        resolved, matches = _resolve_dr_markdown_match(
+            feature_root=feature_root,
+            ph_data_root=ph_data_root,
+            dr_id=dr_id,
+        )
         if resolved is None and matches:
             print("❌ Referenced DR id is ambiguous (multiple matches found).\n", end="")
             print(f"  dr: {dr_id}")

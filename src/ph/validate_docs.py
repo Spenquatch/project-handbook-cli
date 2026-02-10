@@ -6,7 +6,6 @@ from pathlib import Path
 
 from .adr.validate import validate_adrs
 
-
 _DR_ID_RE = re.compile(r"^DR-\d{4}$", re.IGNORECASE)
 
 _ALLOWED_TASK_TYPES: set[str] = {

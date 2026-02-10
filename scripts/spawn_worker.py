@@ -55,7 +55,6 @@ def main() -> int:
     args = ap.parse_args()
 
     task_id = args.task_id
-    repo_root = Path(args.repo_root).resolve()
     workspace_root = Path(args.workspace_root).resolve()
     run_dir = Path(args.run_dir).resolve()
     prompt_file = Path(args.prompt_file).resolve()

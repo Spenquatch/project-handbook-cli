@@ -677,7 +677,8 @@ links: [{", ".join(links)}]
                 content += f"- ⚠️ {w}\n"
 
         content += "\n## Sprint Progress\n"
-        current_slot = timeline.get("current_sprint_slot") if isinstance(timeline.get("current_sprint_slot"), int) else None
+        raw_current_slot = timeline.get("current_sprint_slot")
+        current_slot = raw_current_slot if isinstance(raw_current_slot, int) else None
         for i, slot in enumerate(slots, 1):
             sprint_id = assignments.get(slot)
             status = status_for_sprint_id(sprint_id)
@@ -998,7 +999,8 @@ def _release_alignment_warnings_for_active_sprint(
     slot_meta = parse_int(meta.get("release_sprint_slot"))
 
     assignments = timeline.get("slot_assignments") if isinstance(timeline.get("slot_assignments"), dict) else {}
-    current_slot = timeline.get("current_sprint_slot") if isinstance(timeline.get("current_sprint_slot"), int) else None
+    raw_current_slot = timeline.get("current_sprint_slot")
+    current_slot = raw_current_slot if isinstance(raw_current_slot, int) else None
     slot_to_check = current_slot or slot_meta
 
     if not release or release.lower() in {"null", "none"}:
@@ -1009,7 +1011,8 @@ def _release_alignment_warnings_for_active_sprint(
         normalized_release = normalize_version(release)
         if release.strip().lower() == "current":
             warnings.append(
-                f"Current sprint `{current_sprint_id}` uses `release: current`; use `release: {version}` for slot matching."
+                f"Current sprint `{current_sprint_id}` uses `release: current`; use `release: {version}` for slot "
+                "matching."
             )
         elif normalized_release != normalize_version(version):
             warnings.append(
@@ -1017,11 +1020,14 @@ def _release_alignment_warnings_for_active_sprint(
             )
 
     if slot_meta is None:
-        warnings.append(f"Current sprint `{current_sprint_id}` is missing `release_sprint_slot: <n>` in its front matter.")
+        warnings.append(
+            f"Current sprint `{current_sprint_id}` is missing `release_sprint_slot: <n>` in its front matter."
+        )
     else:
         if slot_meta not in slots:
             warnings.append(
-                f"Current sprint `{current_sprint_id}` has `release_sprint_slot: {slot_meta}`, but release plan slots are {slots}."
+                f"Current sprint `{current_sprint_id}` has `release_sprint_slot: {slot_meta}`, "
+                f"but release plan slots are {slots}."
             )
         assigned = assignments.get(slot_meta) if isinstance(assignments, dict) else None
         if assigned and str(assigned) != current_sprint_id:
@@ -1030,9 +1036,12 @@ def _release_alignment_warnings_for_active_sprint(
             )
         if current_slot is not None and current_slot != slot_meta:
             warnings.append(
-                f"Current sprint `{current_sprint_id}` front matter says slot {slot_meta}, but computed current slot is {current_slot}."
+                f"Current sprint `{current_sprint_id}` front matter says slot {slot_meta}, "
+                f"but computed current slot is {current_slot}."
             )
-        if current_plan_path and not _sprint_plan_has_release_alignment_heading(sprint_plan_path=current_plan_path, slot=slot_meta):
+        if current_plan_path and not _sprint_plan_has_release_alignment_heading(
+            sprint_plan_path=current_plan_path, slot=slot_meta
+        ):
             warnings.append(
                 f"Current sprint plan is missing required heading: `## Release Alignment (Slot {slot_meta})`."
             )
@@ -1041,7 +1050,8 @@ def _release_alignment_warnings_for_active_sprint(
         alignment = slot_alignments.get(int(slot_to_check), {})
         if not alignment:
             warnings.append(
-                f"Release plan is missing required slot markers for Slot {slot_to_check} (expected `### Slot {slot_to_check}` + subsections)."
+                f"Release plan is missing required slot markers for Slot {slot_to_check} "
+                f"(expected `### Slot {slot_to_check}` + subsections)."
             )
         else:
             if _slot_alignment_goal(alignment) == "TBD":
@@ -1056,7 +1066,9 @@ def _release_alignment_warnings_for_active_sprint(
                 continue
             if not isinstance(sprint_ids, list):
                 continue
-            warnings.append(f"Slot {dup_slot} has multiple sprint assignments: {', '.join(str(s) for s in sprint_ids)}.")
+            warnings.append(
+                f"Slot {dup_slot} has multiple sprint assignments: {', '.join(str(s) for s in sprint_ids)}."
+            )
 
     return warnings
 
@@ -1829,7 +1841,8 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
         assignments = timeline.get("slot_assignments") or {}
         if not isinstance(assignments, dict):
             assignments = {}
-        current_slot = timeline.get("current_sprint_slot") if isinstance(timeline.get("current_sprint_slot"), int) else None
+        raw_current_slot = timeline.get("current_sprint_slot")
+        current_slot = raw_current_slot if isinstance(raw_current_slot, int) else None
         for i, slot in enumerate(slots, 1):
             sprint_id = assignments.get(slot)
             label = sprint_id if sprint_id else "(unassigned)"

@@ -202,7 +202,8 @@ Mapping table (`task_type` → required/allowed `session`):
 
 Deep-dive checklist:
 - `README.md`: exact goal + scope boundaries.
-- `steps.md`: numbered, atomic steps with concrete file paths/commands; remove words like “implement/refactor/deploy/ship”.
+- `steps.md`: numbered, atomic steps with concrete file paths/commands; remove words like
+  “implement/refactor/deploy/ship”.
 - `commands.md`: copy/paste runnable commands; include expected outputs when critical.
 - `checklist.md`: binary checkboxes, not prose.
 - `validation.md`: explicit validations (tests, manual checks) and evidence paths.

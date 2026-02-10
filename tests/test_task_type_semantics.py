@@ -100,7 +100,9 @@ def test_validate_sprints_defaults_missing_task_type_for_legacy_task_execution(t
         root=ph_data_root,
     )
 
-    assert not any(i.get("code") in {"task_type_invalid", "task_type_missing", "task_type_session_mismatch"} for i in issues)
+    assert not any(
+        i.get("code") in {"task_type_invalid", "task_type_missing", "task_type_session_mismatch"} for i in issues
+    )
 
 
 def test_validate_sprints_defaults_missing_task_type_for_legacy_research_discovery(tmp_path: Path) -> None:
@@ -122,7 +124,9 @@ def test_validate_sprints_defaults_missing_task_type_for_legacy_research_discove
         root=ph_data_root,
     )
 
-    assert not any(i.get("code") in {"task_type_invalid", "task_type_missing", "task_type_session_mismatch"} for i in issues)
+    assert not any(
+        i.get("code") in {"task_type_invalid", "task_type_missing", "task_type_session_mismatch"} for i in issues
+    )
 
 
 def test_validate_sprints_flags_missing_task_type_for_non_legacy_session(tmp_path: Path) -> None:

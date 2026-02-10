@@ -112,7 +112,8 @@ def test_validate_flags_task_type_session_mismatch(tmp_path: Path) -> None:
     text = task_yaml_path.read_text(encoding="utf-8")
     assert "session: research-discovery\n" in text
     assert "task_type: research-discovery\n" in text
-    task_yaml_path.write_text(text.replace("task_type: research-discovery\n", "task_type: implementation\n"), encoding="utf-8")
+    updated = text.replace("task_type: research-discovery\n", "task_type: implementation\n")
+    task_yaml_path.write_text(updated, encoding="utf-8")
 
     validate = subprocess.run(
         ["ph", "--root", str(tmp_path), "--no-post-hook", "validate", "--quick"],
