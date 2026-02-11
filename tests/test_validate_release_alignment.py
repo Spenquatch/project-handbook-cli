@@ -136,3 +136,36 @@ def test_validate_sprint_plan_requires_release_alignment_heading_when_assigned(t
     issues = report["issues"]
     assert any(i.get("code") == "sprint_release_alignment_missing" for i in issues)
 
+
+def test_validate_sprint_plan_release_alignment_heading_ok_when_present(tmp_path: Path) -> None:
+    _write_basic_ph_root(tmp_path)
+
+    sprint_plan = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-W01" / "plan.md"
+    sprint_plan.parent.mkdir(parents=True, exist_ok=True)
+    sprint_plan.write_text(
+        "\n".join(
+            [
+                "---",
+                "title: Sprint plan",
+                "type: sprint-plan",
+                "date: 2099-01-01",
+                "sprint: SPRINT-2099-W01",
+                "mode: bounded",
+                "release: current",
+                "release_sprint_slot: 2",
+                "---",
+                "",
+                "# SPRINT-2099-W01",
+                "",
+                "## Release Alignment (Slot 2)",
+                "Slot goal: Example.",
+                "",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    _, report = _run_validate_and_read_report(tmp_path)
+    issues = report["issues"]
+    assert not any(i.get("code") == "sprint_release_alignment_missing" for i in issues)

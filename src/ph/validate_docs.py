@@ -1318,7 +1318,7 @@ def validate_sprint_release_alignment(*, issues: list[dict], root: Path) -> None
         if slot is None:
             continue
 
-        heading_re = re.compile(rf"^## Release Alignment \\(Slot {slot}\\)\\s*$", flags=re.MULTILINE)
+        heading_re = re.compile(rf"^## Release Alignment \(Slot {slot}\)\s*$", flags=re.MULTILINE)
         if not heading_re.search(text):
             sprint_id = str(fm.get("sprint", "")).strip()
             issues.append(
