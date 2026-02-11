@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from .root import PH_CONFIG_RELATIVE_PATH
+from .seed_assets import load_seed_markdown_dir, render_date_placeholder
 
 DEFAULT_SCHEMA_VERSION = 1
 DEFAULT_REPO_ROOT = "."
@@ -104,266 +105,58 @@ This handbook is designed to be safely operated by humans and agents.
 - `ph validate --quick`
 """
 
-_DEFAULT_SESSION_TEMPLATES: dict[str, str] = {
-    "sprint-planning": """---
-title: Sprint Planning Session
-type: prompt-template
-mode: planning
-tags: [sprint, planning]
+_DEFAULT_AGENT_MD = """---
+title: Project Handbook Agent Context
+type: guide
+date: {date}
+tags: [agents, context]
+links: []
 ---
 
-You are facilitating sprint planning in the Project Handbook.
+# Agent Context
 
-Rules:
-1) Stay in planning mode; do not implement code unless instructed.
-2) Use handbook automation (`ph ...`) to create/update sprints, tasks, releases, backlog, and parking lot items.
-3) Eliminate ambiguity in execution tasks: no TBD/TODO, no open questions, and clear validation gates.
-""",
-    "task-execution": """---
-title: Task Execution Session
-type: prompt-template
-mode: execution
-tags: [task, execution]
----
+Use this file to capture stable, repo-specific context that agents should load before planning or execution.
 
-You are executing a single sprint task.
+## Defaults
+- Source of truth for process artifacts is `.project-handbook/`.
+- Prefer `ph ...` commands over ad-hoc edits when a command exists.
+"""
 
-Rules:
-1) Keep scope tight to the task docs.
-2) Record evidence under `status/evidence/<TASK-###>/`.
-3) Keep task docs and `task.yaml` status up to date as you progress.
-""",
-    "research-discovery": """---
-title: Research/Discovery Session
-type: prompt-template
-mode: discovery
-tags: [research, discovery]
----
 
-You are running a discovery task.
-
-Rules:
-1) The deliverable is a Decision Register entry (DR-XXXX) or ADR when appropriate.
-2) Document exactly two options (Option A / Option B) and a recommendation.
-3) Convert outcomes into execution tasks (task-execution) with no ambiguity.
-""",
-    "research-planning": """---
-title: Research Planning Session
-type: prompt-template
-mode: planning
-tags: [research, planning]
----
-
-You are planning a research effort for a feature or problem area.
-
-Purpose:
-- Produce a crisp research plan and the artifacts needed to turn outcomes into execution tasks.
-
-Hard rules:
-1) Do NOT implement code in this session.
-2) Eliminate ambiguity: explicit deliverables, explicit timeboxes, explicit validation/evidence.
-3) Keep terminology clean:
-   - `task_type` is taxonomy (what kind of work)
-   - `session` is the onboarding template key (how we run the work)
-
-Mapping table (`task_type` → required/allowed `session`):
-| `task_type` | `session` |
-|---|---|
-| `implementation` | `task-execution` |
-| `research-discovery` | `research-discovery` |
-| `feature-research-planning` | `research-planning` |
-
-Checklist:
-- Define the problem statement and success criteria.
-- List research questions (what must be answered to de-risk execution).
-- Define deliverables (Decision Register/ADR, updated contract/spec, and a list of execution tasks to create).
-- Timebox the work and specify evidence locations under `status/evidence/...` when applicable.
-""",
-    "task-docs-deep-dive": """---
-title: Task Docs Deep Dive
-type: prompt-template
-mode: planning
-tags: [task, docs, planning]
----
-
-You are improving task documentation quality (not implementing the task itself).
-
-Hard rules:
-1) Do NOT implement code in this session.
-2) Every task doc must be deterministic: no TBD/TODO, no open questions, no vague verbs.
-3) Keep `task_type` and `session` distinct:
-
-Mapping table (`task_type` → required/allowed `session`):
-| `task_type` | `session` |
-|---|---|
-| `implementation` | `task-execution` |
-| `research-discovery` | `research-discovery` |
-| `task-docs-deep-dive` | `task-docs-deep-dive` |
-
-Deep-dive checklist:
-- `README.md`: exact goal + scope boundaries.
-- `steps.md`: numbered, atomic steps with concrete file paths/commands; remove words like
-  “implement/refactor/deploy/ship”.
-- `commands.md`: copy/paste runnable commands; include expected outputs when critical.
-- `checklist.md`: binary checkboxes, not prose.
-- `validation.md`: explicit validations (tests, manual checks) and evidence paths.
-""",
-    "pre-execution-audit": """---
-title: Pre-execution Audit
-type: prompt-template
-mode: gate
-tags: [pre-exec, audit]
----
-
-You are preparing to start sprint execution.
-
-Steps:
-1) Ensure a sprint is planned and a release is activated (if applicable).
-2) Run `ph pre-exec audit` and capture the evidence bundle path.
-3) Fix any lint findings before starting execution.
-""",
-    "quality-gate": """---
-title: Quality Gate
-type: prompt-template
-mode: gate
-tags: [quality]
----
-
-You are running a quality gate before handoff or release.
-
-Checklist:
-- `ph validate`
-- `ph status`
-- Ensure tasks have explicit evidence + validation docs.
-""",
-    "release-planning": """---
-title: Release Planning Session
-type: prompt-template
-mode: planning
-tags: [release, planning]
----
-
-You are coordinating a release.
-
-Steps:
-- Create a plan: `ph release plan --version next`
-- Activate when ready: `ph release activate --release vX.Y.Z`
-- Track progress: `ph release status` / `ph release progress`
-""",
-    "sprint-closing": """---
-title: Sprint Closing Session
-type: prompt-template
-mode: closing
-tags: [sprint, closing]
----
-
-You are closing a sprint.
-
-Steps:
-- Ensure tasks are updated and evidence is captured.
-- Run `ph sprint close` and archive as needed.
-- Run `ph status` and update roadmap/releases.
-""",
+_FALLBACK_SESSION_TEMPLATES: dict[str, str] = {
+    "sprint-planning": "---\ntitle: Sprint Planning Session\n---\n",
+    "task-execution": "---\ntitle: Task Execution Session\n---\n",
+    "research-discovery": "---\ntitle: Research/Discovery Session\n---\n",
+    "research-planning": "---\ntitle: Research Planning Session\n---\n",
+    "task-docs-deep-dive": "---\ntitle: Task Docs Deep Dive\n---\n",
+    "pre-execution-audit": "---\ntitle: Pre-execution Audit\n---\n",
+    "quality-gate": "---\ntitle: Quality Gate Session\n---\n",
+    "release-planning": "---\ntitle: Release Planning Session\n---\n",
+    "sprint-closing": "---\ntitle: Sprint Closing Session\n---\n",
 }
 
-_DEFAULT_PLAYBOOKS: dict[str, str] = {
-    "sprint-planning": """---
-title: Sprint Planning Playbook
-type: playbook
-date: {date}
-tags: [playbook, sprint, planning]
-links: []
----
 
-# Sprint Planning
-
-Use `ph sprint plan`, then seed tasks with `ph task create`.
-""",
-    "sprint-closing": """---
-title: Sprint Closing Playbook
-type: playbook
-date: {date}
-tags: [playbook, sprint, closing]
-links: []
----
-
-# Sprint Closing
-
-Run `ph sprint close`, update roadmap/releases, and run `ph status`.
-""",
-    "daily-status": """---
-title: Daily Status Playbook
-type: playbook
-date: {date}
-tags: [playbook, status, daily]
-links: []
----
-
-# Daily Status
-
-Run `ph daily generate` and keep `status/daily/` current.
-""",
-    "release-planning": """---
-title: Release Planning Playbook
-type: playbook
-date: {date}
-tags: [playbook, release, planning]
-links: []
----
-
-# Release Planning
-
-Use `ph release plan` then `ph release activate` to set `releases/current`.
-""",
-    "backlog-triage": """---
-title: Backlog Triage Playbook
-type: playbook
-date: {date}
-tags: [playbook, backlog, triage]
-links: []
----
-
-# Backlog Triage
-
-Use `ph backlog list` and `ph backlog triage` for P0s.
-""",
-    "parking-lot-review": """---
-title: Parking Lot Review Playbook
-type: playbook
-date: {date}
-tags: [playbook, parking-lot, review]
-links: []
----
-
-# Parking Lot Review
-
-Use `ph parking review` and promote items to roadmap when ready.
-""",
-    "research-discovery": """---
-title: Research / Discovery Playbook
-type: playbook
-date: {date}
-tags: [playbook, research, discovery]
-links: []
----
-
-# Research / Discovery
-
-Discovery tasks should produce DR-XXXX entries and lead to execution tasks.
-""",
-    "roadmap-planning": """---
-title: Roadmap Planning Playbook
-type: playbook
-date: {date}
-tags: [playbook, roadmap, planning]
-links: []
----
-
-# Roadmap Planning
-
-Update `roadmap/now-next-later.md` and validate links with `ph roadmap validate`.
-""",
+_FALLBACK_PLAYBOOKS: dict[str, str] = {
+    "sprint-planning": "---\ntitle: Sprint Planning Playbook\ndate: {date}\n---\n",
+    "sprint-closing": "---\ntitle: Sprint Closing Playbook\ndate: {date}\n---\n",
+    "daily-status": "---\ntitle: Daily Status Playbook\ndate: {date}\n---\n",
+    "release-planning": "---\ntitle: Release Planning Playbook\ndate: {date}\n---\n",
+    "backlog-triage": "---\ntitle: Backlog Triage Playbook\ndate: {date}\n---\n",
+    "parking-lot-review": "---\ntitle: Parking Lot Review Playbook\ndate: {date}\n---\n",
+    "research-discovery": "---\ntitle: Research / Discovery Playbook\ndate: {date}\n---\n",
+    "roadmap-planning": "---\ntitle: Roadmap Planning Playbook\ndate: {date}\n---\n",
 }
+
+
+def _load_session_templates() -> dict[str, str]:
+    templates = load_seed_markdown_dir(rel_dir="process/sessions/templates")
+    return templates or dict(_FALLBACK_SESSION_TEMPLATES)
+
+
+def _load_playbooks() -> dict[str, str]:
+    playbooks = load_seed_markdown_dir(rel_dir="process/playbooks")
+    return playbooks or dict(_FALLBACK_PLAYBOOKS)
+
 
 _DEFAULT_BACKLOG_INDEX = {
     "last_updated": None,
@@ -589,19 +382,20 @@ def run_init(*, target_root: Path, update_gitignore: bool) -> int:
     )
 
     _write_text_if_missing(path=data_root / "ONBOARDING.md", text=_DEFAULT_ONBOARDING_MD.format(date=today))
+    _write_text_if_missing(path=data_root / "AGENT.md", text=_DEFAULT_AGENT_MD.format(date=today))
     _write_text_if_missing(
         path=data_root / "process" / "AI_AGENT_START_HERE.md",
         text=_DEFAULT_PROCESS_AGENT_GUIDE.format(date=today),
     )
-    for name, text in _DEFAULT_SESSION_TEMPLATES.items():
+    for name, text in _load_session_templates().items():
         _write_text_if_missing(
             path=data_root / "process" / "sessions" / "templates" / f"{name}.md",
             text=text,
         )
-    for name, text in _DEFAULT_PLAYBOOKS.items():
+    for name, text in _load_playbooks().items():
         _write_text_if_missing(
             path=data_root / "process" / "playbooks" / f"{name}.md",
-            text=text.format(date=today),
+            text=render_date_placeholder(text, date=today),
         )
 
     # Content roots (handbook layout under .project-handbook/).
