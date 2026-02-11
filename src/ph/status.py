@@ -513,7 +513,18 @@ def _write_status_summary(
     lines.append("")
     lines.append("## Current Sprint")
     lines.append(f"- ID: `{sprint_id}`")
-    lines.append(f"- Day: {day_of_sprint} / 5 ({start_date.strftime('%Y-%m-%d')} → {end_date.strftime('%Y-%m-%d')})")
+    if mode == "bounded":
+        created = start_date
+        if today < created:
+            days_until = (created - today).days
+            lines.append(f"- Mode: bounded | Starts in {days_until} days (planned: {created.strftime('%Y-%m-%d')})")
+        else:
+            age_days = (today - created).days
+            lines.append(f"- Mode: bounded | Age: {age_days} days (since {created.strftime('%Y-%m-%d')})")
+    else:
+        lines.append(
+            f"- Day: {day_of_sprint} / {max_days} ({start_date.strftime('%Y-%m-%d')} → {end_date.strftime('%Y-%m-%d')})"
+        )
     lines.append(f"- Health: {health}")
     lines.append("")
 

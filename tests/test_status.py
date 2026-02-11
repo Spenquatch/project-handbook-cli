@@ -107,4 +107,4 @@ def test_status_supports_sequence_sprint_ids_using_plan_date(tmp_path: Path) -> 
     )
     assert result.returncode == 0
     assert "- ID: `SPRINT-SEQ-0001`" in result.stdout
-    assert "- Day: 3 / 5 (2026-01-01 → 2026-01-05)" in result.stdout
+    assert "- Mode: bounded | Age: 2 days (since 2026-01-01)" in result.stdout
