@@ -166,11 +166,60 @@ def _parse_front_matter(text: str) -> dict[str, Any]:
                 try:
                     fm[k] = json.loads(v)
                 except json.JSONDecodeError:
-                    parts = [p.strip().strip('"\'') for p in v[1:-1].split(",")]
+                    parts = [p.strip().strip("\"'") for p in v[1:-1].split(",")]
                     fm[k] = [p for p in parts if p]
             else:
                 fm[k] = v
     return fm
+
+
+def _parse_ymd_date(raw: Any) -> dt.date | None:
+    if raw is None:
+        return None
+    text = str(raw).strip().strip('"').strip("'")
+    if not text:
+        return None
+    try:
+        return dt.datetime.strptime(text, "%Y-%m-%d").date()
+    except Exception:
+        return None
+
+
+def _load_current_sprint_dir(*, sprints_dir: Path) -> Path | None:
+    link = sprints_dir / "current"
+    if not link.exists():
+        return None
+    try:
+        sprint_dir = link.resolve()
+    except FileNotFoundError:
+        return None
+    return sprint_dir if sprint_dir.exists() else None
+
+
+def _get_sprint_dates_from_plan(*, sprint_dir: Path, mode: str, duration_days: int) -> tuple[dt.date, dt.date] | None:
+    plan_path = sprint_dir / "plan.md"
+    if not plan_path.exists():
+        return None
+    try:
+        text = plan_path.read_text(encoding="utf-8")
+    except Exception:
+        return None
+    fm = _parse_front_matter(text)
+
+    if mode == "bounded":
+        start = (
+            _parse_ymd_date(fm.get("date")) or _parse_ymd_date(fm.get("created")) or _parse_ymd_date(fm.get("start"))
+        )
+        if start is None:
+            return None
+        end = start + dt.timedelta(days=max(1, duration_days) - 1)
+        return start, end
+
+    start = _parse_ymd_date(fm.get("start")) or _parse_ymd_date(fm.get("date"))
+    end = _parse_ymd_date(fm.get("end"))
+    if start is None or end is None:
+        return None
+    return start, end
 
 
 def _parse_dependency_features(raw: Any) -> list[str]:
@@ -187,7 +236,7 @@ def _parse_dependency_features(raw: Any) -> list[str]:
                 candidates = json.loads(text)
             except json.JSONDecodeError:
                 parts = [seg.strip() for seg in text[1:-1].split(",")]
-                candidates = [p.strip('"\'') for p in parts if p]
+                candidates = [p.strip("\"'") for p in parts if p]
         else:
             candidates = [text]
 
@@ -392,7 +441,7 @@ def _load_current_sprint_context(*, sprints_dir: Path) -> dict[str, Any] | None:
                 key = key.strip()
                 value = value.strip()
                 if value.startswith("[") and value.endswith("]"):
-                    items = [item.strip().strip('"\'') for item in value[1:-1].split(",") if item.strip()]
+                    items = [item.strip().strip("\"'") for item in value[1:-1].split(",") if item.strip()]
                     data[key] = items
                 else:
                     data[key] = value
@@ -428,13 +477,26 @@ def _write_status_summary(
 
     sprint_id = str(context["sprint_id"])
     tasks = list(context["tasks"])
-    start_date, end_date = get_sprint_dates(sprint_id)
+    config = _load_config(ph_project_root=ph_project_root)
+    mode = str(config.get("sprint_management", {}).get("mode") or "bounded").strip().lower() or "bounded"
+    duration_days = int(config.get("sprint_management", {}).get("sprint_duration_days") or 5)
+
+    sprint_dir = _load_current_sprint_dir(sprints_dir=sprints_dir)
+    plan_dates = (
+        _get_sprint_dates_from_plan(sprint_dir=sprint_dir, mode=mode, duration_days=duration_days)
+        if sprint_dir
+        else None
+    )
+
+    if plan_dates is not None:
+        start_date, end_date = plan_dates
+    else:
+        start_date, end_date = get_sprint_dates(sprint_id)
+
     today = clock_local_today_from_now(env=env)
     day_of_sprint = max(1, (today - start_date).days + 1)
-    day_of_sprint = min(day_of_sprint, 5)
-
-    config = _load_config(ph_project_root=ph_project_root)
-    mode = str(config.get("sprint_management", {}).get("mode") or "timeboxed").strip().lower() or "timeboxed"
+    max_days = max(1, (end_date - start_date).days + 1)
+    day_of_sprint = min(day_of_sprint, max_days)
     health = _get_sprint_health(tasks=tasks, day_of_sprint=day_of_sprint, config=config, mode=mode)
     velocity = _calculate_velocity(tasks)
 
@@ -467,7 +529,7 @@ def _write_status_summary(
         gate_info = ""
         if str(task.get("release_gate", "")).strip().lower() in {"true", "yes", "1"}:
             gate_info = " [gate]"
-        return f"- `{task.get('id','')}` ({owner}){session_info}{release_info}{gate_info} — {title}"
+        return f"- `{task.get('id', '')}` ({owner}){session_info}{release_info}{gate_info} — {title}"
 
     total_points = velocity.get("total_points", 0)
     completed_points = velocity.get("completed_points", 0)
@@ -477,9 +539,9 @@ def _write_status_summary(
     lines.append("## Sprint Metrics")
     if total_points:
         lines.append(f"- Planned Points: {total_points}")
-        lines.append(f"- Completed: {completed_points} ({(completed_points/total_points*100):.0f}% )")
-        lines.append(f"- In Progress: {in_progress_points} ({(in_progress_points/total_points*100):.0f}% )")
-        lines.append(f"- Blocked: {blocked_points} ({(blocked_points/total_points*100):.0f}% )")
+        lines.append(f"- Completed: {completed_points} ({(completed_points / total_points * 100):.0f}% )")
+        lines.append(f"- In Progress: {in_progress_points} ({(in_progress_points / total_points * 100):.0f}% )")
+        lines.append(f"- Blocked: {blocked_points} ({(blocked_points / total_points * 100):.0f}% )")
     else:
         lines.append("- No pointed work scheduled")
     lines.append("")
@@ -496,7 +558,7 @@ def _write_status_summary(
         for owner in sorted(owner_map.keys()):
             lines.append(f"- **{owner}**")
             for task in owner_map[owner][:2]:
-                lines.append(f"  - `{task.get('id','')}` — {task.get('title','Untitled')}")
+                lines.append(f"  - `{task.get('id', '')}` — {task.get('title', 'Untitled')}")
     else:
         lines.append("- No tasks currently in progress")
     lines.append("")
@@ -512,7 +574,7 @@ def _write_status_summary(
     lines.append("## Next Up")
     if todo_tasks:
         for task in todo_tasks[:5]:
-            lines.append(f"{format_task(task)} [prio {task.get('prio','P2')}]")
+            lines.append(f"{format_task(task)} [prio {task.get('prio', 'P2')}]")
     else:
         lines.append("- Backlog is clear")
     lines.append("")
@@ -621,7 +683,7 @@ def _generate_status_payload(*, ph_data_root: Path, env: dict[str, str]) -> dict
                                 if value.isdigit():
                                     task_data[key] = int(value)
                                 elif value.startswith("[") and value.endswith("]"):
-                                    items = [item.strip().strip('"\'') for item in value[1:-1].split(",")]
+                                    items = [item.strip().strip("\"'") for item in value[1:-1].split(",")]
                                     task_data[key] = [item for item in items if item]
                                 else:
                                     task_data[key] = value
