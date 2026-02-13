@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import difflib
 import re
 from pathlib import Path
 from typing import Any
@@ -8,17 +9,21 @@ from typing import Any
 from .clock import today as clock_today
 from .context import Context
 from .feature_status_updater import calculate_feature_metrics, collect_all_sprint_tasks
+from .validate_docs import run_validate
 
 _SYSTEM_SCOPE_REMEDIATION = "Releases are project-scope only. Use: ph --scope project release ..."
+
 
 def _plan_hint_lines() -> tuple[str, ...]:
     return (
         "Release plan scaffold created under .project-handbook/releases/<version>/plan.md",
-        "  - Assign features via 'ph release add-feature --release <version> --feature <name>'",
+        "  - Assign features via 'ph release add-feature --release <version> --feature <name> --slot <n> "
+        "--commitment committed|stretch --intent deliver|decide|enable'",
         "  - Activate when ready via 'ph release activate --release <version>'",
         "  - Confirm sprint alignment via 'ph release status' (requires an active release)",
         "  - Run 'ph validate --quick' before sharing externally",
     )
+
 
 _ADD_FEATURE_SUCCESS_PREFIX = "✅ Added"
 
@@ -225,23 +230,21 @@ This release uses **sprint slots** (not calendar dates). Assign a concrete sprin
             for slot in range(2, sprint_count + 1):
                 plan_content += f"- **Slot {slot}** (Sprint {slot} of {sprint_count}): Sprint theme/focus\n"
 
-            plan_content += "\n\n## Slot Plans\n"
             for slot in range(1, sprint_count + 1):
                 plan_content += f"""
-### Slot {slot}
 
-#### Goal / Purpose
+## Slot {slot}: Slot {slot}
+### Slot Goal
 - TBD
-
-#### Scope boundaries (in/out)
-- In: TBD
-- Out: TBD
-
-#### Intended gate(s)
+### Enablement
 - TBD
-
-#### Enablement
-- How this slot advances the release: TBD
+### Scope Boundaries
+In scope:
+- TBD
+Out of scope:
+- TBD
+### Intended Gates
+- Gate: TBD
 """
 
             plan_content += f"""
@@ -387,6 +390,9 @@ features:
   # Features will be added with: ph release add-feature
   # Example:
   # auth-system:
+  #   slot: 1
+  #   commitment: committed   # committed|stretch
+  #   intent: deliver         # deliver|decide|enable
   #   type: epic
   #   priority: P0
   #   status: planned
@@ -410,6 +416,9 @@ features:
   # Features will be added with: ph release add-feature
   # Example:
   # auth-system:
+  #   slot: 1
+  #   commitment: committed   # committed|stretch
+  #   intent: deliver         # deliver|decide|enable
   #   type: epic
   #   priority: P0
   #   sprints: [SPRINT-2025-11-03, SPRINT-2025-11-10, SPRINT-2025-11-17]
@@ -534,11 +543,220 @@ def run_release_plan(
     print(f"📅 Timeline: {sprint_count} sprint slot(s) (decoupled from calendar dates)")
     print("📝 Next steps:")
     print(f"   1. Edit {resolved_plan_path} to define release goals")
-    print(f"   2. Add features: ph release add-feature --release {raw_version} --feature feature-name")
+    print(
+        f"   2. Add features: ph release add-feature --release {raw_version} --feature feature-name "
+        "--slot 1 --commitment committed --intent deliver"
+    )
     print(f"   3. Activate when ready: ph release activate --release {raw_version}")
     print("   4. Review timeline and adjust if needed")
     for line in _plan_hint_lines():
         print(line)
+    return 0
+
+
+def _feature_stage(*, feature_dir: Path) -> str:
+    status_path = feature_dir / "status.md"
+    if not status_path.exists():
+        return "unknown"
+    try:
+        content = status_path.read_text(encoding="utf-8")
+    except Exception:
+        return "unknown"
+    for raw in content.splitlines():
+        if raw.startswith("Stage:"):
+            return raw.split(":", 1)[1].strip() or "unknown"
+    return "unknown"
+
+
+def _resolve_base_release_for_draft(*, ctx: Context, base: str) -> str | None:
+    base_norm = (base or "").strip()
+    if not base_norm:
+        return None
+    if base_norm.lower() == "current":
+        return get_current_release(ph_root=ctx.ph_data_root)
+    if base_norm.lower() == "latest-delivered":
+        delivered: list[str] = []
+        for version in list_release_versions(ph_root=ctx.ph_data_root):
+            plan_path = ctx.ph_data_root / "releases" / version / "plan.md"
+            meta = parse_plan_front_matter(plan_path=plan_path)
+            status = str(meta.get("status") or "").strip().lower()
+            if status == "delivered":
+                delivered.append(version)
+        return delivered[-1] if delivered else None
+    return normalize_version(base_norm)
+
+
+def run_release_draft(
+    *,
+    ctx: Context,
+    version: str,
+    sprints: int,
+    base: str,
+    format: str,
+) -> int:
+    if ctx.scope == "system":
+        print(_SYSTEM_SCOPE_REMEDIATION)
+        return 1
+
+    planned_sprints = int(sprints or 0) or 3
+    fmt = (format or "text").strip().lower()
+    if fmt not in {"text", "json"}:
+        print("❌ Invalid --format (expected text|json)")
+        return 1
+
+    base_release = _resolve_base_release_for_draft(ctx=ctx, base=base)
+    base_norm = (base or "").strip().lower()
+    if base_norm and base_norm not in {"latest-delivered"} and not base_release:
+        print("❌ Unable to resolve --base (expected latest-delivered|current|vX.Y.Z)")
+        return 1
+
+    raw_version = (version or "").strip() or "next"
+    if raw_version.lower() == "next":
+        base_for_version = base_release or get_current_release(ph_root=ctx.ph_data_root)
+        if not base_for_version:
+            available = list_release_versions(ph_root=ctx.ph_data_root)
+            base_for_version = available[-1] if available else "v0.1.0"
+        raw_version = bump_version(base_for_version, bump="patch")
+    target_version = normalize_version(raw_version)
+
+    base_features: set[str] = set()
+    if base_release:
+        try:
+            base_features = set(load_release_features(ph_root=ctx.ph_data_root, version=base_release).keys())
+        except Exception:
+            base_features = set()
+
+    features_dir = ctx.ph_data_root / "features"
+    candidates: list[dict[str, str]] = []
+    if features_dir.exists():
+        for feat_dir in sorted([p for p in features_dir.iterdir() if p.is_dir()], key=lambda p: p.name):
+            if feat_dir.name in base_features:
+                continue
+            candidates.append({"feature": feat_dir.name, "stage": _feature_stage(feature_dir=feat_dir)})
+
+    stage_rank = {
+        "in_progress": 0,
+        "in-progress": 0,
+        "developing": 1,
+        "approved": 2,
+        "planned": 3,
+        "proposed": 4,
+        "concept": 5,
+        "unknown": 6,
+    }
+
+    def cand_key(c: dict[str, str]) -> tuple[int, str]:
+        st = (c.get("stage") or "unknown").strip().lower()
+        rank = stage_rank.get(st, 50)
+        return (rank, str(c.get("feature") or ""))
+
+    candidates = sorted(candidates, key=cand_key)
+
+    suggested: list[dict[str, object]] = []
+    for idx, cand in enumerate(candidates[: max(0, planned_sprints * 4)]):
+        slot = (idx % planned_sprints) + 1
+        stage = (cand.get("stage") or "unknown").strip().lower()
+        intent = "deliver" if stage in {"in_progress", "in-progress", "developing", "approved"} else "decide"
+        commitment = "committed" if idx < planned_sprints else "stretch"
+        suggested.append(
+            {
+                "feature": cand["feature"],
+                "stage": cand["stage"],
+                "slot": slot,
+                "commitment": commitment,
+                "intent": intent,
+                "priority": "P1",
+            }
+        )
+
+    operator_questions = [
+        "What is the primary outcome theme for this release?",
+        "Should we bias toward shipping features or paying down tech debt?",
+        "What risk posture should we take (aggressive vs conservative scope)?",
+        "Which items are must-commit vs stretch (and why)?",
+        "Which decisions must be made before slot 1 execution starts?",
+    ]
+
+    if fmt == "json":
+        payload: dict[str, object] = {
+            "version": target_version,
+            "planned_sprints": planned_sprints,
+            "base": base_release,
+            "excluded_base_features": sorted(base_features),
+            "candidates": candidates,
+            "suggested_assignments": suggested,
+            "suggested_add_feature_commands": [
+                (
+                    "ph release add-feature "
+                    f"--release {target_version} --feature {s['feature']} --slot {s['slot']} "
+                    f"--commitment {s['commitment']} --intent {s['intent']} --priority {s['priority']}"
+                )
+                for s in suggested
+            ],
+            "operator_question_pack": operator_questions,
+            "suggested_research_discovery_tasks": [
+                {
+                    "feature": s["feature"],
+                    "reason": "intent=decide (requires bounded decision + approval)",
+                    "suggestion": (
+                        'ph dr add --id DR-XXXX --title "<decision title>" --feature '
+                        f"{s['feature']}\n"
+                        'ph task create --title "Investigate: <decision>" --feature '
+                        f"{s['feature']} --decision DR-XXXX --type research-discovery --points 3 --release current"
+                    ),
+                }
+                for s in suggested
+                if str(s.get("intent")) == "decide"
+            ],
+        }
+        import json as _json
+
+        print(_json.dumps(payload, indent=2))
+        return 0
+
+    print(f"📦 RELEASE DRAFT ({target_version})")
+    if base_release:
+        print(f"Base: {base_release} (excluding {len(base_features)} feature(s))")
+    print(f"Planned sprints: {planned_sprints}")
+    print()
+
+    print("Operator Question Pack (ask during release planning):")
+    for q in operator_questions:
+        print(f"- {q}")
+    print()
+
+    print("Suggested release plan commands:")
+    print(f"- ph release plan --version {target_version} --sprints {planned_sprints}")
+    print(f"- ph release activate --release {target_version}")
+    print()
+
+    print("Suggested feature assignments (local-only; no web research here):")
+    if not suggested:
+        print("- No candidates found under `.project-handbook/features/`")
+        return 0
+    for s in suggested:
+        print(
+            "- "
+            f"ph release add-feature --release {target_version} --feature {s['feature']} "
+            f"--slot {s['slot']} --commitment {s['commitment']} --intent {s['intent']} "
+            f"--priority {s['priority']}"
+        )
+    print()
+
+    decide = [s for s in suggested if str(s.get("intent")) == "decide"]
+    if decide:
+        print("Suggested research-discovery tasks (do web/deep research there):")
+        for s in decide[:10]:
+            print(f"- Feature: {s['feature']} (intent=decide)")
+            print(f'  - ph dr add --id DR-XXXX --title "<decision title>" --feature {s["feature"]}')
+            print(
+                '  - ph task create --title "Investigate: <decision>" --feature '
+                f"{s['feature']} --decision DR-XXXX --type research-discovery --points 3 --release current"
+            )
+        print()
+
+    print("Next (interactive, release planning session):")
+    print("- Run `ph onboarding session release-planning` and apply this draft with operator input.")
     return 0
 
 
@@ -819,9 +1037,9 @@ def parse_release_plan_slot_alignment(*, plan_path: Path, slot: int) -> dict[str
     """
     Extract slot-derived alignment fields from a sprint-slots release plan.
 
-    Expected markers (I06-RLSLOT-0001):
-    - Slot header: "### Slot <n>"
-    - Subsections: "#### Goal / Purpose", "#### Intended gate(s)", "#### Enablement"
+    Expected strict markers (INIT-0001-workflow-foundations):
+    - Slot header: "## Slot <n>: <label>"
+    - Subsections: "### Slot Goal", "### Enablement", "### Intended Gates"
 
     Returns:
       {
@@ -840,8 +1058,8 @@ def parse_release_plan_slot_alignment(*, plan_path: Path, slot: int) -> dict[str
         return {}
 
     lines = text.splitlines()
-    slot_header_re = re.compile(rf"^###\s+Slot\s+{slot}\b", re.IGNORECASE)
-    next_slot_header_re = re.compile(r"^###\s+Slot\s+\d+\b", re.IGNORECASE)
+    slot_header_re = re.compile(rf"^##\s+Slot\s+{slot}:\s*(.+)\s*$", re.IGNORECASE)
+    next_slot_header_re = re.compile(r"^##\s+Slot\s+\d+:\s*", re.IGNORECASE)
 
     start_idx: int | None = None
     for i, raw in enumerate(lines):
@@ -858,7 +1076,7 @@ def parse_release_plan_slot_alignment(*, plan_path: Path, slot: int) -> dict[str
             break
 
     slot_lines = lines[start_idx:end_idx]
-    heading_re = re.compile(r"^####\s+", re.IGNORECASE)
+    heading_re = re.compile(r"^###\s+", re.IGNORECASE)
 
     def section_lines(*, section_header: re.Pattern[str]) -> list[str]:
         header_idx: int | None = None
@@ -876,11 +1094,9 @@ def parse_release_plan_slot_alignment(*, plan_path: Path, slot: int) -> dict[str
                 break
         return slot_lines[content_start:content_end]
 
-    goal_lines = section_lines(section_header=re.compile(r"^####\s+Goal\s*/\s*Purpose\s*$", re.IGNORECASE))
-    enablement_lines = section_lines(section_header=re.compile(r"^####\s+Enablement\s*$", re.IGNORECASE))
-    intended_gate_lines = section_lines(
-        section_header=re.compile(r"^####\s+Intended\s+gate\(s\)\s*$", re.IGNORECASE)
-    )
+    goal_lines = section_lines(section_header=re.compile(r"^###\s+Slot\s+Goal\s*$", re.IGNORECASE))
+    enablement_lines = section_lines(section_header=re.compile(r"^###\s+Enablement\s*$", re.IGNORECASE))
+    intended_gate_lines = section_lines(section_header=re.compile(r"^###\s+Intended\s+Gates\s*$", re.IGNORECASE))
 
     def first_meaningful_line(raw_lines: list[str]) -> str:
         for raw in raw_lines:
@@ -908,7 +1124,7 @@ def parse_release_plan_slot_alignment(*, plan_path: Path, slot: int) -> dict[str
         intended_gates.append("- " + stripped)
 
     if not intended_gates:
-        intended_gates = ["- TBD"]
+        intended_gates = ["- Gate: TBD"]
 
     return {
         "slot_goal": first_meaningful_line(goal_lines),
@@ -1004,9 +1220,7 @@ def _release_alignment_warnings_for_active_sprint(
     slot_to_check = current_slot or slot_meta
 
     if not release or release.lower() in {"null", "none"}:
-        warnings.append(
-            f"Current sprint `{current_sprint_id}` is missing `release: {version}` in its front matter."
-        )
+        warnings.append(f"Current sprint `{current_sprint_id}` is missing `release: {version}` in its front matter.")
     else:
         normalized_release = normalize_version(release)
         if release.strip().lower() == "current":
@@ -1051,13 +1265,13 @@ def _release_alignment_warnings_for_active_sprint(
         if not alignment:
             warnings.append(
                 f"Release plan is missing required slot markers for Slot {slot_to_check} "
-                f"(expected `### Slot {slot_to_check}` + subsections)."
+                f"(expected `## Slot {slot_to_check}: <label>` + subsections)."
             )
         else:
             if _slot_alignment_goal(alignment) == "TBD":
-                warnings.append(f"Release plan Slot {slot_to_check} is missing a `#### Goal / Purpose` value.")
+                warnings.append(f"Release plan Slot {slot_to_check} is missing a `### Slot Goal` value.")
             if _slot_alignment_enablement(alignment) == "TBD":
-                warnings.append(f"Release plan Slot {slot_to_check} is missing a `#### Enablement` value.")
+                warnings.append(f"Release plan Slot {slot_to_check} is missing a `### Enablement` value.")
 
     duplicates = timeline.get("slot_duplicates") if isinstance(timeline.get("slot_duplicates"), dict) else {}
     if duplicates:
@@ -1880,6 +2094,10 @@ def run_release_add_feature(
     ctx: Context,
     release: str,
     feature: str,
+    slot: int,
+    commitment: str,
+    intent: str,
+    priority: str | None,
     epic: bool,
     critical: bool,
 ) -> int:
@@ -1896,51 +2114,363 @@ def run_release_add_feature(
         print(f"❌ Release {version} not found. Create with: ph release plan")
         return 1
 
+    plan_path = ctx.ph_data_root / "releases" / version / "plan.md"
+    plan_meta = parse_plan_front_matter(plan_path=plan_path)
+    planned_sprints = parse_int(plan_meta.get("planned_sprints")) or 0
+
+    try:
+        slot_int = int(slot)
+    except Exception:
+        print("❌ Invalid --slot (expected an integer)")
+        return 1
+    if planned_sprints and (slot_int < 1 or slot_int > planned_sprints):
+        print(f"❌ Invalid --slot {slot_int} (expected 1..{planned_sprints})")
+        return 1
+
+    commitment_norm = (commitment or "").strip().lower()
+    if commitment_norm not in {"committed", "stretch"}:
+        print("❌ Invalid --commitment (expected committed|stretch)")
+        return 1
+
+    intent_norm = (intent or "").strip().lower()
+    if intent_norm not in {"deliver", "decide", "enable"}:
+        print("❌ Invalid --intent (expected deliver|decide|enable)")
+        return 1
+
+    prio = (priority or "P1").strip() or "P1"
+
     features = load_release_features(ph_root=ctx.ph_data_root, version=version)
 
     feature_type = "epic" if epic else "regular"
     features[feature] = {
+        "slot": slot_int,
+        "commitment": commitment_norm,
+        "intent": intent_norm,
         "type": feature_type,
-        "priority": "P1",
+        "priority": prio,
         "status": "planned",
         "completion": 0,
         "critical_path": critical,
     }
 
-    # Match legacy release add-feature behavior byte-for-byte.
     content = features_file.read_text(encoding="utf-8")
     lines = content.splitlines()
-
-    new_lines: list[str] = []
-    in_features = False
-    for line in lines:
-        if line.strip().startswith("features:"):
-            new_lines.append(line)
-            in_features = True
-
+    out: list[str] = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.strip() == "features:":
+            out.append(line)
             for feat_name, feat_data in features.items():
-                new_lines.append(f"  {feat_name}:")
+                out.append(f"  {feat_name}:")
                 for key, value in feat_data.items():
                     if isinstance(value, list):
                         value_str = "[" + ", ".join(str(item) for item in value) + "]"
                     else:
                         value_str = str(value)
-                    new_lines.append(f"    {key}: {value_str}")
-                new_lines.append("")
+                    out.append(f"    {key}: {value_str}")
+                out.append("")
+
+            # Skip existing features block.
+            i += 1
+            while i < len(lines):
+                nxt = lines[i]
+                if not nxt.strip() or nxt.strip().startswith("#"):
+                    i += 1
+                    continue
+                if nxt.startswith(" "):
+                    i += 1
+                    continue
+                break
             continue
+        out.append(line)
+        i += 1
 
-        if in_features and (line.startswith("features:") or not line.startswith(" ")):
-            in_features = False
-            if line.strip():
-                new_lines.append(line)
-            continue
-
-        if not in_features:
-            new_lines.append(line)
-
-    features_file.write_text("\n".join(new_lines), encoding="utf-8")
+    rendered = "\n".join(out).rstrip() + "\n"
+    features_file.write_text(rendered, encoding="utf-8")
 
     print(f"{_ADD_FEATURE_SUCCESS_PREFIX} {feature} to release {version}")
+    return 0
+
+
+def _detect_legacy_slot_format(text: str) -> bool:
+    if "## Slot Plans" in text:
+        return True
+    if re.search(r"^###\s+Slot\s+[1-9][0-9]*\b", text, flags=re.IGNORECASE | re.MULTILINE):
+        return True
+    if "#### Goal / Purpose" in text:
+        return True
+    return False
+
+
+def _detect_strict_slot_format(text: str) -> bool:
+    return bool(re.search(r"^##\s+Slot\s+[1-9][0-9]*:\s*.+$", text, flags=re.MULTILINE))
+
+
+def _migrate_legacy_slot_block_to_strict(*, text: str, planned_sprints: int) -> str:
+    lines = text.splitlines()
+
+    # If strict slots already exist, migration only needs to remove legacy markers.
+    # This keeps manual edits stable while eliminating strict-only validation failures.
+    if _detect_strict_slot_format(text):
+        if not _detect_legacy_slot_format(text):
+            return text
+
+        start_idx: int | None = None
+        for i, raw in enumerate(lines):
+            if raw.strip() == "## Slot Plans":
+                start_idx = i
+                break
+        if start_idx is None:
+            for i, raw in enumerate(lines):
+                if re.match(r"^###\s+Slot\s+[1-9][0-9]*\b", raw.strip(), flags=re.IGNORECASE):
+                    start_idx = i
+                    break
+        if start_idx is None:
+            return text
+
+        end_idx = len(lines)
+        for j in range(start_idx + 1, len(lines)):
+            if re.match(r"^##\s+(?!Slot\s+\d+:)", lines[j].strip(), flags=re.IGNORECASE):
+                end_idx = j
+                break
+
+        new_lines = lines[:start_idx] + lines[end_idx:]
+        return "\n".join(new_lines).rstrip() + "\n"
+
+    # Otherwise: convert legacy slot content into strict slots.
+    legacy_start: int | None = None
+    for i, raw in enumerate(lines):
+        if raw.strip() == "## Slot Plans":
+            legacy_start = i
+            break
+    if legacy_start is None:
+        for i, raw in enumerate(lines):
+            if re.match(r"^###\s+Slot\s+[1-9][0-9]*\b", raw.strip(), flags=re.IGNORECASE):
+                legacy_start = i
+                break
+    if legacy_start is None:
+        return text
+
+    legacy_end = len(lines)
+    for j in range(legacy_start + 1, len(lines)):
+        if re.match(r"^##\s+", lines[j].strip()) and lines[j].strip() != "## Slot Plans":
+            legacy_end = j
+            break
+
+    legacy_lines = lines[legacy_start:legacy_end]
+
+    slot_theme_re = re.compile(r"^\s*-\s+\*\*Slot\s+([1-9][0-9]*)\*\*.*:\s*(.+?)\s*$", flags=re.IGNORECASE)
+    slot_labels: dict[int, str] = {}
+    for raw in lines:
+        m = slot_theme_re.match(raw)
+        if not m:
+            continue
+        try:
+            slot_num = int(m.group(1))
+        except Exception:
+            continue
+        theme = m.group(2).strip()
+        if theme and theme.lower() != "sprint theme/focus":
+            slot_labels[slot_num] = theme
+
+    slot_header_re = re.compile(r"^###\s+Slot\s+([1-9][0-9]*)\b", flags=re.IGNORECASE)
+    slot_starts: list[tuple[int, int]] = []
+    for idx, raw in enumerate(legacy_lines):
+        m = slot_header_re.match(raw.strip())
+        if not m:
+            continue
+        try:
+            slot_num = int(m.group(1))
+        except Exception:
+            continue
+        slot_starts.append((slot_num, idx))
+    slot_starts.sort(key=lambda t: t[1])
+
+    def _section_slice(*, start: int) -> list[str]:
+        end = len(legacy_lines)
+        for _, sidx in slot_starts:
+            if sidx > start:
+                end = min(end, sidx)
+        for j2 in range(start + 1, len(legacy_lines)):
+            if re.match(r"^##\s+", legacy_lines[j2].strip()):
+                end = min(end, j2)
+                break
+        return legacy_lines[start:end]
+
+    legacy_by_slot: dict[int, list[str]] = {}
+    for slot_num, sidx in slot_starts:
+        legacy_by_slot[slot_num] = _section_slice(start=sidx)
+
+    def _extract_subsection(*, section: list[str], header: str) -> list[str]:
+        h_re = re.compile(rf"^####\s+{re.escape(header)}\s*$", flags=re.IGNORECASE)
+        any_h_re = re.compile(r"^####\s+", flags=re.IGNORECASE)
+        start: int | None = None
+        for i3, raw in enumerate(section):
+            if h_re.match(raw.strip()):
+                start = i3 + 1
+                break
+        if start is None:
+            return []
+        end = len(section)
+        for j3 in range(start, len(section)):
+            if any_h_re.match(section[j3].strip()) or slot_header_re.match(section[j3].strip()):
+                end = j3
+                break
+        return section[start:end]
+
+    def _first_line(lines_in: list[str]) -> str:
+        for raw in lines_in:
+            s = raw.strip()
+            if not s:
+                continue
+            if s.startswith(("- ", "* ")):
+                return s[2:].strip()
+            if s.startswith("-") and len(s) > 1 and s[1].isspace():
+                return s[1:].strip()
+            return s
+        return ""
+
+    def _scope_items(lines_in: list[str], prefix: str) -> list[str]:
+        items: list[str] = []
+        for raw in lines_in:
+            s = raw.strip()
+            if not s:
+                continue
+            if s.startswith(("- ", "* ")):
+                s = s[2:].strip()
+            if s.lower().startswith(prefix.lower()):
+                val = s.split(":", 1)[1].strip() if ":" in s else ""
+                if val:
+                    items.append(val)
+        return items
+
+    strict_block: list[str] = []
+    for slot_num in range(1, max(1, int(planned_sprints or 0)) + 1):
+        section = legacy_by_slot.get(slot_num) or []
+
+        goal_lines = _extract_subsection(section=section, header="Goal / Purpose")
+        enablement_lines = _extract_subsection(section=section, header="Enablement")
+        scope_lines = _extract_subsection(section=section, header="Scope boundaries (in/out)")
+        gates_lines = _extract_subsection(section=section, header="Intended gate(s)")
+
+        goal = _first_line(goal_lines) or "TBD"
+        enablement = _first_line(enablement_lines) or "TBD"
+        if enablement.lower().startswith("how this slot advances the release:"):
+            enablement = enablement.split(":", 1)[1].strip() or "TBD"
+
+        in_scope = _scope_items(scope_lines, "In") or ["TBD"]
+        out_scope = _scope_items(scope_lines, "Out") or ["TBD"]
+
+        gates: list[str] = []
+        for raw in gates_lines:
+            s = raw.strip()
+            if not s:
+                continue
+            if s.startswith(("- ", "* ")):
+                s = s[2:].strip()
+            if s.lower() == "tbd":
+                continue
+            if s.lower().startswith("gate:"):
+                gates.append(f"- {s}")
+            else:
+                gates.append(f"- Gate: {s}")
+        if not gates:
+            gates = ["- Gate: TBD"]
+
+        label = slot_labels.get(slot_num) or f"Slot {slot_num}"
+        strict_block.extend(
+            [
+                "",
+                f"## Slot {slot_num}: {label}",
+                "### Slot Goal",
+                f"- {goal}",
+                "### Enablement",
+                f"- {enablement}",
+                "### Scope Boundaries",
+                "In scope:",
+                *[f"- {item}" for item in in_scope],
+                "Out of scope:",
+                *[f"- {item}" for item in out_scope],
+                "### Intended Gates",
+                *gates,
+                "",
+            ]
+        )
+
+    # Replace the legacy block with strict block.
+    replacement = strict_block
+    new_lines = lines[:legacy_start] + replacement + lines[legacy_end:]
+    return "\n".join(new_lines).rstrip() + "\n"
+
+
+def run_release_migrate_slot_format(
+    *,
+    ctx: Context,
+    release: str,
+    diff: bool,
+    write_back: bool,
+    env: dict[str, str],
+) -> int:
+    if ctx.scope == "system":
+        print(_SYSTEM_SCOPE_REMEDIATION)
+        return 1
+
+    version = (release or "").strip()
+    if not version:
+        print("❌ Missing --release vX.Y.Z")
+        return 1
+    if not version.startswith("v"):
+        version = f"v{version}"
+
+    plan_path = ctx.ph_data_root / "releases" / version / "plan.md"
+    if not plan_path.exists():
+        print(f"❌ Release plan not found: {plan_path}")
+        return 1
+
+    original = plan_path.read_text(encoding="utf-8")
+    meta = parse_plan_front_matter(plan_path=plan_path)
+    planned_sprints = parse_int(meta.get("planned_sprints")) or 0
+    migrated = _migrate_legacy_slot_block_to_strict(text=original, planned_sprints=planned_sprints)
+
+    if migrated == original:
+        print("✅ No changes (release plan is already strict, or no legacy slot block was found).")
+        return 0
+
+    if diff and not write_back:
+        before = original.splitlines(keepends=True)
+        after = migrated.splitlines(keepends=True)
+        for line in difflib.unified_diff(
+            before,
+            after,
+            fromfile=str(plan_path),
+            tofile=str(plan_path) + " (migrated)",
+        ):
+            print(line.rstrip("\n"))
+        return 0
+
+    if write_back:
+        plan_path.write_text(migrated, encoding="utf-8")
+        code, _out_path, message = run_validate(
+            ph_root=ctx.ph_root,
+            ph_project_root=ctx.ph_project_root,
+            ph_data_root=ctx.ph_data_root,
+            scope=ctx.scope,
+            quick=True,
+            silent_success=False,
+        )
+        if message:
+            print(message, end="")
+        if code != 0:
+            print("❌ Migration wrote changes, but validation still reports errors. Fix plan.md and re-run validate.")
+        else:
+            print("✅ Migration applied and validated.")
+        return code
+
+    print(migrated, end="")
+    print("\nNext:")
+    print(f"- Review: {plan_path}")
+    print(f"- Apply: ph release migrate-slot-format --release {version} --write-back")
     return 0
 
 

@@ -174,10 +174,7 @@ def _validate_generated_fdr(*, path: Path, content: str, expected_number: str) -
     missing = [heading for heading in REQUIRED_H1 if heading not in h1]
     if missing:
         raise ValueError(
-            "Generated FDR is missing required H1 headings.\n"
-            f"  path: {path}\n"
-            f"  missing: {missing}\n"
-            f"  found_h1: {h1}\n"
+            f"Generated FDR is missing required H1 headings.\n  path: {path}\n  missing: {missing}\n  found_h1: {h1}\n"
         )
 
     _ = [heading for heading in RECOMMENDED_H1 if heading not in h1]

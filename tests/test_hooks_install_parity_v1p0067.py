@@ -47,13 +47,7 @@ def test_hooks_install_emits_make_output_and_exit_code(tmp_path: Path) -> None:
     assert result.returncode == 0
 
     resolved = tmp_path.resolve()
-    expected_prefix = (
-        "\n"
-        f"> project-handbook@0.0.0 ph {resolved}\n"
-        "> ph hooks install\n"
-        "\n"
-        "Git hooks installed!\n"
-    )
+    expected_prefix = f"\n> project-handbook@0.0.0 ph {resolved}\n> ph hooks install\n\nGit hooks installed!\n"
     assert result.stdout.startswith(expected_prefix)
     assert "validation:" in result.stdout
     assert f"{resolved}/.project-handbook/status/validation.json" in result.stdout

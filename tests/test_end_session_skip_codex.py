@@ -70,16 +70,7 @@ def test_end_session_skip_codex_writes_summary_and_manifest(tmp_path: Path) -> N
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert manifest["sessions"][0]["session_id"] == "sess-1"
 
-    expected_summary = (
-        Path("process")
-        / "sessions"
-        / "logs"
-        / "2026"
-        / "01"
-        / "14"
-        / "sess-1"
-        / "000000_summary.md"
-    )
+    expected_summary = Path("process") / "sessions" / "logs" / "2026" / "01" / "14" / "sess-1" / "000000_summary.md"
     assert manifest["sessions"][0]["summary_path"] == expected_summary.as_posix()
     assert (ph_root / expected_summary).exists()
     summary_text = (ph_root / expected_summary).read_text(encoding="utf-8")

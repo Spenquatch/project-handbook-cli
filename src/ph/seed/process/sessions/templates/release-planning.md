@@ -19,7 +19,8 @@ Goal: produce a coherent release plan under `.project-handbook/releases/<version
 3. **Session routing rule.** If you are working from a sprint task directory, check `task.yaml` and follow its `session:`; if it does not match this prompt, stop and restart using `ph onboarding session <session>`.
 4. **Use handbook automation.** Prefer `ph ...` commands instead of ad-hoc edits when a command exists.
 5. **Write artefacts, not chat.** The outcome should be updated docs under `.project-handbook/releases/` (and optionally feature/roadmap docs), not free-form notes.
-6. **No ambiguity in committed scope.** When release direction depends on uncertain choices, create `task_type=research-discovery` tasks with a `DR-XXXX` (Option A/B), present findings for operator/user approval, then convert to ADR/FDR-backed execution tasks.
+6. **No web research during release planning.** If research is required (external docs, ecosystem comparisons, security posture), create a `task_type=research-discovery` task and do the research there.
+7. **No ambiguity in committed scope.** When release direction depends on uncertain choices, create `task_type=research-discovery` tasks with a `DR-XXXX` (Option A/B), present findings for operator/user approval, then convert to ADR/FDR-backed execution tasks.
 
 ## Session Inputs (Collect These First)
 ```bash
@@ -44,7 +45,15 @@ ph sprint capacity   # Points + lanes telemetry (not a scope cap)
 
 ## Release Planning Flow (Follow the Playbook)
 
-### 1) Decide: release type, version, and timeline
+### 1) Draft the release (local-only, deterministic)
+Run a release draft to propose a structured release composition based only on handbook artefacts (no web browsing here):
+```bash
+ph release draft --version next --sprints 3 --base latest-delivered
+```
+
+Then ask the **Operator Question Pack** surfaced by the draft (theme, risk posture, must-commit vs stretch).
+
+### 2) Decide: release type, version, and timeline
 Pick:
 - **Release type**: minor (2 sprints) / standard (3 sprints) / major (4 sprints)
 - **Version**: `vX.Y.Z` (choose the next semver)
@@ -53,7 +62,7 @@ Pick:
   - `--sprint-ids "SPRINT-SEQ-0007,SPRINT-SEQ-0008"` → pin exact sprint IDs (advanced/legacy)
   - `--start-sprint <SPRINT-...> --sprints <N>` → helper for ISO-week/date schemes
 
-### 2) Generate the release scaffold
+### 3) Generate the release scaffold
 ```bash
 ph release plan --version vX.Y.Z --sprints 3
 # Or auto-pick the next patch version from the current release
@@ -64,6 +73,13 @@ ph release plan --version vX.Y.Z --sprint-ids "SPRINT-SEQ-0007,SPRINT-SEQ-0008"
 
 Then open and complete:
 - `.project-handbook/releases/vX.Y.Z/plan.md`
+
+Important: release slot plans must use the **strict slot format**:
+- `## Slot <n>: <label>`
+  - `### Slot Goal`
+  - `### Enablement`
+  - `### Scope Boundaries` (with `In scope:` and `Out of scope:` markers)
+  - `### Intended Gates` (at least one `- Gate:` bullet)
 
 When you are ready for sprint planning/status to use this release as “current” context:
 ```bash
@@ -79,7 +95,7 @@ Minimum edits to apply inside `plan.md`:
 - Communication plan (internal + stakeholders)
 - Scope control (what is locked vs flexible; how scope changes are handled)
 
-### 3) Select scope and assign features
+### 4) Select scope and assign features
 Helper commands:
 ```bash
 ph release suggest --version vX.Y.Z
@@ -88,9 +104,9 @@ ph feature list
 
 Assign features (repeat as needed):
 ```bash
-ph release add-feature --release vX.Y.Z --feature feature-name
-ph release add-feature --release vX.Y.Z --feature feature-name --critical
-ph release add-feature --release vX.Y.Z --feature feature-name --epic
+ph release add-feature --release vX.Y.Z --feature feature-name --slot 1 --commitment committed --intent deliver
+ph release add-feature --release vX.Y.Z --feature feature-name --slot 2 --commitment stretch --intent enable --critical
+ph release add-feature --release vX.Y.Z --feature feature-name --slot 3 --commitment committed --intent decide --epic
 ```
 
 If a needed feature does not exist yet, create it (planning artefact):
@@ -98,10 +114,10 @@ If a needed feature does not exist yet, create it (planning artefact):
 ph feature create --name feature-name
 ```
 
-### 3.5) Resolve planning unknowns (research-discovery tasks)
+### 4.5) Resolve planning unknowns (research-discovery tasks)
 
 If any committed feature still has open decisions (topology, secrets model, workflow contracts, CI gates), convert the
-ambiguity into bounded research before the release plan is treated as “locked”:
+ambiguity into bounded research before the release plan is treated as “locked”. Research (web/DeepWiki/LSP) happens only in `research-discovery` tasks:
 
 ```bash
 # Ensure a sprint scaffold exists so task creation works (pick the release start sprint)

@@ -60,6 +60,7 @@ def test_sprint_plan_creates_skeleton_and_prints_project_hints(tmp_path: Path) -
     assert (sprint_dir / "plan.md").exists()
     assert (tmp_path / ".project-handbook" / "sprints" / "current").resolve() == sprint_dir.resolve()
 
+
 def test_sprint_plan_bounded_template_matches_legacy(tmp_path: Path) -> None:
     _write_minimal_ph_root(
         tmp_path,
@@ -128,12 +129,12 @@ def test_sprint_plan_bounded_template_matches_legacy(tmp_path: Path) -> None:
         "## Task Creation Guide",
         "```bash",
         (
-            "ph task create --title \"Task Name\" --feature feature-name --decision ADR-XXX --points 3 "
-            "--lane \"handbook/automation\" --release current"
+            'ph task create --title "Task Name" --feature feature-name --decision ADR-XXX --points 3 '
+            '--lane "handbook/automation" --release current'
         ),
         (
-            "ph task create --title \"Gate: <name>\" --feature feature-name --decision ADR-XXX --points 3 "
-            "--lane \"integration/<scope>\" --release current --gate"
+            'ph task create --title "Gate: <name>" --feature feature-name --decision ADR-XXX --points 3 '
+            '--lane "integration/<scope>" --release current --gate'
         ),
         "```",
         "",
@@ -196,38 +197,61 @@ def test_sprint_plan_scaffolds_release_slot_alignment_when_release_active(tmp_pa
             [
                 "# Release v1.2.3",
                 "",
-                "## Slot Plans",
-                "",
-                "### Slot 1",
-                "",
-                "#### Goal / Purpose",
+                "## Slot 1: Foundation",
+                "### Slot Goal",
                 "- Build login flow",
-                "",
-                "#### Scope boundaries (in/out)",
-                "- In: TBD",
-                "- Out: TBD",
-                "",
-                "#### Intended gate(s)",
+                "### Enablement",
+                "- Unlock onboarding",
+                "### Scope Boundaries",
+                "In scope:",
+                "- Basic auth",
+                "Out of scope:",
+                "- SSO",
+                "### Intended Gates",
                 "- Gate: Login smoke",
                 "- Gate: SSO ready",
                 "",
-                "#### Enablement",
-                "- Unlocks onboarding",
+                "## Slot 2: Hardening",
+                "### Slot Goal",
+                "- Stabilize and polish",
+                "### Enablement",
+                "- Raise confidence",
+                "### Scope Boundaries",
+                "In scope:",
+                "- Error states",
+                "Out of scope:",
+                "- New major features",
+                "### Intended Gates",
+                "- Gate: Demo-ready UX",
                 "",
-                "### Slot 2",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    (tmp_path / ".project-handbook" / "releases" / "v1.2.3" / "features.yaml").write_text(
+        "\n".join(
+            [
+                "# Feature assignments for v1.2.3",
+                "# Auto-managed by release commands",
                 "",
-                "#### Goal / Purpose",
-                "- TBD",
+                "version: v1.2.3",
+                "timeline_mode: sprint_slots",
+                "start_sprint_slot: 1",
+                "end_sprint_slot: 2",
+                "planned_sprints: 2",
                 "",
-                "#### Scope boundaries (in/out)",
-                "- In: TBD",
-                "- Out: TBD",
-                "",
-                "#### Intended gate(s)",
-                "- TBD",
-                "",
-                "#### Enablement",
-                "- How this slot advances the release: TBD",
+                "features:",
+                "  feature-a:",
+                "    slot: 1",
+                "    commitment: committed",
+                "    intent: deliver",
+                "    type: regular",
+                "    priority: P1",
+                "    status: planned",
+                "    completion: 0",
+                "    critical_path: False",
                 "",
             ]
         )
@@ -249,10 +273,12 @@ def test_sprint_plan_scaffolds_release_slot_alignment_when_release_active(tmp_pa
     assert "release_sprint_slot: 1" in sprint_plan_text
     assert "## Release Alignment (Slot 1)" in sprint_plan_text
     assert "Slot goal: Build login flow" in sprint_plan_text
-    assert "Enablement: Unlocks onboarding" in sprint_plan_text
+    assert "Enablement: Unlock onboarding" in sprint_plan_text
     assert "Intended gates:" in sprint_plan_text
     assert "- Gate: Login smoke" in sprint_plan_text
     assert "- Gate: SSO ready" in sprint_plan_text
+    assert "Slot Features:" in sprint_plan_text
+    assert "- feature-a [committed/deliver]" in sprint_plan_text
 
 
 def test_sprint_plan_prints_pnpm_make_preamble_when_package_json_present(tmp_path: Path) -> None:

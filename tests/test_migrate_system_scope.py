@@ -59,15 +59,7 @@ def test_migrate_system_scope_moves_artifacts_and_emits_json_contract(tmp_path: 
         encoding="utf-8",
     )
 
-    task_dir = (
-        tmp_path
-        / ".project-handbook"
-        / "sprints"
-        / "2099"
-        / "SPRINT-2099-01-01"
-        / "tasks"
-        / "TASK-001-x"
-    )
+    task_dir = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / "TASK-001-x"
     task_dir.mkdir(parents=True, exist_ok=True)
     (task_dir / "task.yaml").write_text(
         "id: TASK-001\nlane: handbook/automation\n",

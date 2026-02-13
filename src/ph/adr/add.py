@@ -179,10 +179,7 @@ def _validate_generated_adr(*, path: Path, content: str, expected_number: str) -
     missing = [heading for heading in REQUIRED_H1 if heading not in h1]
     if missing:
         raise ValueError(
-            "Generated ADR is missing required H1 headings.\n"
-            f"  path: {path}\n"
-            f"  missing: {missing}\n"
-            f"  found_h1: {h1}\n"
+            f"Generated ADR is missing required H1 headings.\n  path: {path}\n  missing: {missing}\n  found_h1: {h1}\n"
         )
 
     # Recommended H1 headings are not fatal, but we keep this for future strict validation parity.
@@ -218,9 +215,7 @@ def run_adr_add(
         normalized_status = str(status or "").strip().lower()
         if normalized_status not in {"draft", "accepted", "rejected", "superseded"}:
             raise ValueError(
-                "Invalid --status.\n"
-                "  expected: draft|accepted|rejected|superseded\n"
-                f"  found: {status!r}\n"
+                f"Invalid --status.\n  expected: draft|accepted|rejected|superseded\n  found: {status!r}\n"
             )
 
         normalized_superseded_by = (str(superseded_by or "").strip() or None) if superseded_by is not None else None

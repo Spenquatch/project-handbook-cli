@@ -11,6 +11,7 @@ from pathlib import Path
 
 from .context import Context
 from .feature_status_updater import run_feature_summary
+from .question_manager import QuestionManager
 from .release import run_release_status
 from .sprint_status import run_sprint_status
 from .task_view import run_task_list
@@ -174,6 +175,9 @@ def _compile_patterns() -> dict[str, list[tuple[str, re.Pattern[str]]]]:
         ("DECIDE_APPROACH", ci(r"\bdecide (on|between)\b.*\b(approach|strategy|implementation)\b")),
         ("TUNE_LATER", ci(r"\b(tune|decide|choose|pick)\b.*\blater\b")),
         ("BEST_EFFORT", ci(r"\bbest[- ]effort\b")),
+        ("SHOULD_RESEARCH", ci(r"\b(need(s)? to|should)\s+(research|investigate)\b")),
+        ("IMPERATIVE_RESEARCH", ci(r"^\s*[-*]\s+research\b")),
+        ("IMPERATIVE_INVESTIGATE", ci(r"^\s*[-*]\s+investigate\b")),
     ]
 
     discovery = [
@@ -327,11 +331,7 @@ def _lint_task_dir(*, ph_data_root: Path, task_dir: Path) -> list[Finding]:
             Finding(
                 task_id=task_id,
                 severity="FAIL",
-                message=(
-                    f"Unknown session '{session}' (expected one of: "
-                    + ", ".join(sorted(ALLOWED_SESSIONS))
-                    + ")"
-                ),
+                message=(f"Unknown session '{session}' (expected one of: " + ", ".join(sorted(ALLOWED_SESSIONS)) + ")"),
                 file=task_yaml_path,
             )
         )
@@ -392,9 +392,7 @@ def _lint_task_dir(*, ph_data_root: Path, task_dir: Path) -> list[Finding]:
                     Finding(
                         task_id=task_id,
                         severity="FAIL",
-                        message=(
-                            f"Decision id mismatch for session {session}: expected DR-XXXX, found {decision}"
-                        ),
+                        message=(f"Decision id mismatch for session {session}: expected DR-XXXX, found {decision}"),
                         file=task_yaml_path,
                     )
                 )
@@ -441,8 +439,7 @@ def _lint_task_dir(*, ph_data_root: Path, task_dir: Path) -> list[Finding]:
                     task_id=task_id,
                     severity="FAIL",
                     message=(
-                        "README.md front matter feature mismatch: "
-                        f"task.yaml={task_feature}, README.md={readme_feature}"
+                        f"README.md front matter feature mismatch: task.yaml={task_feature}, README.md={readme_feature}"
                     ),
                     file=readme_path,
                 )
@@ -677,6 +674,22 @@ def run_pre_exec_lint(*, ctx: Context) -> int:
         return 1
 
     all_findings: list[Finding] = []
+    try:
+        qm = QuestionManager(ph_data_root=ctx.ph_data_root, env=os.environ)
+        blocking = qm.blocking_open_for_current_sprint()
+    except Exception:
+        blocking = []
+
+    for q in blocking:
+        all_findings.append(
+            Finding(
+                task_id="SPRINT",
+                severity="FAIL",
+                message=f"Blocking question is still open: {q.id} — {q.title}",
+                file=ctx.ph_data_root / q.path,
+            )
+        )
+
     sprint_gate_task_ids: list[str] = []
     for task_dir in _iter_task_dirs(tasks_dir=tasks_dir):
         task_yaml_path = task_dir / "task.yaml"
@@ -805,8 +818,7 @@ def run_pre_exec_audit(
     print("Next:")
     print(f"- Review evidence bundle: {evid}")
     print(
-        "- Update `project-handbook/sprints/current/plan.md` to confirm the audit gate passed "
-        "(date + evidence path)."
+        "- Update `project-handbook/sprints/current/plan.md` to confirm the audit gate passed (date + evidence path)."
     )
     print(
         "- Start execution by claiming the first ready task (typically `TASK-001`) "

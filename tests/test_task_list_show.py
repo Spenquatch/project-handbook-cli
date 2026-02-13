@@ -123,13 +123,7 @@ def test_task_list_and_show_match_v0_formatting_rules(tmp_path: Path, scope: str
     else:
         expected_location = str(
             (
-                tmp_path
-                / ".project-handbook"
-                / "sprints"
-                / "2099"
-                / "SPRINT-2099-01-01"
-                / "tasks"
-                / "TASK-001-first"
+                tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / "TASK-001-first"
             ).resolve()
         )
     assert f"Location: {expected_location}" in shown.stdout.splitlines()

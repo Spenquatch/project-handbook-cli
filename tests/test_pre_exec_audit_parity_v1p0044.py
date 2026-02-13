@@ -152,8 +152,7 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
     )
 
     release_status_out = (
-        "❌ No current release found\n"
-        "💡 Create one with: ph release plan --version v1.2.0 --sprints 3 --activate\n"
+        "❌ No current release found\n💡 Create one with: ph release plan --version v1.2.0 --sprints 3 --activate\n"
     )
 
     task_list_out = (
@@ -162,9 +161,7 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
         "✅ TASK-001: Implement minimal task  [lane-a] (task-execution) [3pts] (depends: FIRST_TASK)\n"
     )
 
-    feature_summary_line = (
-        f"🎉 {'feature-a':<25} {3:3d}/{3:3d} pts ({100:3d}%) Current: 1 tasks\n"
-    )
+    feature_summary_line = f"🎉 {'feature-a':<25} {3:3d}/{3:3d} pts ({100:3d}%) Current: 1 tasks\n"
     feature_summary_out = f"🎯 FEATURE SUMMARY WITH SPRINT DATA\n{rule}\n{feature_summary_line}"
 
     validate_out = (
@@ -343,14 +340,12 @@ def test_release_status_sprint_slots_matches_legacy_format(tmp_path: Path) -> No
     assert result.returncode == 0
 
     expected = (
-        f"📦 RELEASE STATUS: {version}\n"
-        + "=" * 60
-        + "\n"
+        f"📦 RELEASE STATUS: {version}\n" + "=" * 60 + "\n"
         f"Sprint: 1 of 2 (slot 1) ({sprint_id})\n"
         "Slot Goal: TBD\n"
         "⚠️ Alignment warnings:\n"
         "  - Current sprint plan is missing required heading: `## Release Alignment (Slot 1)`.\n"
-        "  - Release plan is missing required slot markers for Slot 1 (expected `### Slot 1` + subsections).\n"
+        "  - Release plan is missing required slot markers for Slot 1 (expected `## Slot 1: <label>` + subsections).\n"
         "Overall Progress: 100% complete (1/1 features started)\n"
         "Target: Slot 2\n"
         "Release Trajectory: 🟢 GREEN - Ahead of expected completion for Sprint 1\n"

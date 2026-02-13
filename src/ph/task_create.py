@@ -347,7 +347,7 @@ status: todo
 story_points: {story_points}
 depends_on: []
 prio: {prio}
-due: {due_date.strftime('%Y-%m-%d')}
+due: {due_date.strftime("%Y-%m-%d")}
 {release_line}{release_gate_line}acceptance:
 {acceptance_lines}
 links: []
@@ -605,7 +605,7 @@ links: []
         commands_content = f"""---
 title: {title} - Commands
 type: commands
-date: {today.strftime('%Y-%m-%d')}
+date: {today.strftime("%Y-%m-%d")}
 task_id: {task_id}
 tags: [commands]
 links: []
@@ -720,8 +720,8 @@ echo "Add task-specific commands here"
                 "```bash",
                 "# Commit with task reference",
                 (
-                    f'git commit -m \"feat: {title.lower()}\\n\\nImplements {task_id} for {feature} feature.\\n'
-                    f'Part of sprint: {sprint_dir.name}\\n\\nRefs: #{task_id}\"'
+                    f'git commit -m "feat: {title.lower()}\\n\\nImplements {task_id} for {feature} feature.\\n'
+                    f'Part of sprint: {sprint_dir.name}\\n\\nRefs: #{task_id}"'
                 ),
                 "",
                 "# Link PR to task (in PR description)",
@@ -732,7 +732,7 @@ echo "Add task-specific commands here"
                 "## Quick Copy-Paste",
                 "```bash",
                 "# Most common commands for this task type",
-                'echo \"Add task-specific commands here\"',
+                'echo "Add task-specific commands here"',
                 "```",
                 "",
             ]
@@ -743,7 +743,7 @@ echo "Add task-specific commands here"
         checklist_content = f"""---
 title: {title} - Completion Checklist
 type: checklist
-date: {today.strftime('%Y-%m-%d')}
+date: {today.strftime("%Y-%m-%d")}
 task_id: {task_id}
 tags: [checklist]
 links: []
@@ -848,7 +848,7 @@ links: []
             "## Sign-off",
             "- [ ] All validation steps completed",
             "- [ ] Evidence documented above",
-            '- [ ] Ready to mark task as "done"' if ctx.scope == "project" else '- [ ] Ready to mark task as \"done\"',
+            '- [ ] Ready to mark task as "done"' if ctx.scope == "project" else '- [ ] Ready to mark task as "done"',
             "",
         ]
 

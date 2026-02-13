@@ -235,9 +235,7 @@ def validate_adrs(*, issues: list[dict], root: Path) -> None:
                     "code": "adr_missing_required_h1",
                     "severity": "error",
                     "message": (
-                        "ADR is missing required H1 headings.\n"
-                        f"  missing: {missing_required}\n"
-                        f"  found_h1: {h1}\n"
+                        f"ADR is missing required H1 headings.\n  missing: {missing_required}\n  found_h1: {h1}\n"
                     ),
                     "missing": missing_required,
                     "found_h1": h1,
@@ -252,9 +250,7 @@ def validate_adrs(*, issues: list[dict], root: Path) -> None:
                     "code": "adr_missing_recommended_h1",
                     "severity": "warning",
                     "message": (
-                        "ADR is missing recommended H1 headings.\n"
-                        f"  missing: {missing_recommended}\n"
-                        f"  found_h1: {h1}\n"
+                        f"ADR is missing recommended H1 headings.\n  missing: {missing_recommended}\n  found_h1: {h1}\n"
                     ),
                     "missing": missing_recommended,
                     "found_h1": h1,
@@ -269,11 +265,7 @@ def validate_adrs(*, issues: list[dict], root: Path) -> None:
                 "path": paths[0],
                 "code": "adr_duplicate_id",
                 "severity": "error",
-                "message": (
-                    "ADR id is duplicated across multiple files.\n"
-                    f"  id: {adr_id}\n"
-                    f"  paths: {sorted(paths)}\n"
-                ),
+                "message": (f"ADR id is duplicated across multiple files.\n  id: {adr_id}\n  paths: {sorted(paths)}\n"),
                 "id": adr_id,
                 "paths": sorted(paths),
             }

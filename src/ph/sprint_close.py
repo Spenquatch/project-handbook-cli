@@ -174,13 +174,19 @@ def _create_retrospective(
     mode = sprint_status._get_sprint_mode(ph_project_root=ph_project_root, sprint_dir=sprint_dir)
     if mode == "bounded":
         health = sprint_status.get_sprint_health(
-            ph_project_root=ph_project_root, tasks=use_tasks, day_of_sprint=0, mode="bounded"  # type: ignore[arg-type]
+            ph_project_root=ph_project_root,
+            tasks=use_tasks,
+            day_of_sprint=0,
+            mode="bounded",  # type: ignore[arg-type]
         )
     else:
         start_date, end_date = get_sprint_dates(sprint_id)
         duration_days = (end_date - start_date).days + 1
         health = sprint_status.get_sprint_health(
-            ph_project_root=ph_project_root, tasks=use_tasks, day_of_sprint=duration_days, mode="timeboxed"  # type: ignore[arg-type]
+            ph_project_root=ph_project_root,
+            tasks=use_tasks,
+            day_of_sprint=duration_days,
+            mode="timeboxed",  # type: ignore[arg-type]
         )
 
     template = "\n".join(

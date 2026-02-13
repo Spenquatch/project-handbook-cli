@@ -65,13 +65,15 @@ def test_release_plan_creates_files_and_hints(tmp_path: Path) -> None:
     assert "timeline_mode: sprint_slots" in plan_text
     assert "planned_sprints: 2" in plan_text
     assert "sprint_slots: [1, 2]" in plan_text
-    assert "## Slot Plans" in plan_text
-    assert "### Slot 1" in plan_text
-    assert "### Slot 2" in plan_text
-    assert plan_text.count("#### Goal / Purpose") == 2
-    assert plan_text.count("#### Scope boundaries (in/out)") == 2
-    assert plan_text.count("#### Intended gate(s)") == 2
-    assert plan_text.count("#### Enablement") == 2
+    assert "## Slot 1: Slot 1" in plan_text
+    assert "## Slot 2: Slot 2" in plan_text
+    assert plan_text.count("### Slot Goal") == 2
+    assert plan_text.count("### Enablement") == 2
+    assert plan_text.count("### Scope Boundaries") == 2
+    assert plan_text.count("In scope:") == 2
+    assert plan_text.count("Out of scope:") == 2
+    assert plan_text.count("### Intended Gates") == 2
+    assert plan_text.count("- Gate:") >= 2
 
     features_text = features_path.read_text(encoding="utf-8")
     assert "timeline_mode: sprint_slots" in features_text
@@ -91,11 +93,13 @@ def test_release_plan_creates_files_and_hints(tmp_path: Path) -> None:
             "📅 Timeline: 2 sprint slot(s) (decoupled from calendar dates)",
             "📝 Next steps:",
             f"   1. Edit {resolved_plan_path} to define release goals",
-            "   2. Add features: ph release add-feature --release v1.2.3 --feature feature-name",
+            "   2. Add features: ph release add-feature --release v1.2.3 --feature feature-name --slot 1 "
+            "--commitment committed --intent deliver",
             "   3. Activate when ready: ph release activate --release v1.2.3",
             "   4. Review timeline and adjust if needed",
             "Release plan scaffold created under .project-handbook/releases/<version>/plan.md",
-            "  - Assign features via 'ph release add-feature --release <version> --feature <name>'",
+            "  - Assign features via 'ph release add-feature --release <version> --feature <name> --slot <n> "
+            "--commitment committed|stretch --intent deliver|decide|enable'",
             "  - Activate when ready via 'ph release activate --release <version>'",
             "  - Confirm sprint alignment via 'ph release status' (requires an active release)",
             "  - Run 'ph validate --quick' before sharing externally",

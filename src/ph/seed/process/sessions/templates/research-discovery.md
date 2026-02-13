@@ -16,13 +16,14 @@ Goal: reduce uncertainty and produce durable planning artefacts so execution age
 ## Your Rules
 1. **Stay in discovery mode.** Do not implement product code or run deploy/migration commands unless explicitly instructed.
 2. **Write artefacts, not chat.** The outcomes should be committed docs under `.project-handbook/` (Decision Register entries + explicit follow-up tasks).
-3. **Every decision must be recorded** as a Decision Register entry:
+3. **Web/deep research is encouraged here.** You MAY use web search and credible code intelligence (e.g., DeepWiki MCP, LSP) to answer the decision — but ONLY in this `research-discovery` session/task type. Capture sources in the DR.
+4. **Every decision must be recorded** as a Decision Register entry:
    - **Feature-scoped (default):** `.project-handbook/features/<feature>/decision-register/DR-XXXX-<slug>.md`
    - **Cross-cutting:** `.project-handbook/decision-register/DR-XXXX-<slug>.md`
-4. **Each Decision Register entry must present exactly two viable solutions** (Option A / Option B). No third option.
-5. **Operator approval required.** End every DR with a recommended option + rationale + explicit follow-up tasks, then request operator/user approval; only mark the DR as `Accepted` after approval (use `Proposed` while pending).
+5. **Each Decision Register entry must present exactly two viable solutions** (Option A / Option B). No third option.
+6. **Operator approval required.** End every DR with a recommended option + rationale + explicit follow-up tasks, then request operator/user approval; only mark the DR as `Accepted` after approval (use `Proposed` while pending).
    - When approval is received (user says “approved”): update the DR to `Status: Accepted`, promote DR → ADR/FDR, and create the follow-up execution tasks referencing the ADR/FDR so sprint flow can pick them up.
-6. **Session routing rule.** If you are working from a sprint task directory, check `task.yaml` and follow its `session:`; if it does not match this prompt, stop and restart using `ph onboarding session <session>`.
+7. **Session routing rule.** If you are working from a sprint task directory, check `task.yaml` and follow its `session:`; if it does not match this prompt, stop and restart using `ph onboarding session <session>`.
 
 ## Start Here (Context + Current State)
 ```bash
@@ -101,4 +102,9 @@ Every decision must be recorded as a Decision Register entry. Each entry must:
 
 **Follow-up tasks (explicit)**
 - <concrete tasks/spec edits/tests/scripts>
+
+## Sources
+- URL: <https://...>
+  - Accessed: <YYYY-MM-DD>
+  - Relevance: <why this source matters>
 ```

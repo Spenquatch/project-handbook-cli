@@ -59,6 +59,7 @@ def _write_backlog_index(ph_root: Path) -> None:
         encoding="utf-8",
     )
 
+
 EXPECTED_DAILY_STATUS_2026_02_04 = (
     "---\n"
     "title: Daily Status - 2026-02-04\n"

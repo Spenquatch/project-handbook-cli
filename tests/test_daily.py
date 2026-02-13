@@ -24,6 +24,7 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
     )
     (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
+
 def _expected_sprint_plan_link(*, scope_root: Path, daily_file: Path) -> str:
     target = scope_root / "sprints" / "current.md"
     year_dir = daily_file.parent.parent
@@ -70,10 +71,7 @@ def test_daily_generate_writes_under_scope_root(tmp_path: Path) -> None:
     project_file = project_root / "status" / "daily" / "2099" / "01" / "05.md"
     assert project_file.exists()
     project_text = project_file.read_text(encoding="utf-8")
-    assert (
-        f"links: [{_expected_sprint_plan_link(scope_root=project_root, daily_file=project_file)}]"
-        in project_text
-    )
+    assert f"links: [{_expected_sprint_plan_link(scope_root=project_root, daily_file=project_file)}]" in project_text
 
     system = subprocess.run(
         ["ph", "--root", str(tmp_path), "--scope", "system", "--no-post-hook", "daily", "generate"],

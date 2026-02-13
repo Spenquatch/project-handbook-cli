@@ -262,20 +262,94 @@ tags: [sprint, planning]
             plan_path=ph_project_root / "releases" / release_version_value / "plan.md",
             slot=release_slot,
         )
+        if not alignment:
+            raise ValueError(
+                "\n".join(
+                    [
+                        "Release slot alignment is missing or unreadable.",
+                        f"  release: {release_version_value}",
+                        f"  slot: {release_slot}",
+                        "  expected: strict slot section like `## Slot <n>: <label>` with required subsections",
+                        f"  remediation: ph release migrate-slot-format --release {release_version_value} --write-back",
+                    ]
+                )
+            )
+
         slot_goal = str(alignment.get("slot_goal") or "").strip() or "TBD"
         enablement = str(alignment.get("enablement") or "").strip() or "TBD"
         intended_gates_raw = alignment.get("intended_gates")
         intended_gates = intended_gates_raw if isinstance(intended_gates_raw, list) else []
         intended_gates = [str(item).rstrip() for item in intended_gates if str(item).strip()]
-        if not intended_gates:
-            intended_gates = ["- TBD"]
+
+        if slot_goal.strip().upper() == "TBD" or enablement.strip().upper() == "TBD":
+            raise ValueError(
+                "\n".join(
+                    [
+                        "Release plan slot alignment is incomplete (TBD).",
+                        f"  release: {release_version_value}",
+                        f"  slot: {release_slot}",
+                        "  expected: `### Slot Goal` and `### Enablement` filled with non-TBD values",
+                        f"  file: .project-handbook/releases/{release_version_value}/plan.md",
+                    ]
+                )
+            )
+
+        non_tbd_gates = [g for g in intended_gates if "tbd" not in g.lower()]
+        if not non_tbd_gates:
+            raise ValueError(
+                "\n".join(
+                    [
+                        "Release plan slot intended gates are incomplete (TBD).",
+                        f"  release: {release_version_value}",
+                        f"  slot: {release_slot}",
+                        "  expected: at least one `- Gate: ...` bullet under `### Intended Gates`",
+                        f"  file: .project-handbook/releases/{release_version_value}/plan.md",
+                    ]
+                )
+            )
+
+        features = load_release_features(ph_root=ph_project_root, version=release_version_value)
+        slot_features: list[tuple[str, dict[str, object]]] = []
+        for fname, fmeta in (features or {}).items():
+            meta = fmeta if isinstance(fmeta, dict) else {}
+            raw_slot = meta.get("slot")
+            try:
+                slot_val = int(raw_slot)  # type: ignore[arg-type]
+            except Exception:
+                continue
+            if slot_val == int(release_slot):
+                slot_features.append((fname, meta))
+        slot_features.sort(key=lambda t: t[0])
+        if not slot_features:
+            raise ValueError(
+                "\n".join(
+                    [
+                        "No features are assigned to the current release slot.",
+                        f"  release: {release_version_value}",
+                        f"  slot: {release_slot}",
+                        f"  remediation: ph release add-feature --release {release_version_value} --feature <name> "
+                        f"--slot {release_slot} --commitment committed --intent deliver",
+                        f"  file: .project-handbook/releases/{release_version_value}/features.yaml",
+                    ]
+                )
+            )
 
         slot_alignment_lines = [
             f"## Release Alignment (Slot {release_slot})",
             f"Slot goal: {slot_goal}",
             f"Enablement: {enablement}",
             "Intended gates:",
-            *intended_gates,
+            *non_tbd_gates,
+            "",
+            "Slot Features:",
+            *[
+                (
+                    f"- {fname} "
+                    f"[{str(meta.get('commitment') or 'committed').strip().lower()}/"
+                    f"{str(meta.get('intent') or 'deliver').strip().lower()}]"
+                )
+                for fname, meta in slot_features
+            ],
             "",
         ]
 
@@ -376,12 +450,12 @@ tags: [sprint, planning]
             "## Task Creation Guide",
             "```bash",
             (
-                "ph task create --title \"Task Name\" --feature feature-name --decision ADR-XXX --points 3 "
-                "--lane \"handbook/automation\" --release current"
+                'ph task create --title "Task Name" --feature feature-name --decision ADR-XXX --points 3 '
+                '--lane "handbook/automation" --release current'
             ),
             (
-                "ph task create --title \"Gate: <name>\" --feature feature-name --decision ADR-XXX --points 3 "
-                "--lane \"integration/<scope>\" --release current --gate"
+                'ph task create --title "Gate: <name>" --feature feature-name --decision ADR-XXX --points 3 '
+                '--lane "integration/<scope>" --release current --gate'
             ),
             "```",
             "",
@@ -437,11 +511,11 @@ tags: [sprint, planning]
             "## Task Creation Guide",
             "```bash",
             (
-                "ph task create --title \"Task Name\" --feature feature-name --decision ADR-XXX --points 5 "
+                'ph task create --title "Task Name" --feature feature-name --decision ADR-XXX --points 5 '
                 "--release current"
             ),
             (
-                "ph task create --title \"Gate: <name>\" --feature feature-name --decision ADR-XXX --points 3 "
+                'ph task create --title "Gate: <name>" --feature feature-name --decision ADR-XXX --points 3 '
                 "--release current --gate"
             ),
             "```",

@@ -115,6 +115,11 @@ def _render_dr_markdown(*, spec: DrAddSpec) -> str:
         "**Follow-up tasks (explicit)**",
         "- <concrete tasks/spec edits/tests/scripts>",
         "",
+        "## Sources",
+        "- URL: <https://...>",
+        "  - Accessed: <YYYY-MM-DD>",
+        "  - Relevance: <why this source matters>",
+        "",
     ]
     return "\n".join(lines)
 

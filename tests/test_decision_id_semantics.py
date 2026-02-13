@@ -313,9 +313,7 @@ def _write_dr_entry(ph_data_root: Path, *, dr_id: str, feature: str | None = Non
 
 def test_validate_sprints_flags_invalid_decision_for_session(tmp_path: Path) -> None:
     ph_data_root = tmp_path / ".project-handbook"
-    task_dir = (
-        ph_data_root / "sprints" / "2026" / "SPRINT-2026-01-01" / "tasks" / "TASK-001-decision-semantics"
-    )
+    task_dir = ph_data_root / "sprints" / "2026" / "SPRINT-2026-01-01" / "tasks" / "TASK-001-decision-semantics"
     _write_sprint_task_yaml(task_dir, task_id="TASK-001", session="research-discovery", decision="ADR-0001")
 
     issues: list[dict] = []
@@ -333,18 +331,14 @@ def test_validate_sprints_flags_invalid_decision_for_session(tmp_path: Path) -> 
         root=ph_data_root,
     )
     assert any(
-        i.get("code") == "task_decision_invalid"
-        and i.get("expected") == "DR-XXXX"
-        and i.get("found") == "ADR-0001"
+        i.get("code") == "task_decision_invalid" and i.get("expected") == "DR-XXXX" and i.get("found") == "ADR-0001"
         for i in issues
     ), issues
 
 
 def test_validate_sprints_flags_dr_decision_on_task_execution(tmp_path: Path) -> None:
     ph_data_root = tmp_path / ".project-handbook"
-    task_dir = (
-        ph_data_root / "sprints" / "2026" / "SPRINT-2026-01-01" / "tasks" / "TASK-001-decision-semantics"
-    )
+    task_dir = ph_data_root / "sprints" / "2026" / "SPRINT-2026-01-01" / "tasks" / "TASK-001-decision-semantics"
     _write_sprint_task_yaml(task_dir, task_id="TASK-001", session="task-execution", decision="DR-0001")
 
     issues: list[dict] = []
@@ -372,9 +366,7 @@ def test_validate_sprints_flags_dr_decision_on_task_execution(tmp_path: Path) ->
 def test_validate_sprints_accepts_valid_session_decision_pairs(tmp_path: Path) -> None:
     ph_data_root = tmp_path / ".project-handbook"
     _write_dr_entry(ph_data_root, dr_id="DR-0001")
-    task_dir = (
-        ph_data_root / "sprints" / "2026" / "SPRINT-2026-01-01" / "tasks" / "TASK-001-decision-semantics"
-    )
+    task_dir = ph_data_root / "sprints" / "2026" / "SPRINT-2026-01-01" / "tasks" / "TASK-001-decision-semantics"
     _write_sprint_task_yaml(task_dir, task_id="TASK-001", session="research-discovery", decision="DR-0001")
 
     issues: list[dict] = []
@@ -396,9 +388,7 @@ def test_validate_sprints_accepts_valid_session_decision_pairs(tmp_path: Path) -
 
 def test_validate_sprints_flags_missing_dr_doc(tmp_path: Path) -> None:
     ph_data_root = tmp_path / ".project-handbook"
-    task_dir = (
-        ph_data_root / "sprints" / "2026" / "SPRINT-2026-01-01" / "tasks" / "TASK-001-decision-semantics"
-    )
+    task_dir = ph_data_root / "sprints" / "2026" / "SPRINT-2026-01-01" / "tasks" / "TASK-001-decision-semantics"
     _write_sprint_task_yaml(task_dir, task_id="TASK-001", session="research-discovery", decision="DR-0001")
 
     issues: list[dict] = []
@@ -424,9 +414,7 @@ def test_validate_sprints_flags_missing_dr_doc(tmp_path: Path) -> None:
 def test_validate_sprints_accepts_feature_scoped_dr_doc(tmp_path: Path) -> None:
     ph_data_root = tmp_path / ".project-handbook"
     _write_dr_entry(ph_data_root, dr_id="DR-0001", feature="f")
-    task_dir = (
-        ph_data_root / "sprints" / "2026" / "SPRINT-2026-01-01" / "tasks" / "TASK-001-decision-semantics"
-    )
+    task_dir = ph_data_root / "sprints" / "2026" / "SPRINT-2026-01-01" / "tasks" / "TASK-001-decision-semantics"
     _write_sprint_task_yaml(task_dir, task_id="TASK-001", session="research-discovery", decision="DR-0001")
 
     issues: list[dict] = []

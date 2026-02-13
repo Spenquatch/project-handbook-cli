@@ -4,9 +4,7 @@ from pathlib import Path
 
 PH_CONFIG_RELATIVE_PATH = Path(".project-handbook") / "config.json"
 
-ROOT_MARKER_RELATIVE_PATHS: tuple[Path, ...] = (
-    PH_CONFIG_RELATIVE_PATH,
-)
+ROOT_MARKER_RELATIVE_PATHS: tuple[Path, ...] = (PH_CONFIG_RELATIVE_PATH,)
 
 
 class RootResolutionError(RuntimeError):

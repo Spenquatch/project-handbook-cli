@@ -68,6 +68,12 @@ def test_release_add_feature_updates_yaml_and_suggest_lists_feature(tmp_path: Pa
             "v1.2.3",
             "--feature",
             "feat-a",
+            "--slot",
+            "1",
+            "--commitment",
+            "committed",
+            "--intent",
+            "deliver",
         ],
         capture_output=True,
         text=True,
@@ -79,6 +85,9 @@ def test_release_add_feature_updates_yaml_and_suggest_lists_feature(tmp_path: Pa
         encoding="utf-8"
     )
     assert "  feat-a:" in features_yaml
+    assert "    slot: 1" in features_yaml
+    assert "    commitment: committed" in features_yaml
+    assert "    intent: deliver" in features_yaml
     assert "    type: regular" in features_yaml
     assert "    critical_path: False" in features_yaml
 
@@ -144,6 +153,9 @@ def test_release_add_feature_matches_legacy_duplication_bug(tmp_path: Path) -> N
                 "",
                 "features:",
                 "  feat-one:",
+                "    slot: 1",
+                "    commitment: committed",
+                "    intent: deliver",
                 "    type: regular",
                 "    priority: P1",
                 "    status: planned",
@@ -151,6 +163,9 @@ def test_release_add_feature_matches_legacy_duplication_bug(tmp_path: Path) -> N
                 "    critical_path: False",
                 "",
                 "  feat-two:",
+                "    slot: 2",
+                "    commitment: committed",
+                "    intent: deliver",
                 "    type: regular",
                 "    priority: P1",
                 "    status: planned",
@@ -175,6 +190,12 @@ def test_release_add_feature_matches_legacy_duplication_bug(tmp_path: Path) -> N
             "v0.0.1",
             "--feature",
             "feat-new",
+            "--slot",
+            "1",
+            "--commitment",
+            "stretch",
+            "--intent",
+            "enable",
             "--epic",
             "--critical",
         ],
@@ -198,6 +219,9 @@ def test_release_add_feature_matches_legacy_duplication_bug(tmp_path: Path) -> N
             "",
             "features:",
             "  feat-one:",
+            "    slot: 1",
+            "    commitment: committed",
+            "    intent: deliver",
             "    type: regular",
             "    priority: P1",
             "    status: planned",
@@ -205,6 +229,9 @@ def test_release_add_feature_matches_legacy_duplication_bug(tmp_path: Path) -> N
             "    critical_path: False",
             "",
             "  feat-two:",
+            "    slot: 2",
+            "    commitment: committed",
+            "    intent: deliver",
             "    type: regular",
             "    priority: P1",
             "    status: planned",
@@ -212,20 +239,14 @@ def test_release_add_feature_matches_legacy_duplication_bug(tmp_path: Path) -> N
             "    critical_path: True",
             "",
             "  feat-new:",
+            "    slot: 1",
+            "    commitment: stretch",
+            "    intent: enable",
             "    type: epic",
-            "    priority: P1",
-            "    status: planned",
-            "    completion: 0",
-            "    critical_path: True",
-            "",
-            "  feat-two:",
-            "    type: regular",
             "    priority: P1",
             "    status: planned",
             "    completion: 0",
             "    critical_path: True",
         ]
     )
-    actual_bytes = features_path.read_bytes()
-    assert not actual_bytes.endswith(b"\n")
-    assert actual_bytes.decode("utf-8") == expected
+    assert features_path.read_text(encoding="utf-8") == expected + "\n"

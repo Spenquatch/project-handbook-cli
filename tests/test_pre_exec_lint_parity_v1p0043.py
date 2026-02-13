@@ -18,9 +18,7 @@ def _write_legacy_like_package_json(ph_root: Path) -> None:
 
 
 def _write_passing_task(ph_root: Path) -> None:
-    task_dir = (
-        ph_root / ".project-handbook" / "sprints" / "current" / "tasks" / "TASK-001-parity-pre-exec-lint"
-    )
+    task_dir = ph_root / ".project-handbook" / "sprints" / "current" / "tasks" / "TASK-001-parity-pre-exec-lint"
     task_dir.mkdir(parents=True, exist_ok=True)
 
     (task_dir / "task.yaml").write_text(
@@ -122,9 +120,7 @@ def _write_passing_task(ph_root: Path) -> None:
 
 
 def _write_passing_sprint_gate_task(ph_root: Path) -> None:
-    task_dir = (
-        ph_root / ".project-handbook" / "sprints" / "current" / "tasks" / "TASK-000-parity-sprint-gate"
-    )
+    task_dir = ph_root / ".project-handbook" / "sprints" / "current" / "tasks" / "TASK-000-parity-sprint-gate"
     task_dir.mkdir(parents=True, exist_ok=True)
 
     (task_dir / "task.yaml").write_text(
@@ -210,12 +206,5 @@ def test_pre_exec_lint_stdout_matches_make_pre_exec_lint_preamble(tmp_path: Path
     assert result.returncode == 0
 
     resolved = tmp_path.resolve()
-    expected_stdout = (
-        "\n"
-        f"> project-handbook@0.0.0 ph {resolved}\n"
-        "> ph pre-exec lint\n"
-        "\n"
-        "\n"
-        "PRE-EXEC LINT PASSED\n"
-    )
+    expected_stdout = f"\n> project-handbook@0.0.0 ph {resolved}\n> ph pre-exec lint\n\n\nPRE-EXEC LINT PASSED\n"
     assert result.stdout == expected_stdout

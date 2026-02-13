@@ -132,11 +132,7 @@ def format_worker_prompt(task_id: str, repo_root: Path, kickoff_prompt: str) -> 
         "- If you notice unrelated working-tree changes, IGNORE them and continue; do not attempt to revert them.\n"
         "- Run the verification commands listed in the kickoff_prompt.\n"
         "- Produce a concise final message including: files changed, commands run, verification results, and any "
-        "follow-ups.\n\n"
-        + note_block
-        + "Task kickoff_prompt (verbatim):\n"
-        + kickoff_prompt.strip()
-        + "\n"
+        "follow-ups.\n\n" + note_block + "Task kickoff_prompt (verbatim):\n" + kickoff_prompt.strip() + "\n"
     )
 
 
@@ -468,9 +464,7 @@ def main() -> int:
                 f"- task_id: {task_id}\n"
                 f"- detected_at: {utc_now_iso()}\n\n"
                 "## Last 200 log lines\n\n"
-                "```text\n"
-                + tail_lines(a.log_path, 200)
-                + "\n```\n",
+                "```text\n" + tail_lines(a.log_path, 200) + "\n```\n",
             )
             mark_blocked(
                 queue,
@@ -600,9 +594,7 @@ def main() -> int:
                     f"- finished_at: {utc_now_iso()}\n"
                     f"- exit_code: {exit_code}\n\n"
                     "## Last 200 log lines\n\n"
-                    "```text\n"
-                    + log_tail
-                    + "\n```\n",
+                    "```text\n" + log_tail + "\n```\n",
                 )
                 mark_blocked(
                     queue,

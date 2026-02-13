@@ -48,12 +48,16 @@ from .onboarding import (
 from .orchestration import run_check_all, run_test_system
 from .parking import run_parking_add, run_parking_list, run_parking_promote, run_parking_review
 from .pre_exec import PreExecError, run_pre_exec_audit, run_pre_exec_lint
+from .process_refresh import run_process_refresh
+from .question import run_question_add, run_question_answer, run_question_close, run_question_list, run_question_show
 from .release import (
     run_release_activate,
     run_release_add_feature,
     run_release_clear,
     run_release_close,
+    run_release_draft,
     run_release_list,
+    run_release_migrate_slot_format,
     run_release_plan,
     run_release_progress,
     run_release_show,
@@ -106,8 +110,6 @@ def _format_cli_preamble(*, ph_root: Path, cmd_args: list[str]) -> str:
     cwd = str(ph_root.resolve())
     args = shlex.join([str(token) for token in cmd_args if str(token)])
     return f"\n> {name}@{version} ph {cwd}\n> ph {args}\n\n"
-
-
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -507,6 +509,59 @@ def build_parser() -> argparse.ArgumentParser:
         help="now|next|later (default: later)",
     )
 
+    process_parser = subparsers.add_parser("process", help="Manage process templates/playbooks", parents=[sub_common])
+    process_subparsers = process_parser.add_subparsers(
+        dest="process_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
+    process_refresh = process_subparsers.add_parser(
+        "refresh",
+        help="Refresh seeded session templates and playbooks",
+        parents=[sub_common],
+    )
+    process_refresh.add_argument("--templates", action="store_true", help="Refresh session templates only")
+    process_refresh.add_argument("--playbooks", action="store_true", help="Refresh playbooks only")
+    process_refresh.add_argument("--force", action="store_true", help="Overwrite modified seed-owned files")
+
+    question_parser = subparsers.add_parser("question", help="Manage operator questions", parents=[sub_common])
+    question_subparsers = question_parser.add_subparsers(
+        dest="question_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
+    question_add = question_subparsers.add_parser("add", help="Add a question for the operator", parents=[sub_common])
+    question_add.add_argument("--title", required=True, help="Question title")
+    question_add.add_argument("--severity", required=True, help="blocking|non-blocking")
+    question_add.add_argument(
+        "--q-scope",
+        dest="question_scope",
+        required=True,
+        help="Question scope: sprint|task|release|project (NOT the system/project CLI scope)",
+    )
+    question_add.add_argument("--sprint", help="Sprint id (required for scope sprint|task)")
+    question_add.add_argument("--task-id", help="Task id (required for scope task)")
+    question_add.add_argument("--release", help="Optional release id (vX.Y.Z or current)")
+    question_add.add_argument("--asked-by", help="Who asked (agent/human)")
+    question_add.add_argument("--owner", help="Owner handle (e.g. @spenser)")
+    question_add.add_argument("--body", default="", help="Question body/details")
+
+    question_list = question_subparsers.add_parser("list", help="List questions", parents=[sub_common])
+    question_list.add_argument("--status", default="open", help="open|answered|closed|all (default: open)")
+    question_list.add_argument("--format", choices=["table", "json"], default="table", help="Output format")
+
+    question_show = question_subparsers.add_parser("show", help="Show a question", parents=[sub_common])
+    question_show.add_argument("--id", required=True, help="Question id (e.g. Q-0001)")
+
+    question_answer = question_subparsers.add_parser("answer", help="Record an answer", parents=[sub_common])
+    question_answer.add_argument("--id", required=True, help="Question id (e.g. Q-0001)")
+    question_answer.add_argument("--answer", required=True, help="Answer text")
+    question_answer.add_argument("--by", help="Answerer handle (e.g. @user)")
+
+    question_close = question_subparsers.add_parser("close", help="Close a question", parents=[sub_common])
+    question_close.add_argument("--id", required=True, help="Question id (e.g. Q-0001)")
+    question_close.add_argument("--resolution", required=True, help="answered|not-needed|superseded")
+
     roadmap_parser = subparsers.add_parser("roadmap", help="Manage the project roadmap", parents=[sub_common])
     roadmap_subparsers = roadmap_parser.add_subparsers(
         dest="roadmap_command",
@@ -537,11 +592,38 @@ def build_parser() -> argparse.ArgumentParser:
     release_subparsers.add_parser("status", help="Show current release status", parents=[sub_common])
     release_subparsers.add_parser("show", help="Print current release plan + computed status", parents=[sub_common])
     release_subparsers.add_parser("progress", help="Regenerate releases/current/progress.md", parents=[sub_common])
+    release_draft = release_subparsers.add_parser(
+        "draft",
+        help="Draft a release composition (local-only; creates no files)",
+        parents=[sub_common],
+    )
+    release_draft.add_argument("--version", default="next", help="Release version (vX.Y.Z or 'next')")
+    release_draft.add_argument("--sprints", type=int, default=3, help="Number of planned sprints (default: 3)")
+    release_draft.add_argument(
+        "--base",
+        default="latest-delivered",
+        help="Draft base (latest-delivered|current|vX.Y.Z)",
+    )
+    release_draft.add_argument("--format", default="text", help="Output format (text|json)")
     release_add_feature = release_subparsers.add_parser(
         "add-feature", help="Assign a feature to a release", parents=[sub_common]
     )
     release_add_feature.add_argument("--release", required=True, help="Release version (vX.Y.Z)")
     release_add_feature.add_argument("--feature", required=True, help="Feature name")
+    release_add_feature.add_argument("--slot", required=True, type=int, help="Sprint slot number (1..planned_sprints)")
+    release_add_feature.add_argument(
+        "--commitment",
+        required=True,
+        choices=["committed", "stretch"],
+        help="Scope commitment for this release",
+    )
+    release_add_feature.add_argument(
+        "--intent",
+        required=True,
+        choices=["deliver", "decide", "enable"],
+        help="Slot intent for this feature",
+    )
+    release_add_feature.add_argument("--priority", default="P1", help="Priority (default: P1)")
     release_add_feature.add_argument("--epic", action="store_true", help="Mark feature as epic")
     release_add_feature.add_argument("--critical", action="store_true", help="Mark as critical path")
     release_suggest = release_subparsers.add_parser(
@@ -550,6 +632,14 @@ def build_parser() -> argparse.ArgumentParser:
     release_suggest.add_argument("--version", required=True, help="Release version (vX.Y.Z)")
     release_close = release_subparsers.add_parser("close", help="Close a release", parents=[sub_common])
     release_close.add_argument("--version", required=True, help="Release version (vX.Y.Z)")
+    release_migrate = release_subparsers.add_parser(
+        "migrate-slot-format",
+        help="Migrate legacy release slot plans to strict slot sections",
+        parents=[sub_common],
+    )
+    release_migrate.add_argument("--release", required=True, help="Release version (vX.Y.Z)")
+    release_migrate.add_argument("--diff", action="store_true", help="Print unified diff only")
+    release_migrate.add_argument("--write-back", action="store_true", help="Write changes to plan.md and validate")
 
     daily_parser = subparsers.add_parser("daily", help="Manage daily status cadence", parents=[sub_common])
     daily_subparsers = daily_parser.add_subparsers(
@@ -793,6 +883,76 @@ def main(argv: list[str] | None = None) -> int:
                     sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["dashboard"]))
                     sys.stdout.flush()
                 exit_code = run_dashboard(ph_root=ph_root, ctx=ctx)
+            elif args.command == "process":
+                if getattr(args, "process_command", None) is None:
+                    print("Usage: ph process <refresh>\n", file=sys.stderr, end="")
+                    exit_code = 2
+                elif args.process_command == "refresh":
+                    if ctx.scope == "project":
+                        cmd_args = ["process", "refresh"]
+                        if bool(getattr(args, "templates", False)):
+                            cmd_args.append("--templates")
+                        if bool(getattr(args, "playbooks", False)):
+                            cmd_args.append("--playbooks")
+                        if bool(getattr(args, "force", False)):
+                            cmd_args.append("--force")
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
+                        sys.stdout.flush()
+                    exit_code = run_process_refresh(
+                        ctx=ctx,
+                        templates=bool(getattr(args, "templates", False)),
+                        playbooks=bool(getattr(args, "playbooks", False)),
+                        force=bool(getattr(args, "force", False)),
+                        env=os.environ,
+                    )
+                else:
+                    print("Usage: ph process <refresh>\n", file=sys.stderr, end="")
+                    exit_code = 2
+            elif args.command == "question":
+                if getattr(args, "question_command", None) is None:
+                    print("Usage: ph question <add|list|show|answer|close>\n", file=sys.stderr, end="")
+                    exit_code = 2
+                elif args.question_command == "add":
+                    exit_code = run_question_add(
+                        ctx=ctx,
+                        title=str(getattr(args, "title")),
+                        severity=str(getattr(args, "severity")),
+                        scope=str(getattr(args, "question_scope")),
+                        sprint=getattr(args, "sprint", None),
+                        task_id=getattr(args, "task_id", None),
+                        release=getattr(args, "release", None),
+                        asked_by=getattr(args, "asked_by", None),
+                        owner=getattr(args, "owner", None),
+                        body=str(getattr(args, "body", "")),
+                        env=os.environ,
+                    )
+                elif args.question_command == "list":
+                    exit_code = run_question_list(
+                        ctx=ctx,
+                        status=str(getattr(args, "status", "open")),
+                        format=str(getattr(args, "format", "table")),
+                        env=os.environ,
+                    )
+                elif args.question_command == "show":
+                    exit_code = run_question_show(ctx=ctx, qid=str(getattr(args, "id")), env=os.environ)
+                elif args.question_command == "answer":
+                    exit_code = run_question_answer(
+                        ctx=ctx,
+                        qid=str(getattr(args, "id")),
+                        answer=str(getattr(args, "answer")),
+                        by=getattr(args, "by", None),
+                        env=os.environ,
+                    )
+                elif args.question_command == "close":
+                    exit_code = run_question_close(
+                        ctx=ctx,
+                        qid=str(getattr(args, "id")),
+                        resolution=str(getattr(args, "resolution")),
+                        env=os.environ,
+                    )
+                else:
+                    print("Usage: ph question <add|list|show|answer|close>\n", file=sys.stderr, end="")
+                    exit_code = 2
             elif args.command == "check-all":
                 if ctx.scope == "project":
                     sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["check-all"]))
@@ -1277,9 +1437,7 @@ def main(argv: list[str] | None = None) -> int:
                     )
                 elif args.backlog_command == "rubric":
                     if ctx.scope == "project":
-                        sys.stdout.write(
-                            _format_cli_preamble(ph_root=ph_root, cmd_args=["backlog", "rubric"])
-                        )
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["backlog", "rubric"]))
                     exit_code = run_backlog_rubric(ctx=ctx, env=os.environ)
                 elif args.backlog_command == "stats":
                     if ctx.scope == "project":
@@ -1389,7 +1547,8 @@ def main(argv: list[str] | None = None) -> int:
             elif args.command == "release":
                 if args.release_command is None:
                     print(
-                        "Usage: ph release <plan|activate|clear|status|show|progress|list|add-feature|suggest|close>\n",
+                        "Usage: ph release <plan|activate|clear|status|show|progress|draft|"
+                        "list|add-feature|suggest|close|migrate-slot-format>\n",
                         file=sys.stderr,
                         end="",
                     )
@@ -1417,11 +1576,23 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = run_release_show(ctx=ctx, env=os.environ)
                 elif args.release_command == "progress":
                     exit_code = run_release_progress(ctx=ctx, env=os.environ)
+                elif args.release_command == "draft":
+                    exit_code = run_release_draft(
+                        ctx=ctx,
+                        version=str(getattr(args, "version", "next")),
+                        sprints=int(getattr(args, "sprints", 3)),
+                        base=str(getattr(args, "base", "latest-delivered")),
+                        format=str(getattr(args, "format", "text")),
+                    )
                 elif args.release_command == "add-feature":
                     exit_code = run_release_add_feature(
                         ctx=ctx,
                         release=str(getattr(args, "release")),
                         feature=str(getattr(args, "feature")),
+                        slot=int(getattr(args, "slot")),
+                        commitment=str(getattr(args, "commitment")),
+                        intent=str(getattr(args, "intent")),
+                        priority=str(getattr(args, "priority", "P1")),
                         epic=bool(getattr(args, "epic", False)),
                         critical=bool(getattr(args, "critical", False)),
                     )
@@ -1429,9 +1600,18 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = run_release_suggest(ctx=ctx, version=str(getattr(args, "version")))
                 elif args.release_command == "close":
                     exit_code = run_release_close(ctx=ctx, version=str(getattr(args, "version")), env=os.environ)
+                elif args.release_command == "migrate-slot-format":
+                    exit_code = run_release_migrate_slot_format(
+                        ctx=ctx,
+                        release=str(getattr(args, "release")),
+                        diff=bool(getattr(args, "diff", False)),
+                        write_back=bool(getattr(args, "write_back", False)),
+                        env=os.environ,
+                    )
                 else:
                     print(
-                        "Usage: ph release <plan|activate|clear|status|show|progress|list|add-feature|suggest|close>\n",
+                        "Usage: ph release <plan|activate|clear|status|show|progress|draft|"
+                        "list|add-feature|suggest|close|migrate-slot-format>\n",
                         file=sys.stderr,
                         end="",
                     )

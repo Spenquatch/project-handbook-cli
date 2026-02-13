@@ -93,9 +93,7 @@ def test_sprint_burndown_stdout_matches_make_preamble_and_spacing(tmp_path: Path
     result = subprocess.run(cmd, capture_output=True, text=True, env=env)
     assert result.returncode == 0
 
-    expected_prefix = (
-        f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n> ph sprint burndown\n\n"
-    )
+    expected_prefix = f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n> ph sprint burndown\n\n"
     assert result.stdout.startswith(expected_prefix)
 
     saved_path = (tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "burndown.md").resolve()
@@ -195,12 +193,8 @@ def test_sprint_capacity_stdout_matches_make_preamble_and_bounded_output(tmp_pat
 
     expected = (
         f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n> ph sprint capacity\n\n"
-        "\n📊 SPRINT METRICS (BOUNDED)\n"
-        + "=" * 80
-        + "\n"
-        "\n🎯 Sprint: SPRINT-2099-01-01\n"
-        + "-" * 40
-        + "\n"
+        "\n📊 SPRINT METRICS (BOUNDED)\n" + "=" * 80 + "\n"
+        "\n🎯 Sprint: SPRINT-2099-01-01\n" + "-" * 40 + "\n"
         "\nPoints by status (telemetry; not a scope cap):\n"
         "Total Points:      11\n"
         "Completed:         6 (54.5%)\n"
@@ -211,8 +205,6 @@ def test_sprint_capacity_stdout_matches_make_preamble_and_bounded_output(tmp_pat
         f"- {'ci/evidence':24} {5:3d}/{5:3d} pts done (blocked 0)\n"
         f"- {'integration/v2-demo':24} {0:3d}/{5:3d} pts done (blocked 2)\n"
         f"- {'ui/twenty-harness':24} {1:3d}/{1:3d} pts done (blocked 0)\n"
-        "\n"
-        + "=" * 80
-        + "\n"
+        "\n" + "=" * 80 + "\n"
     )
     assert result.stdout == expected

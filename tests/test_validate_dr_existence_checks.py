@@ -95,9 +95,8 @@ def test_validate_quick_flags_missing_dr_entry_for_research_discovery_task(tmp_p
     assert report_path.exists()
     report = json.loads(report_path.read_text(encoding="utf-8"))
 
-    assert result.returncode == 1, (result.stdout + result.stderr)
+    assert result.returncode == 1, result.stdout + result.stderr
     missing = next(i for i in report["issues"] if i.get("code") == "task_dr_missing")
     assert missing.get("severity") == "error"
     assert missing.get("dr_id") == "DR-0001"
     assert "decision-register" in str(missing.get("searched_dirs", []))
-

@@ -78,16 +78,12 @@ def test_parking_review_stdout_matches_legacy_make_v1p0039(tmp_path: Path) -> No
     expected = (
         f"\n> project-handbook@0.0.0 ph {expected_root}\n"
         "> ph parking review\n\n"
-        "\n🔍 PARKING LOT QUARTERLY REVIEW\n"
-        + ("=" * 80)
-        + "\n"
+        "\n🔍 PARKING LOT QUARTERLY REVIEW\n" + ("=" * 80) + "\n"
         "Review each item and decide its fate:\n"
         "  [p]romote to roadmap\n"
         "  [d]elete/archive\n"
         "  [s]kip (keep in parking lot)\n"
-        "  [q]uit review\n\n"
-        + ("-" * 40)
-        + "\n"
+        "  [q]uit review\n\n" + ("-" * 40) + "\n"
         "ID: DEBT-20990102-bar-debt\n"
         "Type: technical-debt\n"
         "Title: Bar debt\n"

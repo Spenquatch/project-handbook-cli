@@ -666,13 +666,13 @@ def validate_system_scope_artifacts_in_project_scope(
                     {
                         "path": str(task_yaml),
                         "code": "system_scope_lane_in_project",
-                    "severity": "error",
-                    "message": (
-                        f"System-scope task lane MUST NOT exist in project scope: lane={lane_value}. "
-                        f"Move to `{internal_system_root}` or recreate via `ph --scope system task create ...`."
-                    ),
-                }
-            )
+                        "severity": "error",
+                        "message": (
+                            f"System-scope task lane MUST NOT exist in project scope: lane={lane_value}. "
+                            f"Move to `{internal_system_root}` or recreate via `ph --scope system task create ...`."
+                        ),
+                    }
+                )
 
     adr_dir = root / "adr"
     if adr_dir.exists():
@@ -684,14 +684,14 @@ def validate_system_scope_artifacts_in_project_scope(
                     {
                         "path": str(md),
                         "code": "system_scope_adr_in_project",
-                    "severity": "error",
-                    "message": (
-                        "System-scope ADR MUST NOT exist in project scope. "
-                        f"Move to `{internal_system_root}/adr/` and keep related work in system scope via "
-                        "`ph --scope system ...` commands."
-                    ),
-                }
-            )
+                        "severity": "error",
+                        "message": (
+                            "System-scope ADR MUST NOT exist in project scope. "
+                            f"Move to `{internal_system_root}/adr/` and keep related work in system scope via "
+                            "`ph --scope system ...` commands."
+                        ),
+                    }
+                )
 
 
 def normalize_roadmap_links(*, rules: dict, root: Path, scope: str, quick: bool) -> int:
@@ -780,9 +780,7 @@ def _validate_sprint_gate_task_docs(*, issues: list[dict], task_dir: Path, task_
     missing_markers = [marker for marker in _SPRINT_GATE_VALIDATION_REQUIRED_LITERALS if marker not in validation_text]
     if not any(opt in validation_text for opt in _SPRINT_GATE_VALIDATION_SPRINT_PLAN_REFERENCE_OPTIONS):
         missing_markers.append(
-            "sprint plan reference (one of: "
-            + ", ".join(_SPRINT_GATE_VALIDATION_SPRINT_PLAN_REFERENCE_OPTIONS)
-            + ")"
+            "sprint plan reference (one of: " + ", ".join(_SPRINT_GATE_VALIDATION_SPRINT_PLAN_REFERENCE_OPTIONS) + ")"
         )
 
     if missing_markers:
@@ -1176,6 +1174,7 @@ def validate_release_plan_slots(*, issues: list[dict], root: Path) -> None:
         return
 
     slot_heading_re = re.compile(r"^## Slot ([1-9][0-9]*):\s*(.+)$")
+    legacy_slot_heading_re = re.compile(r"^###\s+Slot\s+([1-9][0-9]*)\b", flags=re.IGNORECASE)
 
     for release_dir in sorted(releases_dir.iterdir()):
         if not release_dir.is_dir():
@@ -1192,6 +1191,32 @@ def validate_release_plan_slots(*, issues: list[dict], root: Path) -> None:
         planned_sprints = _as_int(fm.get("planned_sprints"))
         if planned_sprints is None or planned_sprints < 1:
             continue
+
+        # Strict-only enforcement: legacy slot formats are disallowed even if strict slots also exist.
+        legacy_detected = False
+        if "## Slot Plans" in text:
+            legacy_detected = True
+        elif legacy_slot_heading_re.search(text):
+            legacy_detected = True
+        elif "#### Goal / Purpose" in text:
+            legacy_detected = True
+        if legacy_detected:
+            issues.append(
+                {
+                    "path": str(plan_path),
+                    "code": "release_slot_legacy_format",
+                    "severity": "error",
+                    "message": (
+                        "Release plan uses a legacy slot format. Only strict slot sections are accepted.\n"
+                        f"  release: {release_dir.name}\n"
+                        "  expected_heading: ## Slot <n>: <label>\n"
+                        "  remediation: ph release migrate-slot-format --release "
+                        f"{release_dir.name} --diff\n"
+                        "  apply_fix: ph release migrate-slot-format --release "
+                        f"{release_dir.name} --write-back\n"
+                    ),
+                }
+            )
 
         lines = text.splitlines()
         slot_starts: list[tuple[int, int]] = []
@@ -1338,6 +1363,173 @@ def validate_sprint_release_alignment(*, issues: list[dict], root: Path) -> None
             )
 
 
+def validate_release_features_schema(*, issues: list[dict], root: Path) -> None:
+    releases_dir = root / "releases"
+    if not releases_dir.exists():
+        return
+
+    def parse_features_file(path: Path) -> tuple[int | None, dict[str, dict[str, str]]]:
+        try:
+            text = path.read_text(encoding="utf-8")
+        except Exception:
+            return None, {}
+
+        planned_sprints = None
+        features: dict[str, dict[str, str]] = {}
+        in_features = False
+        current: str | None = None
+        for raw in text.splitlines():
+            line = raw.rstrip("\n")
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if stripped.startswith("planned_sprints:"):
+                planned_sprints = _as_int(stripped.split(":", 1)[1].strip())
+                continue
+            if stripped == "features:":
+                in_features = True
+                current = None
+                continue
+            if not in_features:
+                continue
+            if line.startswith("  ") and ":" in line and not line.startswith("    "):
+                current = line.strip().split(":", 1)[0].strip()
+                if current:
+                    features[current] = {}
+                continue
+            if current and line.startswith("    ") and ":" in line:
+                k, v = line.strip().split(":", 1)
+                key = k.strip()
+                value = v.strip().strip('"').strip("'")
+                if key:
+                    features[current][key] = value
+        return planned_sprints, features
+
+    for release_dir in sorted(releases_dir.iterdir()):
+        if not release_dir.is_dir() or not release_dir.name.startswith("v"):
+            continue
+        features_path = release_dir / "features.yaml"
+        if not features_path.exists():
+            continue
+
+        planned_sprints, features = parse_features_file(features_path)
+        if planned_sprints is None or planned_sprints < 1:
+            continue
+
+        for feature_name, meta in sorted(features.items(), key=lambda t: t[0]):
+            slot_raw = meta.get("slot")
+            commitment = (meta.get("commitment") or "").strip().lower()
+            intent = (meta.get("intent") or "").strip().lower()
+
+            if slot_raw is None or str(slot_raw).strip() == "":
+                issues.append(
+                    {
+                        "path": str(features_path),
+                        "code": "release_feature_missing_slot",
+                        "severity": "error",
+                        "release": release_dir.name,
+                        "feature": feature_name,
+                        "message": (
+                            "Release feature assignment is missing required field: slot\n"
+                            f"  release: {release_dir.name}\n"
+                            f"  feature: {feature_name}\n"
+                            f"  expected: slot: <int> (1..{planned_sprints})\n"
+                        ),
+                    }
+                )
+            else:
+                slot = _as_int(slot_raw)
+                if slot is None or slot < 1 or slot > planned_sprints:
+                    issues.append(
+                        {
+                            "path": str(features_path),
+                            "code": "release_feature_slot_out_of_range",
+                            "severity": "error",
+                            "release": release_dir.name,
+                            "feature": feature_name,
+                            "slot": slot_raw,
+                            "message": (
+                                "Release feature assignment has an invalid slot.\n"
+                                f"  release: {release_dir.name}\n"
+                                f"  feature: {feature_name}\n"
+                                f"  slot: {slot_raw}\n"
+                                f"  expected_range: 1..{planned_sprints}\n"
+                            ),
+                        }
+                    )
+
+            if commitment not in {"committed", "stretch"}:
+                issues.append(
+                    {
+                        "path": str(features_path),
+                        "code": "release_feature_invalid_commitment",
+                        "severity": "error",
+                        "release": release_dir.name,
+                        "feature": feature_name,
+                        "message": (
+                            "Release feature assignment has an invalid commitment.\n"
+                            f"  release: {release_dir.name}\n"
+                            f"  feature: {feature_name}\n"
+                            f"  commitment: {meta.get('commitment')}\n"
+                            "  expected: committed|stretch\n"
+                        ),
+                    }
+                )
+
+            if intent not in {"deliver", "decide", "enable"}:
+                issues.append(
+                    {
+                        "path": str(features_path),
+                        "code": "release_feature_invalid_intent",
+                        "severity": "error",
+                        "release": release_dir.name,
+                        "feature": feature_name,
+                        "message": (
+                            "Release feature assignment has an invalid intent.\n"
+                            f"  release: {release_dir.name}\n"
+                            f"  feature: {feature_name}\n"
+                            f"  intent: {meta.get('intent')}\n"
+                            "  expected: deliver|decide|enable\n"
+                        ),
+                    }
+                )
+
+
+def validate_decision_register_sources(*, issues: list[dict], root: Path) -> None:
+    dirs: list[Path] = []
+    project_dir = root / "decision-register"
+    if project_dir.exists():
+        dirs.append(project_dir)
+    features_dir = root / "features"
+    if features_dir.exists():
+        for feat in sorted([p for p in features_dir.iterdir() if p.is_dir()]):
+            dr_dir = feat / "decision-register"
+            if dr_dir.exists():
+                dirs.append(dr_dir)
+
+    sources_re = re.compile(r"^##\s+Sources\s*$", flags=re.MULTILINE)
+    for dr_dir in dirs:
+        for md in sorted(dr_dir.glob("DR-*.md")):
+            text = read(md)
+            fm, _, _ = parse_front_matter(text)
+            if str(fm.get("type") or "").strip().lower() != "decision-register":
+                continue
+            if sources_re.search(text):
+                continue
+            issues.append(
+                {
+                    "path": str(md),
+                    "code": "decision_register_sources_missing",
+                    "severity": "error",
+                    "message": (
+                        "Decision Register entries must include a Sources section.\n"
+                        "  expected_heading: ## Sources\n"
+                        "  expected_items: URL + accessed date + relevance note\n"
+                    ),
+                }
+            )
+
+
 def validate_phase(*, issues: list[dict], root: Path) -> None:
     exec_dir = root / "execution"
     if not exec_dir.exists():
@@ -1385,6 +1577,8 @@ def run_validate(
     try:
         validate_release_plan_slots(issues=issues, root=ph_data_root)
         validate_sprint_release_alignment(issues=issues, root=ph_data_root)
+        validate_release_features_schema(issues=issues, root=ph_data_root)
+        validate_decision_register_sources(issues=issues, root=ph_data_root)
     except Exception:
         pass
 

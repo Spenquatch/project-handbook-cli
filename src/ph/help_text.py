@@ -59,6 +59,9 @@ TOPICS: dict[str, str] = {
         "  ph release plan [--version v1.2.0|next] [--bump patch|minor|major] [--sprints 3] "
         '[--sprint-ids "SPRINT-...,SPRINT-..."] [--activate]\n'
         "                                - Generate a release plan scaffold (optionally activate)\n"
+        "  ph release draft [--version v1.2.0|next] [--sprints 3] [--base latest-delivered|current|vX.Y.Z] "
+        "[--format text|json]\n"
+        "                                - Suggest a release composition from local handbook artefacts (no files)\n"
         "  ph release activate --release v1.2.0\n"
         "                                - Set releases/current to an existing release\n"
         "  ph release clear              - Unset current release pointer\n"
@@ -67,10 +70,12 @@ TOPICS: dict[str, str] = {
         "(best for sprint planning/closing)\n"
         "  ph release progress           - Refresh releases/current/progress.md "
         "(auto-generated; no need to edit manually)\n"
-        "  ph release add-feature --release v1.2.0 --feature auth [--epic] [--critical]\n"
+        "  ph release add-feature --release v1.2.0 --feature auth --slot 1 --commitment committed --intent deliver "
+        "[--priority P1] [--epic] [--critical]\n"
         "  ph release suggest --version v1.2.0 - Recommend features based on status data\n"
         "  ph release list               - List every release folder + status\n"
         "  ph release close --version v1.2.0 - Close and document retro notes\n"
+        "  ph release migrate-slot-format --release v1.2.0 [--diff] [--write-back]\n"
     ),
     "backlog": """Issue backlog + triage commands
   ph backlog add --type bug|wildcards|work-items --title 'X' --severity P1 --desc 'Y' [--owner @alice]
@@ -102,6 +107,8 @@ TOPICS: dict[str, str] = {
   ph onboarding session continue-session - Show latest Codex + command history summary
   ph end-session                 - Generate session summary via headless Codex
   ph dashboard                   - Quick sprint + validation snapshot
+  ph process refresh             - Refresh seed templates/playbooks after upgrades
+  ph question add|list|show|answer|close - Escape hatch for required operator answers
   ph clean                       - Remove Python caches
   ph hooks install               - Install repo git hooks
   ph test system                 - Automation smoke test suite

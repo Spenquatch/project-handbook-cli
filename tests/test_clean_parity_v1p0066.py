@@ -53,11 +53,7 @@ def test_clean_prints_pnpm_preamble_in_project_scope(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0
-    expected = (
-        f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n"
-        "> ph clean\n\n"
-        "Cleaned Python cache files\n"
-    )
+    expected = f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n> ph clean\n\nCleaned Python cache files\n"
     assert result.stdout == expected
     assert not pyc.exists()
     assert not pycache_dir.exists()

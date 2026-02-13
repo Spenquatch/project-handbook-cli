@@ -105,9 +105,7 @@ def test_backlog_rubric_stdout_matches_legacy_v1p0035(tmp_path: Path, scope: str
         expected = _RUBRIC
     else:
         expected_root = tmp_path.resolve()
-        expected = (
-            f"\n> project-handbook@0.0.0 ph {expected_root}\n> ph backlog rubric\n\n" + _RUBRIC
-        )
+        expected = f"\n> project-handbook@0.0.0 ph {expected_root}\n> ph backlog rubric\n\n" + _RUBRIC
 
     cmd += ["--no-post-hook", "backlog", "rubric"]
 

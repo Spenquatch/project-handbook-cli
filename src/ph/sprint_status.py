@@ -393,9 +393,7 @@ def run_sprint_status(*, ph_project_root: Path, ctx: Context, sprint: str | None
             gate_title = gate.get("title", "<untitled>")
             gate_status = _task_status(gate)
             gate_dep_ready = dependency_ready(gate, task_map)
-            print(
-                f"- {gate_id}: {gate_title} | status {gate_status} | dependency-ready {gate_dep_ready}"
-            )
+            print(f"- {gate_id}: {gate_title} | status {gate_status} | dependency-ready {gate_dep_ready}")
 
     active_task = pick_task_by_status(tasks, ["doing", "review"])
     upcoming_task = None
@@ -441,9 +439,6 @@ def run_sprint_status(*, ph_project_root: Path, ctx: Context, sprint: str | None
         for warn in dep_warnings:
             print(f"⚠️  {warn}")
 
-    tip = (
-        "\nTip: use `ph onboarding session task-execution` (alias: `implement`) "
-        "for detailed hand-off guidance."
-    )
+    tip = "\nTip: use `ph onboarding session task-execution` (alias: `implement`) for detailed hand-off guidance."
     print(tip)
     return 0

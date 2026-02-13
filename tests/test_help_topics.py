@@ -27,7 +27,7 @@ def _expected_help_topic_stdout(*, resolved: Path, topic: str | None) -> bytes:
     text = get_help_text(topic)
     assert text is not None
     cmd_args = ["help"] + ([topic] if topic else [])
-    preamble = "\n" f"> project-handbook@0.0.0 ph {resolved}\n" f"> ph {shlex.join(cmd_args)}\n\n"
+    preamble = f"\n> project-handbook@0.0.0 ph {resolved}\n> ph {shlex.join(cmd_args)}\n\n"
     return (preamble + text).encode()
 
 

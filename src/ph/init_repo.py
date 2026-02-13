@@ -4,6 +4,7 @@ import datetime as dt
 import json
 from pathlib import Path
 
+from .process_refresh import inject_seed_id_and_hash
 from .root import PH_CONFIG_RELATIVE_PATH
 from .seed_assets import load_seed_markdown_dir, render_date_placeholder
 
@@ -388,14 +389,17 @@ def run_init(*, target_root: Path, update_gitignore: bool) -> int:
         text=_DEFAULT_PROCESS_AGENT_GUIDE.format(date=today),
     )
     for name, text in _load_session_templates().items():
+        seeded = inject_seed_id_and_hash(text=text, seed_id=f"process/sessions/templates/{name}.md")
         _write_text_if_missing(
             path=data_root / "process" / "sessions" / "templates" / f"{name}.md",
-            text=text,
+            text=seeded,
         )
     for name, text in _load_playbooks().items():
+        rendered = render_date_placeholder(text, date=today)
+        seeded = inject_seed_id_and_hash(text=rendered, seed_id=f"process/playbooks/{name}.md")
         _write_text_if_missing(
             path=data_root / "process" / "playbooks" / f"{name}.md",
-            text=render_date_placeholder(text, date=today),
+            text=seeded,
         )
 
     # Content roots (handbook layout under .project-handbook/).
@@ -429,6 +433,7 @@ def run_init(*, target_root: Path, update_gitignore: bool) -> int:
             "status/daily",
             "status/evidence",
             "status/exports",
+            "status/questions",
             "tools",
         ],
     )

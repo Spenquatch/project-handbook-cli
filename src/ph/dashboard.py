@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
 from .context import Context
+from .question_manager import QuestionManager
 from .sprint_status import run_sprint_status
 from .validate_docs import run_validate
 
@@ -51,6 +53,29 @@ def run_dashboard(*, ph_root: Path, ctx: Context) -> int:
     print()
 
     _ = run_sprint_status(ph_project_root=ctx.ph_project_root, ctx=ctx, sprint="current")
+    print()
+
+    print("Open Questions:")
+    try:
+        qm = QuestionManager(ph_data_root=ctx.ph_data_root, env=os.environ)
+        questions = [q for q in qm.get_questions() if q.status.strip().lower() == "open"]
+    except Exception:
+        questions = []
+
+    questions = sorted(
+        questions,
+        key=lambda q: (0 if (q.severity or "").strip().lower() == "blocking" else 1, str(q.id)),
+    )
+    if questions:
+        for q in questions[:8]:
+            sev = (q.severity or "non-blocking").strip().lower()
+            scope = (q.scope or "project").strip().lower()
+            sprint = f" sprint={q.sprint}" if q.sprint else ""
+            print(f"- {q.id} [{sev}] [{scope}]{sprint} — {q.title}")
+        if len(questions) > 8:
+            print(f"- …and {len(questions) - 8} more (run `ph question list`)")
+    else:
+        print("- None")
     print()
 
     print("Recent Daily Status:")

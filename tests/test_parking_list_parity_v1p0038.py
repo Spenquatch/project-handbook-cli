@@ -87,19 +87,13 @@ def test_parking_list_stdout_matches_legacy_make_v1p0038(tmp_path: Path) -> None
     expected = (
         f"\n> project-handbook@0.0.0 ph {expected_root}\n"
         "> ph parking list\n\n"
-        "\n📦 PARKING LOT ITEMS\n"
-        + ("=" * 80)
-        + "\n"
-        "\n📁 FEATURES (1 items)\n"
-        + ("-" * 40)
-        + "\n"
+        "\n📦 PARKING LOT ITEMS\n" + ("=" * 80) + "\n"
+        "\n📁 FEATURES (1 items)\n" + ("-" * 40) + "\n"
         "  • FEAT-20990101-foo-feature\n"
         "    Foo feature\n"
         "    Created: 2099-01-01 | Owner: unassigned\n"
         "\n"
-        "\n📁 TECHNICAL DEBT (1 items)\n"
-        + ("-" * 40)
-        + "\n"
+        "\n📁 TECHNICAL DEBT (1 items)\n" + ("-" * 40) + "\n"
         "  • DEBT-20990102-bar-debt\n"
         "    Bar debt\n"
         "    Created: 2099-01-02 | Owner: @alice\n"

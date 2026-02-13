@@ -902,16 +902,16 @@ def render_summary(
                     stats.append(f"err={stderr_len}")
                 stat_suffix = f" ({', '.join(stats)})" if stats else ""
                 lines.append(
-                    f"- [{event.get('timestamp','unknown')}] {category} {status.upper()} [{scope}] "
+                    f"- [{event.get('timestamp', 'unknown')}] {category} {status.upper()} [{scope}] "
                     f":: {command_text} :: {summary_line}{stat_suffix}"
                 )
             elif event.get("event") == "message":
-                lines.append(f"- [{event.get('timestamp','unknown')}] message from {event.get('role','assistant')}")
+                lines.append(f"- [{event.get('timestamp', 'unknown')}] message from {event.get('role', 'assistant')}")
             elif event.get("event") == "context":
                 change_line = event.get("changes") or "(no changes recorded)"
                 source = event.get("source", "context")
                 lines.append(
-                    f"- [{event.get('timestamp','unknown')}] CONTEXT ({source}) :: "
+                    f"- [{event.get('timestamp', 'unknown')}] CONTEXT ({source}) :: "
                     f"{change_line or '(no changes recorded)'}"
                 )
             elif event.get("event") == "reasoning":
@@ -920,7 +920,7 @@ def render_summary(
                 summary_text = text or "(no reasoning text)"
                 if section and section not in summary_text:
                     summary_text = f"{section}: {summary_text}"
-                lines.append(f"- [{event.get('timestamp','unknown')}] reasoning :: {summary_text}")
+                lines.append(f"- [{event.get('timestamp', 'unknown')}] reasoning :: {summary_text}")
     else:
         lines.append("- (No command or message events recorded)")
     lines.append("")

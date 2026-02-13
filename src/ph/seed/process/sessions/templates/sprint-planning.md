@@ -21,6 +21,8 @@ You are an AI agent preparing a planning/discovery session inside the project ha
    - cross-cutting: `.project-handbook/decision-register/DR-XXXX-<slug>.md`
    After operator approval, promote the accepted decision into an **FDR** (feature-local) or **ADR** (cross-cutting) and create execution tasks that reference the ADR/FDR (not the DR).
 10. **Session routing rule.** If you are working from a sprint task directory, check `task.yaml` and follow its `session:`; if it does not match this prompt, stop and restart using `ph onboarding session <session>`.
+11. **Non-interactive contract.** Do not ask the user questions in sprint planning. If absolutely blocked by missing info that cannot be derived from handbook artefacts, capture it via `ph question add` and stop.
+12. **No web/deep research here.** Web search / DeepWiki / LSP-style exploration belongs only in `task_type=research-discovery` tasks.
 
 ## Planning Checklist
 - Load context (continuity + guard rails):  

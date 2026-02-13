@@ -26,11 +26,7 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
     (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
     (ph_root / "package.json").write_text(
-        "{\n"
-        '  "name": "project-handbook",\n'
-        '  "private": true,\n'
-        '  "version": "0.0.0"\n'
-        "}\n",
+        '{\n  "name": "project-handbook",\n  "private": true,\n  "version": "0.0.0"\n}\n',
         encoding="utf-8",
     )
 
@@ -44,7 +40,7 @@ def _write_minimal_feature(ph_root: Path) -> None:
                 "---",
                 "title: Feature A",
                 "type: feature",
-                "dependencies: [\"feature:feature-b\"]",
+                'dependencies: ["feature:feature-b"]',
                 "---",
                 "",
                 "# Feature A",

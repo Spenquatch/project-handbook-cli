@@ -93,9 +93,7 @@ def test_sprint_status_project_scope_includes_make_preamble_and_tip(tmp_path: Pa
         env=dict(os.environ),
     )
     assert status.returncode == 0
-    assert status.stdout.startswith(
-        f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n> ph sprint status\n\n"
-    )
+    assert status.stdout.startswith(f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n> ph sprint status\n\n")
     assert (
         "Tip: use `ph onboarding session task-execution` (alias: `implement`) for detailed hand-off guidance.\n"
         in status.stdout
@@ -186,9 +184,7 @@ def test_sprint_tasks_project_scope_includes_make_preamble_and_release_tags(tmp_
     assert tasks.returncode == 0
     assert tasks.stdout == (
         f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n> ph sprint tasks\n\n"
-        "📋 SPRINT TASKS: SPRINT-2099-01-01\n"
-        + "=" * 60
-        + "\n"
+        "📋 SPRINT TASKS: SPRINT-2099-01-01\n" + "=" * 60 + "\n"
         "✅ TASK-001: Rel task  [ci/evidence] (task-execution) [rel:v0.6.0] [3pts] (depends: FIRST_TASK)\n"
         "✅ TASK-002: Gate task  [ci/evidence] (task-execution) [gate] [1pts] (depends: TASK-001)\n"
     )

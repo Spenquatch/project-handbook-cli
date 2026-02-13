@@ -11,6 +11,7 @@ from typing import Any
 
 from .clock import local_today_from_now as clock_local_today_from_now
 from .feature_status_updater import update_all_feature_status
+from .question_manager import QuestionManager
 from .sprint import get_sprint_dates
 
 STAGE_PRIORITY: dict[str, int] = {
@@ -572,6 +573,31 @@ def _write_status_summary(
                 lines.append(f"  - `{task.get('id', '')}` — {task.get('title', 'Untitled')}")
     else:
         lines.append("- No tasks currently in progress")
+    lines.append("")
+
+    lines.append("## Open Questions")
+    try:
+        qm = QuestionManager(ph_data_root=ph_data_root, env=env)
+        questions = [q for q in qm.get_questions() if q.status.strip().lower() == "open"]
+    except Exception:
+        questions = []
+
+    def q_sort_key(q) -> tuple[int, str]:
+        sev = (getattr(q, "severity", "") or "").strip().lower()
+        sev_rank = 0 if sev == "blocking" else 1
+        return (sev_rank, str(getattr(q, "id", "")))
+
+    questions = sorted(questions, key=q_sort_key)
+    if questions:
+        for q in questions[:10]:
+            sev = (q.severity or "non-blocking").strip().lower()
+            scope = (q.scope or "project").strip().lower()
+            sprint = f" sprint={q.sprint}" if q.sprint else ""
+            lines.append(f"- `{q.id}` [{sev}] [{scope}]{sprint} — {q.title}")
+        if len(questions) > 10:
+            lines.append(f"- …and {len(questions) - 10} more (run `ph question list`)")
+    else:
+        lines.append("- None")
     lines.append("")
 
     lines.append("## Blockers")

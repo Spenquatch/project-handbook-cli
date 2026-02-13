@@ -80,9 +80,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
     assert result.returncode == 0
 
     resolved = tmp_path.resolve()
-    task_dir = (
-        resolved / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / "TASK-001-t"
-    )
+    task_dir = resolved / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / "TASK-001-t"
 
     expected_stdout = (
         "\n"
@@ -166,12 +164,12 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "**Release Gate**: `false`\n"
         "\n"
         "## Agent Navigation Rules\n"
-        "1. **Start work**: Update `task.yaml` status to \"doing\"\n"
+        '1. **Start work**: Update `task.yaml` status to "doing"\n'
         "2. **Read first**: `steps.md` for implementation sequence\n"
         "3. **Use commands**: Copy-paste from `commands.md`\n"
         "4. **Validate progress**: Follow `validation.md` guidelines\n"
         "5. **Check completion**: Use `checklist.md` before marking done\n"
-        "6. **Update status**: Set to \"review\" when ready for review\n"
+        '6. **Update status**: Set to "review" when ready for review\n'
         "\n"
         "## Context & Background\n"
         "This task implements the `ADR-0000` decision for the [f] feature.\n"
@@ -247,13 +245,13 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "```bash\n"
         "# When starting work\n"
         "cd .project-handbook/sprints/current/tasks/TASK-001-t/\n"
-        "# Edit task.yaml: change status from \"todo\" to \"doing\"\n"
+        '# Edit task.yaml: change status from "todo" to "doing"\n'
         "\n"
         "# When ready for review\n"
-        "# Edit task.yaml: change status to \"review\"\n"
+        '# Edit task.yaml: change status to "review"\n'
         "\n"
         "# When complete\n"
-        "# Edit task.yaml: change status to \"done\"\n"
+        '# Edit task.yaml: change status to "done"\n'
         "```\n"
         "\n"
         "## Validation Commands\n"
@@ -280,12 +278,12 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "## Git Integration\n"
         "```bash\n"
         "# Commit with task reference\n"
-        "git commit -m \"feat: t\n"
+        'git commit -m "feat: t\n'
         "\n"
         "Implements TASK-001 for f feature.\n"
         "Part of sprint: SPRINT-2099-01-01\n"
         "\n"
-        "Refs: #TASK-001\"\n"
+        'Refs: #TASK-001"\n'
         "\n"
         "# Link PR to task (in PR description)\n"
         "# Closes #TASK-001\n"
@@ -295,7 +293,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "## Quick Copy-Paste\n"
         "```bash\n"
         "# Most common commands for this task type\n"
-        "echo \"Add task-specific commands here\"\n"
+        'echo "Add task-specific commands here"\n'
         "```\n"
     )
 
@@ -328,7 +326,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "## Sign-off\n"
         "- [ ] All validation steps completed\n"
         "- [ ] Evidence documented above\n"
-        "- [ ] Ready to mark task as \"done\"\n"
+        '- [ ] Ready to mark task as "done"\n'
     )
 
     assert (task_dir / "references.md").read_text(encoding="utf-8") == (
@@ -393,8 +391,7 @@ def test_task_create_system_scope_prints_hint_block(tmp_path: Path) -> None:
     assert result.returncode == 0
     assert result.stdout.splitlines()[-4:] == [
         "Next steps:",
-        "  - Open .project-handbook/system/sprints/current/tasks/ for the new directory, "
-        "update steps.md + commands.md",
+        "  - Open .project-handbook/system/sprints/current/tasks/ for the new directory, update steps.md + commands.md",
         "  - Set status to 'doing' when work starts and log progress in checklist.md",
         "  - Run 'ph --scope system validate --quick' once initial scaffolding is filled in",
     ]
@@ -467,6 +464,11 @@ def _write_minimal_dr_entry(*, ph_root: Path, dr_id: str, feature: str | None = 
                 "",
                 "Recommendation",
                 "- A",
+                "",
+                "## Sources",
+                "- URL: https://example.com",
+                "  - Accessed: 2099-01-01",
+                "  - Relevance: Fixture source",
                 "",
             ]
         ),

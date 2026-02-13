@@ -39,16 +39,19 @@ def sprint_plan(*, ph_root: Path, ctx: Context, sprint_id: str | None, force: bo
             print(f"⚠️  Sprint plan already exists (not overwriting): {plan_file}")
             print("Re-run with --force to regenerate the template.")
         else:
-            plan_file.write_text(
-                create_sprint_plan_template(
+            try:
+                template = create_sprint_plan_template(
                     ph_project_root=ctx.ph_project_root,
                     ph_data_root=ctx.ph_data_root,
                     scope=ctx.scope,
                     sprint_id=resolved_id,
                     env=env,
-                ),
-                encoding="utf-8",
-            )
+                )
+            except ValueError as exc:
+                print(f"❌ Sprint plan generation blocked:\n{exc}")
+                return 1
+
+            plan_file.write_text(template, encoding="utf-8")
             print(f"Created sprint plan: {plan_file}")
 
         print("Sprint structure seeded:")

@@ -181,7 +181,8 @@ def test_release_progress_file_parity_v1p0056(tmp_path: Path) -> None:
                 "",
                 "## Alignment Warnings",
                 "- ⚠️ Current sprint plan is missing required heading: `## Release Alignment (Slot 3)`.",
-                "- ⚠️ Release plan is missing required slot markers for Slot 3 (expected `### Slot 3` + subsections).",
+                "- ⚠️ Release plan is missing required slot markers for Slot 3 (expected `## Slot 3: <label>` + "
+                "subsections).",
                 "",
                 "## Sprint Progress",
                 "- **Slot 1**: ✅ Complete — SPRINT-SEQ-0002 (Sprint 1 of 4) — Goal: TBD",
