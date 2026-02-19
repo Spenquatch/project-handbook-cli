@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.17 (2026-02-19)
+
+- Adds `ph next` (one-screen current context + ranked next actions), with `--format text|json`.
+
 ## v0.0.16 (2026-02-19)
 
 - `ph parking review` is now non-interactive (no prompts) and supports `--format text|json`.

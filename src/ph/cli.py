@@ -37,6 +37,7 @@ from .help_text import get_help_text
 from .hooks import plan_post_command_hook, run_post_command_hook
 from .init_repo import InitError, run_init
 from .migrate_system_scope import run_migrate_system_scope
+from .next import run_next
 from .onboarding import (
     OnboardingError,
     SessionList,
@@ -305,6 +306,15 @@ def build_parser() -> argparse.ArgumentParser:
         parents=[sub_common],
     )
     dashboard_parser.set_defaults(_post_validate="never")
+    next_parser = subparsers.add_parser(
+        "next",
+        help="One-screen current context + next actions",
+        parents=[sub_common],
+    )
+    next_parser.set_defaults(_post_validate="never")
+    next_parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format (default: text)")
+    next_parser.add_argument("--release", help="Release version (vX.Y.Z or 'current'; default: current)")
+    next_parser.add_argument("--sprint", help="Sprint id (SPRINT-... or 'current'; default: current)")
     status_parser = subparsers.add_parser("status", help="Generate status rollup", parents=[sub_common])
     status_parser.set_defaults(_post_validate="never")
     check_all_parser = subparsers.add_parser("check-all", help="Run validate + status", parents=[sub_common])
@@ -1024,6 +1034,26 @@ def main(argv: list[str] | None = None) -> int:
                     sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["dashboard"]))
                     sys.stdout.flush()
                 exit_code = run_dashboard(ph_root=ph_root, ctx=ctx)
+            elif args.command == "next":
+                output_format = str(getattr(args, "format", "text"))
+                if ctx.scope == "project" and output_format != "json":
+                    cmd_args = ["next"]
+                    if "--format" in invocation_args and getattr(args, "format", None) is not None:
+                        cmd_args.extend(["--format", str(args.format)])
+                    if "--release" in invocation_args and getattr(args, "release", None) is not None:
+                        cmd_args.extend(["--release", str(args.release)])
+                    if "--sprint" in invocation_args and getattr(args, "sprint", None) is not None:
+                        cmd_args.extend(["--sprint", str(args.sprint)])
+                    sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
+                    sys.stdout.flush()
+                exit_code = run_next(
+                    ph_root=ph_root,
+                    ctx=ctx,
+                    release=getattr(args, "release", None),
+                    sprint=getattr(args, "sprint", None),
+                    format=output_format,
+                    env=os.environ,
+                )
             elif args.command == "process":
                 if getattr(args, "process_command", None) is None:
                     print("Usage: ph process <refresh>\n", file=sys.stderr, end="")

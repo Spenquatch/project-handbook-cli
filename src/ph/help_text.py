@@ -131,6 +131,7 @@ Notes:
   ph onboarding session continue-session - Show latest Codex + command history summary
   ph end-session                 - Generate session summary via headless Codex
   ph dashboard                   - Quick sprint + validation snapshot
+  ph next                        - One-screen current context + next actions
   ph process refresh             - Refresh seed templates/playbooks after upgrades
   ph question add|list|show|answer|close - Escape hatch for required operator answers
   ph clean                       - Remove Python caches
