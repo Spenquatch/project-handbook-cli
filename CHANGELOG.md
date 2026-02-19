@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.15 (2026-02-19)
+
+- No functional changes; fixes ruff `E501` line-length lint failures in CLI/task output code and tests.
+
 ## v0.0.14 (2026-02-19)
 
 - Post-hook validation now runs `validate --quick` only for selected mutating commands/subcommands (and never for read-only/reporting commands).

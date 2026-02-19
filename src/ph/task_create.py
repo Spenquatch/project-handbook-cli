@@ -598,7 +598,10 @@ links: []
                 "- Ready for review",
                 "",
                 "## Notes",
-                f"- Update task status via `{ph_cmd} task status --id {task_id} --status <todo|doing|review|done|blocked>`",
+                (
+                    f"- Update task status via `{ph_cmd} task status --id {task_id} --status "
+                    "<todo|doing|review|done|blocked>`"
+                ),
                 "- Document any blockers or decisions in daily status",
                 "- Link any PRs/commits back to this task",
                 "",

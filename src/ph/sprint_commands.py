@@ -129,7 +129,10 @@ def sprint_plan(*, ph_root: Path, ctx: Context, sprint_id: str | None, force: bo
                 captured = buf.getvalue().strip()
                 if captured:
                     print(captured)
-                print("Remediation: ph task create --title 'Sprint Gate: <goal>' --feature sprint --decision N/A --type sprint-gate")
+                print(
+                    "Remediation: ph task create --title 'Sprint Gate: <goal>' --feature sprint "
+                    "--decision N/A --type sprint-gate"
+                )
                 return exit_code
 
             gate_dir = _find_first_sprint_gate_task_dir(tasks_dir)
@@ -140,7 +143,10 @@ def sprint_plan(*, ph_root: Path, ctx: Context, sprint_id: str | None, force: bo
         elif (not wrote_or_regenerated) and (not has_gate):
             print("⚠️  No sprint gate task found (required per sprint).")
             print("Sprint gate must exist from Day 0; it is expected to close last.")
-            print("Remediation: ph task create --title 'Sprint Gate: <goal>' --feature sprint --decision N/A --type sprint-gate")
+            print(
+                "Remediation: ph task create --title 'Sprint Gate: <goal>' --feature sprint "
+                "--decision N/A --type sprint-gate"
+            )
 
         print("Sprint structure seeded:")
         print(f"  📁 {sprint_dir}/")
