@@ -571,7 +571,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Review parking lot items",
         parents=[sub_common],
     )
-    parking_review_parser.set_defaults(_post_validate="quick")
+    parking_review_parser.set_defaults(_post_validate="never")
+    parking_review_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
 
     parking_promote_parser = parking_subparsers.add_parser(
         "promote", help="Promote item to roadmap", parents=[sub_common]
@@ -1626,11 +1632,13 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 elif args.parking_command == "review":
-                    if ctx.scope == "project":
-                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["parking", "review"]))
-                    exit_code = run_parking_review(ctx=ctx, env=os.environ)
-                    if exit_code == 2:
-                        sys.stdout.write("\u2009ELIFECYCLE\u2009 Command failed with exit code 2.\n")
+                    output_format = str(getattr(args, "format", "text"))
+                    if ctx.scope == "project" and output_format != "json":
+                        cmd_args = ["parking", "review"]
+                        if "--format" in invocation_args and getattr(args, "format", None) is not None:
+                            cmd_args.extend(["--format", str(args.format)])
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
+                    exit_code = run_parking_review(ctx=ctx, format=output_format, env=os.environ)
                 elif args.parking_command == "promote":
                     if ctx.scope == "project":
                         sys.stdout.write(

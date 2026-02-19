@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import re
 import shutil
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -224,114 +223,98 @@ _Note any technical, resource, or timing considerations_
         print(f"\nTotal items: {index_data['total_items']}")
         print(f"Last updated: {index_data.get('last_updated', 'never')}")
 
-    def review_items(self) -> int:
-        """Interactive review of parking lot items for quarterly planning."""
+    def review_items(self, *, format: str = "text") -> int:
+        """Non-interactive review report (no prompts; safe for CI/non-tty contexts)."""
         if not self.index_file.exists():
             self.update_index()
 
-        index_data = json.loads(self.index_file.read_text(encoding="utf-8"))
-        if index_data["total_items"] == 0:
-            print("No items to review")
+        try:
+            index_data = json.loads(self.index_file.read_text(encoding="utf-8"))
+        except Exception:
+            print("Error: parking-lot/index.json is missing or invalid JSON")
+            return 1
+
+        items = index_data.get("items", [])
+        total_items = int(index_data.get("total_items", len(items)) or 0)
+        last_updated = index_data.get("last_updated")
+
+        by_category = index_data.get("by_category") or {}
+        counts_by_category: dict[str, int] = {}
+        for cat in ["features", "technical-debt", "research", "external-requests"]:
+            value = by_category.get(cat, [])
+            counts_by_category[cat] = int(len(value)) if isinstance(value, list) else 0
+
+        norm_items: list[dict[str, Any]] = [i for i in items if isinstance(i, dict)]
+        norm_items.sort(key=lambda i: (str(i.get("created", "")), str(i.get("id", ""))))
+
+        if str(format).strip().lower() == "json":
+            payload = {
+                "type": "parking-review",
+                "schema_version": 1,
+                "last_updated": last_updated,
+                "total_items": total_items,
+                "by_category": counts_by_category,
+                "items": [
+                    {
+                        "id": str(i.get("id", "")),
+                        "type": str(i.get("type", "")),
+                        "title": str(i.get("title", "")),
+                        "created": str(i.get("created", "")),
+                        "owner": str(i.get("owner", "")),
+                        "tags": i.get("tags", []) if isinstance(i.get("tags"), list) else [],
+                        "path": str(i.get("path", "")),
+                    }
+                    for i in norm_items
+                ],
+            }
+            print(json.dumps(payload, indent=2))
             return 0
 
-        print("\n🔍 PARKING LOT QUARTERLY REVIEW")
+        print("\n📦 PARKING LOT REVIEW (NON-INTERACTIVE)")
         print("=" * 80)
-        print("Review each item and decide its fate:")
-        print("  [p]romote to roadmap")
-        print("  [d]elete/archive")
-        print("  [s]kip (keep in parking lot)")
-        print("  [q]uit review\n")
+        print(f"Total items: {total_items}")
+        if last_updated:
+            print(f"Last updated: {last_updated}")
+        print("By category:")
+        for cat in ["features", "technical-debt", "research", "external-requests"]:
+            print(f"  - {cat}: {counts_by_category.get(cat, 0)}")
 
-        decisions: list[dict[str, Any]] = []
+        if total_items == 0:
+            print("\n(no items)")
+            return 0
 
-        for item in index_data["items"]:
+        print("\nQueue:")
+        for cat in ["features", "technical-debt", "research", "external-requests"]:
+            group = [i for i in norm_items if str(i.get("type", "")).strip() == cat]
+            if not group:
+                continue
+            print(f"\n📁 {cat.upper().replace('-', ' ')} ({len(group)} items)")
             print("-" * 40)
-            print(f"ID: {item['id']}")
-            print(f"Type: {item.get('type', 'unknown')}")
-            print(f"Title: {item.get('title', 'Untitled')}")
-            print(f"Created: {item.get('created', 'unknown')}")
-            print(f"Owner: {item.get('owner', 'unassigned')}")
+            for item in group:
+                item_id = str(item.get("id", ""))
+                title = str(item.get("title", item_id))
+                created = str(item.get("created", "unknown"))
+                owner = str(item.get("owner", "unassigned"))
+                tags = item.get("tags", [])
+                path = str(item.get("path", ""))
 
-            desc = item.get("description", "")
-            if desc:
-                print(f"Description: {desc[:200]}..." if len(desc) > 200 else f"Description: {desc}")
+                print(f"ID: {item_id}")
+                print(f"Title: {title}")
+                print(f"Created: {created} | Owner: {owner}")
+                if tags:
+                    printable_tags = [str(t) for t in tags] if isinstance(tags, list) else []
+                    if printable_tags:
+                        print(f"Tags: {', '.join(printable_tags)}")
+                print(f"Path: {path}")
+                print()
 
-            while True:
-                try:
-                    action = input("\nAction ([p]romote/[d]elete/[s]kip/[v]iew full/[q]uit): ").lower().strip()
-                except EOFError:
-                    return 2
-
-                if action == "q":
-                    break
-                if action == "v":
-                    item_path = self.project_root / item["path"] / "README.md"
-                    if item_path.exists():
-                        print("\n--- Full Content ---")
-                        print(item_path.read_text(encoding="utf-8"), end="")
-                        print("--- End Content ---\n")
-                    continue
-                if action in {"p", "d", "s"}:
-                    decisions.append({"item": item, "action": action})
-                    break
-                print("Invalid action. Please choose p/d/s/v/q")
-
-            if action == "q":
-                break
-
-        print("\n" + "=" * 40)
-        print("REVIEW SUMMARY")
-        print("=" * 40)
-
-        promoted = [d for d in decisions if d["action"] == "p"]
-        deleted = [d for d in decisions if d["action"] == "d"]
-        kept = [d for d in decisions if d["action"] == "s"]
-
-        if promoted:
-            print(f"\n✅ Items to promote ({len(promoted)}):")
-            for d in promoted:
-                item = d["item"]
-                print(f"  • {item['id']}: {item.get('title', 'Untitled')}")
-
-        if deleted:
-            print(f"\n🗑️  Items to delete ({len(deleted)}):")
-            for d in deleted:
-                item = d["item"]
-                print(f"  • {item['id']}: {item.get('title', 'Untitled')}")
-
-        if kept:
-            print(f"\n⏸️  Items to keep ({len(kept)}):")
-            for d in kept:
-                item = d["item"]
-                print(f"  • {item['id']}: {item.get('title', 'Untitled')}")
-
-        if promoted or deleted:
-            try:
-                confirm = input("\nProceed with these actions? (y/n): ").lower().strip()
-            except EOFError:
-                return 2
-
-            if confirm == "y":
-                for d in promoted:
-                    self._promote_item(d["item"])
-                for d in deleted:
-                    self._delete_item(d["item"])
-
-                self.update_index()
-                print("✅ Review actions completed")
-            else:
-                print("❌ Review cancelled")
-
+        print("Suggested actions (explicit; no prompting):")
+        print("- Promote an item:")
+        print("  ph parking promote --item <ID> --target later")
+        print("- List items (table/json):")
+        print("  ph parking list --format table")
+        print("  ph parking list --format json")
         return 0
-
-    def _promote_item(self, item: Mapping[str, Any]) -> None:
-        print(f"  → Would promote {item.get('id', 'unknown')} to roadmap/later/")
-
-    def _delete_item(self, item: Mapping[str, Any]) -> None:
-        item_path = self.project_root / str(item.get("path", ""))
-        if item_path.exists():
-            shutil.rmtree(item_path)
-            print(f"  → Deleted {item.get('id', 'unknown')}")
 
     def _generate_item_id(self, item_type: str, title: str) -> str:
         """Generate a clean ID from type and title."""

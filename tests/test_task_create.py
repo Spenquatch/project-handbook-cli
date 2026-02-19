@@ -90,6 +90,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "\n"
         "✅ Created task directory: TASK-002-t\n"
         f"📁 Location: {task_dir}\n"
+        f"cd -- {task_dir}\n"
         "📝 Next steps:\n"
         f"   1. Edit {task_dir}/steps.md with implementation details\n"
         f"   2. Update {task_dir}/commands.md with specific commands\n"

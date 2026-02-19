@@ -87,9 +87,26 @@ def test_parking_list_json_table_and_review_outputs(tmp_path: Path) -> None:
         "parking",
         "review",
     ]
-    review = subprocess.run(review_cmd, capture_output=True, text=True, env=env, input="q\n")
+    review = subprocess.run(review_cmd, capture_output=True, text=True, env=env)
     assert review.returncode == 0
-    assert "🔍 PARKING LOT QUARTERLY REVIEW" in review.stdout
+    assert "📦 PARKING LOT REVIEW (NON-INTERACTIVE)" in review.stdout
+
+    review_json_cmd = [
+        "ph",
+        "--root",
+        str(tmp_path),
+        "--no-post-hook",
+        "parking",
+        "review",
+        "--format",
+        "json",
+    ]
+    review_json = subprocess.run(review_json_cmd, capture_output=True, text=True, env=env)
+    assert review_json.returncode == 0
+    parsed_review = json.loads(review_json.stdout)
+    assert parsed_review["type"] == "parking-review"
+    assert parsed_review["schema_version"] == 1
+    assert parsed_review["total_items"] == 1
 
 
 def test_parking_list_json_works_in_system_scope(tmp_path: Path) -> None:

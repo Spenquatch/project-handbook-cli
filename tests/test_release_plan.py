@@ -90,6 +90,7 @@ def test_release_plan_creates_files_and_hints(tmp_path: Path) -> None:
         [
             "✅ Created release plan: v1.2.3",
             f"📁 Location: {resolved_release_dir}",
+            f"cd -- {resolved_release_dir}",
             "📅 Timeline: 2 sprint slot(s) (decoupled from calendar dates)",
             "📝 Next steps:",
             f"   1. Edit {resolved_plan_path} to define release goals",

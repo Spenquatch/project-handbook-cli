@@ -25,7 +25,7 @@ Plan a coherent release that:
 ## Pre-Planning Checklist
 - [ ] Roadmap reviewed (`ph roadmap show`)
 - [ ] Feature status reviewed (`ph feature summary`)
-- [ ] Parking lot reviewed (`ph parking review`)
+- [ ] Parking lot reviewed (`ph parking review` (non-interactive))
 - [ ] Backlog reviewed (`ph backlog list --severity P0` and `ph backlog list --severity P1`)
 - [ ] Capacity snapshot reviewed (`ph sprint capacity`)
 

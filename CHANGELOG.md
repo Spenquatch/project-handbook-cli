@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.16 (2026-02-19)
+
+- `ph parking review` is now non-interactive (no prompts) and supports `--format text|json`.
+- `ph` now prints a shell-safe `cd -- …` hint after location paths for task/feature/release creation.
+
 ## v0.0.15 (2026-02-19)
 
 - No functional changes; fixes ruff `E501` line-length lint failures in CLI/task output code and tests.

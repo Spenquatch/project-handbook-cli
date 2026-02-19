@@ -15,6 +15,7 @@ Review ideas and future work, then promote the right items to the roadmap (now/n
 ## Commands
 ```bash
 ph parking review
+ph parking review --format json
 ph parking list --category features
 ph parking list --category research
 ph parking list --category technical-debt
@@ -26,7 +27,7 @@ ph parking promote --item FEAT-... --target later
 ```
 
 ## Review flow
-1. Run `ph parking review` to review high-signal items.
+1. Run `ph parking review` to generate a non-interactive report of high-signal items.
 2. For each item, decide:
    - promote to roadmap now/next/later, or
    - leave it in parking lot (needs refinement / not aligned yet).

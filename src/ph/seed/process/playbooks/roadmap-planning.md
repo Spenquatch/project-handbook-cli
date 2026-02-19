@@ -18,7 +18,7 @@ Maintain a Now/Next/Later roadmap that aligns releases and sprint work to long-t
 ph roadmap show
 ph roadmap create
 ph roadmap validate
-ph parking review
+ph parking review        # non-interactive
 ph parking promote --item FEAT-... --target next
 ```
 
@@ -26,7 +26,7 @@ ph parking promote --item FEAT-... --target next
 1. Review current roadmap:
    - `ph roadmap show`
 2. Review parking lot candidates:
-   - `ph parking review`
+   - `ph parking review` (non-interactive report)
 3. Promote items that are ready:
    - `ph parking promote --item ... --target now|next|later`
 4. Edit `.project-handbook/roadmap/now-next-later.md` to ensure:

@@ -70,27 +70,33 @@ def test_parking_review_stdout_matches_legacy_make_v1p0039(tmp_path: Path) -> No
         capture_output=True,
         text=True,
         env=env,
-        stdin=subprocess.DEVNULL,
     )
-    assert result.returncode == 2
+    assert result.returncode == 0
 
     expected_root = tmp_path.resolve()
     expected = (
         f"\n> project-handbook@0.0.0 ph {expected_root}\n"
         "> ph parking review\n\n"
-        "\n🔍 PARKING LOT QUARTERLY REVIEW\n" + ("=" * 80) + "\n"
-        "Review each item and decide its fate:\n"
-        "  [p]romote to roadmap\n"
-        "  [d]elete/archive\n"
-        "  [s]kip (keep in parking lot)\n"
-        "  [q]uit review\n\n" + ("-" * 40) + "\n"
+        "\n📦 PARKING LOT REVIEW (NON-INTERACTIVE)\n" + ("=" * 80) + "\n"
+        "Total items: 1\n"
+        "Last updated: 2099-01-01T09:00:00Z\n"
+        "By category:\n"
+        "  - features: 0\n"
+        "  - technical-debt: 1\n"
+        "  - research: 0\n"
+        "  - external-requests: 0\n"
+        "\nQueue:\n"
+        "\n📁 TECHNICAL DEBT (1 items)\n" + ("-" * 40) + "\n"
         "ID: DEBT-20990102-bar-debt\n"
-        "Type: technical-debt\n"
         "Title: Bar debt\n"
-        "Created: 2099-01-02\n"
-        "Owner: @alice\n"
-        f"Description: {desc[:200]}...\n"
-        "\nAction ([p]romote/[d]elete/[s]kip/[v]iew full/[q]uit): "
-        "\u2009ELIFECYCLE\u2009 Command failed with exit code 2.\n"
+        "Created: 2099-01-02 | Owner: @alice\n"
+        "Path: parking-lot/technical-debt/DEBT-20990102-bar-debt\n"
+        "\n"
+        "Suggested actions (explicit; no prompting):\n"
+        "- Promote an item:\n"
+        "  ph parking promote --item <ID> --target later\n"
+        "- List items (table/json):\n"
+        "  ph parking list --format table\n"
+        "  ph parking list --format json\n"
     )
     assert result.stdout == expected

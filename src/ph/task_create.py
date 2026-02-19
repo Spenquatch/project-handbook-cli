@@ -9,6 +9,7 @@ from typing import Any
 from .clock import today as clock_today
 from .context import Context
 from .release import get_current_release
+from .shell_quote import shell_quote
 
 
 def slugify(value: str, *, max_len: int = 80) -> str:
@@ -968,6 +969,7 @@ links: []
 
     print(f"✅ Created task directory: {task_dir.name}")
     print(f"📁 Location: {task_dir}")
+    print(f"cd -- {shell_quote(task_dir)}")
     print("📝 Next steps:")
     print(f"   1. Edit {task_dir}/steps.md with implementation details")
     print(f"   2. Update {task_dir}/commands.md with specific commands")

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .clock import today as clock_today
 from .context import Context
+from .shell_quote import shell_quote
 
 
 def _feature_name_prefixes_for_system_scope(*, ph_data_root: Path) -> list[str]:
@@ -279,6 +280,7 @@ links: []
     epic_note = " (Epic)" if epic else ""
     print(f"✅ Created feature '{name}'{epic_note} with complete directory structure")
     print(f"📁 Location: {feature_dir}")
+    print(f"cd -- {shell_quote(feature_dir)}")
     print("📝 Next steps:")
     print(f"   1. Edit {feature_dir}/overview.md to define the feature")
     print(f"   2. Update {feature_dir}/status.md with current status")

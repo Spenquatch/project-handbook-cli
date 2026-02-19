@@ -39,6 +39,7 @@ ph release list
 ph release show     # Requires an active release; prints plan + slot mapping + gate burn-up
 cat .project-handbook/releases/current.txt  # Tooling-friendly pointer to the active release version (if set)
 ph parking review
+ph parking review --format json
 ph backlog list --severity P0
 ph backlog list --severity P1
 ph sprint capacity   # Points + lanes telemetry (not a scope cap)

@@ -9,6 +9,7 @@ from typing import Any
 from .clock import today as clock_today
 from .context import Context
 from .feature_status_updater import calculate_feature_metrics, collect_all_sprint_tasks
+from .shell_quote import shell_quote
 from .validate_docs import run_validate
 
 _SYSTEM_SCOPE_REMEDIATION = "Releases are project-scope only. Use: ph --scope project release ..."
@@ -564,6 +565,7 @@ def run_release_plan(
     resolved_plan_path = (resolved_release_dir / "plan.md").resolve()
     print(f"✅ Created release plan: {raw_version}")
     print(f"📁 Location: {resolved_release_dir}")
+    print(f"cd -- {shell_quote(resolved_release_dir)}")
     print(f"📅 Timeline: {sprint_count} sprint slot(s) (decoupled from calendar dates)")
     print("📝 Next steps:")
     print(f"   1. Edit {resolved_plan_path} to define release goals")
