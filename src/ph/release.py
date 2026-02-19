@@ -67,22 +67,43 @@ def list_release_versions(*, ph_root: Path) -> list[str]:
     return released
 
 
-def get_current_release(*, ph_root: Path) -> str | None:
-    releases_dir = ph_root / "releases"
-    current_link = releases_dir / "current"
+def _current_release_pointer_path(*, ph_root: Path) -> Path:
+    return ph_root / "releases" / "current.txt"
 
-    if current_link.is_symlink():
-        target = current_link.readlink()
-        target_path = releases_dir / target
-        if target_path.exists():
-            return target.name
-        current_link.unlink(missing_ok=True)
-    return None
+
+def _write_current_release_pointer(*, ph_root: Path, version: str) -> None:
+    version = normalize_version((version or "").strip())
+    if not version:
+        return
+    path = _current_release_pointer_path(ph_root=ph_root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"{version}\n", encoding="utf-8")
+
+
+def _read_current_release_pointer(*, ph_root: Path) -> str | None:
+    path = _current_release_pointer_path(ph_root=ph_root)
+    if not path.exists():
+        return None
+    try:
+        raw = path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+    version = normalize_version(raw)
+    if not version:
+        return None
+    if not (ph_root / "releases" / version).exists():
+        return None
+    return version
+
+
+def get_current_release(*, ph_root: Path) -> str | None:
+    return _read_current_release_target(ph_root=ph_root)
 
 
 def set_current_release(*, ph_root: Path, version: str) -> bool:
-    if not version.startswith("v"):
-        version = f"v{version}"
+    version = normalize_version((version or "").strip())
+    if not version:
+        return False
     release_dir = ph_root / "releases" / version
     if not release_dir.exists():
         return False
@@ -95,6 +116,8 @@ def set_current_release(*, ph_root: Path, version: str) -> bool:
         current_link.symlink_to(version)
     except OSError:
         return False
+
+    _write_current_release_pointer(ph_root=ph_root, version=version)
     return True
 
 
@@ -102,6 +125,7 @@ def clear_current_release(*, ph_root: Path) -> None:
     current_link = ph_root / "releases" / "current"
     if current_link.exists() or current_link.is_symlink():
         current_link.unlink(missing_ok=True)
+    _current_release_pointer_path(ph_root=ph_root).unlink(missing_ok=True)
 
 
 def calculate_sprint_range(*, start_sprint: str, sprint_count: int, explicit: list[str] | None = None) -> list[str]:
@@ -593,15 +617,22 @@ def run_release_draft(
     sprints: int,
     base: str,
     format: str,
+    schema: bool = False,
 ) -> int:
-    if ctx.scope == "system":
-        print(_SYSTEM_SCOPE_REMEDIATION)
-        return 1
-
     planned_sprints = int(sprints or 0) or 3
     fmt = (format or "text").strip().lower()
     if fmt not in {"text", "json"}:
         print("❌ Invalid --format (expected text|json)")
+        return 1
+
+    if schema:
+        import json as _json
+
+        print(_json.dumps(release_draft_schema(), indent=2))
+        return 0
+
+    if ctx.scope == "system":
+        print(_SYSTEM_SCOPE_REMEDIATION)
         return 1
 
     base_release = _resolve_base_release_for_draft(ctx=ctx, base=base)
@@ -678,40 +709,22 @@ def run_release_draft(
     ]
 
     if fmt == "json":
-        payload: dict[str, object] = {
-            "version": target_version,
-            "planned_sprints": planned_sprints,
-            "base": base_release,
-            "excluded_base_features": sorted(base_features),
-            "candidates": candidates,
-            "suggested_assignments": suggested,
-            "suggested_add_feature_commands": [
-                (
-                    "ph release add-feature "
-                    f"--release {target_version} --feature {s['feature']} --slot {s['slot']} "
-                    f"--commitment {s['commitment']} --intent {s['intent']} --priority {s['priority']}"
-                )
-                for s in suggested
-            ],
-            "operator_question_pack": operator_questions,
-            "suggested_research_discovery_tasks": [
-                {
-                    "feature": s["feature"],
-                    "reason": "intent=decide (requires bounded decision + approval)",
-                    "suggestion": (
-                        'ph dr add --id DR-XXXX --title "<decision title>" --feature '
-                        f"{s['feature']}\n"
-                        'ph task create --title "Investigate: <decision>" --feature '
-                        f"{s['feature']} --decision DR-XXXX --type research-discovery --points 3 --release current"
-                    ),
-                }
-                for s in suggested
-                if str(s.get("intent")) == "decide"
-            ],
-        }
         import json as _json
 
-        print(_json.dumps(payload, indent=2))
+        print(
+            _json.dumps(
+                build_release_draft_payload(
+                    target_version=target_version,
+                    planned_sprints=planned_sprints,
+                    base_release=base_release,
+                    excluded_base_features=sorted(base_features),
+                    candidate_features=candidates,
+                    suggested_features=suggested,
+                    operator_questions=operator_questions,
+                ),
+                indent=2,
+            )
+        )
         return 0
 
     print(f"📦 RELEASE DRAFT ({target_version})")
@@ -760,6 +773,151 @@ def run_release_draft(
     return 0
 
 
+def build_release_draft_payload(
+    *,
+    target_version: str,
+    planned_sprints: int,
+    base_release: str | None,
+    excluded_base_features: list[str],
+    candidate_features: list[dict[str, str]],
+    suggested_features: list[dict[str, object]],
+    operator_questions: list[str],
+) -> dict[str, object]:
+    def add_feature_commands() -> list[str]:
+        out: list[str] = []
+        for s in suggested_features:
+            out.append(
+                "ph release add-feature "
+                f"--release {target_version} --feature {s['feature']} --slot {s['slot']} "
+                f"--commitment {s['commitment']} --intent {s['intent']} --priority {s['priority']}"
+            )
+        return out
+
+    def research_discovery_commands() -> list[dict[str, object]]:
+        out: list[dict[str, object]] = []
+        for s in suggested_features:
+            if str(s.get("intent")) != "decide":
+                continue
+            feature = str(s.get("feature") or "").strip()
+            if not feature:
+                continue
+            out.append(
+                {
+                    "feature": feature,
+                    "reason": "intent=decide (requires bounded decision + approval)",
+                    "commands": [
+                        f'ph dr add --id DR-XXXX --title "<decision title>" --feature {feature}',
+                        (
+                            'ph task create --title "Investigate: <decision>" --feature '
+                            f"{feature} --decision DR-XXXX --type research-discovery --points 3 --release current"
+                        ),
+                    ],
+                }
+            )
+        return out
+
+    payload: dict[str, object] = {
+        "type": "release-draft",
+        "schema_version": 1,
+        "version": target_version,
+        "planned_sprints": planned_sprints,
+        "base_release": base_release,
+        "excluded_base_features": excluded_base_features,
+        "candidate_features": candidate_features,
+        "suggested_features": suggested_features,
+        "operator_questions": operator_questions,
+        "commands": {
+            "release_plan": f"ph release plan --version {target_version} --sprints {planned_sprints}",
+            "release_activate": f"ph release activate --release {target_version}",
+            "release_add_feature": add_feature_commands(),
+            "research_discovery": research_discovery_commands(),
+        },
+    }
+    return payload
+
+
+def release_draft_schema() -> dict[str, object]:
+    commitment_enum = ["committed", "stretch"]
+    intent_enum = ["deliver", "decide", "enable"]
+    priority_enum = ["P0", "P1", "P2", "P3", "P4"]
+
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "ph release draft (JSON output)",
+        "type": "object",
+        "additionalProperties": False,
+        "required": [
+            "type",
+            "schema_version",
+            "version",
+            "planned_sprints",
+            "base_release",
+            "excluded_base_features",
+            "candidate_features",
+            "suggested_features",
+            "operator_questions",
+            "commands",
+        ],
+        "properties": {
+            "type": {"type": "string", "const": "release-draft"},
+            "schema_version": {"type": "integer", "const": 1},
+            "version": {"type": "string", "pattern": r"^v[0-9]+(?:\.[0-9]+){2}.*$"},
+            "planned_sprints": {"type": "integer", "minimum": 1},
+            "base_release": {"type": ["string", "null"], "pattern": r"^v[0-9]+(?:\.[0-9]+){2}.*$"},
+            "excluded_base_features": {"type": "array", "items": {"type": "string"}},
+            "candidate_features": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["feature", "stage"],
+                    "properties": {"feature": {"type": "string"}, "stage": {"type": "string"}},
+                },
+            },
+            "suggested_features": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["feature", "stage", "slot", "commitment", "intent", "priority"],
+                    "properties": {
+                        "feature": {"type": "string"},
+                        "stage": {"type": "string"},
+                        "slot": {"type": "integer", "minimum": 1},
+                        "commitment": {"type": "string", "enum": commitment_enum},
+                        "intent": {"type": "string", "enum": intent_enum},
+                        "priority": {"type": "string", "enum": priority_enum},
+                    },
+                },
+            },
+            "operator_questions": {"type": "array", "items": {"type": "string"}},
+            "commands": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["release_plan", "release_activate", "release_add_feature", "research_discovery"],
+                "properties": {
+                    "release_plan": {"type": "string"},
+                    "release_activate": {"type": "string"},
+                    "release_add_feature": {"type": "array", "items": {"type": "string"}},
+                    "research_discovery": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": False,
+                            "required": ["feature", "reason", "commands"],
+                            "properties": {
+                                "feature": {"type": "string"},
+                                "reason": {"type": "string"},
+                                "commands": {"type": "array", "items": {"type": "string"}},
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+
+
 def run_release_activate(*, ctx: Context, release: str, env: dict[str, str]) -> int:
     if ctx.scope == "system":
         print(_SYSTEM_SCOPE_REMEDIATION)
@@ -777,6 +935,7 @@ def run_release_activate(*, ctx: Context, release: str, env: dict[str, str]) -> 
         return 1
 
     print(f"⭐ Current release set to: {version}")
+    print("💡 Pointer: releases/current.txt")
     return run_release_status(ctx=ctx, release=version, env=env)
 
 
@@ -847,6 +1006,8 @@ def write_release_progress(*, ph_root: Path, version: str, env: dict[str, str]) 
     progress = calculate_release_progress(ph_root=ph_root, version=resolved, features=features, env=env)
     current_sprint = _resolve_current_sprint_id(ph_root=ph_root, fallback="SPRINT-SEQ-0001")
     timeline_mode = str(timeline.get("timeline_mode") or "sprint_slots").strip().lower()
+    sprint_timeline = timeline.get("sprint_ids") if isinstance(timeline.get("sprint_ids"), list) else []
+    sprint_timeline = [str(item) for item in sprint_timeline if str(item)]
 
     def status_for_sprint_id(sprint_id: str | None) -> str:
         if not sprint_id:
@@ -925,7 +1086,27 @@ links: [{", ".join(links)}]
             status = status_for_sprint_id(sprint_id)
             content += f"- **{sprint_id}**: {status} (Sprint {i} of {len(sprint_ids)})\n"
 
-    content += "\n## Feature Progress\n"
+    tagged_tasks = collect_release_tagged_tasks(ph_root=ph_root, version=resolved)
+    tagged_summary = summarize_tagged_tasks(tasks=tagged_tasks, sprint_timeline=sprint_timeline)
+
+    content += "\n## Release-Tagged Workstream\n"
+    if int(tagged_summary.get("tasks_total") or 0) > 0:
+        features_touched = tagged_summary.get("features_touched") or []
+        features_count = len(features_touched)
+        content += (
+            f"- Tasks: {tagged_summary.get('tasks_total', 0)} | "
+            f"Points: {tagged_summary.get('points_done', 0)}/{tagged_summary.get('points_total', 0)} | "
+            f"Completion: {tagged_summary.get('completion', 0)}% | "
+            f"Features touched: {features_count}\n"
+        )
+        gates_total = int(tagged_summary.get("gates_total") or 0)
+        if gates_total:
+            gates_done = int(tagged_summary.get("gates_done") or 0)
+            content += f"- Gates: {gates_done}/{gates_total} complete\n"
+    else:
+        content += "*No release-tagged tasks tracked yet.*\n"
+
+    content += "\n## Feature Completion (Historical)\n"
     if features and progress.get("feature_completions"):
         for feature_name, feature_data in features.items():
             completion = int(progress.get("feature_completions", {}).get(feature_name, 0) or 0)
@@ -935,14 +1116,19 @@ links: [{", ".join(links)}]
     else:
         content += "*No release features tracked yet.*\n"
 
-    tagged_tasks = collect_release_tagged_tasks(ph_root=ph_root, version=resolved)
     gates = [
         task
         for task in tagged_tasks
         if bool(task.get("release_gate") is True)
         or str(task.get("release_gate", "")).strip().lower() in {"true", "yes", "1"}
     ]
-    gates_done = len([task for task in gates if str(task.get("status", "")).strip().lower() == "done"])
+    gates_done = len(
+        [
+            task
+            for task in gates
+            if str(task.get("status", "")).strip().lower() in {"done", "completed"}
+        ]
+    )
 
     content += "\n## Gate Burn-up\n"
     if gates:
@@ -960,8 +1146,12 @@ links: [{", ".join(links)}]
         content += "*No release gates tracked yet.*\n"
 
     content += "\n## Release Health\n"
-    readiness = calculate_release_readiness(progress=progress) if progress else "n/a"
-    content += f"- Readiness: {readiness}\n"
+    readiness = (
+        calculate_release_readiness_gate_first(feature_progress=progress, tagged_summary=tagged_summary)
+        if progress is not None
+        else "n/a"
+    )
+    content += f"- Readiness (gate-first): {readiness}\n"
 
     progress_file.write_text(content.rstrip() + "\n", encoding="utf-8")
     return progress_file
@@ -1015,18 +1205,18 @@ def run_release_show(*, ctx: Context, release: str | None, env: dict[str, str]) 
 def _read_current_release_target(*, ph_root: Path) -> str | None:
     releases_dir = ph_root / "releases"
     current_link = releases_dir / "current"
-    if not current_link.is_symlink():
-        return None
-    try:
-        target = current_link.readlink()
-    except OSError:
-        return None
-    target_name = target.name
-    if not target_name.startswith("v"):
-        return None
-    if not (releases_dir / target).exists():
-        return None
-    return target_name
+    if current_link.is_symlink():
+        try:
+            target = current_link.readlink()
+        except OSError:
+            target = None
+        if target is not None:
+            target_name = target.name
+            if target_name.startswith("v") and (releases_dir / target).exists():
+                return target_name
+        current_link.unlink(missing_ok=True)
+
+    return _read_current_release_pointer(ph_root=ph_root)
 
 
 def parse_plan_front_matter(*, plan_path: Path) -> dict[str, object]:
@@ -1516,6 +1706,7 @@ def summarize_tagged_tasks(*, tasks: list[dict[str, Any]], sprint_timeline: list
     points_total = 0
     points_done = 0
     by_status: dict[str, int] = {"todo": 0, "doing": 0, "review": 0, "done": 0, "blocked": 0, "other": 0}
+    gates_by_status: dict[str, int] = {"todo": 0, "doing": 0, "review": 0, "done": 0, "blocked": 0, "other": 0}
     features: set[str] = set()
     in_timeline = 0
     out_of_timeline = 0
@@ -1527,6 +1718,8 @@ def summarize_tagged_tasks(*, tasks: list[dict[str, Any]], sprint_timeline: list
 
     for task in tasks:
         status = str(task.get("status", "todo")).strip().lower()
+        if status == "completed":
+            status = "done"
         if status not in by_status:
             by_status["other"] += 1
         else:
@@ -1559,6 +1752,10 @@ def summarize_tagged_tasks(*, tasks: list[dict[str, Any]], sprint_timeline: list
         }
         if is_gate:
             gates_total += 1
+            if status not in gates_by_status:
+                gates_by_status["other"] += 1
+            else:
+                gates_by_status[status] += 1
             if status in {"done", "completed"}:
                 gates_done += 1
             if is_in_timeline:
@@ -1573,6 +1770,7 @@ def summarize_tagged_tasks(*, tasks: list[dict[str, Any]], sprint_timeline: list
         "points_done": points_done,
         "completion": completion,
         "by_status": by_status,
+        "gates_by_status": gates_by_status,
         "features_touched": sorted(features),
         "in_timeline": in_timeline,
         "out_of_timeline": out_of_timeline,
@@ -1597,6 +1795,45 @@ def calculate_release_readiness(*, progress: dict[str, object]) -> str:
     if critical_path_complete:
         return "🟡 YELLOW - Not ready yet (scope remaining)"
     return "🔴 RED - Critical path incomplete"
+
+
+def calculate_release_readiness_gate_first(
+    *, feature_progress: dict[str, object] | None, tagged_summary: dict[str, object] | None
+) -> str:
+    tagged_summary = tagged_summary or {}
+
+    tasks_total = int(tagged_summary.get("tasks_total") or 0)
+    points_total = int(tagged_summary.get("points_total") or 0)
+    points_done = int(tagged_summary.get("points_done") or 0)
+    completion = int(tagged_summary.get("completion") or 0)
+
+    gates_total = int(tagged_summary.get("gates_total") or 0)
+    gates_done = int(tagged_summary.get("gates_done") or 0)
+
+    by_status = tagged_summary.get("by_status") if isinstance(tagged_summary.get("by_status"), dict) else {}
+    blocked = int(by_status.get("blocked") or 0)
+
+    gates_by_status = (
+        tagged_summary.get("gates_by_status") if isinstance(tagged_summary.get("gates_by_status"), dict) else {}
+    )
+    gates_blocked = int(gates_by_status.get("blocked") or 0)
+
+    if gates_total > 0:
+        if gates_blocked > 0:
+            return "🔴 RED - Gate blocked"
+        if gates_done >= gates_total:
+            return "🟢 GREEN - Gates complete (Ready to ship)"
+        return f"🟡 YELLOW - Gates incomplete ({gates_done}/{gates_total} complete)"
+
+    if tasks_total > 0:
+        if blocked > 0:
+            return "🔴 RED - Tagged work blocked"
+        if completion >= 100:
+            return "🟢 GREEN - Tagged work complete"
+        return f"🟡 YELLOW - Tagged work incomplete ({completion}% / {points_done}/{points_total} pts)"
+
+    _ = feature_progress  # historical only; do not promote to readiness
+    return "🟡 YELLOW - No release-tagged tasks/gates; readiness unknown (feature completion is historical)"
 
 
 def calculate_release_trajectory(
@@ -1909,7 +2146,6 @@ def run_release_status(*, ctx: Context, release: str | None, env: dict[str, str]
 
     features = load_release_features(ph_root=ctx.ph_data_root, version=version)
     progress = calculate_release_progress(ph_root=ctx.ph_data_root, version=version, features=features, env=env)
-    readiness = calculate_release_readiness(progress=progress)
 
     timeline = get_release_timeline_info(ph_root=ctx.ph_data_root, version=version)
     sprint_count = int(timeline.get("planned_sprints") or 3)
@@ -1968,6 +2204,8 @@ def run_release_status(*, ctx: Context, release: str | None, env: dict[str, str]
         progress=tagged_progress, current_sprint_index=current_sprint_index, sprint_count=sprint_count
     )
 
+    readiness = calculate_release_readiness_gate_first(feature_progress=progress, tagged_summary=tagged_summary)
+
     print(f"📦 RELEASE STATUS: {version}")
     print("=" * 60)
     print(f"Sprint: {current_sprint_label} ({current_sprint})")
@@ -1988,11 +2226,11 @@ def run_release_status(*, ctx: Context, release: str | None, env: dict[str, str]
             for w in warnings:
                 print(f"  - {w}")
     print(
-        f"Overall Progress: {progress.get('avg_completion', 0)}% complete "
+        f"Feature Completion (historical): {progress.get('avg_completion', 0)}% "
         f"({progress.get('started_features', 0)}/{progress.get('total_features', 0)} features started)"
     )
     print(f"Target: {target}")
-    print(f"Release Trajectory: {trajectory}")
+    print(f"Feature Trajectory (historical): {trajectory}")
     if expected_range and current_sprint_index:
         print(
             f"  Expected completion band: {expected_range[0]}–{expected_range[1]}% "
@@ -2002,12 +2240,12 @@ def run_release_status(*, ctx: Context, release: str | None, env: dict[str, str]
         features_touched = tagged_summary.get("features_touched") or []
         features_count = len(features_touched)
         print(
-            "Tagged Workstream: "
+            "Release-Tagged Workstream: "
             f"{tagged_summary.get('completion', 0)}% "
             f"({tagged_summary.get('points_done', 0)}/{tagged_summary.get('points_total', 0)} pts) "
             f"across {tagged_summary.get('tasks_total', 0)} tasks ({features_count} features)"
         )
-        print(f"Tagged Trajectory: {tagged_trajectory}")
+        print(f"Release-Tagged Trajectory: {tagged_trajectory}")
         if tagged_expected_range and current_sprint_index:
             print(
                 f"  Expected completion band: {tagged_expected_range[0]}–{tagged_expected_range[1]}% "
@@ -2026,11 +2264,11 @@ def run_release_status(*, ctx: Context, release: str | None, env: dict[str, str]
                 print(f"Gate Burn-up: {gates_done}/{gates_total} complete (in timeline: {gates_done_in}/{gates_in})")
             else:
                 print(f"Gate Burn-up: {gates_done}/{gates_total} complete")
-    print(f"Release Readiness: {readiness}")
+    print(f"Release Readiness (gate-first): {readiness}")
     print()
 
     if features:
-        print("🎯 Feature Progress:")
+        print("🎯 Feature Completion (historical):")
         for feature_name, feature_data in features.items():
             completion = int(progress.get("feature_completions", {}).get(feature_name, 0))
             status_emoji = "✅" if completion >= 90 else ("🔄" if completion > 0 else "⭕")

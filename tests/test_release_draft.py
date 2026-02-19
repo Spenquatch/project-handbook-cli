@@ -60,8 +60,33 @@ def test_release_draft_json_is_stable_and_local_only(tmp_path: Path) -> None:
     )
     assert result.returncode == 0
     payload = json.loads(result.stdout)
+    assert payload["type"] == "release-draft"
+    assert payload["schema_version"] == 1
     assert payload["version"] == "v1.2.3"
     assert payload["planned_sprints"] == 2
-    assert any(c.get("feature") == "feat-a" for c in payload.get("candidates", []))
-    assert any(c.get("feature") == "feat-b" for c in payload.get("candidates", []))
-    assert any("ph release add-feature" in cmd for cmd in payload.get("suggested_add_feature_commands", []))
+    assert any(c.get("feature") == "feat-a" for c in payload.get("candidate_features", []))
+    assert any(c.get("feature") == "feat-b" for c in payload.get("candidate_features", []))
+    assert any("ph release add-feature" in cmd for cmd in payload.get("commands", {}).get("release_add_feature", []))
+
+
+def test_release_draft_schema_is_valid_json_and_has_expected_properties(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+
+    env = dict(os.environ)
+    env["PH_FAKE_TODAY"] = "2099-01-01"
+
+    result = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "draft", "--schema"],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0
+    schema = json.loads(result.stdout)
+    props = schema.get("properties", {})
+    assert "type" in props
+    assert "schema_version" in props
+    assert "candidate_features" in props
+    assert "suggested_features" in props
+    assert "operator_questions" in props
+    assert "commands" in props

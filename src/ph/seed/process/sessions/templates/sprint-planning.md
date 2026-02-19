@@ -35,6 +35,8 @@ You are an AI agent preparing a planning/discovery session inside the project ha
 - Review release context (only if a release is active):  
   ```bash
   # Prints releases/current/plan.md + sprint-slot breakdown + gate burn-up, and refreshes releases/current/progress.md
+  # For tooling/cat/grep: `.project-handbook/releases/current.txt` contains the active release version.
+  # Note: release readiness is gate-first; feature completion is historical context.
   ph release show
   ```  
 - Review current sprint/feature context:  
@@ -71,6 +73,7 @@ You are an AI agent preparing a planning/discovery session inside the project ha
   ```  
 - Ensure the sprint plan is release-aligned (only if a release is active):
   - Set `release: vX.Y.Z` and `release_sprint_slot: <n>` in `.project-handbook/sprints/current/plan.md` front matter to match `.project-handbook/releases/current/plan.md`.
+  - For tooling/cat/grep: `.project-handbook/releases/current.txt` contains the active release version.
   - Explicitly list release-critical vs release-support vs non-release scope in the Sprint Plan (release is a measurement context, not an automatic scope cap).
   - Ensure the sprint has at least one **Gate** task that advances the release goals for that slot:
     - Official release gates (burn-up): `release_gate: true`

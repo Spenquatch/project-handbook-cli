@@ -610,6 +610,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Draft base (latest-delivered|current|vX.Y.Z)",
     )
     release_draft.add_argument("--format", default="text", help="Output format (text|json)")
+    release_draft.add_argument("--schema", action="store_true", help="Print JSON schema for --format json and exit")
     release_add_feature = release_subparsers.add_parser(
         "add-feature", help="Assign a feature to a release", parents=[sub_common]
     )
@@ -1588,6 +1589,7 @@ def main(argv: list[str] | None = None) -> int:
                         sprints=int(getattr(args, "sprints", 3)),
                         base=str(getattr(args, "base", "latest-delivered")),
                         format=str(getattr(args, "format", "text")),
+                        schema=bool(getattr(args, "schema", False)),
                     )
                 elif args.release_command == "add-feature":
                     exit_code = run_release_add_feature(

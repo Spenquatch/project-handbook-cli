@@ -38,10 +38,14 @@ def test_release_activate_and_clear(tmp_path: Path) -> None:
     )
     assert result.returncode == 0
     assert "⭐ Current release set to: v1.0.0" in result.stdout
+    assert "💡 Pointer: releases/current.txt" in result.stdout
     assert "📦 RELEASE STATUS: v1.0.0" in result.stdout
     current_link = tmp_path / ".project-handbook" / "releases" / "current"
     assert current_link.is_symlink()
     assert current_link.readlink().name == "v1.0.0"
+    current_txt = tmp_path / ".project-handbook" / "releases" / "current.txt"
+    assert current_txt.exists()
+    assert current_txt.read_text(encoding="utf-8") == "v1.0.0\n"
 
     result2 = subprocess.run(
         ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "clear"],
@@ -51,6 +55,26 @@ def test_release_activate_and_clear(tmp_path: Path) -> None:
     )
     assert result2.returncode == 0
     assert not current_link.exists()
+    assert not current_txt.exists()
+
+
+def test_release_status_resolves_current_from_current_txt_when_symlink_missing(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    (tmp_path / ".project-handbook" / "releases" / "v1.0.0").mkdir(parents=True, exist_ok=True)
+
+    releases_dir = tmp_path / ".project-handbook" / "releases"
+    (releases_dir / "current.txt").write_text("v1.0.0\n", encoding="utf-8")
+    assert not (releases_dir / "current").exists()
+
+    env = dict(os.environ)
+    result = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "status"],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0
+    assert "📦 RELEASE STATUS: v1.0.0" in result.stdout
 
 
 def test_release_progress_and_show(tmp_path: Path) -> None:

@@ -190,7 +190,11 @@ def test_release_progress_file_parity_v1p0056(tmp_path: Path) -> None:
                 "- ▶ **Slot 3**: 🔄 In Progress — SPRINT-SEQ-0004 (Sprint 3 of 4) — Goal: TBD",
                 "- **Slot 4**: ⭕ Planned — (unassigned) (Sprint 4 of 4) — Goal: TBD",
                 "",
-                "## Feature Progress",
+                "## Release-Tagged Workstream",
+                "- Tasks: 1 | Points: 1/1 | Completion: 100% | Features touched: 1",
+                "- Gates: 1/1 complete",
+                "",
+                "## Feature Completion (Historical)",
                 "- ✅ v2_workspace-signup-onboarding: 100% (Critical Path)",
                 "- ✅ v2_provider-gateway-dynamic-providers: 100% (Critical Path)",
                 "- ✅ v2_launch: 100%",
@@ -203,7 +207,7 @@ def test_release_progress_file_parity_v1p0056(tmp_path: Path) -> None:
                 "- ✅ TASK-005: Gate: V2 functional demo gate (v0.6.0) (SPRINT-SEQ-0003)",
                 "",
                 "## Release Health",
-                "- Readiness: 🟢 GREEN - Ready to ship",
+                "- Readiness (gate-first): 🟢 GREEN - Gates complete (Ready to ship)",
             ]
         )
         + "\n"

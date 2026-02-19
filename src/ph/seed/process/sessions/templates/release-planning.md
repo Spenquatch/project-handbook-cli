@@ -37,6 +37,7 @@ ph roadmap show
 ph feature summary
 ph release list
 ph release show     # Requires an active release; prints plan + slot mapping + gate burn-up
+cat .project-handbook/releases/current.txt  # Tooling-friendly pointer to the active release version (if set)
 ph parking review
 ph backlog list --severity P0
 ph backlog list --severity P1
@@ -52,6 +53,12 @@ ph release draft --version next --sprints 3 --base latest-delivered
 ```
 
 Then ask the **Operator Question Pack** surfaced by the draft (theme, risk posture, must-commit vs stretch).
+
+For machine-readable output (and the schema):
+```bash
+ph release draft --format json
+ph release draft --schema
+```
 
 ### 2) Decide: release type, version, and timeline
 Pick:

@@ -84,6 +84,7 @@ Optional:
 - If a release is complete, close it: `ph release close --version vX.Y.Z`
 - If this sprint was slotted into an active release, re-check release reporting after close:
   - `ph release show` (confirms the sprint is attributed to the correct `release_sprint_slot` and refreshes `releases/current/progress.md`)
+  - For tooling/cat/grep: `.project-handbook/releases/current.txt` contains the active release version.
 
 ## Deliverables
 - Sprint archived under `.project-handbook/sprints/archive/`.
