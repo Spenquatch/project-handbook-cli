@@ -87,3 +87,38 @@ def test_release_progress_and_show(tmp_path: Path) -> None:
     assert result3.returncode == 0
     assert "# Release v1.2.3" in result3.stdout
     assert "📦 RELEASE STATUS: v1.2.3" in result3.stdout
+
+
+def test_release_show_and_progress_accept_explicit_release_without_current(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+
+    env = dict(os.environ)
+    env["PH_FAKE_TODAY"] = "2099-01-01"
+
+    planned = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "plan", "--version", "v1.2.3", "--sprints", "1"],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert planned.returncode == 0
+    assert not (tmp_path / ".project-handbook" / "releases" / "current").exists()
+
+    shown = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "show", "--release", "v1.2.3"],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert shown.returncode == 0
+    assert "📘 RELEASE PLAN: v1.2.3" in shown.stdout
+    assert "📦 RELEASE STATUS: v1.2.3" in shown.stdout
+
+    progressed = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "progress", "--release", "v1.2.3"],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert progressed.returncode == 0
+    assert (tmp_path / ".project-handbook" / "releases" / "v1.2.3" / "progress.md").exists()

@@ -247,13 +247,43 @@ tags: [sprint, planning]
             template += f"**Release sprint position**: Sprint {sprint_index} of {planned_sprints}\n"
         if end_sprint:
             template += f"**Release target**: {end_sprint}\n"
-        template += "**Features in this release**:\n"
         features = release_context.get("features") if isinstance(release_context.get("features"), dict) else {}
+        slot_features: list[tuple[str, dict[str, object]]] = []
+        other_features: list[tuple[str, dict[str, object]]] = []
         for feature_name, feature_data in (features or {}).items():
             feature_dict = feature_data if isinstance(feature_data, dict) else {}
-            critical_note = " (Critical Path)" if feature_dict.get("critical_path") else ""
-            template += f"- {feature_name}: {feature_dict.get('type', 'regular')}{critical_note}\n"
-        template += "\n"
+            if release_slot is not None:
+                raw_slot = feature_dict.get("slot")
+                try:
+                    slot_val = int(raw_slot)  # type: ignore[arg-type]
+                except Exception:
+                    slot_val = None
+                if slot_val == int(release_slot):
+                    slot_features.append((feature_name, feature_dict))
+                else:
+                    other_features.append((feature_name, feature_dict))
+            else:
+                other_features.append((feature_name, feature_dict))
+
+        def _feature_line(fname: str, fmeta: dict[str, object]) -> str:
+            critical_note = " (Critical Path)" if fmeta.get("critical_path") else ""
+            return f"- {fname}: {fmeta.get('type', 'regular')}{critical_note}"
+
+        if release_slot is not None:
+            template += f"**Slot {release_slot} features**:\n"
+            for fname, fmeta in sorted(slot_features, key=lambda t: t[0]):
+                template += _feature_line(fname, fmeta) + "\n"
+            template += "\n"
+            if other_features:
+                template += "<details>\n<summary>Other release features</summary>\n\n"
+                for fname, fmeta in sorted(other_features, key=lambda t: t[0]):
+                    template += _feature_line(fname, fmeta) + "\n"
+                template += "\n</details>\n\n"
+        else:
+            template += "**Features in this release**:\n"
+            for fname, fmeta in sorted(other_features, key=lambda t: t[0]):
+                template += _feature_line(fname, fmeta) + "\n"
+            template += "\n"
 
     slot_alignment_lines: list[str] | None = None
     release_version_value = str(release_context.get("version") or "").strip()

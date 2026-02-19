@@ -777,7 +777,7 @@ def run_release_activate(*, ctx: Context, release: str, env: dict[str, str]) -> 
         return 1
 
     print(f"⭐ Current release set to: {version}")
-    return run_release_status(ctx=ctx, env=env)
+    return run_release_status(ctx=ctx, release=version, env=env)
 
 
 def run_release_clear(*, ctx: Context) -> int:
@@ -789,16 +789,30 @@ def run_release_clear(*, ctx: Context) -> int:
     return 0
 
 
-def run_release_progress(*, ctx: Context, env: dict[str, str]) -> int:
+def run_release_progress(*, ctx: Context, release: str | None, env: dict[str, str]) -> int:
     if ctx.scope == "system":
         print(_SYSTEM_SCOPE_REMEDIATION)
         return 1
 
-    version = _read_current_release_target(ph_root=ctx.ph_data_root)
-    if not version:
-        print("❌ No current release found")
-        print("💡 Activate one with: ph release activate --release vX.Y.Z")
-        return 1
+    release_arg = (release or "").strip()
+    if release_arg and release_arg.lower() != "current":
+        version = normalize_version(release_arg)
+        if not (ctx.ph_data_root / "releases" / version).exists():
+            print(f"❌ Release {version} not found (expected: releases/{version}/)")
+            return 1
+    else:
+        version = _read_current_release_target(ph_root=ctx.ph_data_root)
+        if not version:
+            print("❌ No current release found")
+            available = list_release_versions(ph_root=ctx.ph_data_root)
+            if available:
+                print("📦 Available releases:")
+                for name in available:
+                    print(f"  • {name}")
+                print("💡 Activate one with: ph release activate --release vX.Y.Z")
+            else:
+                print("💡 Create one with: ph release plan --version v1.2.0 --sprints 3 --activate")
+            return 1
 
     try:
         path = write_release_progress(ph_root=ctx.ph_data_root, version=version, env=env)
@@ -953,16 +967,30 @@ links: [{", ".join(links)}]
     return progress_file
 
 
-def run_release_show(*, ctx: Context, env: dict[str, str]) -> int:
+def run_release_show(*, ctx: Context, release: str | None, env: dict[str, str]) -> int:
     if ctx.scope == "system":
         print(_SYSTEM_SCOPE_REMEDIATION)
         return 1
 
-    version = _read_current_release_target(ph_root=ctx.ph_data_root)
-    if not version:
-        print("❌ No current release found")
-        print("💡 Activate one with: ph release activate --release vX.Y.Z")
-        return 1
+    release_arg = (release or "").strip()
+    if release_arg and release_arg.lower() != "current":
+        version = normalize_version(release_arg)
+        if not (ctx.ph_data_root / "releases" / version).exists():
+            print(f"❌ Release {version} not found (expected: releases/{version}/)")
+            return 1
+    else:
+        version = _read_current_release_target(ph_root=ctx.ph_data_root)
+        if not version:
+            print("❌ No current release found")
+            available = list_release_versions(ph_root=ctx.ph_data_root)
+            if available:
+                print("📦 Available releases:")
+                for name in available:
+                    print(f"  • {name}")
+                print("💡 Activate one with: ph release activate --release vX.Y.Z")
+            else:
+                print("💡 Create one with: ph release plan --version v1.2.0 --sprints 3 --activate")
+            return 1
 
     plan_path = ctx.ph_data_root / "releases" / version / "plan.md"
     if plan_path.exists():
@@ -976,7 +1004,7 @@ def run_release_show(*, ctx: Context, env: dict[str, str]) -> int:
     print("---")
     print()
 
-    exit_code = run_release_status(ctx=ctx, env=env)
+    exit_code = run_release_status(ctx=ctx, release=version, env=env)
 
     progress_path = write_release_progress(ph_root=ctx.ph_data_root, version=version, env=env)
     print()
@@ -1851,12 +1879,17 @@ def run_release_list(*, ctx: Context) -> int:
     return 0
 
 
-def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
+def run_release_status(*, ctx: Context, release: str | None, env: dict[str, str]) -> int:
     if ctx.scope == "system":
         print(_SYSTEM_SCOPE_REMEDIATION)
         return 1
 
-    version = _read_current_release_target(ph_root=ctx.ph_data_root)
+    release_arg = (release or "").strip()
+    if release_arg and release_arg.lower() != "current":
+        version = normalize_version(release_arg)
+    else:
+        version = _read_current_release_target(ph_root=ctx.ph_data_root)
+
     if not version:
         print("❌ No current release found")
         available = list_release_versions(ph_root=ctx.ph_data_root)
@@ -1871,7 +1904,7 @@ def run_release_status(*, ctx: Context, env: dict[str, str]) -> int:
 
     release_dir = ctx.ph_data_root / "releases" / version
     if not release_dir.exists():
-        print(f"❌ Release {version} not found")
+        print(f"❌ Release {version} not found (expected: releases/{version}/)")
         return 1
 
     features = load_release_features(ph_root=ctx.ph_data_root, version=version)

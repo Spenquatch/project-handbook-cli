@@ -100,32 +100,32 @@ def validate_dependencies(tasks: list[dict[str, Any]]) -> tuple[list[str], list[
     errors: list[str] = []
     warnings: list[str] = []
     ids = {t.get("id") for t in tasks}
-    sentinel_count = 0
+    start_nodes = 0
     for task in tasks:
         tid = task.get("id", "<unknown>")
         deps = normalize_dependencies(task)
         if not deps:
-            errors.append(f"{tid} missing depends_on; use FIRST_TASK or at least one task id")
+            start_nodes += 1
             continue
-        sentinel_count += deps.count("FIRST_TASK")
-        if "FIRST_TASK" in deps and len(deps) > 1:
-            errors.append(f"{tid} mixes FIRST_TASK with other dependencies")
+        if "FIRST_TASK" in deps:
+            if len(deps) > 1:
+                errors.append(f"{tid} mixes FIRST_TASK with other dependencies")
+            else:
+                start_nodes += 1
         for dep in deps:
             if dep == "FIRST_TASK":
                 continue
             if dep not in ids:
                 errors.append(f"{tid} depends_on unknown task id {dep}")
-    if sentinel_count == 0:
-        warnings.append("No FIRST_TASK defined; ensure at least one task is explicitly first")
-    if sentinel_count > 1:
-        errors.append("FIRST_TASK used more than once")
+    if tasks and start_nodes == 0:
+        errors.append("No start tasks found (no empty depends_on and no FIRST_TASK). Add at least one start node.")
     return errors, warnings
 
 
 def dependency_ready(task: dict[str, Any], task_map: dict[str, dict[str, Any]]) -> bool:
     deps = normalize_dependencies(task)
     if not deps:
-        return False
+        return True
     if "FIRST_TASK" in deps and len(deps) == 1:
         return True
     for dep in deps:

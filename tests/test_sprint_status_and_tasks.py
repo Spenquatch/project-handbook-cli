@@ -320,3 +320,80 @@ def test_sprint_status_gate_ready_yes_when_all_sprint_gates_done(tmp_path: Path)
     assert "Sprint gates:\n" in status.stdout
     assert "Gate-ready: YES (1/1 done)\n" in status.stdout
     assert "- TASK-002: Sprint gate task | status done | dependency-ready True\n" in status.stdout
+
+
+def test_sprint_status_allows_empty_depends_on_as_start_node(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+
+    res = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "plan", "--sprint", "SPRINT-2099-01-01"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert res.returncode == 0
+
+    task_root = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
+    task_dir = task_root / "TASK-001-empty-deps"
+    task_dir.mkdir(parents=True, exist_ok=True)
+    (task_dir / "task.yaml").write_text(
+        "\n".join(
+            [
+                "id: TASK-001",
+                "title: Start task",
+                "status: todo",
+                "story_points: 1",
+                "depends_on: []",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    status = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "status"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert status.returncode == 0
+    assert "missing depends_on" not in status.stdout
+
+
+def test_sprint_status_allows_multiple_first_task_sentinels(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+
+    res = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "plan", "--sprint", "SPRINT-2099-01-01"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert res.returncode == 0
+
+    task_root = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
+    for tid in ("TASK-001", "TASK-002"):
+        task_dir = task_root / f"{tid}-base"
+        task_dir.mkdir(parents=True, exist_ok=True)
+        (task_dir / "task.yaml").write_text(
+            "\n".join(
+                [
+                    f"id: {tid}",
+                    "title: Base task",
+                    "status: todo",
+                    "story_points: 1",
+                    "depends_on: [FIRST_TASK]",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+    status = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "status"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert status.returncode == 0
+    assert "FIRST_TASK used more than once" not in status.stdout

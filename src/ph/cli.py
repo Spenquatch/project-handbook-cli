@@ -589,9 +589,14 @@ def build_parser() -> argparse.ArgumentParser:
     release_activate.add_argument("--release", required=True, help="Release version (vX.Y.Z)")
     release_subparsers.add_parser("clear", help="Clear the current release pointer", parents=[sub_common])
     release_subparsers.add_parser("list", help="List release folders", parents=[sub_common])
-    release_subparsers.add_parser("status", help="Show current release status", parents=[sub_common])
-    release_subparsers.add_parser("show", help="Print current release plan + computed status", parents=[sub_common])
-    release_subparsers.add_parser("progress", help="Regenerate releases/current/progress.md", parents=[sub_common])
+    release_status = release_subparsers.add_parser("status", help="Show release status", parents=[sub_common])
+    release_status.add_argument("--release", help="Release version (vX.Y.Z or 'current'; default: current)")
+    release_show = release_subparsers.add_parser("show", help="Print release plan + computed status", parents=[sub_common])
+    release_show.add_argument("--release", help="Release version (vX.Y.Z or 'current'; default: current)")
+    release_progress = release_subparsers.add_parser(
+        "progress", help="Regenerate releases/<release>/progress.md", parents=[sub_common]
+    )
+    release_progress.add_argument("--release", help="Release version (vX.Y.Z or 'current'; default: current)")
     release_draft = release_subparsers.add_parser(
         "draft",
         help="Draft a release composition (local-only; creates no files)",
@@ -1571,11 +1576,11 @@ def main(argv: list[str] | None = None) -> int:
                 elif args.release_command == "list":
                     exit_code = run_release_list(ctx=ctx)
                 elif args.release_command == "status":
-                    exit_code = run_release_status(ctx=ctx, env=os.environ)
+                    exit_code = run_release_status(ctx=ctx, release=getattr(args, "release", None), env=os.environ)
                 elif args.release_command == "show":
-                    exit_code = run_release_show(ctx=ctx, env=os.environ)
+                    exit_code = run_release_show(ctx=ctx, release=getattr(args, "release", None), env=os.environ)
                 elif args.release_command == "progress":
-                    exit_code = run_release_progress(ctx=ctx, env=os.environ)
+                    exit_code = run_release_progress(ctx=ctx, release=getattr(args, "release", None), env=os.environ)
                 elif args.release_command == "draft":
                     exit_code = run_release_draft(
                         ctx=ctx,

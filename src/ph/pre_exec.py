@@ -782,7 +782,7 @@ def run_pre_exec_audit(
             "sprint-status.txt",
             lambda: run_sprint_status(ph_project_root=ctx.ph_project_root, ctx=ctx, sprint=None),
         ),
-        ("release-status", "release-status.txt", lambda: run_release_status(ctx=ctx, env=os.environ)),
+        ("release-status", "release-status.txt", lambda: run_release_status(ctx=ctx, release=None, env=os.environ)),
         ("task-list", "task-list.txt", lambda: run_task_list(ctx=ctx)),
         ("feature-summary", "feature-summary.txt", lambda: run_feature_summary(ctx=ctx, env=os.environ)),
         ("validate", "handbook-validate.txt", _validate_code),

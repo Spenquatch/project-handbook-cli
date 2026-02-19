@@ -366,6 +366,11 @@ links: []
 
     cd_path = _task_cd_path_for_scope(ctx=ctx, task_dir_name=task_dir_name)
     ph_cmd = _scope_prefix_for_ph_command(ctx=ctx)
+    evidence_rel = (
+        f".project-handbook/status/evidence/{task_id}"
+        if ctx.scope == "project"
+        else f".project-handbook/system/status/evidence/{task_id}"
+    )
 
     readme_content = "\n".join(
         [
@@ -393,12 +398,12 @@ links: []
             f"**Release Gate**: `{str(gate).lower()}`",
             "",
             "## Agent Navigation Rules",
-            '1. **Start work**: Update `task.yaml` status to "doing"',
+            f"1. **Start work**: Run `{ph_cmd} task status --id {task_id} --status doing`",
             "2. **Read first**: `steps.md` for implementation sequence",
             "3. **Use commands**: Copy-paste from `commands.md`",
             "4. **Validate progress**: Follow `validation.md` guidelines",
             "5. **Check completion**: Use `checklist.md` before marking done",
-            '6. **Update status**: Set to "review" when ready for review',
+            f'6. **Update status**: Run `{ph_cmd} task status --id {task_id} --status review` when ready for review',
             "",
             "## Context & Background",
             f"This task implements the {decision_link} decision for the [{feature}] feature.",
@@ -407,7 +412,7 @@ links: []
             "```bash",
             "# Update status when starting",
             f"cd {cd_path}",
-            "# Edit task.yaml: status: doing",
+            f"{ph_cmd} task status --id {task_id} --status doing",
             "",
             "# Follow implementation",
             "cat steps.md              # Read implementation steps",
@@ -593,7 +598,7 @@ links: []
                 "- Ready for review",
                 "",
                 "## Notes",
-                "- Update task.yaml status as you progress through steps",
+                f"- Update task status via `{ph_cmd} task status --id {task_id} --status <todo|doing|review|done|blocked>`",
                 "- Document any blockers or decisions in daily status",
                 "- Link any PRs/commits back to this task",
                 "",
@@ -617,13 +622,26 @@ links: []
 ```bash
 # When starting work
 cd {cd_path}
-# Edit task.yaml: change status from "todo" to "doing"
+{ph_cmd} task status --id {task_id} --status doing
 
 # When ready for review
-# Edit task.yaml: change status to "review"
+{ph_cmd} task status --id {task_id} --status review
 
 # When complete
-# Edit task.yaml: change status to "done"
+{ph_cmd} task status --id {task_id} --status done
+```
+
+## Evidence Paths (Avoid Relative Outputs)
+When a tool runs from another working directory (e.g. `pnpm -C ...`), relative `--output` paths can land in the
+wrong place. Prefer absolute evidence paths:
+```bash
+PH_ROOT="$(git rev-parse --show-toplevel)"
+EVID_REL="{evidence_rel}"
+EVID_ABS="$PH_ROOT/$EVID_REL"
+mkdir -p "$EVID_ABS"
+
+# Example usage:
+# pnpm -C apps/web exec playwright test --output "$EVID_ABS/playwright"
 ```
 
 ## Validation Commands
@@ -686,13 +704,28 @@ echo "Add task-specific commands here"
                 "```bash",
                 "# When starting work",
                 f"cd {cd_path}",
-                '# Edit task.yaml: change status from "todo" to "doing"',
+                f"{ph_cmd} task status --id {task_id} --status doing",
                 "",
                 "# When ready for review",
-                '# Edit task.yaml: change status to "review"',
+                f"{ph_cmd} task status --id {task_id} --status review",
                 "",
                 "# When complete",
-                '# Edit task.yaml: change status to "done"',
+                f"{ph_cmd} task status --id {task_id} --status done",
+                "```",
+                "",
+                "## Evidence Paths (Avoid Relative Outputs)",
+                (
+                    "When a tool runs from another working directory (e.g. `pnpm -C ...`), relative `--output` "
+                    "paths can land in the wrong place. Prefer absolute evidence paths:"
+                ),
+                "```bash",
+                'PH_ROOT="$(git rev-parse --show-toplevel)"',
+                f'EVID_REL="{evidence_rel}"',
+                'EVID_ABS="$PH_ROOT/$EVID_REL"',
+                'mkdir -p "$EVID_ABS"',
+                "",
+                "# Example usage:",
+                '# pnpm -C apps/web exec playwright test --output "$EVID_ABS/playwright"',
                 "```",
                 "",
                 "## Validation Commands",
