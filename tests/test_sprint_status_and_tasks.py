@@ -34,12 +34,13 @@ def _seed_sprint_with_task(*, ph_root: Path, scope: str) -> None:
     assert res.returncode == 0
 
     base = (ph_root / ".project-handbook") if scope == "project" else (ph_root / ".project-handbook" / "system")
-    task_dir = base / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / "TASK-001-test"
+    task_id = "TASK-002" if scope == "project" else "TASK-001"
+    task_dir = base / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / f"{task_id}-test"
     task_dir.mkdir(parents=True, exist_ok=True)
     (task_dir / "task.yaml").write_text(
         "\n".join(
             [
-                "id: TASK-001",
+                f"id: {task_id}",
                 "title: Test task",
                 "feature: feat-a",
                 "decision: ADR-001",
@@ -135,12 +136,12 @@ def test_sprint_tasks_project_scope_includes_make_preamble_and_release_tags(tmp_
     assert res.returncode == 0
 
     task_root = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
-    task_a = task_root / "TASK-001-rel"
+    task_a = task_root / "TASK-002-rel"
     task_a.mkdir(parents=True, exist_ok=True)
     (task_a / "task.yaml").write_text(
         "\n".join(
             [
-                "id: TASK-001",
+                "id: TASK-002",
                 "title: Rel task",
                 "lane: ci/evidence",
                 "session: task-execution",
@@ -155,18 +156,18 @@ def test_sprint_tasks_project_scope_includes_make_preamble_and_release_tags(tmp_
         encoding="utf-8",
     )
 
-    task_b = task_root / "TASK-002-gate"
+    task_b = task_root / "TASK-003-gate"
     task_b.mkdir(parents=True, exist_ok=True)
     (task_b / "task.yaml").write_text(
         "\n".join(
             [
-                "id: TASK-002",
+                "id: TASK-003",
                 "title: Gate task",
                 "lane: ci/evidence",
                 "session: task-execution",
                 "status: done",
                 "story_points: 1",
-                "depends_on: [TASK-001]",
+                "depends_on: [TASK-002]",
                 "release: null",
                 "release_gate: true",
             ]
@@ -185,14 +186,30 @@ def test_sprint_tasks_project_scope_includes_make_preamble_and_release_tags(tmp_
     assert tasks.stdout == (
         f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n> ph sprint tasks\n\n"
         "📋 SPRINT TASKS: SPRINT-2099-01-01\n" + "=" * 60 + "\n"
-        "✅ TASK-001: Rel task  [ci/evidence] (task-execution) [rel:v0.6.0] [3pts] (depends: FIRST_TASK)\n"
-        "✅ TASK-002: Gate task  [ci/evidence] (task-execution) [gate] [1pts] (depends: TASK-001)\n"
+        "⭕ TASK-001: Sprint Gate: SPRINT-2099-01-01  [ops/gates] (sprint-gate) [3pts]\n"
+        "✅ TASK-002: Rel task  [ci/evidence] (task-execution) [rel:v0.6.0] [3pts] (depends: FIRST_TASK)\n"
+        "✅ TASK-003: Gate task  [ci/evidence] (task-execution) [gate] [1pts] (depends: TASK-002)\n"
     )
 
 
 def test_sprint_status_warns_when_no_sprint_gate_tasks_exist(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     _seed_sprint_with_task(ph_root=tmp_path, scope="project")
+    # Simulate a legacy/hand-edited sprint with no sprint-gate tasks.
+    tasks_dir = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
+    for task_dir in tasks_dir.iterdir():
+        if not task_dir.is_dir():
+            continue
+        task_yaml = task_dir / "task.yaml"
+        if not task_yaml.exists():
+            continue
+        if "task_type: sprint-gate" in task_yaml.read_text(encoding="utf-8"):
+            for child in task_dir.rglob("*"):
+                if child.is_file():
+                    child.unlink()
+            for child in sorted([p for p in task_dir.rglob("*") if p.is_dir()], reverse=True):
+                child.rmdir()
+            task_dir.rmdir()
 
     status = subprocess.run(
         ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "status"],
@@ -219,33 +236,16 @@ def test_sprint_status_includes_sprint_gate_tasks_and_readiness(tmp_path: Path) 
 
     task_root = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
 
-    task_a = task_root / "TASK-001-base"
+    task_a = task_root / "TASK-002-base"
     task_a.mkdir(parents=True, exist_ok=True)
     (task_a / "task.yaml").write_text(
         "\n".join(
             [
-                "id: TASK-001",
+                "id: TASK-002",
                 "title: Base task",
                 "status: done",
                 "story_points: 1",
                 "depends_on: [FIRST_TASK]",
-            ]
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-
-    task_gate = task_root / "TASK-002-gate"
-    task_gate.mkdir(parents=True, exist_ok=True)
-    (task_gate / "task.yaml").write_text(
-        "\n".join(
-            [
-                "id: TASK-002",
-                "title: Sprint gate task",
-                "task_type: sprint-gate",
-                "status: todo",
-                "story_points: 1",
-                "depends_on: [TASK-001]",
             ]
         )
         + "\n",
@@ -261,7 +261,7 @@ def test_sprint_status_includes_sprint_gate_tasks_and_readiness(tmp_path: Path) 
     assert status.returncode == 0
     assert "Sprint gates:\n" in status.stdout
     assert "Gate-ready: NO (0/1 done)\n" in status.stdout
-    assert "- TASK-002: Sprint gate task | status todo | dependency-ready True\n" in status.stdout
+    assert "- TASK-001: Sprint Gate: SPRINT-2099-01-01 | status todo | dependency-ready True\n" in status.stdout
 
 
 def test_sprint_status_gate_ready_yes_when_all_sprint_gates_done(tmp_path: Path) -> None:
@@ -277,12 +277,12 @@ def test_sprint_status_gate_ready_yes_when_all_sprint_gates_done(tmp_path: Path)
 
     task_root = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
 
-    base = task_root / "TASK-001-base"
+    base = task_root / "TASK-002-base"
     base.mkdir(parents=True, exist_ok=True)
     (base / "task.yaml").write_text(
         "\n".join(
             [
-                "id: TASK-001",
+                "id: TASK-002",
                 "title: Base task",
                 "status: done",
                 "story_points: 1",
@@ -292,23 +292,24 @@ def test_sprint_status_gate_ready_yes_when_all_sprint_gates_done(tmp_path: Path)
         + "\n",
         encoding="utf-8",
     )
-
-    gate = task_root / "TASK-002-gate"
-    gate.mkdir(parents=True, exist_ok=True)
-    (gate / "task.yaml").write_text(
-        "\n".join(
-            [
-                "id: TASK-002",
-                "title: Sprint gate task",
-                "task_type: sprint-gate",
-                "status: done",
-                "story_points: 1",
-                "depends_on: [TASK-001]",
-            ]
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    # Mark the scaffolded sprint-gate as done.
+    for task_dir in task_root.iterdir():
+        if not task_dir.is_dir():
+            continue
+        task_yaml = task_dir / "task.yaml"
+        if not task_yaml.exists():
+            continue
+        text = task_yaml.read_text(encoding="utf-8")
+        if "task_type: sprint-gate" not in text:
+            continue
+        lines = []
+        for line in text.splitlines():
+            if line.startswith("status:"):
+                lines.append("status: done")
+            else:
+                lines.append(line)
+        task_yaml.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        break
 
     status = subprocess.run(
         ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "status"],
@@ -319,7 +320,7 @@ def test_sprint_status_gate_ready_yes_when_all_sprint_gates_done(tmp_path: Path)
     assert status.returncode == 0
     assert "Sprint gates:\n" in status.stdout
     assert "Gate-ready: YES (1/1 done)\n" in status.stdout
-    assert "- TASK-002: Sprint gate task | status done | dependency-ready True\n" in status.stdout
+    assert "- TASK-001: Sprint Gate: SPRINT-2099-01-01 | status done | dependency-ready True\n" in status.stdout
 
 
 def test_sprint_status_allows_empty_depends_on_as_start_node(tmp_path: Path) -> None:
@@ -334,12 +335,12 @@ def test_sprint_status_allows_empty_depends_on_as_start_node(tmp_path: Path) -> 
     assert res.returncode == 0
 
     task_root = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
-    task_dir = task_root / "TASK-001-empty-deps"
+    task_dir = task_root / "TASK-002-empty-deps"
     task_dir.mkdir(parents=True, exist_ok=True)
     (task_dir / "task.yaml").write_text(
         "\n".join(
             [
-                "id: TASK-001",
+                "id: TASK-002",
                 "title: Start task",
                 "status: todo",
                 "story_points: 1",
@@ -372,7 +373,7 @@ def test_sprint_status_allows_multiple_first_task_sentinels(tmp_path: Path) -> N
     assert res.returncode == 0
 
     task_root = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
-    for tid in ("TASK-001", "TASK-002"):
+    for tid in ("TASK-002", "TASK-003"):
         task_dir = task_root / f"{tid}-base"
         task_dir.mkdir(parents=True, exist_ok=True)
         (task_dir / "task.yaml").write_text(

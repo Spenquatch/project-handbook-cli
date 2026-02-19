@@ -59,7 +59,10 @@ You are an AI agent preparing a planning/discovery session inside the project ha
   ```bash
   ph sprint plan
   ```
-- Create the required sprint gate task (at least one per sprint):
+- Sprint gate (required; exists from Day 0, closes last):
+  - `ph sprint plan` scaffolds a sprint gate task if one does not already exist.
+  - Fill in `validation.md` early (goal + exit criteria + evidence), but expect to mark it `done` last.
+  - If you need to create one manually:
   ```bash
   ph task create --title "Sprint Gate: <goal>" --feature <feature> --decision ADR-XXXX --type sprint-gate --points 3
   ```

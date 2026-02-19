@@ -83,5 +83,7 @@ def test_post_hook_validation_errors_do_not_change_exit_code(tmp_path: Path) -> 
     result = subprocess.run(cmd, capture_output=True, text=True, env=env)
 
     assert result.returncode == 0
-    assert "validation:" in result.stdout
-    assert ".project-handbook/status/validation.json" in result.stdout
+    assert "Post-hook validate --quick failed (non-blocking):" in result.stderr
+    assert "validation:" in result.stderr
+    assert ".project-handbook/status/validation.json" in result.stderr
+    assert (tmp_path / ".project-handbook" / "status" / "validation.json").exists()

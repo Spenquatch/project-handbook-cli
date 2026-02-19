@@ -147,12 +147,15 @@ def build_parser() -> argparse.ArgumentParser:
     _add_common_args(sub_common, suppress_defaults=True)
 
     parser = argparse.ArgumentParser(prog="ph", description="Project Handbook CLI", parents=[main_common])
+    parser.set_defaults(_post_validate="never")
     subparsers = parser.add_subparsers(dest="command", title="Commands", metavar="<command>")
 
     version_parser = subparsers.add_parser("version", help="Print installed ph version", parents=[sub_common])
+    version_parser.set_defaults(_post_validate="never")
     version_parser.set_defaults(_handler=_handle_version)
 
     init_parser = subparsers.add_parser("init", help="Initialize a new handbook instance repo", parents=[sub_common])
+    init_parser.set_defaults(_post_validate="never")
     init_gitignore_group = init_parser.add_mutually_exclusive_group()
     init_gitignore_group.add_argument(
         "--gitignore",
@@ -175,9 +178,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Check repo compatibility and required assets",
         parents=[sub_common],
     )
+    doctor_parser.set_defaults(_post_validate="quick")
     doctor_parser.set_defaults(_handler=_handle_doctor)
 
     help_parser = subparsers.add_parser("help", help="Show help topics", parents=[sub_common])
+    help_parser.set_defaults(_post_validate="never")
     help_parser.add_argument("topic", nargs="?", help="Help topic")
 
     onboarding_parser = subparsers.add_parser(
@@ -185,6 +190,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Show onboarding docs and sessions",
         parents=[sub_common],
     )
+    onboarding_parser.set_defaults(_post_validate="never")
     onboarding_subparsers = onboarding_parser.add_subparsers(
         dest="onboarding_command",
         title="Subcommands",
@@ -195,21 +201,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Show onboarding session templates",
         parents=[sub_common],
     )
+    onboarding_session.set_defaults(_post_validate="never")
     onboarding_session.add_argument("session_topic", nargs="?", help="Session topic (or 'list' / 'continue-session')")
 
     hooks_parser = subparsers.add_parser("hooks", help="Install repo git hooks", parents=[sub_common])
+    hooks_parser.set_defaults(_post_validate="never")
     hooks_subparsers = hooks_parser.add_subparsers(
         dest="hooks_command",
         title="Subcommands",
         metavar="<subcommand>",
     )
-    hooks_subparsers.add_parser("install", help="Install repo git hooks", parents=[sub_common])
+    hooks_install = hooks_subparsers.add_parser("install", help="Install repo git hooks", parents=[sub_common])
+    hooks_install.set_defaults(_post_validate="never")
 
     end_session_parser = subparsers.add_parser(
         "end-session",
         help="Summarize a Codex session rollout log",
         parents=[sub_common],
     )
+    end_session_parser.set_defaults(_post_validate="never")
     end_session_parser.add_argument("--log", required=True, help="Path to rollout log file")
     end_session_parser.add_argument(
         "--force", action="store_true", help="Process the provided --log even if cwd mismatches"
@@ -245,13 +255,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Override Codex model verbosity (experimental).",
     )
 
-    subparsers.add_parser("clean", help="Remove Python cache files under PH_ROOT", parents=[sub_common])
+    clean_parser = subparsers.add_parser("clean", help="Remove Python cache files under PH_ROOT", parents=[sub_common])
+    clean_parser.set_defaults(_post_validate="never")
 
     reset_parser = subparsers.add_parser(
         "reset",
         help="Reset project scope (dry-run by default)",
         parents=[sub_common],
     )
+    reset_parser.set_defaults(_post_validate="never")
     reset_parser.add_argument(
         "--spec",
         default=".project-handbook/process/automation/reset_spec.json",
@@ -260,17 +272,19 @@ def build_parser() -> argparse.ArgumentParser:
     reset_parser.add_argument("--confirm", default="", help="Must be exactly RESET to execute")
     reset_parser.add_argument("--force", default="", help="Must be exactly true to execute")
 
-    subparsers.add_parser(
+    reset_smoke_parser = subparsers.add_parser(
         "reset-smoke",
         help="Run reset smoke verification (destructive to project scope)",
         parents=[sub_common],
     )
+    reset_smoke_parser.set_defaults(_post_validate="never")
 
     migrate_parser = subparsers.add_parser(
         "migrate",
         help="Migrate artifacts between scopes",
         parents=[sub_common],
     )
+    migrate_parser.set_defaults(_post_validate="never")
     migrate_subparsers = migrate_parser.add_subparsers(
         dest="migrate_command",
         title="Subcommands",
@@ -281,56 +295,72 @@ def build_parser() -> argparse.ArgumentParser:
         help="Migrate system-scoped artifacts out of project scope",
         parents=[sub_common],
     )
+    migrate_system.set_defaults(_post_validate="quick")
     migrate_system.add_argument("--confirm", default="", help="Must be exactly RESET to run")
     migrate_system.add_argument("--force", default="", help="Must be exactly true to run")
 
-    subparsers.add_parser("dashboard", help="Show sprint + validation snapshot", parents=[sub_common])
-    subparsers.add_parser("status", help="Generate status rollup", parents=[sub_common])
-    subparsers.add_parser("check-all", help="Run validate + status", parents=[sub_common])
+    dashboard_parser = subparsers.add_parser("dashboard", help="Show sprint + validation snapshot", parents=[sub_common])
+    dashboard_parser.set_defaults(_post_validate="never")
+    status_parser = subparsers.add_parser("status", help="Generate status rollup", parents=[sub_common])
+    status_parser.set_defaults(_post_validate="never")
+    check_all_parser = subparsers.add_parser("check-all", help="Run validate + status", parents=[sub_common])
+    check_all_parser.set_defaults(_post_validate="never")
 
     test_parser = subparsers.add_parser("test", help="Run automation smoke suites", parents=[sub_common])
+    test_parser.set_defaults(_post_validate="never")
     test_subparsers = test_parser.add_subparsers(
         dest="test_command",
         title="Subcommands",
         metavar="<subcommand>",
     )
-    test_subparsers.add_parser("system", help="Run handbook system smoke suite", parents=[sub_common])
+    test_system_parser = test_subparsers.add_parser("system", help="Run handbook system smoke suite", parents=[sub_common])
+    test_system_parser.set_defaults(_post_validate="never")
 
     sprint_parser = subparsers.add_parser("sprint", help="Manage sprint lifecycle", parents=[sub_common])
+    sprint_parser.set_defaults(_post_validate="never")
     sprint_subparsers = sprint_parser.add_subparsers(
         dest="sprint_command",
         title="Subcommands",
         metavar="<subcommand>",
     )
     sprint_plan_parser = sprint_subparsers.add_parser("plan", help="Create sprint plan", parents=[sub_common])
+    sprint_plan_parser.set_defaults(_post_validate="quick")
     sprint_plan_parser.add_argument("--sprint", help="Sprint ID (default: computed)")
     sprint_plan_parser.add_argument("--force", action="store_true", help="Overwrite existing plan.md")
     sprint_open_parser = sprint_subparsers.add_parser(
         "open", help="Set current sprint to existing", parents=[sub_common]
     )
+    sprint_open_parser.set_defaults(_post_validate="quick")
     sprint_open_parser.add_argument("--sprint", required=True, help="Sprint ID to open")
     sprint_status_parser = sprint_subparsers.add_parser("status", help="Show sprint status", parents=[sub_common])
+    sprint_status_parser.set_defaults(_post_validate="never")
     sprint_status_parser.add_argument("--sprint", help="Sprint ID (default: current)")
     sprint_tasks_parser = sprint_subparsers.add_parser("tasks", help="List sprint tasks", parents=[sub_common])
+    sprint_tasks_parser.set_defaults(_post_validate="never")
     sprint_tasks_parser.add_argument("--sprint", help="Sprint ID (default: current)")
     sprint_burndown_parser = sprint_subparsers.add_parser(
         "burndown", help="Generate sprint burndown", parents=[sub_common]
     )
+    sprint_burndown_parser.set_defaults(_post_validate="never")
     sprint_burndown_parser.add_argument("--sprint", help="Sprint ID (default: current)")
     sprint_capacity_parser = sprint_subparsers.add_parser(
         "capacity", help="Show sprint capacity allocation", parents=[sub_common]
     )
+    sprint_capacity_parser.set_defaults(_post_validate="never")
     sprint_capacity_parser.add_argument("--sprint", help="Sprint ID (default: current)")
     sprint_archive_parser = sprint_subparsers.add_parser(
         "archive", help="Archive sprint into sprints/archive", parents=[sub_common]
     )
+    sprint_archive_parser.set_defaults(_post_validate="quick")
     sprint_archive_parser.add_argument("--sprint", help="Sprint ID (default: current)")
     sprint_close_parser = sprint_subparsers.add_parser(
         "close", help="Close sprint and archive it", parents=[sub_common]
     )
+    sprint_close_parser.set_defaults(_post_validate="quick")
     sprint_close_parser.add_argument("--sprint", help="Sprint ID (default: current)")
 
     task_parser = subparsers.add_parser("task", help="Manage sprint tasks", parents=[sub_common])
+    task_parser.set_defaults(_post_validate="never")
     task_subparsers = task_parser.add_subparsers(
         dest="task_command",
         title="Subcommands",
@@ -339,6 +369,7 @@ def build_parser() -> argparse.ArgumentParser:
     task_create_parser = task_subparsers.add_parser(
         "create", help="Create a new task in current sprint", parents=[sub_common]
     )
+    task_create_parser.set_defaults(_post_validate="quick")
     task_create_parser.add_argument("--title", required=True, help="Task title")
     task_create_parser.add_argument("--feature", required=True, help="Feature name")
     task_create_parser.add_argument("--decision", required=True, help="Decision id (ADR-XXX, FDR-XXX, DR-XXX)")
@@ -363,10 +394,13 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Mark this task as a release gate (counts toward release burn-up)",
     )
-    task_subparsers.add_parser("list", help="List tasks in current sprint", parents=[sub_common])
+    task_list_parser = task_subparsers.add_parser("list", help="List tasks in current sprint", parents=[sub_common])
+    task_list_parser.set_defaults(_post_validate="never")
     task_show_parser = task_subparsers.add_parser("show", help="Show a task", parents=[sub_common])
+    task_show_parser.set_defaults(_post_validate="never")
     task_show_parser.add_argument("--id", required=True, help="Task id (e.g. TASK-001)")
     task_status_parser = task_subparsers.add_parser("status", help="Update task status", parents=[sub_common])
+    task_status_parser.set_defaults(_post_validate="quick")
     task_status_parser.add_argument("--id", required=True, help="Task id (e.g. TASK-001)")
     task_status_parser.add_argument("--status", required=True, help="New status (e.g. doing)")
     task_status_parser.add_argument(
@@ -376,67 +410,83 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     feature_parser = subparsers.add_parser("feature", help="Manage features", parents=[sub_common])
+    feature_parser.set_defaults(_post_validate="never")
     feature_subparsers = feature_parser.add_subparsers(
         dest="feature_command",
         title="Subcommands",
         metavar="<subcommand>",
     )
-    feature_subparsers.add_parser("list", help="List features", parents=[sub_common])
+    feature_list_parser = feature_subparsers.add_parser("list", help="List features", parents=[sub_common])
+    feature_list_parser.set_defaults(_post_validate="never")
     feature_create_parser = feature_subparsers.add_parser("create", help="Create a new feature", parents=[sub_common])
+    feature_create_parser.set_defaults(_post_validate="quick")
     feature_create_parser.add_argument("--name", required=True, help="Feature name (kebab-case)")
     feature_create_parser.add_argument("--epic", action="store_true", help="Mark feature as an epic")
     feature_create_parser.add_argument("--owner", default="@owner", help="Owner (default: @owner)")
     feature_create_parser.add_argument("--stage", default="proposed", help="Initial stage (default: proposed)")
     feature_status_parser = feature_subparsers.add_parser("status", help="Update feature stage", parents=[sub_common])
+    feature_status_parser.set_defaults(_post_validate="quick")
     feature_status_parser.add_argument("--name", required=True, help="Feature name (kebab-case)")
     feature_status_parser.add_argument("--stage", required=True, help="New stage")
-    feature_subparsers.add_parser(
+    feature_update_status_parser = feature_subparsers.add_parser(
         "update-status", help="Update status.md files from sprint tasks", parents=[sub_common]
     )
-    feature_subparsers.add_parser("summary", help="Show feature summary with sprint data", parents=[sub_common])
+    feature_update_status_parser.set_defaults(_post_validate="quick")
+    feature_summary_parser = feature_subparsers.add_parser("summary", help="Show feature summary with sprint data", parents=[sub_common])
+    feature_summary_parser.set_defaults(_post_validate="never")
     feature_archive_parser = feature_subparsers.add_parser(
         "archive", help="Archive a feature into features/implemented", parents=[sub_common]
     )
+    feature_archive_parser.set_defaults(_post_validate="quick")
     feature_archive_parser.add_argument("--name", required=True, help="Feature name (kebab-case)")
     feature_archive_parser.add_argument(
         "--force", action="store_true", help="Force archive despite warnings (requires explicit approval)"
     )
 
     adr_parser = subparsers.add_parser("adr", help="Manage ADRs", parents=[sub_common])
+    adr_parser.set_defaults(_post_validate="never")
     adr_subparsers = adr_parser.add_subparsers(
         dest="adr_command",
         title="Subcommands",
         metavar="<subcommand>",
     )
     adr_add_parser = adr_subparsers.add_parser("add", help="Create an ADR file", parents=[sub_common])
+    adr_add_parser.set_defaults(_post_validate="quick")
     add_adr_add_arguments(adr_add_parser)
-    adr_subparsers.add_parser("list", help="List ADRs", parents=[sub_common])
+    adr_list_parser = adr_subparsers.add_parser("list", help="List ADRs", parents=[sub_common])
+    adr_list_parser.set_defaults(_post_validate="never")
 
     dr_parser = subparsers.add_parser("dr", help="Manage Decision Register entries", parents=[sub_common])
+    dr_parser.set_defaults(_post_validate="never")
     dr_subparsers = dr_parser.add_subparsers(
         dest="dr_command",
         title="Subcommands",
         metavar="<subcommand>",
     )
     dr_add_parser = dr_subparsers.add_parser("add", help="Create a DR file", parents=[sub_common])
+    dr_add_parser.set_defaults(_post_validate="quick")
     add_dr_add_arguments(dr_add_parser)
 
     fdr_parser = subparsers.add_parser("fdr", help="Manage Feature Decision Records", parents=[sub_common])
+    fdr_parser.set_defaults(_post_validate="never")
     fdr_subparsers = fdr_parser.add_subparsers(
         dest="fdr_command",
         title="Subcommands",
         metavar="<subcommand>",
     )
     fdr_add_parser = fdr_subparsers.add_parser("add", help="Create an FDR file", parents=[sub_common])
+    fdr_add_parser.set_defaults(_post_validate="quick")
     add_fdr_add_arguments(fdr_add_parser)
 
     backlog_parser = subparsers.add_parser("backlog", help="Manage issue backlog", parents=[sub_common])
+    backlog_parser.set_defaults(_post_validate="never")
     backlog_subparsers = backlog_parser.add_subparsers(
         dest="backlog_command",
         title="Subcommands",
         metavar="<subcommand>",
     )
     backlog_add_parser = backlog_subparsers.add_parser("add", help="Create a backlog entry", parents=[sub_common])
+    backlog_add_parser.set_defaults(_post_validate="quick")
     backlog_add_parser.add_argument(
         "--type",
         dest="issue_type",
@@ -450,6 +500,7 @@ def build_parser() -> argparse.ArgumentParser:
     backlog_add_parser.add_argument("--impact", default="", help="Impact summary")
     backlog_add_parser.add_argument("--workaround", default="", help="Workaround summary")
     backlog_list_parser = backlog_subparsers.add_parser("list", help="List backlog entries", parents=[sub_common])
+    backlog_list_parser.set_defaults(_post_validate="never")
     backlog_list_parser.add_argument("--severity", help="Filter by severity (P0..P4)")
     backlog_list_parser.add_argument("--category", help="Filter by category (bugs|wildcards|work-items)")
     backlog_list_parser.add_argument(
@@ -458,22 +509,28 @@ def build_parser() -> argparse.ArgumentParser:
     backlog_triage_parser = backlog_subparsers.add_parser(
         "triage", help="Show or create triage analysis", parents=[sub_common]
     )
+    backlog_triage_parser.set_defaults(_post_validate="quick")
     backlog_triage_parser.add_argument("--issue", dest="issue_id", required=True, help="Issue id (e.g. BUG-P1-...)")
     backlog_assign_parser = backlog_subparsers.add_parser(
         "assign", help="Assign a backlog issue to a sprint", parents=[sub_common]
     )
+    backlog_assign_parser.set_defaults(_post_validate="quick")
     backlog_assign_parser.add_argument("--issue", dest="issue_id", required=True, help="Issue id (e.g. BUG-P1-...)")
     backlog_assign_parser.add_argument("--sprint", default="current", help="current|next|SPRINT-... (default: current)")
-    backlog_subparsers.add_parser("rubric", help="Show severity rubric", parents=[sub_common])
-    backlog_subparsers.add_parser("stats", help="Show backlog statistics", parents=[sub_common])
+    backlog_rubric_parser = backlog_subparsers.add_parser("rubric", help="Show severity rubric", parents=[sub_common])
+    backlog_rubric_parser.set_defaults(_post_validate="never")
+    backlog_stats_parser = backlog_subparsers.add_parser("stats", help="Show backlog statistics", parents=[sub_common])
+    backlog_stats_parser.set_defaults(_post_validate="never")
 
     parking_parser = subparsers.add_parser("parking", help="Manage parking lot items", parents=[sub_common])
+    parking_parser.set_defaults(_post_validate="never")
     parking_subparsers = parking_parser.add_subparsers(
         dest="parking_command",
         title="Subcommands",
         metavar="<subcommand>",
     )
     parking_add_parser = parking_subparsers.add_parser("add", help="Create a parking lot item", parents=[sub_common])
+    parking_add_parser.set_defaults(_post_validate="quick")
     parking_add_parser.add_argument(
         "--type",
         dest="parking_type",
@@ -487,6 +544,7 @@ def build_parser() -> argparse.ArgumentParser:
     parking_add_parser.add_argument("--tags", default="", help="Comma-separated tags")
 
     parking_list_parser = parking_subparsers.add_parser("list", help="List parking lot items", parents=[sub_common])
+    parking_list_parser.set_defaults(_post_validate="never")
     parking_list_parser.add_argument(
         "--category",
         choices=["features", "technical-debt", "research", "external-requests"],
@@ -496,11 +554,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--format", choices=["table", "json"], default="table", help="Output format (default: table)"
     )
 
-    parking_subparsers.add_parser("review", help="Review parking lot items", parents=[sub_common])
+    parking_review_parser = parking_subparsers.add_parser("review", help="Review parking lot items", parents=[sub_common])
+    parking_review_parser.set_defaults(_post_validate="quick")
 
     parking_promote_parser = parking_subparsers.add_parser(
         "promote", help="Promote item to roadmap", parents=[sub_common]
     )
+    parking_promote_parser.set_defaults(_post_validate="quick")
     parking_promote_parser.add_argument("--item", required=True, help="Item id (e.g. FEAT-...)")
     parking_promote_parser.add_argument(
         "--target",
@@ -510,6 +570,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     process_parser = subparsers.add_parser("process", help="Manage process templates/playbooks", parents=[sub_common])
+    process_parser.set_defaults(_post_validate="never")
     process_subparsers = process_parser.add_subparsers(
         dest="process_command",
         title="Subcommands",
@@ -520,17 +581,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Refresh seeded session templates and playbooks",
         parents=[sub_common],
     )
+    process_refresh.set_defaults(_post_validate="quick")
     process_refresh.add_argument("--templates", action="store_true", help="Refresh session templates only")
     process_refresh.add_argument("--playbooks", action="store_true", help="Refresh playbooks only")
     process_refresh.add_argument("--force", action="store_true", help="Overwrite modified seed-owned files")
 
     question_parser = subparsers.add_parser("question", help="Manage operator questions", parents=[sub_common])
+    question_parser.set_defaults(_post_validate="never")
     question_subparsers = question_parser.add_subparsers(
         dest="question_command",
         title="Subcommands",
         metavar="<subcommand>",
     )
     question_add = question_subparsers.add_parser("add", help="Add a question for the operator", parents=[sub_common])
+    question_add.set_defaults(_post_validate="quick")
     question_add.add_argument("--title", required=True, help="Question title")
     question_add.add_argument("--severity", required=True, help="blocking|non-blocking")
     question_add.add_argument(
@@ -547,38 +611,48 @@ def build_parser() -> argparse.ArgumentParser:
     question_add.add_argument("--body", default="", help="Question body/details")
 
     question_list = question_subparsers.add_parser("list", help="List questions", parents=[sub_common])
+    question_list.set_defaults(_post_validate="never")
     question_list.add_argument("--status", default="open", help="open|answered|closed|all (default: open)")
     question_list.add_argument("--format", choices=["table", "json"], default="table", help="Output format")
 
     question_show = question_subparsers.add_parser("show", help="Show a question", parents=[sub_common])
+    question_show.set_defaults(_post_validate="never")
     question_show.add_argument("--id", required=True, help="Question id (e.g. Q-0001)")
 
     question_answer = question_subparsers.add_parser("answer", help="Record an answer", parents=[sub_common])
+    question_answer.set_defaults(_post_validate="quick")
     question_answer.add_argument("--id", required=True, help="Question id (e.g. Q-0001)")
     question_answer.add_argument("--answer", required=True, help="Answer text")
     question_answer.add_argument("--by", help="Answerer handle (e.g. @user)")
 
     question_close = question_subparsers.add_parser("close", help="Close a question", parents=[sub_common])
+    question_close.set_defaults(_post_validate="quick")
     question_close.add_argument("--id", required=True, help="Question id (e.g. Q-0001)")
     question_close.add_argument("--resolution", required=True, help="answered|not-needed|superseded")
 
     roadmap_parser = subparsers.add_parser("roadmap", help="Manage the project roadmap", parents=[sub_common])
+    roadmap_parser.set_defaults(_post_validate="never")
     roadmap_subparsers = roadmap_parser.add_subparsers(
         dest="roadmap_command",
         title="Subcommands",
         metavar="<subcommand>",
     )
-    roadmap_subparsers.add_parser("show", help="Show roadmap now/next/later", parents=[sub_common])
-    roadmap_subparsers.add_parser("create", help="Create roadmap template", parents=[sub_common])
-    roadmap_subparsers.add_parser("validate", help="Validate roadmap links", parents=[sub_common])
+    roadmap_show_parser = roadmap_subparsers.add_parser("show", help="Show roadmap now/next/later", parents=[sub_common])
+    roadmap_show_parser.set_defaults(_post_validate="never")
+    roadmap_create_parser = roadmap_subparsers.add_parser("create", help="Create roadmap template", parents=[sub_common])
+    roadmap_create_parser.set_defaults(_post_validate="quick")
+    roadmap_validate_parser = roadmap_subparsers.add_parser("validate", help="Validate roadmap links", parents=[sub_common])
+    roadmap_validate_parser.set_defaults(_post_validate="never")
 
     release_parser = subparsers.add_parser("release", help="Manage project releases", parents=[sub_common])
+    release_parser.set_defaults(_post_validate="never")
     release_subparsers = release_parser.add_subparsers(
         dest="release_command",
         title="Subcommands",
         metavar="<subcommand>",
     )
     release_plan_parser = release_subparsers.add_parser("plan", help="Create a release plan", parents=[sub_common])
+    release_plan_parser.set_defaults(_post_validate="quick")
     release_plan_parser.add_argument("--version", help="Release version (vX.Y.Z or 'next')")
     release_plan_parser.add_argument("--activate", action="store_true", help="Activate this release as current")
     release_plan_parser.add_argument("--bump", choices=["patch", "minor", "major"], default="patch")
@@ -586,22 +660,29 @@ def build_parser() -> argparse.ArgumentParser:
     release_plan_parser.add_argument("--start-sprint", help="Starting sprint id (SPRINT-...)")
     release_plan_parser.add_argument("--sprint-ids", help="Comma-separated sprint ids (overrides --sprints)")
     release_activate = release_subparsers.add_parser("activate", help="Set the current release", parents=[sub_common])
+    release_activate.set_defaults(_post_validate="quick")
     release_activate.add_argument("--release", required=True, help="Release version (vX.Y.Z)")
-    release_subparsers.add_parser("clear", help="Clear the current release pointer", parents=[sub_common])
-    release_subparsers.add_parser("list", help="List release folders", parents=[sub_common])
+    release_clear_parser = release_subparsers.add_parser("clear", help="Clear the current release pointer", parents=[sub_common])
+    release_clear_parser.set_defaults(_post_validate="quick")
+    release_list_parser = release_subparsers.add_parser("list", help="List release folders", parents=[sub_common])
+    release_list_parser.set_defaults(_post_validate="never")
     release_status = release_subparsers.add_parser("status", help="Show release status", parents=[sub_common])
+    release_status.set_defaults(_post_validate="never")
     release_status.add_argument("--release", help="Release version (vX.Y.Z or 'current'; default: current)")
     release_show = release_subparsers.add_parser("show", help="Print release plan + computed status", parents=[sub_common])
+    release_show.set_defaults(_post_validate="never")
     release_show.add_argument("--release", help="Release version (vX.Y.Z or 'current'; default: current)")
     release_progress = release_subparsers.add_parser(
         "progress", help="Regenerate releases/<release>/progress.md", parents=[sub_common]
     )
+    release_progress.set_defaults(_post_validate="never")
     release_progress.add_argument("--release", help="Release version (vX.Y.Z or 'current'; default: current)")
     release_draft = release_subparsers.add_parser(
         "draft",
         help="Draft a release composition (local-only; creates no files)",
         parents=[sub_common],
     )
+    release_draft.set_defaults(_post_validate="never")
     release_draft.add_argument("--version", default="next", help="Release version (vX.Y.Z or 'next')")
     release_draft.add_argument("--sprints", type=int, default=3, help="Number of planned sprints (default: 3)")
     release_draft.add_argument(
@@ -614,6 +695,7 @@ def build_parser() -> argparse.ArgumentParser:
     release_add_feature = release_subparsers.add_parser(
         "add-feature", help="Assign a feature to a release", parents=[sub_common]
     )
+    release_add_feature.set_defaults(_post_validate="quick")
     release_add_feature.add_argument("--release", required=True, help="Release version (vX.Y.Z)")
     release_add_feature.add_argument("--feature", required=True, help="Feature name")
     release_add_feature.add_argument("--slot", required=True, type=int, help="Sprint slot number (1..planned_sprints)")
@@ -635,47 +717,57 @@ def build_parser() -> argparse.ArgumentParser:
     release_suggest = release_subparsers.add_parser(
         "suggest", help="Suggest features for a release", parents=[sub_common]
     )
+    release_suggest.set_defaults(_post_validate="never")
     release_suggest.add_argument("--version", required=True, help="Release version (vX.Y.Z)")
     release_close = release_subparsers.add_parser("close", help="Close a release", parents=[sub_common])
+    release_close.set_defaults(_post_validate="quick")
     release_close.add_argument("--version", required=True, help="Release version (vX.Y.Z)")
     release_migrate = release_subparsers.add_parser(
         "migrate-slot-format",
         help="Migrate legacy release slot plans to strict slot sections",
         parents=[sub_common],
     )
+    release_migrate.set_defaults(_post_validate="quick")
     release_migrate.add_argument("--release", required=True, help="Release version (vX.Y.Z)")
     release_migrate.add_argument("--diff", action="store_true", help="Print unified diff only")
     release_migrate.add_argument("--write-back", action="store_true", help="Write changes to plan.md and validate")
 
     daily_parser = subparsers.add_parser("daily", help="Manage daily status cadence", parents=[sub_common])
+    daily_parser.set_defaults(_post_validate="never")
     daily_subparsers = daily_parser.add_subparsers(
         dest="daily_command",
         title="Subcommands",
         metavar="<subcommand>",
     )
     daily_generate = daily_subparsers.add_parser("generate", help="Generate daily status", parents=[sub_common])
+    daily_generate.set_defaults(_post_validate="quick")
     daily_generate.add_argument("--force", action="store_true", help="Generate even on weekends or overwrite")
     daily_check = daily_subparsers.add_parser("check", help="Check daily status freshness", parents=[sub_common])
+    daily_check.set_defaults(_post_validate="never")
     daily_check.add_argument("--verbose", action="store_true", help="Verbose output")
 
     validate_parser = subparsers.add_parser("validate", help="Validate handbook content", parents=[sub_common])
+    validate_parser.set_defaults(_post_validate="never")
     validate_parser.add_argument("--quick", action="store_true", help="Skip heavyweight checks")
     validate_parser.add_argument(
         "--silent-success", action="store_true", help="Suppress output when there are no issues"
     )
 
     pre_exec_parser = subparsers.add_parser("pre-exec", help="Pre-execution lint/audit gate", parents=[sub_common])
+    pre_exec_parser.set_defaults(_post_validate="never")
     pre_exec_subparsers = pre_exec_parser.add_subparsers(
         dest="pre_exec_command",
         title="Subcommands",
         metavar="<subcommand>",
     )
-    pre_exec_subparsers.add_parser("lint", help="Strict task-doc lint gate", parents=[sub_common])
+    pre_exec_lint = pre_exec_subparsers.add_parser("lint", help="Strict task-doc lint gate", parents=[sub_common])
+    pre_exec_lint.set_defaults(_post_validate="never")
     pre_exec_audit = pre_exec_subparsers.add_parser(
         "audit",
         help="Capture evidence bundle + lint",
         parents=[sub_common],
     )
+    pre_exec_audit.set_defaults(_post_validate="never")
     pre_exec_audit.add_argument("--sprint", help="Override sprint id (default: from sprints/current/plan.md)")
     pre_exec_audit.add_argument("--date", help="Override evidence date (default: today YYYY-MM-DD)")
     pre_exec_audit.add_argument("--evidence-dir", help="Override evidence directory path")
@@ -720,6 +812,7 @@ def main(argv: list[str] | None = None) -> int:
             no_post_hook=bool(getattr(args, "no_post_hook", False)),
             no_history=bool(getattr(args, "no_history", False)),
             no_validate=bool(getattr(args, "no_validate", False)),
+            post_validate_mode=str(getattr(args, "_post_validate", "quick")),
             env=os.environ,
         )
 
@@ -1721,6 +1814,7 @@ def main(argv: list[str] | None = None) -> int:
             no_post_hook=bool(getattr(args, "no_post_hook", False)),
             no_history=bool(getattr(args, "no_history", False)),
             no_validate=bool(getattr(args, "no_validate", False)),
+            post_validate_mode=str(getattr(args, "_post_validate", "quick")),
             env=os.environ,
         )
         if plan.run_validation and ctx is None:
@@ -1739,5 +1833,6 @@ def main(argv: list[str] | None = None) -> int:
         no_post_hook=bool(getattr(args, "no_post_hook", False)),
         no_history=bool(getattr(args, "no_history", False)),
         no_validate=bool(getattr(args, "no_validate", False)),
+        post_validate_mode=str(getattr(args, "_post_validate", "quick")),
         env=os.environ,
     )

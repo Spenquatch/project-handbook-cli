@@ -24,30 +24,37 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
     (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
-def _write_legacy_like_package_json(ph_root: Path) -> None:
-    (ph_root / "package.json").write_text(
-        '{\n  "name": "project-handbook",\n  "version": "0.0.0"\n}\n',
-        encoding="utf-8",
-    )
-
-
-def test_hooks_install_emits_make_output_and_exit_code(tmp_path: Path) -> None:
+def test_sprint_plan_autoscaffolds_sprint_gate_and_validates(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
-    _write_legacy_like_package_json(tmp_path)
-    (tmp_path / ".git" / "hooks").mkdir(parents=True, exist_ok=True)
-
-    # Force quick validation to report errors.
-    (tmp_path / ".project-handbook" / "INVALID.md").write_text("# Missing front matter\n", encoding="utf-8")
 
     result = subprocess.run(
-        ["ph", "--root", str(tmp_path), "hooks", "install"],
+        ["ph", "--root", str(tmp_path), "sprint", "plan"],
         capture_output=True,
         text=True,
     )
     assert result.returncode == 0
 
-    resolved = tmp_path.resolve()
-    expected_prefix = f"\n> project-handbook@0.0.0 ph {resolved}\n> ph hooks install\n\nGit hooks installed!\n"
-    assert result.stdout.startswith(expected_prefix)
-    assert "validation:" not in result.stdout
-    assert not (tmp_path / ".project-handbook" / "status" / "validation.json").exists()
+    current_link = tmp_path / ".project-handbook" / "sprints" / "current"
+    assert current_link.exists()
+    sprint_dir = current_link.resolve()
+    tasks_dir = sprint_dir / "tasks"
+    assert tasks_dir.exists()
+
+    gate_tasks = []
+    for task_dir in tasks_dir.iterdir():
+        if not task_dir.is_dir():
+            continue
+        task_yaml = task_dir / "task.yaml"
+        if not task_yaml.exists():
+            continue
+        if "task_type: sprint-gate" in task_yaml.read_text(encoding="utf-8"):
+            gate_tasks.append(task_dir)
+
+    assert gate_tasks, "Expected sprint plan to scaffold at least one sprint-gate task"
+
+    validate = subprocess.run(
+        ["ph", "--root", str(tmp_path), "validate", "--quick"],
+        capture_output=True,
+        text=True,
+    )
+    assert validate.returncode == 0

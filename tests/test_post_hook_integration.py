@@ -48,6 +48,18 @@ def test_no_validate_flag_skips_auto_validation(tmp_path: Path) -> None:
     assert not (tmp_path / ".project-handbook" / "status" / "validation.json").exists()
 
 
+def test_read_only_commands_do_not_run_post_hook_validation(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    result = subprocess.run(
+        ["ph", "--root", str(tmp_path), "feature", "list"],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert (tmp_path / ".project-handbook" / "history.log").exists()
+    assert not (tmp_path / ".project-handbook" / "status" / "validation.json").exists()
+
+
 def test_env_var_skips_post_hook_entirely(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
     env = dict(os.environ)

@@ -119,12 +119,12 @@ def test_sprint_capacity_stdout_matches_make_preamble_and_bounded_output(tmp_pat
 
     task_root = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
 
-    task_1 = task_root / "TASK-001-ci"
+    task_1 = task_root / "TASK-002-ci"
     task_1.mkdir(parents=True, exist_ok=True)
     (task_1 / "task.yaml").write_text(
         "\n".join(
             [
-                "id: TASK-001",
+                "id: TASK-002",
                 "title: CI evidence",
                 "lane: ci/evidence",
                 "status: done",
@@ -136,33 +136,16 @@ def test_sprint_capacity_stdout_matches_make_preamble_and_bounded_output(tmp_pat
         encoding="utf-8",
     )
 
-    task_2 = task_root / "TASK-002-inprog"
+    task_2 = task_root / "TASK-003-inprog"
     task_2.mkdir(parents=True, exist_ok=True)
     (task_2 / "task.yaml").write_text(
         "\n".join(
             [
-                "id: TASK-002",
+                "id: TASK-003",
                 "title: Demo integration",
                 "lane: integration/v2-demo",
                 "status: doing",
                 "story_points: 3",
-                "depends_on: [TASK-001]",
-            ]
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-
-    task_3 = task_root / "TASK-003-blocked"
-    task_3.mkdir(parents=True, exist_ok=True)
-    (task_3 / "task.yaml").write_text(
-        "\n".join(
-            [
-                "id: TASK-003",
-                "title: Blocked integration",
-                "lane: integration/v2-demo",
-                "status: blocked",
-                "story_points: 2",
                 "depends_on: [TASK-002]",
             ]
         )
@@ -170,17 +153,34 @@ def test_sprint_capacity_stdout_matches_make_preamble_and_bounded_output(tmp_pat
         encoding="utf-8",
     )
 
-    task_4 = task_root / "TASK-004-ui"
+    task_3 = task_root / "TASK-004-blocked"
+    task_3.mkdir(parents=True, exist_ok=True)
+    (task_3 / "task.yaml").write_text(
+        "\n".join(
+            [
+                "id: TASK-004",
+                "title: Blocked integration",
+                "lane: integration/v2-demo",
+                "status: blocked",
+                "story_points: 2",
+                "depends_on: [TASK-003]",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    task_4 = task_root / "TASK-005-ui"
     task_4.mkdir(parents=True, exist_ok=True)
     (task_4 / "task.yaml").write_text(
         "\n".join(
             [
-                "id: TASK-004",
+                "id: TASK-005",
                 "title: UI harness",
                 "lane: ui/twenty-harness",
                 "status: done",
                 "story_points: 1",
-                "depends_on: [TASK-001]",
+                "depends_on: [TASK-002]",
             ]
         )
         + "\n",
@@ -196,14 +196,15 @@ def test_sprint_capacity_stdout_matches_make_preamble_and_bounded_output(tmp_pat
         "\n📊 SPRINT METRICS (BOUNDED)\n" + "=" * 80 + "\n"
         "\n🎯 Sprint: SPRINT-2099-01-01\n" + "-" * 40 + "\n"
         "\nPoints by status (telemetry; not a scope cap):\n"
-        "Total Points:      11\n"
-        "Completed:         6 (54.5%)\n"
-        "In Progress:       3 (27.3%)\n"
-        "Blocked:           2 (18.2%)\n"
+        "Total Points:      14\n"
+        "Completed:         6 (42.9%)\n"
+        "In Progress:       3 (21.4%)\n"
+        "Blocked:           2 (14.3%)\n"
         "\n🚨 Backlog Pressure (P0/P1 count): 2\n"
         "\n🧵 Lanes:\n"
         f"- {'ci/evidence':24} {5:3d}/{5:3d} pts done (blocked 0)\n"
         f"- {'integration/v2-demo':24} {0:3d}/{5:3d} pts done (blocked 2)\n"
+        f"- {'ops/gates':24} {0:3d}/{3:3d} pts done (blocked 0)\n"
         f"- {'ui/twenty-harness':24} {1:3d}/{1:3d} pts done (blocked 0)\n"
         "\n" + "=" * 80 + "\n"
     )

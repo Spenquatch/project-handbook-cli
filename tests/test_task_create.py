@@ -80,7 +80,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
     assert result.returncode == 0
 
     resolved = tmp_path.resolve()
-    task_dir = resolved / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / "TASK-001-t"
+    task_dir = resolved / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks" / "TASK-002-t"
 
     expected_stdout = (
         "\n"
@@ -88,7 +88,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "> ph task create --title T --feature f --decision ADR-0000 --points 5 --owner @a --prio P1 "
         "--lane ops --session task-execution\n"
         "\n"
-        "✅ Created task directory: TASK-001-t\n"
+        "✅ Created task directory: TASK-002-t\n"
         f"📁 Location: {task_dir}\n"
         "📝 Next steps:\n"
         f"   1. Edit {task_dir}/steps.md with implementation details\n"
@@ -117,7 +117,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
     assert expected_files.issubset({p.name for p in task_dir.iterdir()})
 
     assert (task_dir / "task.yaml").read_text(encoding="utf-8") == (
-        "id: TASK-001\n"
+        "id: TASK-002\n"
         "title: T\n"
         "feature: f\n"
         "lane: ops\n"
@@ -141,17 +141,17 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
 
     assert (task_dir / "README.md").read_text(encoding="utf-8") == (
         "---\n"
-        "title: Task TASK-001 - T\n"
+        "title: Task TASK-002 - T\n"
         "type: task\n"
         "date: 2099-01-01\n"
-        "task_id: TASK-001\n"
+        "task_id: TASK-002\n"
         "feature: f\n"
         "session: task-execution\n"
         "tags: [task, f]\n"
         "links: [../../../../../features/f/overview.md]\n"
         "---\n"
         "\n"
-        "# Task TASK-001: T\n"
+        "# Task TASK-002: T\n"
         "\n"
         "## Overview\n"
         "**Feature**: [f](../../../../../features/f/overview.md)\n"
@@ -164,12 +164,12 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "**Release Gate**: `false`\n"
         "\n"
         "## Agent Navigation Rules\n"
-        "1. **Start work**: Run `ph task status --id TASK-001 --status doing`\n"
+        "1. **Start work**: Run `ph task status --id TASK-002 --status doing`\n"
         "2. **Read first**: `steps.md` for implementation sequence\n"
         "3. **Use commands**: Copy-paste from `commands.md`\n"
         "4. **Validate progress**: Follow `validation.md` guidelines\n"
         "5. **Check completion**: Use `checklist.md` before marking done\n"
-        '6. **Update status**: Run `ph task status --id TASK-001 --status review` when ready for review\n'
+        '6. **Update status**: Run `ph task status --id TASK-002 --status review` when ready for review\n'
         "\n"
         "## Context & Background\n"
         "This task implements the `ADR-0000` decision for the [f] feature.\n"
@@ -177,8 +177,8 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "## Quick Start\n"
         "```bash\n"
         "# Update status when starting\n"
-        "cd .project-handbook/sprints/current/tasks/TASK-001-t/\n"
-        "ph task status --id TASK-001 --status doing\n"
+        "cd .project-handbook/sprints/current/tasks/TASK-002-t/\n"
+        "ph task status --id TASK-002 --status doing\n"
         "\n"
         "# Follow implementation\n"
         "cat steps.md              # Read implementation steps\n"
@@ -198,7 +198,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "title: T - Completion Checklist\n"
         "type: checklist\n"
         "date: 2099-01-01\n"
-        "task_id: TASK-001\n"
+        "task_id: TASK-002\n"
         "tags: [checklist]\n"
         "links: []\n"
         "---\n"
@@ -220,12 +220,12 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "- [ ] Run `ph validate --quick`\n"
         "- [ ] Update daily status with progress/blockers\n"
         "- [ ] Gather artifacts (screenshots, logs, PR links)\n"
-        "- [ ] Set status to `review` via `ph task status --id TASK-001 --status review`\n"
+        "- [ ] Set status to `review` via `ph task status --id TASK-002 --status review`\n"
         "\n"
         "## After Completion\n"
         "- [ ] Peer review approved and merged\n"
         "- [ ] Update owning feature docs/changelog if needed\n"
-        "- [ ] Move status to `done` with `ph task status --id TASK-001 --status done`\n"
+        "- [ ] Move status to `done` with `ph task status --id TASK-002 --status done`\n"
         "- [ ] Capture learnings for the sprint retrospective\n"
     )
 
@@ -234,7 +234,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "title: T - Commands\n"
         "type: commands\n"
         "date: 2099-01-01\n"
-        "task_id: TASK-001\n"
+        "task_id: TASK-002\n"
         "tags: [commands]\n"
         "links: []\n"
         "---\n"
@@ -244,14 +244,14 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "## Task Status Updates\n"
         "```bash\n"
         "# When starting work\n"
-        "cd .project-handbook/sprints/current/tasks/TASK-001-t/\n"
-        "ph task status --id TASK-001 --status doing\n"
+        "cd .project-handbook/sprints/current/tasks/TASK-002-t/\n"
+        "ph task status --id TASK-002 --status doing\n"
         "\n"
         "# When ready for review\n"
-        "ph task status --id TASK-001 --status review\n"
+        "ph task status --id TASK-002 --status review\n"
         "\n"
         "# When complete\n"
-        "ph task status --id TASK-001 --status done\n"
+        "ph task status --id TASK-002 --status done\n"
         "```\n"
         "\n"
         "## Evidence Paths (Avoid Relative Outputs)\n"
@@ -259,7 +259,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "wrong place. Prefer absolute evidence paths:\n"
         "```bash\n"
         "PH_ROOT=\"$(git rev-parse --show-toplevel)\"\n"
-        "EVID_REL=\".project-handbook/status/evidence/TASK-001\"\n"
+        "EVID_REL=\".project-handbook/status/evidence/TASK-002\"\n"
         "EVID_ABS=\"$PH_ROOT/$EVID_REL\"\n"
         "mkdir -p \"$EVID_ABS\"\n"
         "\n"
@@ -293,13 +293,13 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "# Commit with task reference\n"
         'git commit -m "feat: t\n'
         "\n"
-        "Implements TASK-001 for f feature.\n"
+        "Implements TASK-002 for f feature.\n"
         "Part of sprint: SPRINT-2099-01-01\n"
         "\n"
-        'Refs: #TASK-001"\n'
+        'Refs: #TASK-002"\n'
         "\n"
         "# Link PR to task (in PR description)\n"
-        "# Closes #TASK-001\n"
+        "# Closes #TASK-002\n"
         "# Implements ADR-0000\n"
         "```\n"
         "\n"
@@ -315,7 +315,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "title: T - Validation Guide\n"
         "type: validation\n"
         "date: 2099-01-01\n"
-        "task_id: TASK-001\n"
+        "task_id: TASK-002\n"
         "tags: [validation]\n"
         "links: []\n"
         "---\n"
@@ -334,7 +334,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "Before the task is marked `review`, add:\n"
         "- exact copy/paste command(s),\n"
         "- exact pass/fail success criteria,\n"
-        "- exact evidence file list (under `.project-handbook/status/evidence/TASK-001/`).\n"
+        "- exact evidence file list (under `.project-handbook/status/evidence/TASK-002/`).\n"
         "\n"
         "## Sign-off\n"
         "- [ ] All validation steps completed\n"
@@ -347,7 +347,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "title: T - References\n"
         "type: references\n"
         "date: 2099-01-01\n"
-        "task_id: TASK-001\n"
+        "task_id: TASK-002\n"
         "tags: [references]\n"
         "links: []\n"
         "---\n"
@@ -445,7 +445,9 @@ def test_task_create_guardrail_rejects_system_scoped_lanes_in_project_scope(tmp_
     )
 
     tasks_dir = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
-    assert not any(p.is_dir() for p in tasks_dir.iterdir())
+    task_dirs = [p for p in tasks_dir.iterdir() if p.is_dir()]
+    assert len(task_dirs) == 1
+    assert "task_type: sprint-gate" in (task_dirs[0] / "task.yaml").read_text(encoding="utf-8")
 
 
 def _write_minimal_dr_entry(*, ph_root: Path, dr_id: str, feature: str | None = None) -> None:

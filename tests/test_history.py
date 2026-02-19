@@ -50,7 +50,7 @@ def test_history_appends_default_entry(tmp_path: Path) -> None:
 
 def test_no_history_flag_skips_logging(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
-    result = subprocess.run(["ph", "--root", str(tmp_path), "--no-history"], capture_output=True, text=True)
+    result = subprocess.run(["ph", "--root", str(tmp_path), "--no-history", "doctor"], capture_output=True, text=True)
     assert result.returncode == 0
     assert not _history_path(tmp_path).exists()
     assert _validation_path(tmp_path).exists()

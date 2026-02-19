@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.14 (2026-02-19)
+
+- Post-hook validation now runs `validate --quick` only for selected mutating commands/subcommands (and never for read-only/reporting commands).
+- Post-hook validation output is now errors-only and written to stderr (stdout stays clean for JSON/table output).
+- `ph sprint plan` now auto-scaffolds a required `task_type: sprint-gate` task for new/forced-regenerated sprints (gate exists Day 0; expected to close last).
+
 ## v0.0.13 (2026-02-19)
 
 - Adds `.project-handbook/releases/current.txt` as a tooling-friendly pointer to the active release version (symlink remains).

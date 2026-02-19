@@ -25,7 +25,7 @@ Tip: most workflows print next-step guidance after they run.
 
 TOPICS: dict[str, str] = {
     "sprint": """Sprint workflow commands
-  ph sprint plan      - Create a new sprint skeleton (auto-updates sprints/current)
+  ph sprint plan      - Create a new sprint skeleton (auto-updates sprints/current; scaffolds a sprint gate)
   ph sprint open      - Switch sprints/current to an existing sprint
   ph sprint status    - Show day-of-sprint, health, and next suggested task
   ph sprint tasks     - List every task under the active sprint
@@ -33,6 +33,9 @@ TOPICS: dict[str, str] = {
   ph sprint close     - Produce retrospective, archive sprint, summarize velocity
   ph sprint capacity  - Display sprint telemetry (points + lanes; not a scope cap)
   ph sprint archive   - Manually archive a specific sprint (reruns only)
+
+Notes:
+  - Sprint gate must exist from Day 0; it is expected to close last.
 """,
     "task": (
         "Task workflow commands\n"

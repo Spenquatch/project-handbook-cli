@@ -38,8 +38,12 @@ def test_sprint_plan_creates_skeleton_and_prints_project_hints(tmp_path: Path) -
     assert result.returncode == 0
     sprint_dir = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01"
     plan_file = sprint_dir / "plan.md"
+    gate_dir = sprint_dir / "tasks" / "TASK-001-sprint-gate-sprint-2099-01-01"
     assert result.stdout.splitlines() == [
         f"Created sprint plan: {plan_file}",
+        "✅ Sprint gate task scaffolded (must exist Day 0; expected to close last).",
+        f"  - Fill exit criteria + evidence in: {gate_dir / 'validation.md'}",
+        "  - Pre-exec lint will fail until Sprint Goal/Exit criteria/evidence are explicit.",
         "Sprint structure seeded:",
         f"  📁 {sprint_dir}/",
         f"  📁 {sprint_dir}/tasks/ (ready for task creation)",

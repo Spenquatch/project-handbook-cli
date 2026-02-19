@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
@@ -24,6 +25,7 @@ def plan_post_command_hook(
     no_post_hook: bool,
     no_history: bool,
     no_validate: bool,
+    post_validate_mode: str = "quick",
     env: Mapping[str, str] | None = None,
 ) -> PostCommandHookPlan:
     env = env or os.environ
@@ -48,6 +50,9 @@ def plan_post_command_hook(
     if no_validate or command in {"validate", "reset", "reset-smoke"}:
         return PostCommandHookPlan(append_history=append, run_validation=False)
 
+    if str(post_validate_mode).strip().lower() == "never":
+        return PostCommandHookPlan(append_history=append, run_validation=False)
+
     return PostCommandHookPlan(append_history=append, run_validation=True)
 
 
@@ -61,6 +66,7 @@ def run_post_command_hook(
     no_post_hook: bool,
     no_history: bool,
     no_validate: bool,
+    post_validate_mode: str = "quick",
     env: Mapping[str, str] | None = None,
     now: datetime | None = None,
 ) -> int:
@@ -70,6 +76,7 @@ def run_post_command_hook(
         no_post_hook=no_post_hook,
         no_history=no_history,
         no_validate=no_validate,
+        post_validate_mode=post_validate_mode,
         env=env,
     )
 
@@ -92,7 +99,9 @@ def run_post_command_hook(
         quick=True,
         silent_success=True,
     )
-    if message and command != "migrate":
-        print(message, end="")
+    if validate_exit != 0 and message and command != "migrate":
+        msg = " ".join(str(message).split())
+        if msg:
+            sys.stderr.write(f"Post-hook validate --quick failed (non-blocking): {msg}\n")
 
     return exit_code

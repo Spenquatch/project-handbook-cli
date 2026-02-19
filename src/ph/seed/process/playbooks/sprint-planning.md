@@ -37,7 +37,14 @@ ph release show
 ph sprint plan
 ```
 
-### 3) Create the required sprint gate task (at least one)
+### 3) Sprint gate (required; exists from Day 0, closes last)
+
+`ph sprint plan` will scaffold a sprint gate task if one does not already exist.
+
+Fill in the sprint gate `validation.md` early (goal + exit criteria + evidence paths), but expect to mark it `done`
+at the end of the sprint once the exit criteria are met.
+
+If you need to create one manually:
 ```bash
 ph task create \
   --title "Sprint Gate: <goal>" \

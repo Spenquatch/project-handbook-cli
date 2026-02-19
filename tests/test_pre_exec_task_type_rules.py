@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -98,10 +99,26 @@ def _write_passing_sprint_gate_task(*, root: Path, task_id: str = "TASK-000") ->
     )
 
 
+def _remove_any_sprint_gate_tasks(*, root: Path) -> None:
+    tasks_dir = root / ".project-handbook" / "sprints" / "current" / "tasks"
+    if not tasks_dir.exists():
+        return
+    for task_dir in list(tasks_dir.iterdir()):
+        if not task_dir.is_dir():
+            continue
+        task_yaml = task_dir / "task.yaml"
+        if not task_yaml.exists():
+            continue
+        text = task_yaml.read_text(encoding="utf-8")
+        if "task_type: sprint-gate" in text or "session: sprint-gate" in text:
+            shutil.rmtree(task_dir)
+
+
 def test_pre_exec_lint_defaults_task_type_for_legacy_session(tmp_path: Path) -> None:
     assert _run(["ph", "init"], cwd=tmp_path).returncode == 0
     assert _run(["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "plan"], cwd=tmp_path).returncode == 0
 
+    _remove_any_sprint_gate_tasks(root=tmp_path)
     _write_passing_sprint_gate_task(root=tmp_path)
     _write_task(
         root=tmp_path,
@@ -212,6 +229,7 @@ def test_pre_exec_lint_defaults_task_type_for_legacy_research_discovery_session(
     assert _run(["ph", "init"], cwd=tmp_path).returncode == 0
     assert _run(["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "plan"], cwd=tmp_path).returncode == 0
 
+    _remove_any_sprint_gate_tasks(root=tmp_path)
     _write_passing_sprint_gate_task(root=tmp_path)
     _write_task(
         root=tmp_path,
@@ -270,6 +288,7 @@ def test_pre_exec_lint_fails_when_sprint_missing_sprint_gate_task(tmp_path: Path
     assert _run(["ph", "init"], cwd=tmp_path).returncode == 0
     assert _run(["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "plan"], cwd=tmp_path).returncode == 0
 
+    _remove_any_sprint_gate_tasks(root=tmp_path)
     _write_task(
         root=tmp_path,
         task_id="TASK-001",
