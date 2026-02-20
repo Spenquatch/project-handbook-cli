@@ -21,4 +21,6 @@ Next:
 
 - `Quick Start` for installation + initialization
 - `Concepts` for root/scope/layout/post-hooks
+- `Layout` for where files live on disk
 - `Workflows` for end-to-end usage patterns
+- `Deep Dives` for domain-specific guides (tasks, sprints, releases, decisions, validation, evidence)

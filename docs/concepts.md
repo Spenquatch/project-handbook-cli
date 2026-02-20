@@ -76,6 +76,30 @@ Some commands are designed for scripting and support machine-friendly output:
 
 When a command supports JSON output, prefer avoiding extra stdout noise (or use `--no-post-hook` during debugging).
 
+## Task taxonomy (`task_type`) and sessions
+
+`task_type` is the canonical task taxonomy field in `task.yaml`.
+
+Allowed values:
+
+- `implementation`
+- `research-discovery`
+- `feature-research-planning`
+- `task-docs-deep-dive`
+- `sprint-gate`
+
+Session templates are derived from `task_type` (for example, `task_type=implementation` uses the `task-execution` template).
+
+Legacy tasks may contain a `session:` field in `task.yaml`. That field is deprecated:
+
+- if `task_type` is present, `session` is ignored for behavior
+- mismatches between `task_type` and `session` fail validation / pre-exec
+- matches emit warnings (delete `session:`)
+
+Migration helper (current sprint only):
+
+- `ph process refresh --migrate-tasks-drop-session`
+
 ## Evidence capture
 
 `ph evidence` captures command output into a deterministic directory tree:

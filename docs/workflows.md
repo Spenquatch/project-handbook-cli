@@ -66,7 +66,7 @@ ph sprint close
 
 ## Tasks (taxonomy + gates)
 
-Prefer `--type` so the CLI sets consistent task metadata + recommended sessions.
+Prefer `--type` so the CLI sets consistent task metadata (`task_type`) and derives the session template.
 
 ```bash
 ph task create --title "Implement X" --feature foo --decision ADR-0001 --type implementation
@@ -77,6 +77,12 @@ ph task create --title "Sprint Gate: ..." --feature foo --decision ADR-0001 --ty
 Release gates:
 
 - `ph task create --gate` marks a task as a release gate (`release_gate: true`).
+
+If you upgraded to `ph` v0.0.24 and have older tasks with `session:` in `task.yaml`, migrate current sprint tasks:
+
+```bash
+ph process refresh --migrate-tasks-drop-session
+```
 
 ## Releases (draft → plan → execute → close)
 

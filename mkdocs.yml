@@ -9,6 +9,15 @@ nav:
   - Home: index.md
   - Quick Start: quickstart.md
   - Concepts: concepts.md
+  - Layout: layout.md
   - Commands: commands.md
   - Workflows: workflows.md
+  - Deep Dives:
+      - Tasks: tasks.md
+      - Sprints: sprints.md
+      - Releases: releases.md
+      - Decisions: decisions.md
+      - Process: process.md
+      - Validation: validation.md
+      - Evidence: evidence.md
   - Troubleshooting: troubleshooting.md

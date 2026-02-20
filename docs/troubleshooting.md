@@ -31,6 +31,16 @@ If you are scripting `ph` and want predictable stdout:
 - prefer commands that support `--format json`
 - during debugging, disable hooks: `--no-post-hook` (or `--no-validate`)
 
+## Validation/pre-exec errors about `session` vs `task_type`
+
+As of `ph` v0.0.24, `task_type` is canonical and `session:` in `task.yaml` is deprecated.
+
+Fix (current sprint tasks):
+
+- `ph process refresh --migrate-tasks-drop-session`
+
+If a task has an unmappable legacy `session:` value, you’ll need to edit that `task.yaml` manually to add a valid `task_type` and remove `session:`.
+
 ## Evidence capture isn’t streaming output
 
 By design, `ph evidence run` captures output to files instead of streaming to your terminal.
@@ -50,4 +60,3 @@ Fix:
 
 - `ph help` and `ph help <topic>` for workflow-specific help text
 - `ph --help` for the full CLI surface
-

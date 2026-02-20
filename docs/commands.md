@@ -20,7 +20,7 @@ Post-command behavior (defaults):
 - `ph doctor`
 - `ph help [topic]`
 - `ph init`
-- `ph process refresh`
+- `ph process refresh [--templates] [--playbooks] [--force] [--disable-system-scope-enforcement] [--migrate-tasks-drop-session]`
 
 Help topics:
 
