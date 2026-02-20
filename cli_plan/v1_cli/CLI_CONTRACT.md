@@ -453,13 +453,16 @@ Behavior:
   - If `--force` is provided: command MUST still print the same findings as warnings, then proceed with close/archival.
 
 Hints:
-- MUST print exactly:
+- MUST print the following block exactly (byte-for-byte), though additional deterministic guidance MAY be printed before it:
   - `Sprint closed! Next steps:`
   - `  1. Share the new retrospective and velocity summary`
   - `  2. Update roadmap/releases with completed scope`
   - `  3. Run 'ph status' so status/current_summary.md reflects the close-out`
   - `  4. Kick off the next sprint via 'ph sprint plan' when ready`
   - `  5. Capture any loose ends inside parking lot or backlog`
+- SHOULD also print a deterministic pre/post checklist for operators (mirrors the sprint-closing playbook).
+- MAY print: `Consider closing release: ph release close --version vX.Y.Z` when closing this sprint completes the final
+  release slot/timeline item (non-interactive; hint only).
 
 ### `ph sprint capacity [--sprint <id|current>]`
 

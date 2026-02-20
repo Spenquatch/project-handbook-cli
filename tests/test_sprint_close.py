@@ -193,6 +193,20 @@ def test_sprint_close_stdout_archive_and_retrospective_match_make_convention(tmp
         f"📦 Archived sprint {sprint_id} to {archived_dir}\n"
         f"📝 Updated: {progress_path}\n"
         "📦 Release progress refreshed for v0.6.0.\n"
+        "Deterministic sprint close checklist:\n"
+        "Pre-close (recommended):\n"
+        "- ph sprint status\n"
+        "- ph sprint burndown\n"
+        "- ph task list\n"
+        "- ph feature summary\n"
+        "- ph release status\n"
+        "- ph validate --quick\n"
+        "Optional (evidence bundle):\n"
+        "- ph pre-exec lint\n"
+        "- ph pre-exec audit\n"
+        "Post-close (recommended):\n"
+        "- ph status\n"
+        "- ph validate --quick\n"
         "Sprint closed! Next steps:\n"
         "  1. Share the new retrospective and velocity summary\n"
         "  2. Update roadmap/releases with completed scope\n"
@@ -215,6 +229,136 @@ def test_sprint_close_stdout_archive_and_retrospective_match_make_convention(tmp
     retro_text = (archived_dir / "retrospective.md").read_text(encoding="utf-8")
     assert f"date: {expected_today}\n" in retro_text
     assert _extract_completed_task_lines(retro_text) == expected_done_lines
+
+
+def test_sprint_close_prints_release_close_hint_when_last_slot_completes(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _write_package_json(tmp_path)
+    ph_data_root = tmp_path / ".project-handbook"
+
+    # Seed backlog + parking-lot so the guardrail refresh prints stable counts.
+    bug_dir = ph_data_root / "backlog" / "bugs" / "BUG-001"
+    bug_dir.mkdir(parents=True, exist_ok=True)
+    (bug_dir / "README.md").write_text(
+        "\n".join(
+            [
+                "---",
+                "title: Bug 001",
+                "severity: P1",
+                "created: 2099-01-01",
+                "---",
+                "",
+                "Body",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    parking_dir = ph_data_root / "parking-lot" / "features" / "PARK-001"
+    parking_dir.mkdir(parents=True, exist_ok=True)
+    (parking_dir / "README.md").write_text(
+        "\n".join(
+            [
+                "---",
+                "title: Parking 001",
+                "type: features",
+                "created: 2099-01-02",
+                "---",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    version = "v1.2.3"
+    release_dir = ph_data_root / "releases" / version
+    release_dir.mkdir(parents=True, exist_ok=True)
+    (release_dir / "plan.md").write_text(
+        "\n".join(
+            [
+                "---",
+                f"title: Release Plan - {version}",
+                "type: release-plan",
+                "date: 2099-01-01",
+                f"version: {version}",
+                "timeline_mode: sprint_slots",
+                "planned_sprints: 1",
+                "sprint_slots: [1]",
+                "---",
+                "",
+                f"# Release {version}",
+                "",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    sprint_id = "SPRINT-SEQ-0001"
+    sprint_dir = ph_data_root / "sprints" / "SEQ" / sprint_id
+    tasks_dir = sprint_dir / "tasks"
+    tasks_dir.mkdir(parents=True, exist_ok=True)
+    (sprint_dir / "plan.md").write_text(
+        "\n".join(
+            [
+                "---",
+                f"title: Sprint Plan - {sprint_id}",
+                "type: sprint-plan",
+                "date: 2099-01-01",
+                f"sprint: {sprint_id}",
+                "mode: bounded",
+                f"release: {version}",
+                "release_sprint_slot: 1",
+                "tags: [sprint, planning]",
+                "---",
+                "",
+                f"# Sprint Plan: {sprint_id}",
+                "",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    gate_dir = tasks_dir / "TASK-001-gate"
+    gate_dir.mkdir(parents=True, exist_ok=True)
+    (gate_dir / "task.yaml").write_text(
+        "\n".join(
+            [
+                "id: TASK-001",
+                "title: Gate task",
+                "task_type: sprint-gate",
+                "status: done",
+                "story_points: 1",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    current_link = ph_data_root / "sprints" / "current"
+    current_link.parent.mkdir(parents=True, exist_ok=True)
+    current_link.symlink_to(Path("SEQ") / sprint_id)
+
+    env = dict(os.environ)
+    env["PH_FAKE_NOW"] = "2099-02-03T04:05:06.789012Z"
+
+    res = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "close"],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert res.returncode == 0
+
+    hint = f"Consider closing release: ph release close --version {version}\n"
+    assert res.stdout.count(hint) == 1
+    assert "Deterministic sprint close checklist:\n" in res.stdout
+    assert res.stdout.index(hint) < res.stdout.index("Deterministic sprint close checklist:\n")
+    assert res.stdout.index("Deterministic sprint close checklist:\n") < res.stdout.index(
+        "Sprint closed! Next steps:\n"
+    )
 
 
 def test_sprint_close_blocks_when_sprint_gates_missing(tmp_path: Path) -> None:

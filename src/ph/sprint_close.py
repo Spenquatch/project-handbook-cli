@@ -5,7 +5,13 @@ from pathlib import Path
 from . import sprint_status
 from .clock import local_today_from_now as clock_local_today_from_now
 from .context import Context
-from .release import write_release_progress
+from .release import (
+    get_current_release,
+    get_release_timeline_info,
+    is_sprint_archived,
+    normalize_version,
+    write_release_progress,
+)
 from .sprint import get_sprint_dates, sprint_dir_from_id
 from .sprint_archive import archive_sprint_directory
 from .work_item_archiver import archive_done_tasks_in_sprint
@@ -123,6 +129,94 @@ def _rewrite_sprint_current_task_links(*, ph_data_root: Path, sprint_id: str) ->
 
 def _truthy_env(env: dict[str, str], key: str) -> bool:
     return (env.get(key) or "").strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+_DETERMINISTIC_SPRINT_CLOSE_CHECKLIST_LINES = [
+    "Deterministic sprint close checklist:",
+    "Pre-close (recommended):",
+    "- ph sprint status",
+    "- ph sprint burndown",
+    "- ph task list",
+    "- ph feature summary",
+    "- ph release status",
+    "- ph validate --quick",
+    "Optional (evidence bundle):",
+    "- ph pre-exec lint",
+    "- ph pre-exec audit",
+    "Post-close (recommended):",
+    "- ph status",
+    "- ph validate --quick",
+]
+
+
+def _print_deterministic_sprint_close_checklist(*, ctx: Context) -> None:
+    omit_release_status = ctx.scope == "system"
+    for line in _DETERMINISTIC_SPRINT_CLOSE_CHECKLIST_LINES:
+        if omit_release_status and line == "- ph release status":
+            continue
+        print(line)
+
+
+def _resolve_release_version_for_sprint(*, ctx: Context, sprint_release: str) -> str | None:
+    raw = (sprint_release or "").strip()
+    if not raw or raw.lower() in {"null", "none"}:
+        return None
+    if raw.lower() == "current":
+        return get_current_release(ph_root=ctx.ph_project_root)
+    resolved = normalize_version(raw)
+    return resolved or None
+
+
+def _is_release_timeline_complete(*, ctx: Context, version: str) -> bool:
+    resolved = normalize_version((version or "").strip())
+    if not resolved:
+        return False
+
+    timeline = get_release_timeline_info(ph_root=ctx.ph_project_root, version=resolved)
+    mode = str(timeline.get("timeline_mode") or "sprint_ids").strip().lower()
+
+    if mode == "sprint_slots":
+        slots_raw = timeline.get("sprint_slots") or []
+        slots: list[int] = []
+        if isinstance(slots_raw, list):
+            for s in slots_raw:
+                try:
+                    slots.append(int(s))  # type: ignore[arg-type]
+                except Exception:
+                    continue
+
+        assignments_raw = timeline.get("slot_assignments") or {}
+        assignments: dict[int, str] = {}
+        if isinstance(assignments_raw, dict):
+            for k, v in assignments_raw.items():
+                try:
+                    slot_int = int(k)  # type: ignore[arg-type]
+                except Exception:
+                    continue
+                sprint_id = str(v).strip()
+                if sprint_id:
+                    assignments[slot_int] = sprint_id
+
+        duplicates = timeline.get("slot_duplicates") or {}
+        if isinstance(duplicates, dict) and duplicates:
+            return False
+
+        if set(slots) != set(assignments.keys()):
+            return False
+
+        for sprint_id in assignments.values():
+            if not is_sprint_archived(ph_root=ctx.ph_project_root, sprint_id=sprint_id):
+                return False
+        return True
+
+    sprint_ids_raw = timeline.get("sprint_ids") or []
+    sprint_ids: list[str] = []
+    if isinstance(sprint_ids_raw, list):
+        sprint_ids = [str(s).strip() for s in sprint_ids_raw if str(s).strip()]
+    for sprint_id in sprint_ids:
+        if not is_sprint_archived(ph_root=ctx.ph_project_root, sprint_id=sprint_id):
+            return False
+    return True
 
 
 def _enforce_sprint_gates_or_block(
@@ -257,6 +351,17 @@ def run_sprint_close(*, ph_project_root: Path, ctx: Context, sprint: str | None,
     if sprint_release.lower() in {"", "null", "none"}:
         sprint_release = ""
 
+    release_version_for_hint: str | None = None
+    release_ready_before = False
+    if ctx.scope == "project" and sprint_release:
+        try:
+            release_version_for_hint = _resolve_release_version_for_sprint(ctx=ctx, sprint_release=sprint_release)
+            if release_version_for_hint:
+                release_ready_before = _is_release_timeline_complete(ctx=ctx, version=release_version_for_hint)
+        except Exception:
+            release_version_for_hint = None
+            release_ready_before = False
+
     try:
         work_item_errors = archive_done_tasks_in_sprint(
             sprint_dir=sprint_dir,
@@ -293,6 +398,13 @@ def run_sprint_close(*, ph_project_root: Path, ctx: Context, sprint: str | None,
         print(f"⚠️  {exc}")
         return 1
 
+    release_ready_after = False
+    if release_version_for_hint:
+        try:
+            release_ready_after = _is_release_timeline_complete(ctx=ctx, version=release_version_for_hint)
+        except Exception:
+            release_ready_after = False
+
     changed = _rewrite_sprint_current_task_links(ph_data_root=ctx.ph_data_root, sprint_id=sprint_id)
     _ = changed  # reserved for future telemetry output
 
@@ -305,6 +417,11 @@ def run_sprint_close(*, ph_project_root: Path, ctx: Context, sprint: str | None,
             print(f"📦 Release progress refreshed for {sprint_release}.")
         except Exception:
             print(f"⚠️  Release progress refresh failed for {sprint_release}.")
+
+    if release_version_for_hint and release_ready_after and not release_ready_before:
+        print(f"Consider closing release: ph release close --version {release_version_for_hint}")
+
+    _print_deterministic_sprint_close_checklist(ctx=ctx)
 
     if ctx.scope == "project":
         print("Sprint closed! Next steps:")

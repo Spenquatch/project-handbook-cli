@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.21 (2026-02-20)
+
+- `ph sprint close` now prints a deterministic pre/post checklist (mirrors the sprint-closing playbook) and prints a
+  non-interactive hint to `ph release close --version ...` when closing this sprint completes the last planned release
+  slot/timeline item.
+
 ## v0.0.20 (2026-02-20)
 
 - `ph release close` now runs a preflight that blocks close when the release timeline isn’t complete (unfinished
