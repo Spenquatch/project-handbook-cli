@@ -209,3 +209,29 @@ def test_sprint_capacity_stdout_matches_make_preamble_and_bounded_output(tmp_pat
         "\n" + "=" * 80 + "\n"
     )
     assert result.stdout == expected
+
+
+def test_sprint_capacity_no_active_sprint_prints_next_commands_to_stderr(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+
+    result = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "capacity"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert result.returncode == 1
+    assert result.stderr == ("❌ No active sprint\n\n" "Next commands:\n" "- ph sprint plan\n" "- ph next\n")
+
+
+def test_sprint_burndown_no_active_sprint_prints_next_commands_to_stderr(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+
+    result = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "sprint", "burndown"],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+    )
+    assert result.returncode == 1
+    assert result.stderr == ("❌ No active sprint\n\n" "Next commands:\n" "- ph sprint plan\n" "- ph next\n")

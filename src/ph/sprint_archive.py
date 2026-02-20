@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import json
 import shutil
+import sys
 from pathlib import Path
 from typing import Any
 
 from .clock import local_today_from_now as clock_local_today_from_now
 from .clock import now as clock_now
 from .context import Context
+from .remediation_hints import next_commands_no_active_sprint, ph_prefix, print_next_commands
 from .sprint import get_sprint_dates, sprint_dir_from_id
 
 
@@ -124,8 +126,15 @@ def run_sprint_archive(*, ph_root: Path, ctx: Context, sprint: str | None, env: 
     if sprint_raw is None or sprint_raw in {"", "current"}:
         sprint_dir = _get_current_sprint_path(ph_data_root=ctx.ph_data_root)
         if sprint_dir is None:
-            print("❌ No active sprint (sprints/current is not set).")
-            print("Set one via `ph sprint plan` / `ph sprint open`, or pass `--sprint SPRINT-...`.")
+            prefix = ph_prefix(ctx)
+            print("❌ No active sprint (sprints/current is not set).", file=sys.stderr)
+            print_next_commands(
+                commands=next_commands_no_active_sprint(
+                    ctx=ctx,
+                    extra=[f"{prefix} sprint archive --sprint SPRINT-..."],
+                ),
+                file=sys.stderr,
+            )
             return 1
         sprint_id = sprint_dir.name
     else:

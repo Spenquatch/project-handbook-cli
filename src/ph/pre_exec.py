@@ -5,7 +5,7 @@ import datetime as dt
 import os
 import re
 import sys
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 from pathlib import Path
 
@@ -738,7 +738,7 @@ def _write_evidence_text(*, evidence_dir: Path, name: str, text: str) -> None:
 
 def _capture_call(label: str, fn) -> tuple[int, str]:
     buf = StringIO()
-    with redirect_stdout(buf):
+    with redirect_stdout(buf), redirect_stderr(buf):
         code = fn()
     return code, buf.getvalue()
 

@@ -3,12 +3,14 @@ from __future__ import annotations
 import datetime as dt
 import difflib
 import re
+import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, TextIO
 
 from .clock import today as clock_today
 from .context import Context
 from .feature_status_updater import calculate_feature_metrics, collect_all_sprint_tasks
+from .remediation_hints import ph_prefix, print_next_commands
 from .shell_quote import shell_quote
 from .validate_docs import run_validate
 
@@ -2125,15 +2127,29 @@ def run_release_status(*, ctx: Context, release: str | None, env: dict[str, str]
         version = _read_current_release_target(ph_root=ctx.ph_data_root)
 
     if not version:
-        print("❌ No current release found")
+        prefix = ph_prefix(ctx)
+        print("❌ No current release found", file=sys.stderr)
         available = list_release_versions(ph_root=ctx.ph_data_root)
         if available:
-            print("📦 Available releases:")
+            print("📦 Available releases:", file=sys.stderr)
             for name in available:
-                print(f"  • {name}")
-            print("💡 Activate one with: ph release activate --release vX.Y.Z")
+                print(f"  • {name}", file=sys.stderr)
+            print_next_commands(
+                commands=[
+                    f"{prefix} release list",
+                    f"{prefix} release activate --release vX.Y.Z",
+                    f"Re-run: {prefix} release status",
+                ],
+                file=sys.stderr,
+            )
         else:
-            print("💡 Create one with: ph release plan --version v1.2.0 --sprints 3 --activate")
+            print_next_commands(
+                commands=[
+                    f"{prefix} release plan --version v1.2.0 --sprints 3 --activate",
+                    f"Re-run: {prefix} release status",
+                ],
+                file=sys.stderr,
+            )
         return 1
 
     release_dir = ctx.ph_data_root / "releases" / version
@@ -2923,66 +2939,75 @@ def _release_close_preflight(*, ctx: Context, version: str) -> tuple[bool, dict[
     return ok, info
 
 
-def _print_release_close_blockers(*, info: dict[str, object]) -> None:
+def _print_release_close_blockers(*, info: dict[str, object], file: TextIO) -> None:
     version = str(info.get("version") or "").strip()
-    print("❌ Release close blocked: preflight failed.")
-    print(f"Release: {version}")
+    print("❌ Release close blocked: preflight failed.", file=file)
+    print(f"Release: {version}", file=file)
 
     timeline_open = info.get("timeline_open") if isinstance(info.get("timeline_open"), dict) else {}
     timeline_mode = str(info.get("timeline_mode") or "sprint_ids").strip().lower()
     if timeline_open:
-        print("\nTimeline blockers:")
-        print(f"- Mode: {timeline_mode}")
+        print("\nTimeline blockers:", file=file)
+        print(f"- Mode: {timeline_mode}", file=file)
         if timeline_mode == "sprint_slots":
             unassigned = timeline_open.get("unassigned_slots") or []
             if isinstance(unassigned, list) and unassigned:
-                print(f"- Unassigned slot(s): {', '.join(str(s) for s in unassigned)}")
+                print(f"- Unassigned slot(s): {', '.join(str(s) for s in unassigned)}", file=file)
             duplicates = timeline_open.get("duplicate_slots") or {}
             if isinstance(duplicates, dict) and duplicates:
                 for slot in sorted(duplicates.keys(), key=lambda s: int(s) if str(s).isdigit() else str(s)):
                     sprints = duplicates.get(slot) or []
                     if isinstance(sprints, list) and sprints:
-                        print(f"- Slot {slot} has multiple sprint assignments: {', '.join(str(s) for s in sprints)}")
+                        print(
+                            f"- Slot {slot} has multiple sprint assignments: {', '.join(str(s) for s in sprints)}",
+                            file=file,
+                        )
             unarchived = timeline_open.get("unarchived_assigned_sprints") or []
             if isinstance(unarchived, list) and unarchived:
-                print(f"- Unarchived assigned sprint(s): {', '.join(str(s) for s in unarchived)}")
+                print(f"- Unarchived assigned sprint(s): {', '.join(str(s) for s in unarchived)}", file=file)
         else:
             unarchived = timeline_open.get("unarchived_sprints") or []
             if isinstance(unarchived, list) and unarchived:
-                print(f"- Unarchived sprint(s): {', '.join(str(s) for s in unarchived)}")
+                print(f"- Unarchived sprint(s): {', '.join(str(s) for s in unarchived)}", file=file)
 
     incomplete_gates = info.get("incomplete_gates") if isinstance(info.get("incomplete_gates"), list) else []
     if incomplete_gates:
-        print("\nGate blockers:")
-        print(f"- Incomplete release gate task(s): {len(incomplete_gates)}")
+        print("\nGate blockers:", file=file)
+        print(f"- Incomplete release gate task(s): {len(incomplete_gates)}", file=file)
         for task in sorted(incomplete_gates, key=lambda t: (str(t.get("sprint") or ""), str(t.get("id") or ""))):
             tid = str(task.get("id") or "TASK-???")
             sprint = str(task.get("sprint") or "SPRINT-???")
             status = str(task.get("status") or "todo").strip().lower()
             directory = str(task.get("directory") or "").strip()
-            print(f"  - {tid} ({sprint}) status={status} dir={directory}")
+            print(f"  - {tid} ({sprint}) status={status} dir={directory}", file=file)
 
-    print("\nNext commands:")
-    print(f"- ph release status --release {version}")
+    print("\nNext commands:", file=file)
+    print(f"- ph release status --release {version}", file=file)
     if timeline_open:
         if timeline_mode == "sprint_slots":
             unarchived = timeline_open.get("unarchived_assigned_sprints") or []
             if isinstance(unarchived, list):
                 for sprint_id in sorted({str(s) for s in unarchived if str(s)}):
-                    print(f"- ph sprint close --sprint {sprint_id}")
+                    print(f"- ph sprint close --sprint {sprint_id}", file=file)
             unassigned = timeline_open.get("unassigned_slots") or []
             if isinstance(unassigned, list) and unassigned:
                 for slot in unassigned:
-                    print(f"- Assign Slot {slot}: ph sprint plan")
-                    print(f"  then set in sprints/current/plan.md: release: {version}, release_sprint_slot: {slot}")
+                    print(f"- Assign Slot {slot}: ph sprint plan", file=file)
+                    print(
+                        f"  then set in sprints/current/plan.md: release: {version}, release_sprint_slot: {slot}",
+                        file=file,
+                    )
         else:
             unarchived = timeline_open.get("unarchived_sprints") or []
             if isinstance(unarchived, list):
                 for sprint_id in [str(s).strip() for s in unarchived if str(s).strip()]:
-                    print(f"- ph sprint close --sprint {sprint_id}")
+                    print(f"- ph sprint close --sprint {sprint_id}", file=file)
     if incomplete_gates:
-        print("- Complete gate task validations + evidence, then mark gate task(s) done in their archived task.yaml")
-    print(f"- Re-run: ph release close --version {version}")
+        print(
+            "- Complete gate task validations + evidence, then mark gate task(s) done in their archived task.yaml",
+            file=file,
+        )
+    print(f"- Re-run: ph release close --version {version}", file=file)
 
 
 def run_release_close(*, ctx: Context, version: str, env: dict[str, str]) -> int:
@@ -3001,11 +3026,14 @@ def run_release_close(*, ctx: Context, version: str, env: dict[str, str]) -> int
 
     ok, info = _release_close_preflight(ctx=ctx, version=version)
     if not ok:
-        _print_release_close_blockers(info=info)
+        _print_release_close_blockers(info=info, file=sys.stderr)
         return 1
     delivered_sprint = str(info.get("delivered_sprint") or "").strip()
     if not delivered_sprint:
-        print("❌ Release close blocked: could not determine delivered sprint from release timeline.")
+        print(
+            "❌ Release close blocked: could not determine delivered sprint from release timeline.",
+            file=sys.stderr,
+        )
         return 1
 
     delivered_date_obj = clock_today(env=env)

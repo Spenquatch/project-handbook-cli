@@ -417,8 +417,16 @@ def test_sprint_close_blocks_when_sprint_gates_missing(tmp_path: Path) -> None:
         env=dict(os.environ),
     )
     assert res.returncode == 1
-    assert "❌ Sprint close blocked: sprint gates missing/incomplete." in res.stdout
-    assert "No sprint gate tasks found (task_type: sprint-gate)." in res.stdout
+    assert "❌ Sprint close blocked: sprint gates missing/incomplete." in res.stderr
+    assert "No sprint gate tasks found (task_type: sprint-gate)." in res.stderr
+    assert "Next commands:" in res.stderr
+    assert f"ph sprint tasks --sprint {sprint_id}" in res.stderr
+    assert "ph validate --quick" in res.stderr
+    assert (
+        'ph task create --title "Sprint Gate: <goal>" --feature sprint --decision N/A --type sprint-gate' in res.stderr
+    )
+    assert f"Re-run: ph sprint close --sprint {sprint_id}" in res.stderr
+    assert "Override (not recommended): set PH_SPRINT_CLOSE_ALLOW_INCOMPLETE_GATES=1." in res.stderr
 
     assert current_link.exists()
     assert sprint_dir.exists()
@@ -482,9 +490,16 @@ def test_sprint_close_blocks_when_any_sprint_gate_incomplete(tmp_path: Path) -> 
         env=dict(os.environ),
     )
     assert res.returncode == 1
-    assert "❌ Sprint close blocked: sprint gates missing/incomplete." in res.stdout
-    assert "sprint gate task(s) are not status: done." in res.stdout
-    assert "TASK-001: Gate task (status: doing)" in res.stdout
+    assert "❌ Sprint close blocked: sprint gates missing/incomplete." in res.stderr
+    assert "sprint gate task(s) are not status: done." in res.stderr
+    assert "TASK-001: Gate task (status: doing)" in res.stderr
+    assert "Next commands:" in res.stderr
+    assert f"ph sprint tasks --sprint {sprint_id}" in res.stderr
+    assert "ph validate --quick" in res.stderr
+    assert "ph task show --id TASK-001" in res.stderr
+    assert "ph task status --id TASK-001 --status done" in res.stderr
+    assert f"Re-run: ph sprint close --sprint {sprint_id}" in res.stderr
+    assert "Override (not recommended): set PH_SPRINT_CLOSE_ALLOW_INCOMPLETE_GATES=1." in res.stderr
 
     assert current_link.exists()
     assert sprint_dir.exists()

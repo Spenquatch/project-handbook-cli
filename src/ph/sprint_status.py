@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import datetime as dt
+import sys
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
 from .context import Context
+from .remediation_hints import next_commands_no_active_sprint, ph_prefix, print_next_commands
 from .sprint import get_sprint_dates, load_sprint_config, sprint_dir_from_id
 
 
@@ -316,9 +318,21 @@ def run_sprint_status(*, ph_project_root: Path, ctx: Context, sprint: str | None
     sprint_dir = _resolve_sprint_dir(ctx=ctx, sprint=sprint)
     if sprint_dir is None or not sprint_dir.exists():
         print("No active sprint")
+        print_next_commands(commands=next_commands_no_active_sprint(ctx=ctx), file=sys.stdout)
         return 0
 
     sprint_id = sprint_dir.name
+    plan_path = sprint_dir / "plan.md"
+    if not plan_path.exists():
+        prefix = ph_prefix(ctx)
+        print(f"⚠️  Sprint plan missing: {plan_path}")
+        print_next_commands(
+            commands=[
+                f"{prefix} sprint plan --sprint {sprint_id} --force",
+                f"{prefix} validate --quick",
+            ],
+            file=sys.stdout,
+        )
     tasks = sort_tasks(collect_tasks(sprint_dir=sprint_dir))
     metrics = calculate_velocity(tasks)
 

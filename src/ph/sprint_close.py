@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from . import sprint_status
@@ -12,6 +13,7 @@ from .release import (
     normalize_version,
     write_release_progress,
 )
+from .remediation_hints import next_commands_no_active_sprint, ph_prefix, print_next_commands
 from .sprint import get_sprint_dates, sprint_dir_from_id
 from .sprint_archive import archive_sprint_directory
 from .work_item_archiver import archive_done_tasks_in_sprint
@@ -221,6 +223,7 @@ def _is_release_timeline_complete(*, ctx: Context, version: str) -> bool:
 
 def _enforce_sprint_gates_or_block(
     *,
+    prefix: str,
     sprint_id: str,
     tasks: list[dict[str, object]],
     env: dict[str, str],
@@ -239,19 +242,35 @@ def _enforce_sprint_gates_or_block(
     if gate_tasks and not incomplete:
         return True
 
-    print("❌ Sprint close blocked: sprint gates missing/incomplete.")
+    print("❌ Sprint close blocked: sprint gates missing/incomplete.", file=sys.stderr)
     if not gate_tasks:
-        print("  - No sprint gate tasks found (task_type: sprint-gate).")
+        print("  - No sprint gate tasks found (task_type: sprint-gate).", file=sys.stderr)
     if incomplete:
-        print(f"  - {len(incomplete)}/{len(gate_tasks)} sprint gate task(s) are not status: done.")
+        print(f"  - {len(incomplete)}/{len(gate_tasks)} sprint gate task(s) are not status: done.", file=sys.stderr)
         for task in incomplete:
             task_id = str(task.get("id") or "(missing id)")
             title = str(task.get("title") or "(missing title)")
             status = str(task.get("status", "todo") or "todo").strip().lower()
-            print(f"    - {task_id}: {title} (status: {status})")
+            print(f"    - {task_id}: {title} (status: {status})", file=sys.stderr)
 
-    print(f"Complete sprint gate task(s) and rerun: ph sprint close (sprint: {sprint_id}).")
-    print(f"Override (not recommended): set {_SPRINT_CLOSE_GATES_OVERRIDE_ENV}=1.")
+    commands: list[str] = [
+        f"{prefix} sprint tasks --sprint {sprint_id}",
+        f"{prefix} validate --quick",
+    ]
+    if not gate_tasks:
+        commands.append(
+            f'{prefix} task create --title "Sprint Gate: <goal>" --feature sprint --decision N/A --type sprint-gate'
+        )
+    if incomplete:
+        for task in incomplete:
+            task_id = str(task.get("id") or "").strip()
+            if not task_id or task_id == "(missing id)":
+                continue
+            commands.append(f"{prefix} task show --id {task_id}")
+            commands.append(f"{prefix} task status --id {task_id} --status done")
+    commands.append(f"Re-run: {prefix} sprint close --sprint {sprint_id}")
+    print_next_commands(commands=commands, file=sys.stderr)
+    print(f"Override (not recommended): set {_SPRINT_CLOSE_GATES_OVERRIDE_ENV}=1.", file=sys.stderr)
     return False
 
 
@@ -337,13 +356,21 @@ def _create_retrospective(
 def run_sprint_close(*, ph_project_root: Path, ctx: Context, sprint: str | None, env: dict[str, str]) -> int:
     sprint_dir = _resolve_sprint_dir(ctx=ctx, sprint=sprint)
     if sprint_dir is None or not sprint_dir.exists():
-        print("No active sprint")
+        prefix = ph_prefix(ctx)
+        print("❌ No active sprint", file=sys.stderr)
+        print_next_commands(
+            commands=next_commands_no_active_sprint(
+                ctx=ctx,
+                extra=[f"{prefix} sprint close --sprint SPRINT-..."],
+            ),
+            file=sys.stderr,
+        )
         return 1
 
     sprint_id = sprint_dir.name
 
     tasks = _collect_tasks_legacy_order(sprint_dir=sprint_dir)
-    if not _enforce_sprint_gates_or_block(sprint_id=sprint_id, tasks=tasks, env=env):
+    if not _enforce_sprint_gates_or_block(prefix=ph_prefix(ctx), sprint_id=sprint_id, tasks=tasks, env=env):
         return 1
 
     sprint_meta = _read_sprint_plan_metadata(sprint_dir=sprint_dir)

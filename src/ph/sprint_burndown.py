@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from . import sprint_status
 from .clock import today as clock_today
 from .context import Context
+from .remediation_hints import next_commands_no_active_sprint, print_next_commands
 from .sprint import sprint_dir_from_id
 
 
@@ -86,7 +88,8 @@ Current Status:
 def run_sprint_burndown(*, ph_project_root: Path, ctx: Context, sprint: str | None, env: dict[str, str]) -> int:
     sprint_dir = _resolve_sprint_dir(ctx=ctx, sprint=sprint)
     if sprint_dir is None or not sprint_dir.exists():
-        print("No active sprint")
+        print("❌ No active sprint", file=sys.stderr)
+        print_next_commands(commands=next_commands_no_active_sprint(ctx=ctx), file=sys.stderr)
         return 1
 
     tasks = sprint_status.collect_tasks(sprint_dir=sprint_dir)

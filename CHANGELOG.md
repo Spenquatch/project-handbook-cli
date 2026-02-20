@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.22 (2026-02-20)
+
+- Standardizes “what to do next” remediation hints for missing/blocked states across `ph sprint status|capacity|burndown|archive|close`
+  and `ph release status|close` by printing deterministic `Next commands:` checklists (errors go to stderr; informational
+  no-active-sprint status stays on stdout).
+
 ## v0.0.21 (2026-02-20)
 
 - `ph sprint close` now prints a deterministic pre/post checklist (mirrors the sprint-closing playbook) and prints a

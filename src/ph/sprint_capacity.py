@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 from . import sprint_status
 from .context import Context
+from .remediation_hints import next_commands_no_active_sprint, print_next_commands
 from .sprint import load_sprint_config, sprint_dir_from_id
 
 
@@ -45,7 +47,8 @@ def run_sprint_capacity(*, ph_root: Path, ctx: Context, sprint: str | None, env:
 
     sprint_dir = _resolve_sprint_dir(ctx=ctx, sprint=sprint)
     if sprint_dir is None or not sprint_dir.exists():
-        print("No active sprint")
+        print("❌ No active sprint", file=sys.stderr)
+        print_next_commands(commands=next_commands_no_active_sprint(ctx=ctx), file=sys.stderr)
         return 1
 
     sprint_id = sprint_dir.name

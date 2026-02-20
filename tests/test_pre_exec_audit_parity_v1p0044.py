@@ -152,7 +152,10 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
     )
 
     release_status_out = (
-        "❌ No current release found\n💡 Create one with: ph release plan --version v1.2.0 --sprints 3 --activate\n"
+        "❌ No current release found\n\n"
+        "Next commands:\n"
+        "- ph release plan --version v1.2.0 --sprints 3 --activate\n"
+        "- Re-run: ph release status\n"
     )
 
     task_list_out = (

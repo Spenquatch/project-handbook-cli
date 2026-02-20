@@ -63,7 +63,7 @@ def test_release_close_blocks_on_incomplete_timeline_sprint_ids(tmp_path: Path) 
         env=env,
     )
     assert close.returncode == 1
-    assert close.stdout == (
+    assert close.stderr == (
         "\n".join(
             [
                 "❌ Release close blocked: preflight failed.",
@@ -139,7 +139,7 @@ def test_release_close_blocks_on_unassigned_slot_sprint_slots(tmp_path: Path) ->
         env=env,
     )
     assert close.returncode == 1
-    assert close.stdout == (
+    assert close.stderr == (
         "\n".join(
             [
                 "❌ Release close blocked: preflight failed.",
@@ -212,7 +212,7 @@ def test_release_close_blocks_on_incomplete_release_gate_task(tmp_path: Path) ->
         env=env,
     )
     assert close.returncode == 1
-    assert close.stdout == (
+    assert close.stderr == (
         "\n".join(
             [
                 "❌ Release close blocked: preflight failed.",
