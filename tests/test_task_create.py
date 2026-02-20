@@ -170,7 +170,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "3. **Use commands**: Copy-paste from `commands.md`\n"
         "4. **Validate progress**: Follow `validation.md` guidelines\n"
         "5. **Check completion**: Use `checklist.md` before marking done\n"
-        '6. **Update status**: Run `ph task status --id TASK-002 --status review` when ready for review\n'
+        "6. **Update status**: Run `ph task status --id TASK-002 --status review` when ready for review\n"
         "\n"
         "## Context & Background\n"
         "This task implements the `ADR-0000` decision for the [f] feature.\n"
@@ -260,13 +260,13 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "the\n"
         "wrong place. Prefer absolute evidence paths:\n"
         "```bash\n"
-        "PH_ROOT=\"$(git rev-parse --show-toplevel)\"\n"
-        "EVID_REL=\".project-handbook/status/evidence/TASK-002\"\n"
-        "EVID_ABS=\"$PH_ROOT/$EVID_REL\"\n"
-        "mkdir -p \"$EVID_ABS\"\n"
+        'PH_ROOT="$(git rev-parse --show-toplevel)"\n'
+        'EVID_REL=".project-handbook/status/evidence/TASK-002"\n'
+        'EVID_ABS="$PH_ROOT/$EVID_REL"\n'
+        'mkdir -p "$EVID_ABS"\n'
         "\n"
         "# Example usage:\n"
-        "# pnpm -C apps/web exec playwright test --output \"$EVID_ABS/playwright\"\n"
+        '# pnpm -C apps/web exec playwright test --output "$EVID_ABS/playwright"\n'
         "```\n"
         "\n"
         "## Validation Commands\n"

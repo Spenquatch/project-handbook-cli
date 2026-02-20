@@ -266,6 +266,7 @@ def _compute_next_actions(
         gates_total = int(summary.get("gates_total", 0) or 0)
         gates_done = int(summary.get("gates_done", 0) or 0)
         if gates_total > 0 and gates_done < gates_total:
+
             def _is_gate(t: dict[str, Any]) -> bool:
                 return bool(t.get("release_gate") is True) or str(t.get("release_gate", "")).strip().lower() in {
                     "true",
@@ -392,12 +393,16 @@ def run_next(
             current_sprint_id=current_sprint_id,
         )
 
-    sprint_paths = _sprint_paths(
-        ctx=ctx,
-        sprint_id=sprint_id or "",
-        state=str(sprint_state or "locked"),
-        is_current=is_current_sprint,
-    ) if sprint_id else {"plan": f"{_scope_prefix(ctx)}/sprints/current/plan.md"}
+    sprint_paths = (
+        _sprint_paths(
+            ctx=ctx,
+            sprint_id=sprint_id or "",
+            state=str(sprint_state or "locked"),
+            is_current=is_current_sprint,
+        )
+        if sprint_id
+        else {"plan": f"{_scope_prefix(ctx)}/sprints/current/plan.md"}
+    )
 
     sprint_tasks = _collect_sprint_tasks(sprint_dir=sprint_dir) if sprint_dir else []
     if sprint_dir:
@@ -437,11 +442,7 @@ def run_next(
                 raw_slots = release_timeline.get("sprint_slots")
                 if not isinstance(raw_slots, list):
                     raw_slots = []
-                slots = [
-                    int(s)
-                    for s in raw_slots
-                    if isinstance(s, int) or (isinstance(s, str) and str(s).isdigit())
-                ]
+                slots = [int(s) for s in raw_slots if isinstance(s, int) or (isinstance(s, str) and str(s).isdigit())]
                 assignments = (
                     release_timeline.get("slot_assignments")
                     if isinstance(release_timeline.get("slot_assignments"), dict)

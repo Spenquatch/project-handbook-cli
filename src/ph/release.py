@@ -1124,13 +1124,7 @@ links: [{", ".join(links)}]
         if bool(task.get("release_gate") is True)
         or str(task.get("release_gate", "")).strip().lower() in {"true", "yes", "1"}
     ]
-    gates_done = len(
-        [
-            task
-            for task in gates
-            if str(task.get("status", "")).strip().lower() in {"done", "completed"}
-        ]
-    )
+    gates_done = len([task for task in gates if str(task.get("status", "")).strip().lower() in {"done", "completed"}])
 
     content += "\n## Gate Burn-up\n"
     if gates:

@@ -404,7 +404,7 @@ links: []
             "3. **Use commands**: Copy-paste from `commands.md`",
             "4. **Validate progress**: Follow `validation.md` guidelines",
             "5. **Check completion**: Use `checklist.md` before marking done",
-            f'6. **Update status**: Run `{ph_cmd} task status --id {task_id} --status review` when ready for review',
+            f"6. **Update status**: Run `{ph_cmd} task status --id {task_id} --status review` when ready for review",
             "",
             "## Context & Background",
             f"This task implements the {decision_link} decision for the [{feature}] feature.",

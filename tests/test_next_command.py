@@ -88,4 +88,3 @@ def test_next_json_is_machine_readable_and_has_stable_envelope(tmp_path: Path) -
     assert parsed["type"] == "ph-next"
     assert parsed["schema_version"] == 1
     assert isinstance(parsed["next_actions"], list)
-

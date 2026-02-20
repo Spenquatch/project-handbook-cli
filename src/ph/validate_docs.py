@@ -7,6 +7,7 @@ from pathlib import Path
 from .adr.validate import validate_adrs
 
 _DR_ID_RE = re.compile(r"^DR-\d{4}$", re.IGNORECASE)
+_HEADING_INSIDE_LIST_RE = re.compile(r"^\s*(?:[-*]|\d+\.)\s+#{1,6}\s+\S")
 
 _ALLOWED_TASK_TYPES: set[str] = {
     "implementation",
@@ -1168,6 +1169,178 @@ def _as_int(val: object) -> int | None:
         return None
 
 
+def validate_current_sprint_plan_structure(*, issues: list[dict], root: Path, scope: str) -> None:
+    plan_path = root / "sprints" / "current" / "plan.md"
+    if not plan_path.exists():
+        return
+
+    text = read(plan_path)
+    if not text.strip():
+        return
+
+    fm, _, _ = parse_front_matter(text)
+    mode = str(fm.get("mode") or "").strip().lower()
+
+    start = str(fm.get("start") or "").strip()
+    end = str(fm.get("end") or "").strip()
+    if mode not in {"bounded", "timeboxed"}:
+        if start and end:
+            mode = "timeboxed"
+        else:
+            issues.append(
+                {
+                    "path": str(plan_path),
+                    "code": "sprint_plan_mode_missing_or_invalid",
+                    "severity": "error",
+                    "message": (
+                        "Current sprint plan is missing a valid mode in front matter.\n"
+                        "  expected: mode: bounded|timeboxed\n"
+                        "  remediation: regenerate a template via `ph sprint plan --force` (or add front matter)\n"
+                    ),
+                }
+            )
+            return
+
+    lines = text.splitlines()
+    for idx, raw in enumerate(lines, start=1):
+        if _HEADING_INSIDE_LIST_RE.match(raw):
+            issues.append(
+                {
+                    "path": str(plan_path),
+                    "code": "sprint_plan_heading_inside_list",
+                    "severity": "error",
+                    "line": idx,
+                    "example": raw.strip(),
+                    "message": (
+                        "Sprint plan appears to contain a Markdown heading pasted into a list item.\n"
+                        f"  line: {idx}\n"
+                        f"  example: {raw.strip()}\n"
+                        "  remediation: remove the list marker before the heading (e.g. `- ##` -> `##`).\n"
+                        "  reference: compare to a fresh template (`ph sprint plan --force`).\n"
+                    ),
+                }
+            )
+            break
+
+    in_fence = False
+    h1_positions: list[tuple[str, int]] = []
+    h2_positions: list[tuple[str, int]] = []
+    for idx, raw in enumerate(lines, start=1):
+        stripped = raw.rstrip("\n")
+        if stripped.strip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if stripped.startswith("# "):
+            h1_positions.append((stripped.strip(), idx))
+        elif stripped.startswith("## "):
+            h2_positions.append((stripped.strip(), idx))
+
+    sprint_id = str(fm.get("sprint") or "").strip()
+    expected_h1 = f"# Sprint Plan: {sprint_id}" if sprint_id else None
+    h1_ok = False
+    if expected_h1:
+        h1_ok = any(h == expected_h1 for h, _ in h1_positions)
+    else:
+        h1_ok = any(h.startswith("# Sprint Plan:") for h, _ in h1_positions)
+
+    if not h1_ok:
+        issues.append(
+            {
+                "path": str(plan_path),
+                "code": "sprint_plan_title_missing_or_mismatch",
+                "severity": "error",
+                "message": (
+                    "Current sprint plan is missing the expected title heading.\n"
+                    f"  expected: {expected_h1 or '# Sprint Plan: <SPRINT-ID>'}\n"
+                    "  remediation: restore the template title heading near the top of the plan.\n"
+                ),
+            }
+        )
+
+    release_slot = _as_int(fm.get("release_sprint_slot"))
+
+    required_h2: list[str] = []
+    if mode == "bounded":
+        required_h2 = [
+            "## Sprint Model",
+            "## Sprint Goal",
+        ]
+        if scope != "system":
+            if release_slot is not None:
+                required_h2.append(f"## Release Alignment (Slot {release_slot})")
+            else:
+                required_h2.append("## Release Alignment (Explicit)")
+        required_h2.extend(
+            [
+                "## Boundaries (Lanes)",
+                "## Integration Tasks",
+                "## Task Creation Guide",
+                "## Telemetry (Points)",
+                "## Dependencies & Risks",
+                "## Success Criteria",
+            ]
+        )
+    else:
+        required_h2 = [
+            "## Sprint Duration",
+            "## Sprint Goals",
+        ]
+        if release_slot is not None:
+            required_h2.append(f"## Release Alignment (Slot {release_slot})")
+        else:
+            required_h2.append("## Release Alignment (Optional)")
+        required_h2.extend(
+            [
+                "## Task Creation Guide",
+                "## Capacity Planning (Optional)",
+                "## Dependencies & Risks",
+                "## Success Criteria",
+            ]
+        )
+
+    h2_to_line: dict[str, int] = {}
+    for heading, line_no in h2_positions:
+        h2_to_line.setdefault(heading, line_no)
+
+    for heading in required_h2:
+        if heading not in h2_to_line:
+            issues.append(
+                {
+                    "path": str(plan_path),
+                    "code": "sprint_plan_missing_heading",
+                    "severity": "error",
+                    "expected_heading": heading,
+                    "message": (
+                        "Current sprint plan is missing a required section heading.\n"
+                        f"  expected_heading: {heading}\n"
+                        "  remediation: restore the missing heading to match the sprint plan template.\n"
+                    ),
+                }
+            )
+
+    present = [h for h in required_h2 if h in h2_to_line]
+    for prev, nxt in zip(present, present[1:]):
+        if h2_to_line[prev] > h2_to_line[nxt]:
+            issues.append(
+                {
+                    "path": str(plan_path),
+                    "code": "sprint_plan_heading_order",
+                    "severity": "error",
+                    "expected_order": required_h2,
+                    "found_order": present,
+                    "message": (
+                        "Current sprint plan section headings are out of order.\n"
+                        f"  expected_order: {required_h2}\n"
+                        f"  found_order: {present}\n"
+                        f"  first_inversion: {prev} appears after {nxt}\n"
+                    ),
+                }
+            )
+            break
+
+
 def validate_release_plan_slots(*, issues: list[dict], root: Path) -> None:
     releases_dir = root / "releases"
     if not releases_dir.exists():
@@ -1567,6 +1740,7 @@ def run_validate(
 
     issues: list[dict] = []
     validate_front_matter(issues=issues, rules=rules, root=ph_data_root, ph_root=ph_root, scope=scope)
+    validate_current_sprint_plan_structure(issues=issues, root=ph_data_root, scope=scope)
     validate_session_end_index(issues=issues, ph_project_root=ph_project_root, ph_root=ph_root)
     validate_system_scope_artifacts_in_project_scope(
         issues=issues, rules=rules, root=ph_project_root, ph_root=ph_root, scope=scope

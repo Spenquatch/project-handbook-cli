@@ -101,7 +101,5 @@ def test_release_readiness_is_not_green_when_only_historical_feature_completion_
     assert "Feature Completion (historical): 100% (1/1 features started)" in result.stdout
     assert (
         "Release Readiness (gate-first): 🟡 YELLOW - No release-tagged tasks/gates; readiness unknown "
-        "(feature completion is historical)"
-        in result.stdout
+        "(feature completion is historical)" in result.stdout
     )
-

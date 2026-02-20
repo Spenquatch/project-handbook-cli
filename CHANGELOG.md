@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.18 (2026-02-20)
+
+- `ph validate` now enforces expected structure for the current sprint plan (required headings + order) and flags
+  “heading pasted into a list item” formatting drift.
+
 ## v0.0.17 (2026-02-19)
 
 - Adds `ph next` (one-screen current context + ranked next actions), with `--format text|json`.

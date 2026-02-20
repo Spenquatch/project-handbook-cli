@@ -165,17 +165,7 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
     feature_summary_out = f"🎯 FEATURE SUMMARY WITH SPRINT DATA\n{rule}\n{feature_summary_line}"
 
     validate_out = (
-        f"validation: 0 error(s), 0 warning(s), report: {resolved}/.project-handbook/status/validation.json\n"
-    )
-    lint_out = (
-        "FAIL SPRINT: Current sprint is missing a required sprint gate task (task_type: sprint-gate). "
-        "Create one (recommended: `ph task create --gate`) and ensure its validation.md references sprint goal(s) "
-        "and required evidence artifacts (including secret-scan.txt). (sprints/current/tasks)\n"
-        "\n"
-        "PRE-EXEC LINT FAILED: 1 issue(s)\n"
-        "Next:\n"
-        "- Fix the flagged task docs/metadata (remove ambiguity, align session↔purpose, fill required fields/files).\n"
-        "- Re-run: `ph pre-exec lint`\n"
+        f"validation: 9 error(s), 0 warning(s), report: {resolved}/.project-handbook/status/validation.json\n"
     )
 
     expected_stdout = (
@@ -209,12 +199,7 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
         "PRE-EXEC: validate\n"
         f"{section}\n"
         f"{validate_out}"
-        "\n"
-        f"{section}\n"
-        "PRE-EXEC: lint\n"
-        f"{section}\n"
-        f"{lint_out}"
-        f"\n❌ PRE-EXEC AUDIT FAILED: Pre-exec lint failed. Evidence: {evidence_dir}\n"
+        f"\n❌ PRE-EXEC AUDIT FAILED: validate failed (exit 1). See {evidence_dir}/handbook-validate.txt\n"
     )
     assert result.stdout == expected_stdout
 
@@ -223,8 +208,8 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
     assert (evidence_dir / "task-list.txt").read_text(encoding="utf-8") == task_list_out
     assert (evidence_dir / "feature-summary.txt").read_text(encoding="utf-8") == feature_summary_out
     assert (evidence_dir / "handbook-validate.txt").read_text(encoding="utf-8") == validate_out
-    assert (evidence_dir / "pre-exec-lint.txt").read_text(encoding="utf-8") == lint_out
-    assert (evidence_dir / "validation.json").read_text(encoding="utf-8") == '{\n  "issues": []\n}\n'
+    assert not (evidence_dir / "pre-exec-lint.txt").exists()
+    assert not (evidence_dir / "validation.json").exists()
 
 
 def test_release_status_sprint_slots_matches_legacy_format(tmp_path: Path) -> None:

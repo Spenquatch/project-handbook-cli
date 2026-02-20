@@ -19,4 +19,3 @@ def test_no_python_input_calls_in_ph_cli() -> None:
                 offenders.append(f"{path}:{getattr(node, 'lineno', '?')}")
 
     assert offenders == [], "Found input() calls:\n" + "\n".join(offenders)
-
