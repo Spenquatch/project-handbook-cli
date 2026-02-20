@@ -16,8 +16,7 @@ from .validate_docs import run_validate
 
 
 class CommandRunner(Protocol):
-    def run(self, argv: list[str], *, no_post_hook: bool) -> int:
-        ...
+    def run(self, argv: list[str], *, no_post_hook: bool) -> int: ...
 
 
 @dataclass(frozen=True)

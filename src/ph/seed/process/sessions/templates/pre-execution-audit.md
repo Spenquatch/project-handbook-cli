@@ -13,18 +13,18 @@ You are an AI agent performing a final audit on sprint planning documentation be
 3. **Verify dependencies, execution order, and readiness** for every sprint task.  
 4. **Fix gaps immediately** (missing steps, weak validation, unclear ownership).  
 5. **Finish with a clean validation report** (`ph validate`).
-6. **Reject ambiguity (strict).** Any task containing ambiguity language must be rewritten, split, or re-routed to `session=research-discovery` (with a DR entry) before execution starts.
+6. **Reject ambiguity (strict).** Any task containing ambiguity language must be rewritten, split, or re-routed to `task_type=research-discovery` (with a DR entry) before execution starts.
    - Ambiguity includes (non-exhaustive): `TBD`, `TODO`, `WIP`, `FIXME`, “open question”, “depends on local setup/environment”, “optional”, “nice to have”, “if time/possible”, “maybe”, “unclear/unknown”, “we'll decide”, and **implementation-choice language** like “implementation decision”, “choose between”, “pick an approach”.
-7. **Session ↔ core purpose alignment (non-negotiable).**
-   - `session: task-execution` tasks must be fully implementable with zero remaining decisions (no “choose/decide/pick approach” language anywhere in task docs).
-   - `session: research-discovery` tasks must reduce uncertainty and produce a Decision Register (DR) with **exactly two options (Option A / Option B)** + recommendation + follow-up tasks.
-8. **Session routing rule.** For every sprint task, confirm `task.yaml session:` matches the task docs (README front matter + steps/validation semantics). Do not approve a task under the wrong session template.
+7. **Task type ↔ core purpose alignment (non-negotiable).**
+   - `task_type: implementation` tasks must be fully implementable with zero remaining decisions (no “choose/decide/pick approach” language anywhere in task docs).
+   - `task_type: research-discovery` tasks must reduce uncertainty and produce a Decision Register (DR) with **exactly two options (Option A / Option B)** + recommendation + follow-up tasks.
+8. **Session routing rule.** For every sprint task, confirm `task.yaml task_type:` matches the task docs (steps/validation semantics). Session template is derived from `task_type`. Do not approve a task under the wrong session template.
 
 ## Hard-Fail Gates (Execution Cannot Start Until Green)
 - `ph validate` is clean (0 errors / 0 warnings).
 - `ph sprint status` is healthy (no dependency errors; current sprint is coherent).
 - If a release is active: `ph release status` is coherent (tagged work + gate burn-up match the sprint plan). For full context during audit, also check `ph release show`.
-- `ph pre-exec lint` passes (session/purpose alignment + ambiguity lint + required fields/files + sprint gate task required).
+- `ph pre-exec lint` passes (task_type/purpose alignment + ambiguity lint + required fields/files + sprint gate task required).
 
 ## Required Audit Evidence Bundle (Do Not Skip)
 All audit outputs must be captured under:
@@ -57,9 +57,9 @@ ph pre-exec lint
 
 ## Audit Checklist
 - For each sprint task (`sprints/current/tasks/TASK-XXX-*`):
-  - Confirm `task.yaml` has: `owner`, `story_points`, `lane`, `feature`, `decision`, `depends_on`, `session`.  
+  - Confirm `task.yaml` has: `owner`, `story_points`, `lane`, `feature`, `decision`, `depends_on`, `task_type`.  
   - If the task contributes to the active release, confirm it has `release: vX.Y.Z` (or `release: current`) and `release_gate: true|false`.  
-  - Confirm README front matter matches `task.yaml` (`task_id`, `feature`, `session`).  
+  - Confirm README front matter matches `task.yaml` (`task_id`, `feature`).  
   - Review `README.md`, `steps.md`, `commands.md`, `checklist.md`, `validation.md`, `references.md` for completeness and *copy/paste runnable commands*.  
   - Ensure commands include prerequisites (env vars, services) and write evidence to explicit task-scoped paths.  
   - Verify validation is binary Pass/Fail and maps directly to acceptance criteria + sprint goals.  

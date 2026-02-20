@@ -186,9 +186,11 @@ def test_sprint_tasks_project_scope_includes_make_preamble_and_release_tags(tmp_
     assert tasks.stdout == (
         f"\n> project-handbook@0.0.0 ph {tmp_path.resolve()}\n> ph sprint tasks\n\n"
         "📋 SPRINT TASKS: SPRINT-2099-01-01\n" + "=" * 60 + "\n"
-        "⭕ TASK-001: Sprint Gate: SPRINT-2099-01-01  [ops/gates] (sprint-gate) [3pts]\n"
-        "✅ TASK-002: Rel task  [ci/evidence] (task-execution) [rel:v0.6.0] [3pts] (depends: FIRST_TASK)\n"
-        "✅ TASK-003: Gate task  [ci/evidence] (task-execution) [gate] [1pts] (depends: TASK-002)\n"
+        "⭕ TASK-001: Sprint Gate: SPRINT-2099-01-01  [ops/gates] [type:sprint-gate] (sprint-gate) [3pts]\n"
+        "✅ TASK-002: Rel task  [ci/evidence] [type:implementation] (task-execution) [rel:v0.6.0] [3pts] "
+        "(depends: FIRST_TASK)\n"
+        "✅ TASK-003: Gate task  [ci/evidence] [type:implementation] (task-execution) [gate] [1pts] "
+        "(depends: TASK-002)\n"
     )
 
 

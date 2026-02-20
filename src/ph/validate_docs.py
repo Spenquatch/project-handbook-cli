@@ -5,32 +5,12 @@ import re
 from pathlib import Path
 
 from .adr.validate import validate_adrs
+from .task_taxonomy import ALLOWED_TASK_TYPES, SESSION_TO_LEGACY_TASK_TYPE, TASK_TYPE_TO_SESSION
 
 _DR_ID_RE = re.compile(r"^DR-\d{4}$", re.IGNORECASE)
 _HEADING_INSIDE_LIST_RE = re.compile(r"^\s*(?:[-*]|\d+\.)\s+#{1,6}\s+\S")
 
-_ALLOWED_TASK_TYPES: set[str] = {
-    "implementation",
-    "research-discovery",
-    "sprint-gate",
-    "feature-research-planning",
-    "task-docs-deep-dive",
-}
-
-_TASK_TYPE_TO_REQUIRED_SESSION: dict[str, str] = {
-    "implementation": "task-execution",
-    "research-discovery": "research-discovery",
-    "sprint-gate": "sprint-gate",
-    "feature-research-planning": "feature-research-planning",
-    "task-docs-deep-dive": "task-docs-deep-dive",
-}
-
-# Backwards compatibility for legacy tasks that predate `task_type`.
-# Mapping is defined in cli_plan/v1_cli/CLI_CONTRACT.md ("Task types (BL-0007)").
-_LEGACY_DEFAULT_TASK_TYPE_BY_SESSION: dict[str, str] = {
-    "task-execution": "implementation",
-    "research-discovery": "research-discovery",
-}
+_ALLOWED_TASK_TYPES = ALLOWED_TASK_TYPES
 
 
 def load_validation_rules(*, ph_project_root: Path) -> dict:
@@ -912,16 +892,13 @@ def validate_sprints(*, issues: list[dict], rules: dict, root: Path) -> None:
                         "acceptance",
                     ],
                 )
-                missing = [k for k in required_fields if k not in task_data]
-                if missing and sprint_rules.get("require_task_yaml", True):
-                    issues.append(
-                        {"path": str(task_yaml), "code": "task_missing_fields", "severity": "error", "missing": missing}
-                    )
 
-                session = _strip(str(task_data.get("session", ""))).strip().lower()
+                raw_session = _strip(str(task_data.get("session", ""))).strip().lower()
                 raw_task_type = _strip(str(task_data.get("task_type", ""))).strip().lower()
 
                 effective_task_type: str | None = None
+                derived_session: str | None = None
+
                 if raw_task_type:
                     if raw_task_type not in _ALLOWED_TASK_TYPES:
                         issues.append(
@@ -940,10 +917,66 @@ def validate_sprints(*, issues: list[dict], rules: dict, root: Path) -> None:
                         )
                     else:
                         effective_task_type = raw_task_type
+                        derived_session = TASK_TYPE_TO_SESSION.get(effective_task_type)
+
+                        if raw_session:
+                            if derived_session and raw_session != derived_session:
+                                issues.append(
+                                    {
+                                        "path": str(task_yaml),
+                                        "code": "task_type_session_mismatch",
+                                        "severity": "error",
+                                        "task_type": effective_task_type,
+                                        "expected": derived_session,
+                                        "found": raw_session,
+                                        "message": (
+                                            "task_type and session are inconsistent.\n"
+                                            f"  task_type: {effective_task_type}\n"
+                                            f"  expected_session: {derived_session}\n"
+                                            f"  found_session: {raw_session}\n"
+                                        ),
+                                    }
+                                )
+                            else:
+                                issues.append(
+                                    {
+                                        "path": str(task_yaml),
+                                        "code": "task_session_deprecated",
+                                        "severity": "warning",
+                                        "message": (
+                                            "Deprecated key `session:` present in task.yaml; remove it "
+                                            "(derived from task_type)."
+                                        ),
+                                    }
+                                )
                 else:
-                    if session in _LEGACY_DEFAULT_TASK_TYPE_BY_SESSION:
-                        effective_task_type = _LEGACY_DEFAULT_TASK_TYPE_BY_SESSION[session]
-                    elif session:
+                    if raw_session:
+                        inferred = SESSION_TO_LEGACY_TASK_TYPE.get(raw_session)
+                        if inferred:
+                            effective_task_type = inferred
+                            derived_session = raw_session
+                            issues.append(
+                                {
+                                    "path": str(task_yaml),
+                                    "code": "task_type_missing_legacy_session",
+                                    "severity": "warning",
+                                    "message": (
+                                        "task.yaml is missing task_type; inferred from legacy session. "
+                                        "Add task_type and remove session."
+                                    ),
+                                }
+                            )
+                        else:
+                            issues.append(
+                                {
+                                    "path": str(task_yaml),
+                                    "code": "session_invalid",
+                                    "severity": "error",
+                                    "found": raw_session,
+                                    "message": f"Unknown session value in task.yaml: {raw_session}",
+                                }
+                            )
+                    else:
                         issues.append(
                             {
                                 "path": str(task_yaml),
@@ -953,49 +986,23 @@ def validate_sprints(*, issues: list[dict], rules: dict, root: Path) -> None:
                                 "found": "<missing>",
                                 "message": (
                                     "Missing task_type in task.yaml.\n"
-                                    f"  session: {session}\n"
                                     f"  expected: one of {sorted(_ALLOWED_TASK_TYPES)}\n"
                                     "  found: <missing>\n"
                                 ),
                             }
                         )
 
-                if effective_task_type:
-                    expected_session = _TASK_TYPE_TO_REQUIRED_SESSION.get(effective_task_type)
-                    if expected_session and session and session != expected_session:
-                        issues.append(
-                            {
-                                "path": str(task_yaml),
-                                "code": "task_type_session_mismatch",
-                                "severity": "error",
-                                "task_type": effective_task_type,
-                                "expected": expected_session,
-                                "found": session,
-                                "message": (
-                                    "task_type and session are inconsistent.\n"
-                                    f"  task_type: {effective_task_type}\n"
-                                    f"  expected_session: {expected_session}\n"
-                                    f"  found_session: {session}\n"
-                                ),
-                            }
-                        )
-                    elif expected_session and not session:
-                        issues.append(
-                            {
-                                "path": str(task_yaml),
-                                "code": "task_type_session_mismatch",
-                                "severity": "error",
-                                "task_type": effective_task_type,
-                                "expected": expected_session,
-                                "found": "<missing>",
-                                "message": (
-                                    "task_type requires a session value but session is missing.\n"
-                                    f"  task_type: {effective_task_type}\n"
-                                    f"  expected_session: {expected_session}\n"
-                                    "  found_session: <missing>\n"
-                                ),
-                            }
-                        )
+                # Allow older validation_rules.json configs to keep listing `session` as required. For
+                # modern tasks, `session` is derived from `task_type` and no longer needs to be stored.
+                missing = [k for k in required_fields if k not in task_data]
+                if "session" in missing and derived_session:
+                    missing = [k for k in missing if k != "session"]
+                if "task_type" in missing and effective_task_type:
+                    missing = [k for k in missing if k != "task_type"]
+                if missing and sprint_rules.get("require_task_yaml", True):
+                    issues.append(
+                        {"path": str(task_yaml), "code": "task_missing_fields", "severity": "error", "missing": missing}
+                    )
 
                 if effective_task_type == "sprint-gate":
                     task_id = _strip(str(task_data.get("id", ""))).strip()
@@ -1012,7 +1019,7 @@ def validate_sprints(*, issues: list[dict], rules: dict, root: Path) -> None:
                 if decision and sprint_rules.get("require_single_decision_per_task", True):
                     decision = str(decision).strip()
                     decision_norm = decision.upper()
-                    if session == "research-discovery":
+                    if derived_session == "research-discovery":
                         if not re.match(r"^DR-\d{4}$", decision_norm):
                             issues.append(
                                 {
@@ -1045,7 +1052,7 @@ def validate_sprints(*, issues: list[dict], rules: dict, root: Path) -> None:
                                         ),
                                     }
                                 )
-                    elif session == "task-execution":
+                    elif derived_session == "task-execution":
                         if not (decision_norm.startswith("ADR-") or decision_norm.startswith("FDR-")):
                             issues.append(
                                 {

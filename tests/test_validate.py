@@ -95,7 +95,7 @@ def test_validate_flags_task_type_session_mismatch(tmp_path: Path) -> None:
             "f",
             "--decision",
             "DR-0001",
-            "--session",
+            "--type",
             "research-discovery",
         ],
         cwd=tmp_path,
@@ -110,8 +110,13 @@ def test_validate_flags_task_type_session_mismatch(tmp_path: Path) -> None:
     task_dir = Path(m.group("path"))
     task_yaml_path = task_dir / "task.yaml"
     text = task_yaml_path.read_text(encoding="utf-8")
-    assert "session: research-discovery\n" in text
     assert "task_type: research-discovery\n" in text
+
+    # Session is deprecated but still validated for mismatch if present.
+    # Add a session line, then flip task_type to force a mismatch.
+    if "session: research-discovery\n" not in text:
+        text = text.replace("decision: DR-0001\n", "decision: DR-0001\nsession: research-discovery\n")
+
     updated = text.replace("task_type: research-discovery\n", "task_type: implementation\n")
     task_yaml_path.write_text(updated, encoding="utf-8")
 

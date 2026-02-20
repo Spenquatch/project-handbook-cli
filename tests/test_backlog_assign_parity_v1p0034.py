@@ -102,7 +102,7 @@ def test_backlog_assign_stdout_matches_legacy_make_preamble_and_next_steps_v1p00
         f"✅ Recorded assignment: {issue_id} → SPRINT-2099-01-01\n"
         "Next steps:\n"
         "1. Create/assign the actual sprint task via 'ph task create ...' (feature + decision required; "
-        "discovery tasks may use --session research-discovery --decision DR-XXXX).\n"
+        "discovery tasks may use --type research-discovery --decision DR-XXXX).\n"
         "2. If needed, update the sprint plan lanes/integration tasks to reflect the new work.\n"
     )
     assert result.stdout == expected

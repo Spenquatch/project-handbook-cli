@@ -37,7 +37,7 @@ tags: [ph, spec]
 
 ## Required Files and Directories
 - Required marker file:
-  - `project_handbook.config.json` (defines `PH_ROOT`; used by `ph` root detection)
+  - `.project-handbook/config.json` (defines `PH_ROOT`; used by `ph` root detection)
 - Common entrypoint doc (required for `ph onboarding`):
   - `ONBOARDING.md`
 - Required directories under `PH_ROOT/`:

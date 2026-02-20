@@ -23,7 +23,7 @@ Goal: reduce uncertainty and produce durable planning artefacts so execution age
 5. **Each Decision Register entry must present exactly two viable solutions** (Option A / Option B). No third option.
 6. **Operator approval required.** End every DR with a recommended option + rationale + explicit follow-up tasks, then request operator/user approval; only mark the DR as `Accepted` after approval (use `Proposed` while pending).
    - When approval is received (user says “approved”): update the DR to `Status: Accepted`, promote DR → ADR/FDR, and create the follow-up execution tasks referencing the ADR/FDR so sprint flow can pick them up.
-7. **Session routing rule.** If you are working from a sprint task directory, check `task.yaml` and follow its `session:`; if it does not match this prompt, stop and restart using `ph onboarding session <session>`.
+7. **Session routing rule.** If you are working from a sprint task directory, check `task.yaml task_type:`. Session template is derived from `task_type`. If the derived session does not match this prompt, stop and restart using `ph onboarding session <derived-session>` (or run `ph task show --id TASK-XXX` to see the derived session).
 
 ## Start Here (Context + Current State)
 ```bash

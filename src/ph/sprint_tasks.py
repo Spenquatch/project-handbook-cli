@@ -5,6 +5,7 @@ from typing import Any
 
 from .context import Context
 from .sprint import sprint_dir_from_id
+from .task_taxonomy import effective_task_type_and_session
 
 
 def _get_current_sprint_path(*, ph_data_root: Path) -> Path | None:
@@ -92,8 +93,10 @@ def run_sprint_tasks(*, ctx: Context, sprint: str | None) -> int:
         dep_info = f" (depends: {', '.join(deps)})" if deps else ""
         lane = task.get("lane")
         lane_info = f" [{lane}]" if lane else ""
-        session = task.get("session")
-        session_info = f" ({session})" if session else ""
+        inferred_type, derived_session, _issues = effective_task_type_and_session(task)
+        task_type = inferred_type or str(task.get("task_type", "") or "").strip() or "unknown"
+        task_type_info = f" [type:{task_type}]" if task_type else ""
+        session_info = f" ({derived_session})" if derived_session else ""
 
         release = task.get("release")
         release_value = str(release).strip() if release is not None else ""
@@ -115,7 +118,7 @@ def run_sprint_tasks(*, ctx: Context, sprint: str | None) -> int:
 
         print(
             f"{status_emoji} {task.get('id')}: {task.get('title')} "
-            f"{lane_info}{session_info}{release_info}{gate_info} [{points_value}pts]{dep_info}"
+            f"{lane_info}{task_type_info}{session_info}{release_info}{gate_info} [{points_value}pts]{dep_info}"
         )
 
     return 0

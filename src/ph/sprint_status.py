@@ -9,6 +9,7 @@ from typing import Any
 from .context import Context
 from .remediation_hints import next_commands_no_active_sprint, ph_prefix, print_next_commands
 from .sprint import get_sprint_dates, load_sprint_config, sprint_dir_from_id
+from .task_taxonomy import effective_task_type_and_session
 
 
 def _get_current_sprint_path(*, ph_data_root: Path) -> Path | None:
@@ -76,9 +77,11 @@ def describe_task(task: dict[str, Any]) -> str:
     owner = task.get("owner", "@owner")
     status = task.get("status", "todo")
     points = task.get("story_points", "?")
-    session = task.get("session")
-    session_info = f" | session {session}" if session else ""
-    return f"- {task_id} [{status} | {points} pts | owner {owner}{session_info}] {title}"
+    inferred_type, derived_session, _issues = effective_task_type_and_session(task)
+    task_type = inferred_type or str(task.get("task_type", "") or "").strip() or "unknown"
+    type_info = f" | type {task_type}" if task_type else ""
+    session_info = f" | session {derived_session}" if derived_session else ""
+    return f"- {task_id} [{status} | {points} pts | owner {owner}{type_info}{session_info}] {title}"
 
 
 def pick_task_by_status(tasks: list[dict[str, Any]], statuses: Sequence[str]) -> dict[str, Any] | None:

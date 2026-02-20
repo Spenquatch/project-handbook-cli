@@ -14,6 +14,7 @@ from .feature_status_updater import run_feature_summary
 from .question_manager import QuestionManager
 from .release import run_release_status
 from .sprint_status import run_sprint_status
+from .task_taxonomy import SESSION_TO_LEGACY_TASK_TYPE, TASK_TYPE_TO_SESSION, normalize_session, normalize_task_type
 from .task_view import run_task_list
 from .validate_docs import run_validate
 
@@ -32,27 +33,7 @@ class PreExecError(RuntimeError):
     pass
 
 
-ALLOWED_SESSIONS = {
-    "task-execution",
-    "research-discovery",
-    "sprint-gate",
-    "feature-research-planning",
-    "task-docs-deep-dive",
-}
-
-TASK_TYPE_TO_SESSION = {
-    "implementation": "task-execution",
-    "research-discovery": "research-discovery",
-    "sprint-gate": "sprint-gate",
-    "feature-research-planning": "feature-research-planning",
-    "task-docs-deep-dive": "task-docs-deep-dive",
-}
-
-DEFAULT_TASK_TYPE_BY_SESSION = {
-    # Backwards-compatible defaulting for legacy tasks (BL-0007 / I07-TTYPE-0001).
-    "task-execution": "implementation",
-    "research-discovery": "research-discovery",
-}
+ALLOWED_SESSIONS = set(TASK_TYPE_TO_SESSION.values())
 
 DISCOVERY_SESSIONS = {"research-discovery", "feature-research-planning", "task-docs-deep-dive"}
 EXECUTION_SESSIONS = {"task-execution", "sprint-gate"}
@@ -290,9 +271,9 @@ def _lint_task_dir(*, ph_data_root: Path, task_dir: Path) -> list[Finding]:
 
     task_yaml_text = _read_text(task_yaml_path)
     task_meta = _parse_task_yaml_top_level(task_yaml_text)
-    session = task_meta.get("session", "").strip()
+    raw_session = normalize_session(task_meta.get("session"))
     decision = task_meta.get("decision", "").strip()
-    task_type_raw = task_meta.get("task_type", "").strip()
+    task_type_raw = normalize_task_type(task_meta.get("task_type"))
 
     required_yaml_keys = [
         "id",
@@ -301,7 +282,6 @@ def _lint_task_dir(*, ph_data_root: Path, task_dir: Path) -> list[Finding]:
         "lane",
         "feature",
         "decision",
-        "session",
         "story_points",
         "depends_on",
     ]
@@ -326,17 +306,9 @@ def _lint_task_dir(*, ph_data_root: Path, task_dir: Path) -> list[Finding]:
             )
         )
 
-    if session not in ALLOWED_SESSIONS:
-        findings.append(
-            Finding(
-                task_id=task_id,
-                severity="FAIL",
-                message=(f"Unknown session '{session}' (expected one of: " + ", ".join(sorted(ALLOWED_SESSIONS)) + ")"),
-                file=task_yaml_path,
-            )
-        )
-
     task_type = task_type_raw
+    derived_session = ""
+
     if task_type:
         if task_type not in TASK_TYPE_TO_SESSION:
             findings.append(
@@ -352,36 +324,87 @@ def _lint_task_dir(*, ph_data_root: Path, task_dir: Path) -> list[Finding]:
                 )
             )
             task_type = ""
+        else:
+            derived_session = TASK_TYPE_TO_SESSION.get(task_type, "")
+            if raw_session:
+                if raw_session != derived_session:
+                    findings.append(
+                        Finding(
+                            task_id=task_id,
+                            severity="FAIL",
+                            message=(
+                                f"task_type/session mismatch: task_type '{task_type}' requires session "
+                                f"'{derived_session}', found '{raw_session}'"
+                            ),
+                            file=task_yaml_path,
+                        )
+                    )
+                else:
+                    findings.append(
+                        Finding(
+                            task_id=task_id,
+                            severity="WARN",
+                            message=(
+                                "Deprecated key `session:` present in task.yaml; remove it "
+                                "(derived from task_type)."
+                            ),
+                            file=task_yaml_path,
+                        )
+                    )
     else:
-        task_type = DEFAULT_TASK_TYPE_BY_SESSION.get(session, "")
-        if not task_type and session in ALLOWED_SESSIONS:
+        if raw_session:
+            inferred = SESSION_TO_LEGACY_TASK_TYPE.get(raw_session, "")
+            if inferred:
+                task_type = inferred
+                derived_session = raw_session
+                findings.append(
+                    Finding(
+                        task_id=task_id,
+                        severity="WARN",
+                        message=(
+                            "task.yaml missing task_type; inferred from legacy session "
+                            "(add task_type, remove session)."
+                        ),
+                        file=task_yaml_path,
+                    )
+                )
+            else:
+                findings.append(
+                    Finding(
+                        task_id=task_id,
+                        severity="FAIL",
+                        message=(
+                            f"Unknown session '{raw_session}' (expected one of: "
+                            + ", ".join(sorted(ALLOWED_SESSIONS))
+                            + ")"
+                        ),
+                        file=task_yaml_path,
+                    )
+                )
+        else:
             findings.append(
                 Finding(
                     task_id=task_id,
                     severity="FAIL",
-                    message=(
-                        "task.yaml missing required key: task_type "
-                        f"(required for session '{session}'; legacy defaulting only applies to "
-                        "task-execution and research-discovery)"
-                    ),
+                    message="task.yaml missing required key: task_type",
                     file=task_yaml_path,
                 )
             )
 
-    if task_type and session:
-        expected_session = TASK_TYPE_TO_SESSION.get(task_type, "")
-        if expected_session and session != expected_session:
-            findings.append(
-                Finding(
-                    task_id=task_id,
-                    severity="FAIL",
-                    message=(
-                        f"task_type/session mismatch: task_type '{task_type}' requires session "
-                        f"'{expected_session}', found '{session}'"
-                    ),
-                    file=task_yaml_path,
-                )
+    session = derived_session
+    if session and session not in ALLOWED_SESSIONS:
+        findings.append(
+            Finding(
+                task_id=task_id,
+                severity="FAIL",
+                message=(
+                    f"Unknown derived session '{session}' (expected one of: "
+                    + ", ".join(sorted(ALLOWED_SESSIONS))
+                    + ")"
+                ),
+                file=task_yaml_path,
             )
+        )
 
     if session and decision:
         session_norm = session.strip().lower()
@@ -422,15 +445,32 @@ def _lint_task_dir(*, ph_data_root: Path, task_dir: Path) -> list[Finding]:
                     file=readme_path,
                 )
             )
-        if "session" in fm and fm["session"] and session and fm["session"] != session:
-            findings.append(
-                Finding(
-                    task_id=task_id,
-                    severity="FAIL",
-                    message=f"README.md front matter session mismatch: task.yaml={session}, README.md={fm['session']}",
-                    file=readme_path,
+        if "session" in fm and fm["session"]:
+            readme_session = (fm.get("session") or "").strip()
+            if session and readme_session and readme_session != session:
+                findings.append(
+                    Finding(
+                        task_id=task_id,
+                        severity="FAIL",
+                        message=(
+                            "README.md front matter session mismatch: "
+                            f"derived_session={session}, README.md={readme_session}"
+                        ),
+                        file=readme_path,
+                    )
                 )
-            )
+            else:
+                findings.append(
+                    Finding(
+                        task_id=task_id,
+                        severity="WARN",
+                        message=(
+                            "README.md contains deprecated front matter key `session:`; remove it "
+                            "(derived from task_type)."
+                        ),
+                        file=readme_path,
+                    )
+                )
         if "feature" in fm and fm["feature"] and task_meta.get("feature") and fm["feature"] != task_meta["feature"]:
             task_feature = task_meta.get("feature")
             readme_feature = fm["feature"]

@@ -161,7 +161,8 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
     task_list_out = (
         "📋 SPRINT TASKS: SPRINT-SEQ-0001\n"
         f"{rule}\n"
-        "✅ TASK-001: Implement minimal task  [lane-a] (task-execution) [3pts] (depends: FIRST_TASK)\n"
+        "✅ TASK-001: Implement minimal task  [lane-a] [type:implementation] "
+        "(task-execution) [3pts] (depends: FIRST_TASK)\n"
     )
 
     feature_summary_line = f"🎉 {'feature-a':<25} {3:3d}/{3:3d} pts ({100:3d}%) Current: 1 tasks\n"

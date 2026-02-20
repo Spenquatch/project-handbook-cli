@@ -65,7 +65,6 @@ def run_reset_smoke(*, ph_root: Path, ctx: Context, include_system: bool) -> int
         owner="@owner",
         prio="P2",
         lane="ops/automation",
-        session="task-execution",
         env=env,
     )
     if rc != 0:
@@ -100,7 +99,6 @@ def run_reset_smoke(*, ph_root: Path, ctx: Context, include_system: bool) -> int
         owner="@owner",
         prio="P2",
         lane="ops",
-        session="task-execution",
         env=env,
     )
     if rc != 0:

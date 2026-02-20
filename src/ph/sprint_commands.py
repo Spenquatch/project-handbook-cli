@@ -15,8 +15,6 @@ def sprint_plan(*, ph_root: Path, ctx: Context, sprint_id: str | None, force: bo
             raw = line.strip()
             if raw.lower() == "task_type: sprint-gate":
                 return True
-            if raw.lower() == "session: sprint-gate":
-                return True
         return False
 
     def _sprint_has_gate_task(tasks_dir: Path) -> bool:
@@ -117,8 +115,6 @@ def sprint_plan(*, ph_root: Path, ctx: Context, sprint_id: str | None, force: bo
                     owner="@owner",
                     prio="P2",
                     lane=None,
-                    session="task-execution",
-                    session_was_provided=False,
                     task_type="sprint-gate",
                     release=None,
                     gate=False,

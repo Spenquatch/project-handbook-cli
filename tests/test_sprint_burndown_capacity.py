@@ -221,7 +221,7 @@ def test_sprint_capacity_no_active_sprint_prints_next_commands_to_stderr(tmp_pat
         env=dict(os.environ),
     )
     assert result.returncode == 1
-    assert result.stderr == ("❌ No active sprint\n\n" "Next commands:\n" "- ph sprint plan\n" "- ph next\n")
+    assert result.stderr == ("❌ No active sprint\n\nNext commands:\n- ph sprint plan\n- ph next\n")
 
 
 def test_sprint_burndown_no_active_sprint_prints_next_commands_to_stderr(tmp_path: Path) -> None:
@@ -234,4 +234,4 @@ def test_sprint_burndown_no_active_sprint_prints_next_commands_to_stderr(tmp_pat
         env=dict(os.environ),
     )
     assert result.returncode == 1
-    assert result.stderr == ("❌ No active sprint\n\n" "Next commands:\n" "- ph sprint plan\n" "- ph next\n")
+    assert result.stderr == ("❌ No active sprint\n\nNext commands:\n- ph sprint plan\n- ph next\n")

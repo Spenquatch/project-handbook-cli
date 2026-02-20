@@ -70,8 +70,6 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
             "P1",
             "--lane",
             "ops",
-            "--session",
-            "task-execution",
         ],
         capture_output=True,
         text=True,
@@ -86,11 +84,13 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "\n"
         f"> project-handbook@0.0.0 ph {resolved}\n"
         "> ph task create --title T --feature f --decision ADR-0000 --points 5 --owner @a --prio P1 "
-        "--lane ops --session task-execution\n"
+        "--lane ops\n"
         "\n"
         "✅ Created task directory: TASK-002-t\n"
         f"📁 Location: {task_dir}\n"
         f"cd -- {task_dir}\n"
+        "Task type: implementation\n"
+        "Session (derived): task-execution\n"
         "📝 Next steps:\n"
         f"   1. Edit {task_dir}/steps.md with implementation details\n"
         f"   2. Update {task_dir}/commands.md with specific commands\n"
@@ -123,7 +123,6 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "feature: f\n"
         "lane: ops\n"
         "decision: ADR-0000\n"
-        "session: task-execution\n"
         "task_type: implementation\n"
         "owner: @a\n"
         "status: todo\n"
@@ -147,7 +146,6 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "date: 2099-01-01\n"
         "task_id: TASK-002\n"
         "feature: f\n"
-        "session: task-execution\n"
         "tags: [task, f]\n"
         "links: [../../../../../features/f/overview.md]\n"
         "---\n"
@@ -160,7 +158,7 @@ def test_task_create_project_stdout_and_files_match_make_task_create(tmp_path: P
         "**Story Points**: 5\n"
         "**Owner**: @a\n"
         "**Lane**: ops\n"
-        "**Session**: `task-execution`\n"
+        "**Task Type**: `implementation`\n"
         "**Release**: (none)\n"
         "**Release Gate**: `false`\n"
         "\n"
@@ -557,14 +555,6 @@ def test_task_create_each_task_type_passes_validate_quick(tmp_path: Path) -> Non
         ("task-docs-deep-dive", "DR-0000"),
     ]
 
-    task_type_to_session = {
-        "implementation": "task-execution",
-        "research-discovery": "research-discovery",
-        "sprint-gate": "sprint-gate",
-        "feature-research-planning": "feature-research-planning",
-        "task-docs-deep-dive": "task-docs-deep-dive",
-    }
-
     for task_type, decision in cases:
         result = subprocess.run(
             [
@@ -593,7 +583,7 @@ def test_task_create_each_task_type_passes_validate_quick(tmp_path: Path) -> Non
         task_dir = Path(m.group("path"))
         task_yaml = (task_dir / "task.yaml").read_text(encoding="utf-8")
         assert f"task_type: {task_type}\n" in task_yaml
-        assert f"session: {task_type_to_session[task_type]}\n" in task_yaml
+        assert "session:" not in task_yaml
 
     validate = subprocess.run(
         ["ph", "--root", str(tmp_path), "--no-post-hook", "validate", "--quick"],

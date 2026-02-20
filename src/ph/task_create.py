@@ -10,6 +10,7 @@ from .clock import today as clock_today
 from .context import Context
 from .release import get_current_release
 from .shell_quote import shell_quote
+from .task_taxonomy import TASK_TYPE_TO_SESSION, normalize_task_type
 
 
 def slugify(value: str, *, max_len: int = 80) -> str:
@@ -215,8 +216,6 @@ def run_task_create(
     owner: str,
     prio: str,
     lane: str | None,
-    session: str,
-    session_was_provided: bool = True,
     task_type: str | None = None,
     release: str | None = None,
     gate: bool = False,
@@ -236,43 +235,14 @@ def run_task_create(
         print("Use: ph --scope system task create ...")
         return 1
 
-    TASK_TYPE_TO_SESSION: dict[str, str] = {
-        "implementation": "task-execution",
-        "research-discovery": "research-discovery",
-        "sprint-gate": "sprint-gate",
-        "feature-research-planning": "feature-research-planning",
-        "task-docs-deep-dive": "task-docs-deep-dive",
-    }
-    SESSION_TO_TASK_TYPE: dict[str, str] = {v: k for k, v in TASK_TYPE_TO_SESSION.items()}
     DEFAULT_TASK_TYPE = "implementation"
-    DEFAULT_SESSION = "task-execution"
 
-    normalized_task_type = (str(task_type).strip().lower() if task_type is not None else "") or None
-    normalized_session = (str(session).strip() if session is not None else "").strip()
-
-    if normalized_task_type:
-        if normalized_task_type not in TASK_TYPE_TO_SESSION:
-            allowed = ", ".join(sorted(TASK_TYPE_TO_SESSION.keys()))
-            print(f"❌ Unknown task type '{normalized_task_type}'. Allowed: {allowed}")
-            return 2
-        mapped = TASK_TYPE_TO_SESSION[normalized_task_type]
-        if session_was_provided and normalized_session and normalized_session != mapped:
-            print(
-                "❌ session/task_type mismatch.\n"
-                f"  task_type: {normalized_task_type}\n"
-                f"  session: {normalized_session}\n"
-                f"  expected session for type: {mapped}"
-            )
-            return 1
-        effective_task_type = normalized_task_type
-        effective_session = mapped
-    else:
-        effective_session = normalized_session or DEFAULT_SESSION
-        if session_was_provided and effective_session:
-            effective_task_type = SESSION_TO_TASK_TYPE.get(effective_session, DEFAULT_TASK_TYPE)
-        else:
-            effective_task_type = DEFAULT_TASK_TYPE
-            effective_session = DEFAULT_SESSION
+    effective_task_type = normalize_task_type(task_type) or DEFAULT_TASK_TYPE
+    if effective_task_type not in TASK_TYPE_TO_SESSION:
+        allowed = ", ".join(sorted(TASK_TYPE_TO_SESSION.keys()))
+        print(f"❌ Unknown task type '{effective_task_type}'. Allowed: {allowed}")
+        return 2
+    effective_session = TASK_TYPE_TO_SESSION[effective_task_type]
 
     TASK_TYPE_TO_DEFAULT_LANE: dict[str, str] = {
         "sprint-gate": "ops/gates",
@@ -345,7 +315,6 @@ def run_task_create(
     release_gate_line = f"release_gate: {'true' if gate else 'false'}\n"
 
     lane_line = f"lane: {effective_lane}\n" if effective_lane else ""
-    session_line = f"session: {effective_session}\n" if effective_session else ""
     task_type_line = f"task_type: {effective_task_type}\n"
 
     acceptance_lines = "\n".join(
@@ -356,7 +325,7 @@ def run_task_create(
 title: {title}
 feature: {feature}
 {lane_line}decision: {decision}
-{session_line}{task_type_line}owner: {owner}
+{task_type_line}owner: {owner}
 status: todo
 story_points: {story_points}
 depends_on: []
@@ -394,7 +363,6 @@ links: []
             f"date: {today.strftime('%Y-%m-%d')}",
             f"task_id: {task_id}",
             f"feature: {feature}",
-            f"session: {effective_session}",
             f"tags: [task, {feature}]",
             f"links: [{feature_overview_rel}]",
             "---",
@@ -407,7 +375,7 @@ links: []
             f"**Story Points**: {story_points}",
             f"**Owner**: {owner}",
             f"**Lane**: {effective_lane or '(unset)'}",
-            f"**Session**: `{effective_session}`",
+            f"**Task Type**: `{effective_task_type}`",
             f"**Release**: {normalized_release or '(none)'}",
             f"**Release Gate**: `{str(gate).lower()}`",
             "",
@@ -983,6 +951,8 @@ links: []
     print(f"✅ Created task directory: {task_dir.name}")
     print(f"📁 Location: {task_dir}")
     print(f"cd -- {shell_quote(task_dir)}")
+    print(f"Task type: {effective_task_type}")
+    print(f"Session (derived): {effective_session}")
     print("📝 Next steps:")
     print(f"   1. Edit {task_dir}/steps.md with implementation details")
     print(f"   2. Update {task_dir}/commands.md with specific commands")

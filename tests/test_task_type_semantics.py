@@ -148,4 +148,5 @@ def test_validate_sprints_flags_missing_task_type_for_non_legacy_session(tmp_pat
         root=ph_data_root,
     )
 
-    assert any(i.get("code") == "task_type_missing" and i.get("found") == "<missing>" for i in issues), issues
+    assert not any(i.get("code") == "task_type_missing" for i in issues), issues
+    assert any(i.get("code") == "task_type_missing_legacy_session" for i in issues), issues

@@ -14,8 +14,8 @@ Rule: `ph` MUST NOT execute repo-local Python scripts at runtime.
 When developing, prefer `ph --root /absolute/path/to/handbook` so you don’t accidentally operate on the wrong directory.
 
 v1 contract summary:
-- Content root: `PH_ROOT/**` (repo-root layout, e.g. `sprints/`, `features/`, `status/`, etc.)
-- Internals: `PH_ROOT/.project-handbook/**`
+- Handbook data root (project scope): `PH_ROOT/.project-handbook/**` (sprints, features, releases, status, process, etc.)
+- System scope data root: `PH_ROOT/.project-handbook/system/**`
 
 ## Repo layout (this repo)
 
@@ -42,6 +42,8 @@ If `ph` is not found, activate the venv first: `. .venv/bin/activate`.
 
 - `uv pip install -e ".[dev]"`
 - `uv run mkdocs serve`
+
+Docs source lives in `docs/` and is rendered via `mkdocs.yml`.
 
 ## End-session (manual verification)
 

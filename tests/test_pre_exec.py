@@ -65,8 +65,6 @@ def test_pre_exec_lint_and_audit_create_evidence_bundle(tmp_path: Path) -> None:
             "P1",
             "--lane",
             "ops",
-            "--session",
-            "task-execution",
         ],
         cwd=tmp_path,
     )

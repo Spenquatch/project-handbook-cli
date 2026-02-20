@@ -15,7 +15,7 @@ links: []
 - No waivers or “we think it’s fine” judgments: when uncertainty exists, stop and create a `task_type=research-discovery` task + DR entry for operator/user approval.
 
 ## Guardrails
-- **Session routing rule.** If you are working from a sprint task directory, check `task.yaml` and follow its `session:`; if it does not match this template, stop and restart using `ph onboarding session <session>`.
+- **Session routing rule.** If you are working from a sprint task directory, check `task.yaml task_type:`. Session template is derived from `task_type`. If the derived session does not match this template, stop and restart using `ph onboarding session <derived-session>` (or run `ph task show --id TASK-XXX` to see the derived session).
 - **Reject ambiguity.** Do not sign off when acceptance/evidence is missing or unclear; unresolved choices must become `task_type=research-discovery` tasks with a `DR-XXXX` and operator/user approval.
 
 ## Agenda

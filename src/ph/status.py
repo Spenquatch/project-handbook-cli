@@ -13,6 +13,7 @@ from .clock import local_today_from_now as clock_local_today_from_now
 from .feature_status_updater import update_all_feature_status
 from .question_manager import QuestionManager
 from .sprint import get_sprint_dates
+from .task_taxonomy import effective_task_type_and_session
 
 STAGE_PRIORITY: dict[str, int] = {
     "in-progress": 0,
@@ -532,8 +533,10 @@ def _write_status_summary(
     def format_task(task: dict[str, Any]) -> str:
         owner = task.get("owner", "@owner")
         title = task.get("title", "Untitled")
-        session = task.get("session")
-        session_info = f" [{session}]" if session else ""
+        inferred_type, derived_session, _issues = effective_task_type_and_session(task)
+        task_type = inferred_type or str(task.get("task_type", "") or "").strip() or "unknown"
+        type_info = f" [type:{task_type}]" if task_type else ""
+        session_info = f" [session:{derived_session}]" if derived_session else ""
         release = task.get("release")
         release_info = ""
         if release and str(release).strip().lower() not in {"null", "none", ""}:
@@ -541,7 +544,7 @@ def _write_status_summary(
         gate_info = ""
         if str(task.get("release_gate", "")).strip().lower() in {"true", "yes", "1"}:
             gate_info = " [gate]"
-        return f"- `{task.get('id', '')}` ({owner}){session_info}{release_info}{gate_info} — {title}"
+        return f"- `{task.get('id', '')}` ({owner}){type_info}{session_info}{release_info}{gate_info} — {title}"
 
     total_points = velocity.get("total_points", 0)
     completed_points = velocity.get("completed_points", 0)

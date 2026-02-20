@@ -18,13 +18,21 @@ Verify:
 
 ## Point `ph` at a handbook instance repo
 
-`ph` discovers the handbook root by searching upward from `cwd` for `project_handbook.config.json`.
+`ph` discovers the handbook root by searching upward from `cwd` for `.project-handbook/config.json`.
 
 If you are starting a new handbook instance repo directory, initialize the root marker first:
 
 - `ph init`
 
 `ph init` is safe and idempotent: it creates the root marker, required process assets, seeds onboarding/session templates, and scaffolds the canonical handbook directory tree (without overwriting existing files).
+
+After `ph init`, most handbook content lives under:
+
+- `.project-handbook/` (project scope)
+
+Tip: `ph init` updates `.gitignore` by default with recommended ignores (history/log/export paths). Use `--no-gitignore` to skip.
+
+Tip: commit `.project-handbook/` to your repo so planning/execution artifacts are versioned.
 
 Then verify required assets:
 
@@ -42,6 +50,8 @@ Tip: when developing inside a mono-repo or when your shell `cwd` is not inside t
 
 ## Run a few commands
 
+- `ph version`
+- `ph next`
 - `ph validate --quick`
 - `ph status`
 - `ph sprint plan`

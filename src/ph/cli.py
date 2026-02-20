@@ -392,7 +392,6 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Task taxonomy (e.g. implementation, research-discovery, sprint-gate)",
     )
-    task_create_parser.add_argument("--session", default="task-execution", help="Recommended session template")
     task_create_parser.add_argument(
         "--release",
         help='Optional release tag (vX.Y.Z or "current") to attribute work to a release',
@@ -611,6 +610,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--disable-system-scope-enforcement",
         action="store_true",
         help="Disable system-scope routing/enforcement (updates validation rules; deletes system scope config)",
+    )
+    process_refresh.add_argument(
+        "--migrate-tasks-drop-session",
+        action="store_true",
+        help="Migrate current sprint tasks by removing deprecated `session:` (infers task_type when possible)",
     )
 
     question_parser = subparsers.add_parser("question", help="Manage operator questions", parents=[sub_common])
@@ -1083,6 +1087,8 @@ def main(argv: list[str] | None = None) -> int:
                             cmd_args.append("--force")
                         if bool(getattr(args, "disable_system_scope_enforcement", False)):
                             cmd_args.append("--disable-system-scope-enforcement")
+                        if bool(getattr(args, "migrate_tasks_drop_session", False)):
+                            cmd_args.append("--migrate-tasks-drop-session")
                         sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                         sys.stdout.flush()
                     exit_code = run_process_refresh(
@@ -1091,6 +1097,7 @@ def main(argv: list[str] | None = None) -> int:
                         playbooks=bool(getattr(args, "playbooks", False)),
                         force=bool(getattr(args, "force", False)),
                         disable_system_scope_enforcement=bool(getattr(args, "disable_system_scope_enforcement", False)),
+                        migrate_tasks_drop_session=bool(getattr(args, "migrate_tasks_drop_session", False)),
                         env=os.environ,
                     )
                 else:
@@ -1295,8 +1302,6 @@ def main(argv: list[str] | None = None) -> int:
                             cmd_args.extend(["--lane", str(args.lane)])
                         if "--type" in invocation_args or "--task-type" in invocation_args:
                             cmd_args.extend(["--type", str(getattr(args, "task_type", ""))])
-                        if "--session" in invocation_args:
-                            cmd_args.extend(["--session", str(args.session)])
                         if "--release" in invocation_args and getattr(args, "release", None) is not None:
                             cmd_args.extend(["--release", str(args.release)])
                         if "--gate" in invocation_args and bool(getattr(args, "gate", False)):
@@ -1314,8 +1319,6 @@ def main(argv: list[str] | None = None) -> int:
                         owner=str(args.owner),
                         prio=str(args.prio),
                         lane=getattr(args, "lane", None),
-                        session=str(args.session),
-                        session_was_provided=("--session" in invocation_args),
                         task_type=getattr(args, "task_type", None),
                         release=getattr(args, "release", None),
                         gate=bool(getattr(args, "gate", False)),

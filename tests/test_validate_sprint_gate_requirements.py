@@ -174,7 +174,6 @@ def test_validate_passes_when_sprint_gate_task_has_required_markers(tmp_path: Pa
                 "status: done",
                 "story_points: 1",
                 "task_type: sprint-gate",
-                "session: sprint-gate",
                 "evidence_dir: status/evidence/TASK-001/",
             ]
         )

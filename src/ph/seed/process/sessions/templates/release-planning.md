@@ -16,7 +16,7 @@ Goal: produce a coherent release plan under `.project-handbook/releases/<version
 ## Your Rules
 1. **Stay in planning mode.** Do not modify implementation code or run build/deploy commands unless explicitly instructed.
 2. **Load continuity context first.** Read `.project-handbook/AGENT.md`, `.project-handbook/process/sessions/logs/latest_summary.md`, and the newest recap listed in `.project-handbook/process/sessions/session_end/session_end_index.json`.
-3. **Session routing rule.** If you are working from a sprint task directory, check `task.yaml` and follow its `session:`; if it does not match this prompt, stop and restart using `ph onboarding session <session>`.
+3. **Session routing rule.** If you are working from a sprint task directory, check `task.yaml task_type:`. Session template is derived from `task_type`. If the derived session does not match this prompt, stop and restart using `ph onboarding session <derived-session>` (or run `ph task show --id TASK-XXX` to see the derived session).
 4. **Use handbook automation.** Prefer `ph ...` commands instead of ad-hoc edits when a command exists.
 5. **Write artefacts, not chat.** The outcome should be updated docs under `.project-handbook/releases/` (and optionally feature/roadmap docs), not free-form notes.
 6. **No web research during release planning.** If research is required (external docs, ecosystem comparisons, security posture), create a `task_type=research-discovery` task and do the research there.

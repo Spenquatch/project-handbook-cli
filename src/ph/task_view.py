@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from .context import Context
+from .task_taxonomy import effective_task_type_and_session
 
 
 def _get_current_sprint_link(*, ph_data_root: Path) -> Path | None:
@@ -172,8 +173,10 @@ def run_task_list(*, ctx: Context) -> int:
         dep_info = f" (depends: {', '.join(deps)})" if deps else ""
         lane = str(task.get("lane", "") or "").strip()
         lane_info = f" [{lane}]" if lane else ""
-        session = str(task.get("session", "") or "").strip()
-        session_info = f" ({session})" if session else ""
+        inferred_type, derived_session, _issues = effective_task_type_and_session(task)
+        task_type = inferred_type or str(task.get("task_type", "") or "").strip() or "unknown"
+        task_type_info = f" [type:{task_type}]" if task_type else ""
+        session_info = f" ({derived_session})" if derived_session else ""
 
         release = task.get("release")
         release_value = str(release).strip() if release is not None else ""
@@ -197,7 +200,7 @@ def run_task_list(*, ctx: Context) -> int:
 
         print(
             f"{status_emoji} {task.get('id')}: {task.get('title')} "
-            f"{lane_info}{session_info}{release_info}{gate_info} [{points_value}pts]{dep_info}"
+            f"{lane_info}{task_type_info}{session_info}{release_info}{gate_info} [{points_value}pts]{dep_info}"
         )
 
     return 0
@@ -224,9 +227,11 @@ def run_task_show(*, ctx: Context, task_id: str) -> int:
     lane = str(task.get("lane", "") or "").strip()
     if lane:
         print(f"Lane: {lane}")
-    session = str(task.get("session", "") or "").strip()
-    if session:
-        print(f"Session: {session}")
+    inferred_type, derived_session, _issues = effective_task_type_and_session(task)
+    task_type = inferred_type or str(task.get("task_type", "") or "").strip() or "unknown"
+    print(f"Task Type: {task_type}")
+    if derived_session:
+        print(f"Session (derived): {derived_session}")
     print(f"Owner: {task.get('owner')}")
     print(f"Status: {task.get('status')}")
     print(f"Story Points: {task.get('story_points')}")

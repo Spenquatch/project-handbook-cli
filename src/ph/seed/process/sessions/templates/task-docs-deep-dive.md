@@ -13,7 +13,7 @@ You are an AI agent fleshing out task documentation (README/steps/commands/check
 3. **Use canonical guidance** from `.project-handbook/process/AI_AGENT_START_HERE.md` and task templates.  
 4. **Keep documentation self-contained:** all commands, inputs, and acceptance criteria must be explicit.  
 5. **Validate updates** with `ph validate`.
-6. **Session routing rule.** For the task you are editing, check `task.yaml` and ensure the docs match its `session:`; if the session implies discovery work, route uncertainty to `session=research-discovery` and DRs (Option A/B) instead of leaving open questions.
+6. **Session routing rule.** For the task you are editing, check `task.yaml task_type:` and ensure the docs match its derived session semantics; if the task implies discovery work, route uncertainty to `task_type=research-discovery` and DRs (Option A/B) instead of leaving open questions.
 
 ## Documentation Checklist
 - Identify the task (story points, dependencies, owner).  

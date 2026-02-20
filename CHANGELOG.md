@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+## v0.0.24 (2026-02-20)
+
+- **Breaking**: `ph task create --session ...` removed; `task_type` is now canonical and session templates are derived from `task_type`.
+- `task.yaml session:` is deprecated (ignored for behavior); mismatches fail validation/pre-exec, matches emit warnings.
+- Adds `ph process refresh --migrate-tasks-drop-session` to remove deprecated `session:` from current sprint tasks (infers `task_type` when possible).
+
 ## v0.0.23 (2026-02-20)
 
 - Adds `ph evidence new` to create a task-scoped evidence directory and seeded `index.md`.

@@ -17,7 +17,7 @@ Goal: close the current sprint with clean task states, a completed retrospective
 ## Your Rules
 1. **Stay in closing mode.** Do not modify product implementation code unless explicitly requested.
 2. **Load continuity context first.** Read `.project-handbook/AGENT.md`, `.project-handbook/process/sessions/logs/latest_summary.md`, and the newest recap listed in `.project-handbook/process/sessions/session_end/session_end_index.json`.
-3. **Session routing rule.** If you are working from a sprint task directory, check `task.yaml` and follow its `session:`; if it does not match this prompt, stop and restart using `ph onboarding session <session>`.
+3. **Session routing rule.** If you are working from a sprint task directory, check `task.yaml task_type:`. Session template is derived from `task_type`. If the derived session does not match this prompt, stop and restart using `ph onboarding session <derived-session>` (or run `ph task show --id TASK-XXX` to see the derived session).
 4. **Use handbook automation first.** Prefer `ph ...` over ad-hoc edits when a command exists.
 5. **No loose ends.** Every retro action item becomes a tracked artifact (next sprint task, backlog item, or parking-lot item) with an owner.
 

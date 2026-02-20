@@ -362,7 +362,7 @@ _Add investigation findings here_
         print(
             "1. Create/assign the actual sprint task via "
             f"'{task_create_cmd} ...' (feature + decision required; discovery tasks may use "
-            "--session research-discovery --decision DR-XXXX)."
+            "--type research-discovery --decision DR-XXXX)."
         )
         print("2. If needed, update the sprint plan lanes/integration tasks to reflect the new work.")
 

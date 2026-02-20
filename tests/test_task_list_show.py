@@ -104,8 +104,9 @@ def test_task_list_and_show_match_v0_formatting_rules(tmp_path: Path, scope: str
     assert listed.stdout.splitlines() == [
         "📋 SPRINT TASKS: SPRINT-2099-01-01",
         "=" * 60,
-        "🔄 TASK-001: First task  [ops] (task-execution) [rel:v9.9.9] [3pts] (depends: FIRST_TASK)",
-        "⭕ TASK-002: Second task  [gate] [5pts]",
+        "🔄 TASK-001: First task  [ops] [type:implementation] (task-execution) [rel:v9.9.9] [3pts] "
+        "(depends: FIRST_TASK)",
+        "⭕ TASK-002: Second task  [type:unknown] [gate] [5pts]",
     ]
 
     cmd = ["ph", "--root", str(tmp_path)]

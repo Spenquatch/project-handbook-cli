@@ -25,7 +25,7 @@ You are an AI agent executing a specific task inside the project handbook.
 ## Execution Checklist
 - Claim the task via `ph task status`.  
 - Enter the task directory: `cd .project-handbook/sprints/current/tasks/TASK-XXX-*`.  
-- Check `task.yaml` for an explicit `session:`; when it is not `task-execution`, restart using that session template (e.g. `ph onboarding session research-discovery`).  
+- Check `task.yaml` for an explicit `task_type:`. Session template is derived from `task_type`. If the derived session is not `task-execution`, stop and restart using `ph onboarding session <derived-session>` (or run `ph task show --id TASK-XXX` to see the derived session).  
 - Execute steps from `steps.md`; use commands from `commands.md`.  
 - Do not execute tasks that contain ambiguity (`TBD`, “optional”, open questions, “if it’s just …”); send them back to planning or create a `task_type=research-discovery` task + DR entry first.  
 - Update relevant feature docs (`architecture`, `implementation`, `status`, `risks`).  
