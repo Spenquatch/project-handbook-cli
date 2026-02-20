@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.20 (2026-02-20)
+
+- `ph release close` now runs a preflight that blocks close when the release timeline isn’t complete (unfinished
+  slots/sprints) or when any `release_gate: true` tasks are not done; when blocked it prints a deterministic “Next
+  commands” checklist, and when closing the current release it auto-clears the current release pointer.
+
 ## v0.0.19 (2026-02-20)
 
 - System-scope routing/enforcement is now opt-in (disabled by default); new handbooks no longer seed

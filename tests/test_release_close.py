@@ -31,12 +31,6 @@ def test_release_close_updates_plan_and_creates_changelog(tmp_path: Path) -> Non
     env = dict(os.environ)
     env["PH_FAKE_TODAY"] = "2099-01-01"
 
-    sprint_dir = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01"
-    sprint_dir.mkdir(parents=True, exist_ok=True)
-    current_link = tmp_path / ".project-handbook" / "sprints" / "current"
-    current_link.parent.mkdir(parents=True, exist_ok=True)
-    current_link.symlink_to(Path("2099") / "SPRINT-2099-01-01")
-
     plan = subprocess.run(
         [
             "ph",
@@ -60,6 +54,15 @@ def test_release_close_updates_plan_and_creates_changelog(tmp_path: Path) -> Non
 
     plan_path = tmp_path / ".project-handbook" / "releases" / "v1.2.3" / "plan.md"
     assert "# Release v1.2.3" in plan_path.read_text(encoding="utf-8")
+
+    # Release timeline is `sprint_ids` (start_sprint + planned_sprints). Closing is blocked unless all
+    # planned sprints are archived under sprints/archive/.
+    (tmp_path / ".project-handbook" / "sprints" / "archive" / "2099" / "SPRINT-2099-01-01").mkdir(
+        parents=True, exist_ok=True
+    )
+    (tmp_path / ".project-handbook" / "sprints" / "archive" / "2099" / "SPRINT-2099-01-08").mkdir(
+        parents=True, exist_ok=True
+    )
 
     (tmp_path / ".project-handbook" / "releases" / "v1.2.3" / "features.yaml").write_text(
         "\n".join(
@@ -137,9 +140,80 @@ def test_release_close_updates_plan_and_creates_changelog(tmp_path: Path) -> Non
 
     updated_plan = plan_path.read_text(encoding="utf-8")
     assert "status: delivered" in updated_plan
-    assert "delivered_sprint: SPRINT-2099-01-01" in updated_plan
+    assert "delivered_sprint: SPRINT-2099-01-08" in updated_plan
     assert "delivered_date: 2099-01-01" in updated_plan
-    assert "> Release status: **delivered** (marked delivered in `SPRINT-2099-01-01`, on 2099-01-01)." in updated_plan
+    assert "> Release status: **delivered** (marked delivered in `SPRINT-2099-01-08`, on 2099-01-01)." in updated_plan
+
+
+def test_release_close_clears_current_release_pointer_when_current(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+
+    env = dict(os.environ)
+    env["PH_FAKE_TODAY"] = "2099-01-01"
+
+    plan = subprocess.run(
+        [
+            "ph",
+            "--root",
+            str(tmp_path),
+            "--no-post-hook",
+            "release",
+            "plan",
+            "--version",
+            "v1.2.3",
+            "--sprints",
+            "1",
+            "--start-sprint",
+            "SPRINT-2099-01-01",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert plan.returncode == 0
+
+    (tmp_path / ".project-handbook" / "sprints" / "archive" / "2099" / "SPRINT-2099-01-01").mkdir(
+        parents=True, exist_ok=True
+    )
+
+    # Simulate active current release pointer (symlink + txt).
+    releases_dir = tmp_path / ".project-handbook" / "releases"
+    current_link = releases_dir / "current"
+    current_link.parent.mkdir(parents=True, exist_ok=True)
+    current_link.symlink_to(Path("v1.2.3"))
+    (releases_dir / "current.txt").write_text("v1.2.3\n", encoding="utf-8")
+
+    (tmp_path / ".project-handbook" / "releases" / "v1.2.3" / "features.yaml").write_text(
+        "\n".join(
+            [
+                "version: v1.2.3",
+                "",
+                "features:",
+                "  alpha:",
+                "    critical_path: true",
+                "",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    close = subprocess.run(
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "close", "--version", "v1.2.3"],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert close.returncode == 0
+    assert close.stdout.splitlines() == [
+        "✅ Release v1.2.3 closed",
+        f"📋 Generated changelog: {tmp_path}/.project-handbook/releases/v1.2.3/changelog.md",
+        f"📝 Updated plan status: {tmp_path}/.project-handbook/releases/v1.2.3/plan.md",
+        "⭐ Cleared current release pointer: v1.2.3",
+        "📈 Ready for deployment",
+    ]
+    assert not (releases_dir / "current").exists()
+    assert not (releases_dir / "current.txt").exists()
 
 
 def test_release_close_rejects_system_scope(tmp_path: Path) -> None:
