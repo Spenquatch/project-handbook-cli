@@ -136,6 +136,14 @@ def _default_story_points(*, ph_project_root: Path) -> int:
         return 5
 
 
+def _system_scope_enforcement_enabled(*, ph_project_root: Path) -> bool:
+    rules = _load_validation_rules(ph_project_root=ph_project_root)
+    enforcement = rules.get("system_scope_enforcement")
+    if not isinstance(enforcement, dict):
+        return False
+    return enforcement.get("enabled") is True
+
+
 def _task_lane_prefixes_for_system_scope(*, ph_project_root: Path) -> list[str]:
     config_path = ph_project_root / "process" / "automation" / "system_scope_config.json"
     try:
@@ -219,7 +227,12 @@ def run_task_create(
         print("❌ No current sprint found. Run 'ph sprint plan' first.")
         return 1
 
-    if lane and ctx.scope == "project" and is_system_scoped_lane(ph_project_root=ctx.ph_project_root, lane=lane):
+    if (
+        lane
+        and ctx.scope == "project"
+        and _system_scope_enforcement_enabled(ph_project_root=ctx.ph_project_root)
+        and is_system_scoped_lane(ph_project_root=ctx.ph_project_root, lane=lane)
+    ):
         print("Use: ph --scope system task create ...")
         return 1
 

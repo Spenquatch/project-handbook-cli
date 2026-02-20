@@ -8,6 +8,18 @@ from .context import Context
 from .shell_quote import shell_quote
 
 
+def _system_scope_enforcement_enabled(*, ph_project_root: Path) -> bool:
+    rules_path = ph_project_root / "process" / "checks" / "validation_rules.json"
+    try:
+        rules = json.loads(rules_path.read_text(encoding="utf-8"))
+    except Exception:
+        return False
+    enforcement = rules.get("system_scope_enforcement")
+    if not isinstance(enforcement, dict):
+        return False
+    return enforcement.get("enabled") is True
+
+
 def _feature_name_prefixes_for_system_scope(*, ph_data_root: Path) -> list[str]:
     config_path = ph_data_root / "process" / "automation" / "system_scope_config.json"
     try:
@@ -65,7 +77,11 @@ def run_feature_create(
     owner = (owner or "@owner").strip() or "@owner"
     stage = (stage or "proposed").strip() or "proposed"
 
-    if ctx.scope == "project" and is_system_scoped_feature(ph_data_root=ctx.ph_data_root, name=name):
+    if (
+        ctx.scope == "project"
+        and _system_scope_enforcement_enabled(ph_project_root=ctx.ph_project_root)
+        and is_system_scoped_feature(ph_data_root=ctx.ph_data_root, name=name)
+    ):
         print(f"Use: ph --scope system feature create --name {name}")
         return 1
 

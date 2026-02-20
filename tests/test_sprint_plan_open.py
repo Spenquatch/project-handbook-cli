@@ -124,7 +124,7 @@ def test_sprint_plan_bounded_template_matches_legacy(tmp_path: Path) -> None:
         "|------|-------|----------------|",
         "| `service/<name>` | | |",
         "| `infra/<name>` | | |",
-        "| `handbook/<area>` | | |",
+        "| `docs/<area>` | | |",
         "| `integration/<scope>` | | |",
         "",
         "## Integration Tasks",
@@ -134,7 +134,7 @@ def test_sprint_plan_bounded_template_matches_legacy(tmp_path: Path) -> None:
         "```bash",
         (
             'ph task create --title "Task Name" --feature feature-name --decision ADR-XXX --points 3 '
-            '--lane "handbook/automation" --release current'
+            '--lane "ops/automation" --release current'
         ),
         (
             'ph task create --title "Gate: <name>" --feature feature-name --decision ADR-XXX --points 3 '

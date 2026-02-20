@@ -38,7 +38,8 @@ def load_validation_rules(*, ph_project_root: Path) -> dict:
     default_rules = {
         "validation": {"require_front_matter": True, "skip_docs_directory": True},
         "system_scope_enforcement": {
-            "enabled": True,
+            # Opt-in. When disabled, system-scope routing config is not required and no routing checks run.
+            "enabled": False,
             "config_path": "process/automation/system_scope_config.json",
         },
         "sprint_tasks": {

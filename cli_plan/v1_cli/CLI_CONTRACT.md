@@ -495,8 +495,11 @@ Defaults:
   - Tooling MUST default to `task_type: implementation` and `session: task-execution`.
 
 Guardrails:
-- If `--lane` begins with `handbook/`, command MUST fail with remediation:
-  - `Lane prefix 'handbook/' is reserved. Use a project lane like: ops, eng, product, etc.`
+- Optional (opt-in) system-scope routing:
+  - If `system_scope_enforcement.enabled` is `true` in `process/checks/validation_rules.json` and the provided
+    `--lane` matches a configured system-scope lane prefix (from `process/automation/system_scope_config.json`),
+    command MUST fail with remediation:
+    - `Use: ph --scope system task create ...`
 - If `--task-type` is provided, it MUST be one of the allowed `task_type` values under “Task types (BL-0007)”.
 - If `--session` is provided, it MUST be one of: `task-execution`, `research-discovery`, `sprint-gate`, `feature-research-planning`, `task-docs-deep-dive`.
 - Decision/session workflow invariants (BL-0005):

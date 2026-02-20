@@ -405,7 +405,7 @@ tags: [sprint, planning]
                 "|------|-------|----------------|",
                 "| `service/<name>` | | |",
                 "| `infra/<name>` | | |",
-                "| `handbook/<area>` | | |",
+                "| `docs/<area>` | | |",
                 "| `integration/<scope>` | | |",
                 "",
                 "## Integration Tasks",
@@ -415,7 +415,7 @@ tags: [sprint, planning]
                 "```bash",
                 (
                     f'{task_create_cmd} --title "Task Name" --feature feature-name --decision ADR-XXX '
-                    '--points 3 --lane "handbook/automation"'
+                    '--points 3 --lane "ops/automation"'
                 ),
                 "```",
                 "",
@@ -471,7 +471,7 @@ tags: [sprint, planning]
             "|------|-------|----------------|",
             "| `service/<name>` | | |",
             "| `infra/<name>` | | |",
-            "| `handbook/<area>` | | |",
+            "| `docs/<area>` | | |",
             "| `integration/<scope>` | | |",
             "",
             "## Integration Tasks",
@@ -481,7 +481,7 @@ tags: [sprint, planning]
             "```bash",
             (
                 'ph task create --title "Task Name" --feature feature-name --decision ADR-XXX --points 3 '
-                '--lane "handbook/automation" --release current'
+                '--lane "ops/automation" --release current'
             ),
             (
                 'ph task create --title "Gate: <name>" --feature feature-name --decision ADR-XXX --points 3 '

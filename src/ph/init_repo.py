@@ -181,7 +181,9 @@ _DEFAULT_SESSION_END_INDEX = {"records": []}
 _DEFAULT_VALIDATION_RULES = {
     "validation": {"require_front_matter": True, "skip_docs_directory": True},
     "system_scope_enforcement": {
-        "enabled": True,
+        # System-scope routing/enforcement is opt-in. The `--scope` mechanism remains available,
+        # but no lane/feature/ADR routing rules are enforced unless a repo explicitly enables it.
+        "enabled": False,
         "config_path": "process/automation/system_scope_config.json",
     },
     "sprint_management": {
@@ -231,8 +233,8 @@ _DEFAULT_SYSTEM_SCOPE_CONFIG = {
 
 _DEFAULT_RESET_SPEC = {
     "schema_version": 1,
-    "description": "Project-scope reset spec (MUST preserve .project-handbook/system/**).",
-    "forbidden_subtrees": [".project-handbook/system"],
+    "description": "Project-scope reset spec (system scope preserved by default; see `ph reset --include-system`).",
+    "forbidden_subtrees": [],
     "delete_contents_roots": [
         ".project-handbook/sprints",
         ".project-handbook/features",
@@ -348,7 +350,6 @@ def run_init(*, target_root: Path, update_gitignore: bool) -> int:
         target_root=target_root,
         rel_dirs=[
             ".project-handbook",
-            ".project-handbook/system",
             ".project-handbook/process/playbooks",
             ".project-handbook/process/sessions/logs",
             ".project-handbook/process/sessions/session_end",
@@ -361,10 +362,6 @@ def run_init(*, target_root: Path, update_gitignore: bool) -> int:
     _write_json_if_missing(
         path=data_root / "process" / "checks" / "validation_rules.json",
         payload=_DEFAULT_VALIDATION_RULES,
-    )
-    _write_json_if_missing(
-        path=data_root / "process" / "automation" / "system_scope_config.json",
-        payload=_DEFAULT_SYSTEM_SCOPE_CONFIG,
     )
     _write_json_if_missing(
         path=data_root / "process" / "automation" / "reset_spec.json",

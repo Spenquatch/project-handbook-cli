@@ -179,3 +179,27 @@ def test_reset_execute_deletes_project_preserves_system_rewrites_templates_and_s
     assert (data_root / "parking-lot" / "index.json").exists()
 
     assert not history.exists()
+
+
+def test_reset_include_system_wipes_system_scope_when_flag_passed(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path)
+    _write_reset_spec(tmp_path)
+
+    sys_feature = _write_system_artifacts(tmp_path)
+    _write_project_artifacts(tmp_path)
+
+    result = subprocess.run(
+        ["ph", "--root", str(tmp_path), "reset", "--include-system", "--confirm", "RESET", "--force", "true"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+
+    data_root = tmp_path / ".project-handbook"
+    assert not (data_root / "features" / "x").exists()
+    assert not (data_root / "sprints" / "2099").exists()
+    assert not (data_root / "sprints" / "current").exists()
+    assert not (data_root / "backlog" / "bugs" / "BUG-001").exists()
+    assert not sys_feature.exists()
+    assert not (data_root / "system").exists()

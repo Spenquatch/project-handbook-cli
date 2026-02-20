@@ -116,6 +116,20 @@ def test_feature_create_guardrail_rejects_system_scoped_names_in_project_scope(t
         routing_rules={"feature_name_prefixes_for_system_scope": ["handbook-", "ph-"]},
     )
 
+    # Opt-in: enable system-scope enforcement for this test.
+    rules_path = tmp_path / ".project-handbook" / "process" / "checks" / "validation_rules.json"
+    rules_path.write_text(
+        json.dumps(
+            {
+                "system_scope_enforcement": {
+                    "enabled": True,
+                    "config_path": "process/automation/system_scope_config.json",
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
     env = dict(os.environ)
     env["PH_FAKE_TODAY"] = "2099-01-01"
 

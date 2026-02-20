@@ -26,7 +26,7 @@ def _assert_not_exists(path: Path, label: str) -> int:
     return 1
 
 
-def run_reset_smoke(*, ph_root: Path, ctx: Context) -> int:
+def run_reset_smoke(*, ph_root: Path, ctx: Context, include_system: bool) -> int:
     if ctx.scope == "system":
         print("reset-smoke is project-scope only. Use: ph --scope project reset-smoke ...")
         return 1
@@ -64,7 +64,7 @@ def run_reset_smoke(*, ph_root: Path, ctx: Context) -> int:
         points=1,
         owner="@owner",
         prio="P2",
-        lane="handbook/automation",
+        lane="ops/automation",
         session="task-execution",
         env=env,
     )
@@ -107,7 +107,13 @@ def run_reset_smoke(*, ph_root: Path, ctx: Context) -> int:
         return rc
 
     # Step 3: Execute reset.
-    rc = run_reset(ctx=ctx, spec=".project-handbook/process/automation/reset_spec.json", confirm="RESET", force="true")
+    rc = run_reset(
+        ctx=ctx,
+        spec=".project-handbook/process/automation/reset_spec.json",
+        include_system=include_system,
+        confirm="RESET",
+        force="true",
+    )
     if rc != 0:
         return rc
 
@@ -144,6 +150,21 @@ def run_reset_smoke(*, ph_root: Path, ctx: Context) -> int:
             "sys_sprint",
         )
     )
+    if include_system:
+        checks[-2] = (
+            _assert_not_exists(
+                system_ctx.ph_data_root / "features" / "handbook-reset-smoke",
+                "system feature",
+            ),
+            "sys_feature",
+        )
+        checks[-1] = (
+            _assert_not_exists(
+                system_ctx.ph_data_root / "sprints" / "2099" / "SPRINT-2099-01-01",
+                "system sprint",
+            ),
+            "sys_sprint",
+        )
 
     for code, _name in checks:
         if code != 0:
@@ -167,5 +188,8 @@ def run_reset_smoke(*, ph_root: Path, ctx: Context) -> int:
     if rc != 0:
         return rc
 
-    print("✅ reset-smoke complete (project scope wiped; system scope preserved).")
+    if include_system:
+        print("✅ reset-smoke complete (project + system scopes wiped).")
+    else:
+        print("✅ reset-smoke complete (project scope wiped; system scope preserved).")
     return 0

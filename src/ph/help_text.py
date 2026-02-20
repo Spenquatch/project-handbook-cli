@@ -40,7 +40,7 @@ Notes:
     "task": (
         "Task workflow commands\n"
         "  ph task create --title 'X' --feature foo --decision ADR-001 [--points 5] [--owner @alice] "
-        "[--lane handbook/automation] [--type implementation|research-discovery|feature-research-planning|"
+        "[--lane ops/automation] [--type implementation|research-discovery|feature-research-planning|"
         "task-docs-deep-dive|sprint-gate] [--session <template>] [--release current|vX.Y.Z] [--gate]\n"
         "                        - Scaffold a new sprint task directory with docs/checklists\n"
         "\n"

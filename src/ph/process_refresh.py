@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 
 from .clock import today as clock_today
@@ -126,6 +127,7 @@ def run_process_refresh(
     templates: bool,
     playbooks: bool,
     force: bool,
+    disable_system_scope_enforcement: bool,
     env: dict[str, str],
 ) -> int:
     if ctx.scope == "system":
@@ -140,6 +142,43 @@ def run_process_refresh(
 
     wrote = 0
     skipped = 0
+
+    enforcement_disabled = False
+    system_scope_config_deleted = False
+    if disable_system_scope_enforcement:
+        rules_path = ctx.ph_project_root / "process" / "checks" / "validation_rules.json"
+        try:
+            rules = json.loads(rules_path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            print(f"❌ Missing validation rules: {rules_path}")
+            return 1
+        except Exception as exc:
+            print(f"❌ Failed to read validation rules: {rules_path} ({exc})")
+            return 1
+
+        if not isinstance(rules, dict):
+            rules = {}
+        enforcement = rules.get("system_scope_enforcement")
+        if not isinstance(enforcement, dict):
+            enforcement = {}
+        enforcement["enabled"] = False
+        rules["system_scope_enforcement"] = enforcement
+
+        try:
+            rules_path.write_text(json.dumps(rules, indent=2) + "\n", encoding="utf-8")
+            enforcement_disabled = True
+        except Exception as exc:
+            print(f"❌ Failed to write validation rules: {rules_path} ({exc})")
+            return 1
+
+        config_path = ctx.ph_project_root / "process" / "automation" / "system_scope_config.json"
+        try:
+            if config_path.exists():
+                config_path.unlink()
+                system_scope_config_deleted = True
+        except Exception as exc:
+            print(f"❌ Failed to delete system scope config: {config_path} ({exc})")
+            return 1
 
     if templates:
         seed = load_seed_markdown_dir(rel_dir="process/sessions/templates")
@@ -171,6 +210,12 @@ def run_process_refresh(
             wrote += 1
 
     print(f"✅ Process refresh complete: wrote={wrote} skipped={skipped}")
+    if disable_system_scope_enforcement:
+        print(
+            "System scope enforcement disabled:"
+            f" validation_rules.json={'updated' if enforcement_disabled else 'unchanged'}"
+            f", system_scope_config.json={'deleted' if system_scope_config_deleted else 'absent'}"
+        )
     if skipped and not force:
         print("Tip: re-run with `--force` to overwrite locally modified seed-owned files.")
     return 0

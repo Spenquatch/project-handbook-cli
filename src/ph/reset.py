@@ -56,14 +56,14 @@ def _as_list(value: Any, field: str) -> list[str]:
     return out
 
 
-def _compute_delete_set_for_dir(root: Path, protected: list[Path], system_root: Path) -> set[Path]:
+def _compute_delete_set_for_dir(root: Path, protected: list[Path], forbidden_subtree: Path | None) -> set[Path]:
     if not root.exists():
         return set()
     if not root.is_dir():
         raise ResetError(f"Invalid reset spec: delete_contents_roots entry is not a directory: {root}\n")
 
-    if _path_is_relative_to(root.absolute(), system_root.absolute()):
-        raise ResetError(f"Refusing to compute delete set under system root: {root}\n")
+    if forbidden_subtree is not None and _path_is_relative_to(root.absolute(), forbidden_subtree.absolute()):
+        raise ResetError(f"Refusing to compute delete set under forbidden subtree: {root}\n")
 
     delete_set: set[Path] = set()
 
@@ -187,7 +187,7 @@ ph end-session --log <path-to-rollout-jsonl>
         out_path.write_text(content, encoding="utf-8")
 
 
-def run_reset(*, ctx: Context, spec: str, confirm: str, force: str) -> int:
+def run_reset(*, ctx: Context, spec: str, include_system: bool, confirm: str, force: str) -> int:
     if ctx.scope == "system":
         print("Reset is project-scope only. Use: ph --scope project reset ...")
         return 1
@@ -198,7 +198,6 @@ def run_reset(*, ctx: Context, spec: str, confirm: str, force: str) -> int:
     if int(reset_spec.get("schema_version") or 0) != 1:
         raise ResetError(f"Invalid reset spec schema_version (expected 1): {spec_path}\n")
 
-    forbidden_subtrees = _as_list(reset_spec.get("forbidden_subtrees"), "forbidden_subtrees")
     delete_contents_roots = _as_list(reset_spec.get("delete_contents_roots"), "delete_contents_roots")
     delete_paths = _as_list(reset_spec.get("delete_paths"), "delete_paths")
     preserve_paths = _as_list(reset_spec.get("preserve_paths"), "preserve_paths")
@@ -207,20 +206,20 @@ def run_reset(*, ctx: Context, spec: str, confirm: str, force: str) -> int:
     recreate_files = _as_list(reset_spec.get("recreate_files"), "recreate_files")
 
     system_root = _resolve_repo_relative(ctx.ph_root, ".project-handbook/system")
-    if ".project-handbook/system" not in {p.rstrip("/") for p in forbidden_subtrees}:
-        raise ResetError("Invalid reset spec: forbidden_subtrees must include '.project-handbook/system'\n")
 
     protected_abs = [_resolve_repo_relative(ctx.ph_root, rel) for rel in sorted(set(preserve_paths + rewrite_paths))]
 
-    for rel in delete_contents_roots + delete_paths:
-        if rel.startswith(".project-handbook/system") or rel.startswith(".project-handbook/system/"):
-            raise ResetError("Invalid reset spec: .project-handbook/system/** MUST NOT appear in delete lists\n")
+    if not include_system:
+        for rel in delete_contents_roots + delete_paths:
+            if rel.startswith(".project-handbook/system") or rel.startswith(".project-handbook/system/"):
+                raise ResetError("Invalid reset spec: .project-handbook/system/** MUST NOT appear in delete lists\n")
 
     delete_set: set[Path] = set()
 
     for root_rel in delete_contents_roots:
         root_abs = _resolve_repo_relative(ctx.ph_root, root_rel)
-        delete_set |= _compute_delete_set_for_dir(root_abs, protected_abs, system_root)
+        forbidden = system_root if not include_system else None
+        delete_set |= _compute_delete_set_for_dir(root_abs, protected_abs, forbidden)
 
     for rel in delete_paths:
         abs_path = _resolve_repo_relative(ctx.ph_root, rel)
@@ -228,9 +227,13 @@ def run_reset(*, ctx: Context, spec: str, confirm: str, force: str) -> int:
             continue
         delete_set.add(abs_path)
 
-    for p in delete_set:
-        if _path_is_relative_to(p.absolute(), system_root.absolute()):
-            raise ResetError(f"Refusing to run: computed delete set intersects .project-handbook/system/** ({p})\n")
+    if include_system and (system_root.exists() or system_root.is_symlink()):
+        delete_set.add(system_root.absolute())
+
+    if not include_system:
+        for p in delete_set:
+            if _path_is_relative_to(p.absolute(), system_root.absolute()):
+                raise ResetError(f"Refusing to run: computed delete set intersects .project-handbook/system/** ({p})\n")
 
     delete_list = _dedupe_and_sort(delete_set)
     delete_list_rel = [str(p.relative_to(ctx.ph_root).as_posix()) for p in delete_list]
@@ -249,7 +252,8 @@ def run_reset(*, ctx: Context, spec: str, confirm: str, force: str) -> int:
 
     if not executing:
         print("No filesystem changes made.")
-        print("To execute: ph reset --confirm RESET --force true")
+        include_note = " --include-system" if include_system else ""
+        print(f"To execute: ph reset{include_note} --confirm RESET --force true")
         return 0
 
     for p in sorted(delete_list, key=lambda x: (-len(x.parts), x.as_posix())):
@@ -265,9 +269,6 @@ def run_reset(*, ctx: Context, spec: str, confirm: str, force: str) -> int:
             file_path.write_text("", encoding="utf-8")
 
     _rewrite_templates(ctx.ph_root, rewrite_paths)
-
-    if not system_root.exists():
-        raise ResetError("Reset error: .project-handbook/system is missing after reset (refusing to proceed)\n")
 
     print("✅ Reset complete.")
     return 0

@@ -75,7 +75,7 @@ Integration checkpoint (required):
 
 ## Task Creation Guide
 ```bash
-ph task create --title "Task Name" --feature feature-name --decision ADR-XXX --points 3 --lane "handbook/automation"
+ph task create --title "Task Name" --feature feature-name --decision ADR-XXX --points 3 --lane "ops/automation"
 ```
 
 ## Telemetry (Points)

@@ -36,7 +36,6 @@ from .git_hooks import install_git_hooks
 from .help_text import get_help_text
 from .hooks import plan_post_command_hook, run_post_command_hook
 from .init_repo import InitError, run_init
-from .migrate_system_scope import run_migrate_system_scope
 from .next import run_next
 from .onboarding import (
     OnboardingError,
@@ -270,6 +269,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=".project-handbook/process/automation/reset_spec.json",
         help="Repo-relative path to reset spec JSON",
     )
+    reset_parser.add_argument(
+        "--include-system",
+        action="store_true",
+        help="Also wipe .project-handbook/system/** (destructive; default: preserve system scope)",
+    )
     reset_parser.add_argument("--confirm", default="", help="Must be exactly RESET to execute")
     reset_parser.add_argument("--force", default="", help="Must be exactly true to execute")
 
@@ -279,26 +283,11 @@ def build_parser() -> argparse.ArgumentParser:
         parents=[sub_common],
     )
     reset_smoke_parser.set_defaults(_post_validate="never")
-
-    migrate_parser = subparsers.add_parser(
-        "migrate",
-        help="Migrate artifacts between scopes",
-        parents=[sub_common],
+    reset_smoke_parser.add_argument(
+        "--include-system",
+        action="store_true",
+        help="Also wipe system scope (default: verify system scope is preserved)",
     )
-    migrate_parser.set_defaults(_post_validate="never")
-    migrate_subparsers = migrate_parser.add_subparsers(
-        dest="migrate_command",
-        title="Subcommands",
-        metavar="<subcommand>",
-    )
-    migrate_system = migrate_subparsers.add_parser(
-        "system-scope",
-        help="Migrate system-scoped artifacts out of project scope",
-        parents=[sub_common],
-    )
-    migrate_system.set_defaults(_post_validate="quick")
-    migrate_system.add_argument("--confirm", default="", help="Must be exactly RESET to run")
-    migrate_system.add_argument("--force", default="", help="Must be exactly true to run")
 
     dashboard_parser = subparsers.add_parser(
         "dashboard",
@@ -617,6 +606,11 @@ def build_parser() -> argparse.ArgumentParser:
     process_refresh.add_argument("--templates", action="store_true", help="Refresh session templates only")
     process_refresh.add_argument("--playbooks", action="store_true", help="Refresh playbooks only")
     process_refresh.add_argument("--force", action="store_true", help="Overwrite modified seed-owned files")
+    process_refresh.add_argument(
+        "--disable-system-scope-enforcement",
+        action="store_true",
+        help="Disable system-scope routing/enforcement (updates validation rules; deletes system scope config)",
+    )
 
     question_parser = subparsers.add_parser("question", help="Manage operator questions", parents=[sub_common])
     question_parser.set_defaults(_post_validate="never")
@@ -944,24 +938,16 @@ def main(argv: list[str] | None = None) -> int:
                 exit_code = run_reset(
                     ctx=ctx,
                     spec=str(getattr(args, "spec")),
+                    include_system=bool(getattr(args, "include_system", False)),
                     confirm=str(getattr(args, "confirm")),
                     force=str(getattr(args, "force")),
                 )
             elif args.command == "reset-smoke":
-                exit_code = run_reset_smoke(ph_root=ph_root, ctx=ctx)
-            elif args.command == "migrate":
-                if getattr(args, "migrate_command", None) is None:
-                    print("Usage: ph migrate <system-scope>\n", file=sys.stderr, end="")
-                    exit_code = 2
-                elif args.migrate_command == "system-scope":
-                    exit_code = run_migrate_system_scope(
-                        ph_root=ph_root,
-                        confirm=str(getattr(args, "confirm")),
-                        force=str(getattr(args, "force")),
-                    )
-                else:
-                    print("Usage: ph migrate <system-scope>\n", file=sys.stderr, end="")
-                    exit_code = 2
+                exit_code = run_reset_smoke(
+                    ph_root=ph_root,
+                    ctx=ctx,
+                    include_system=bool(getattr(args, "include_system", False)),
+                )
             elif args.command == "end-session":
                 _ = args.session_id  # parsed for parity; log selection is explicit in v1
                 _ = args.session_end_codex  # parsed for parity; not exercised in tests
@@ -1067,6 +1053,8 @@ def main(argv: list[str] | None = None) -> int:
                             cmd_args.append("--playbooks")
                         if bool(getattr(args, "force", False)):
                             cmd_args.append("--force")
+                        if bool(getattr(args, "disable_system_scope_enforcement", False)):
+                            cmd_args.append("--disable-system-scope-enforcement")
                         sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                         sys.stdout.flush()
                     exit_code = run_process_refresh(
@@ -1074,6 +1062,7 @@ def main(argv: list[str] | None = None) -> int:
                         templates=bool(getattr(args, "templates", False)),
                         playbooks=bool(getattr(args, "playbooks", False)),
                         force=bool(getattr(args, "force", False)),
+                        disable_system_scope_enforcement=bool(getattr(args, "disable_system_scope_enforcement", False)),
                         env=os.environ,
                     )
                 else:

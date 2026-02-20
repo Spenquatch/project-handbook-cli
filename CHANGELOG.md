@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.0.19 (2026-02-20)
+
+- System-scope routing/enforcement is now opt-in (disabled by default); new handbooks no longer seed
+  `process/automation/system_scope_config.json`.
+- Adds `ph process refresh --disable-system-scope-enforcement` to turn off enforcement in existing repos and delete the
+  system-scope config file.
+- Adds `ph reset --include-system` and `ph reset-smoke --include-system` to optionally wipe `.project-handbook/system/**`
+  (default behavior preserves system scope).
+- Removes `ph migrate system-scope`.
+- Replaces `handbook/automation` lane examples with `ops/automation`.
+
 ## v0.0.18 (2026-02-20)
 
 - `ph validate` now enforces expected structure for the current sprint plan (required headings + order) and flags

@@ -106,3 +106,23 @@ def test_reset_smoke_creates_system_artifacts_wipes_project_and_validates(tmp_pa
     assert data.get("issues") == []
 
     assert not history.exists()
+
+
+def test_reset_smoke_include_system_wipes_both_scopes(tmp_path: Path) -> None:
+    _write_ph_root_for_reset_smoke(tmp_path)
+
+    result = subprocess.run(
+        ["ph", "--root", str(tmp_path), "reset-smoke", "--include-system"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "✅ reset-smoke complete (project + system scopes wiped)." in result.stdout
+
+    project_root = tmp_path / ".project-handbook"
+    assert not (project_root / "features" / "reset-smoke-project").exists()
+    assert not (project_root / "sprints" / "2099" / "SPRINT-2099-01-02").exists()
+    assert (project_root / "sprints" / "2099" / "SPRINT-2099-01-03").exists()
+
+    assert not (tmp_path / ".project-handbook" / "system").exists()

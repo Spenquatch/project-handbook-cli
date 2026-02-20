@@ -29,9 +29,14 @@ def test_init_creates_root_marker_and_is_idempotent(tmp_path: Path) -> None:
     data_root = tmp_path / ".project-handbook"
 
     assert (data_root / "process" / "checks" / "validation_rules.json").exists()
-    assert (data_root / "process" / "automation" / "system_scope_config.json").exists()
+    assert not (data_root / "process" / "automation" / "system_scope_config.json").exists()
     assert (data_root / "process" / "automation" / "reset_spec.json").exists()
     assert (data_root / "process" / "sessions" / "templates").exists()
+
+    validation_rules = json.loads(
+        (data_root / "process" / "checks" / "validation_rules.json").read_text(encoding="utf-8")
+    )
+    assert validation_rules.get("system_scope_enforcement", {}).get("enabled") is False
     templates_dir = data_root / "process" / "sessions" / "templates"
     for name in [
         "sprint-planning",

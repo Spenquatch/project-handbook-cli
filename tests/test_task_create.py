@@ -416,6 +416,20 @@ def test_task_create_guardrail_rejects_system_scoped_lanes_in_project_scope(tmp_
     _write_minimal_ph_root(tmp_path, routing_rules={"task_lane_prefixes_for_system_scope": ["handbook/"]})
     _plan_sprint(ph_root=tmp_path, scope="project")
 
+    # Opt-in: enable system-scope enforcement for this test.
+    ph_data_root = tmp_path / ".project-handbook"
+    (ph_data_root / "process" / "checks" / "validation_rules.json").write_text(
+        __import__("json").dumps(
+            {
+                "system_scope_enforcement": {
+                    "enabled": True,
+                    "config_path": "process/automation/system_scope_config.json",
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
     env = dict(os.environ)
     env["PH_FAKE_TODAY"] = "2099-01-01"
 
@@ -450,6 +464,40 @@ def test_task_create_guardrail_rejects_system_scoped_lanes_in_project_scope(tmp_
     task_dirs = [p for p in tasks_dir.iterdir() if p.is_dir()]
     assert len(task_dirs) == 1
     assert "task_type: sprint-gate" in (task_dirs[0] / "task.yaml").read_text(encoding="utf-8")
+
+
+def test_task_create_allows_handbook_lane_values_when_enforcement_disabled(tmp_path: Path) -> None:
+    _write_minimal_ph_root(tmp_path, routing_rules={"task_lane_prefixes_for_system_scope": ["handbook/"]})
+    _plan_sprint(ph_root=tmp_path, scope="project")
+
+    env = dict(os.environ)
+    env["PH_FAKE_TODAY"] = "2099-01-01"
+
+    cmd = [
+        "ph",
+        "--root",
+        str(tmp_path),
+        "--no-post-hook",
+        "task",
+        "create",
+        "--title",
+        "T",
+        "--feature",
+        "f",
+        "--decision",
+        "ADR-0000",
+        "--lane",
+        "handbook/automation",
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    assert result.returncode == 0
+
+    tasks_dir = tmp_path / ".project-handbook" / "sprints" / "2099" / "SPRINT-2099-01-01" / "tasks"
+    task_dirs = sorted([p for p in tasks_dir.iterdir() if p.is_dir()])
+    assert len(task_dirs) == 2  # sprint gate + created task
+    created = [p for p in task_dirs if "task_type: sprint-gate" not in (p / "task.yaml").read_text(encoding="utf-8")]
+    assert len(created) == 1
+    assert "lane: handbook/automation" in (created[0] / "task.yaml").read_text(encoding="utf-8")
 
 
 def _write_minimal_dr_entry(*, ph_root: Path, dr_id: str, feature: str | None = None) -> None:

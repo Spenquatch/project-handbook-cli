@@ -87,7 +87,7 @@ Define lanes to maximize parallel execution and minimize cross-lane coupling.
 
 ## Task Creation Guide
 ```bash
-ph task create --title "Task Name" --feature feature-name --decision ADR-XXX --points 3 --lane "handbook/automation"
+ph task create --title "Task Name" --feature feature-name --decision ADR-XXX --points 3 --lane "ops/automation"
 ```
 
 ## Telemetry (Points)
