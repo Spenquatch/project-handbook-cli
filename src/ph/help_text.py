@@ -8,6 +8,7 @@ Most-used flows:
   • Task execution          : ph task create / ph task status
   • Feature + release work  : ph feature create / ph release plan
   • Validation & status     : ph validate --quick | ph status
+  • Evidence capture        : ph evidence new / ph evidence run
 
 Need the full command list for a workflow?
   ph help sprint      # sprint planning & health
@@ -17,6 +18,7 @@ Need the full command list for a workflow?
   ph help backlog     # issue backlog & triage
   ph help parking     # parking lot ideas
   ph help validation  # validation / status / test
+  ph help evidence    # evidence capture
   ph help utilities   # daily tools, onboarding, cleanup
 
 Tip: most workflows print next-step guidance after they run.
@@ -123,6 +125,17 @@ Notes:
   ph status                      - Regenerate status/current_summary.md
   ph check-all                   - Convenience alias for validate + status
   ph test system                 - Run validation + status + daily smoke checks
+""",
+    "evidence": """Evidence capture commands
+  ph evidence new --task TASK-### [--name manual] [--run-id <run-id>]
+                                - Create status/evidence/<TASK-###>/<RUN_ID>/ and seed index.md
+  ph evidence run --task TASK-### --name <label> [--run-id <run-id>] -- <cmd> [args...]
+                                - Run a command and capture stdout/stderr + exit code + timestamps
+
+Notes:
+  - Evidence is stored under `.project-handbook/status/evidence/<TASK-###>/<RUN_ID>/`
+    (or under `.project-handbook/system/...` in system scope).
+  - By default, `ph evidence run` does not stream command output; it writes to evidence files.
 """,
     "utilities": """Utility + daily-use commands
   ph daily generate / ph daily check - Manage daily status cadence

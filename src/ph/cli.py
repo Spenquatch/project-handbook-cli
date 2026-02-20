@@ -27,6 +27,7 @@ from .dashboard import run_dashboard
 from .doctor import run_doctor
 from .dr.add import add_dr_add_arguments, run_dr_add
 from .end_session import EndSessionError, run_end_session_codex, run_end_session_skip_codex
+from .evidence import EvidenceError, run_evidence_new, run_evidence_run
 from .fdr import run_fdr_add
 from .fdr.add import add_fdr_add_arguments
 from .feature import run_feature_create, run_feature_list, run_feature_status
@@ -817,6 +818,33 @@ def build_parser() -> argparse.ArgumentParser:
     pre_exec_audit.add_argument("--sprint", help="Override sprint id (default: from sprints/current/plan.md)")
     pre_exec_audit.add_argument("--date", help="Override evidence date (default: today YYYY-MM-DD)")
     pre_exec_audit.add_argument("--evidence-dir", help="Override evidence directory path")
+
+    evidence_parser = subparsers.add_parser("evidence", help="Evidence capture utilities", parents=[sub_common])
+    evidence_parser.set_defaults(_post_validate="never")
+    evidence_subparsers = evidence_parser.add_subparsers(
+        dest="evidence_command",
+        title="Subcommands",
+        metavar="<subcommand>",
+    )
+
+    evidence_new = evidence_subparsers.add_parser("new", help="Create evidence folder(s)", parents=[sub_common])
+    evidence_new.set_defaults(_post_validate="never")
+    evidence_new.add_argument("--task", required=True, help="Task id (e.g. TASK-001)")
+    evidence_new.add_argument("--name", default="manual", help="Label for this evidence run (default: manual)")
+    evidence_new.add_argument("--run-id", dest="run_id", help="Override run id (default: UTC timestamp + slug)")
+
+    evidence_run = evidence_subparsers.add_parser(
+        "run", help="Run a command and capture evidence", parents=[sub_common]
+    )
+    evidence_run.set_defaults(_post_validate="never")
+    evidence_run.add_argument("--task", required=True, help="Task id (e.g. TASK-001)")
+    evidence_run.add_argument("--name", required=True, help="Short label for this evidence run (e.g. v2-smoke)")
+    evidence_run.add_argument("--run-id", dest="run_id", help="Override run id (default: UTC timestamp + slug)")
+    evidence_run.add_argument(
+        "cmd",
+        nargs=argparse.REMAINDER,
+        help="Command to run (use `-- <cmd> ...` to pass flags through)",
+    )
     return parser
 
 
@@ -1829,6 +1857,43 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     print("Usage: ph pre-exec <lint|audit>\n", file=sys.stderr, end="")
                     exit_code = 2
+            elif args.command == "evidence":
+                if getattr(args, "evidence_command", None) is None:
+                    print("Usage: ph evidence <new|run>\n", file=sys.stderr, end="")
+                    exit_code = 2
+                elif args.evidence_command == "new":
+                    task_id = str(getattr(args, "task"))
+                    name = str(getattr(args, "name", "manual"))
+                    run_id = getattr(args, "run_id", None)
+
+                    cmd_args = ["evidence", "new", "--task", task_id, "--name", name]
+                    if run_id:
+                        cmd_args.extend(["--run-id", str(run_id)])
+                    sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
+                    exit_code = run_evidence_new(ctx=ctx, task_id=task_id, name=name, run_id=run_id)
+                elif args.evidence_command == "run":
+                    task_id = str(getattr(args, "task"))
+                    name = str(getattr(args, "name"))
+                    run_id = getattr(args, "run_id", None)
+                    cmd = [str(token) for token in (getattr(args, "cmd", None) or [])]
+                    if cmd and cmd[0] == "--":
+                        cmd = cmd[1:]
+                    if not cmd:
+                        print(
+                            "Usage: ph evidence run --task TASK-### --name <label> -- <cmd> [args...]\n",
+                            file=sys.stderr,
+                            end="",
+                        )
+                        exit_code = 2
+                    else:
+                        cmd_args = ["evidence", "run", "--task", task_id, "--name", name]
+                        if run_id:
+                            cmd_args.extend(["--run-id", str(run_id)])
+                        sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
+                        exit_code = run_evidence_run(ctx=ctx, task_id=task_id, name=name, run_id=run_id, cmd=cmd)
+                else:
+                    print("Usage: ph evidence <new|run>\n", file=sys.stderr, end="")
+                    exit_code = 2
             elif args.command == "daily":
                 if args.daily_command is None:
                     print("Usage: ph daily <generate|check>\n", file=sys.stderr, end="")
@@ -1866,7 +1931,7 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 print(f"Unknown command: {args.command}\n", file=sys.stderr, end="")
                 exit_code = 2
-        except (ConfigError, ScopeError, OnboardingError, EndSessionError, ResetError) as exc:
+        except (ConfigError, ScopeError, OnboardingError, EndSessionError, ResetError, EvidenceError) as exc:
             print(str(exc), file=sys.stderr, end="")
             exit_code = 2
 

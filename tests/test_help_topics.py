@@ -71,7 +71,18 @@ def test_help_topics_print_preamble_when_package_json_present(tmp_path: Path) ->
     _write_legacy_like_package_json(tmp_path)
     resolved = tmp_path.resolve()
 
-    for topic in ("sprint", "task", "feature", "release", "backlog", "parking", "validation", "utilities", "roadmap"):
+    for topic in (
+        "sprint",
+        "task",
+        "feature",
+        "release",
+        "backlog",
+        "parking",
+        "validation",
+        "evidence",
+        "utilities",
+        "roadmap",
+    ):
         result = subprocess.run(["ph", "--root", str(tmp_path), "help", topic], capture_output=True)
         assert result.returncode == 0
         assert result.stdout == _expected_help_topic_stdout(resolved=resolved, topic=topic)

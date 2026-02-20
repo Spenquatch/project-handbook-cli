@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.23 (2026-02-20)
+
+- Adds `ph evidence new` to create a task-scoped evidence directory and seeded `index.md`.
+- Adds `ph evidence run` to run a command and capture stdout/stderr + exit code + timestamps into evidence files.
+- Adds `ph help evidence` topic documenting evidence capture conventions.
+
 ## v0.0.22 (2026-02-20)
 
 - Standardizes “what to do next” remediation hints for missing/blocked states across `ph sprint status|capacity|burndown|archive|close`
