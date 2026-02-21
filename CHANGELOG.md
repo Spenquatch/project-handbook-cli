@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.0.26 (2026-02-21)
+
+- `ph ... --help` usage lines now use a consistent `<options>` placeholder across all commands/subcommands.
+
 ## v0.0.24 (2026-02-20)
 
 - **Breaking**: `ph task create --session ...` removed; `task_type` is now canonical and session templates are derived from `task_type`.

@@ -113,6 +113,82 @@ def _format_cli_preamble(*, ph_root: Path, cmd_args: list[str]) -> str:
     return f"\n> {name}@{version} ph {cwd}\n> ph {args}\n\n"
 
 
+def _find_subparsers_action(parser: argparse.ArgumentParser) -> argparse._SubParsersAction | None:
+    for action in parser._actions:
+        if isinstance(action, argparse._SubParsersAction):
+            return action
+    return None
+
+
+def _format_positionals(parser: argparse.ArgumentParser) -> str:
+    tokens: list[str] = []
+    for action in parser._actions:
+        if isinstance(action, argparse._SubParsersAction):
+            continue
+        if action.option_strings:
+            continue
+
+        metavar = action.metavar
+        if isinstance(metavar, tuple):
+            name = " ".join(str(part) for part in metavar if str(part))
+        elif isinstance(metavar, str) and metavar.strip():
+            name = metavar.strip()
+        else:
+            name = str(action.dest)
+
+        nargs = action.nargs
+        if nargs is None or nargs == 1:
+            tokens.append(name)
+        elif nargs == "?":
+            tokens.append(f"[{name}]")
+        elif nargs == "*":
+            tokens.append(f"[{name} ...]")
+        elif nargs == "+":
+            tokens.append(f"{name} ...")
+        elif nargs is argparse.REMAINDER:
+            tokens.append(f"{name} ...")
+        elif isinstance(nargs, int):
+            tokens.extend([name] * nargs)
+        else:
+            tokens.append(name)
+
+    return " ".join(tokens).strip()
+
+
+def _set_usage_placeholder(parser: argparse.ArgumentParser) -> None:
+    base = "%(prog)s <options>"
+    subparsers_action = _find_subparsers_action(parser)
+    if subparsers_action is not None:
+        metavar = subparsers_action.metavar
+        if not isinstance(metavar, str) or not metavar.strip():
+            metavar = f"<{subparsers_action.dest}>"
+        parser.usage = f"{base} {metavar} ..."
+        return
+
+    positionals = _format_positionals(parser)
+    parser.usage = f"{base} {positionals}" if positionals else base
+
+
+def _apply_usage_placeholders(root_parser: argparse.ArgumentParser) -> None:
+    seen: set[int] = set()
+    stack: list[argparse.ArgumentParser] = [root_parser]
+
+    while stack:
+        parser = stack.pop()
+        parser_id = id(parser)
+        if parser_id in seen:
+            continue
+        seen.add(parser_id)
+
+        _set_usage_placeholder(parser)
+        subparsers_action = _find_subparsers_action(parser)
+        if subparsers_action is None:
+            continue
+
+        for child in subparsers_action.choices.values():
+            stack.append(child)
+
+
 def build_parser() -> argparse.ArgumentParser:
     def _add_common_args(p: argparse.ArgumentParser, *, suppress_defaults: bool) -> None:
         default = argparse.SUPPRESS if suppress_defaults else None
@@ -849,6 +925,8 @@ def build_parser() -> argparse.ArgumentParser:
         nargs=argparse.REMAINDER,
         help="Command to run (use `-- <cmd> ...` to pass flags through)",
     )
+
+    _apply_usage_placeholders(parser)
     return parser
 
 
