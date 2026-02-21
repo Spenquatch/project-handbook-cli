@@ -345,8 +345,7 @@ def _lint_task_dir(*, ph_data_root: Path, task_dir: Path) -> list[Finding]:
                             task_id=task_id,
                             severity="WARN",
                             message=(
-                                "Deprecated key `session:` present in task.yaml; remove it "
-                                "(derived from task_type)."
+                                "Deprecated key `session:` present in task.yaml; remove it (derived from task_type)."
                             ),
                             file=task_yaml_path,
                         )
@@ -362,8 +361,7 @@ def _lint_task_dir(*, ph_data_root: Path, task_dir: Path) -> list[Finding]:
                         task_id=task_id,
                         severity="WARN",
                         message=(
-                            "task.yaml missing task_type; inferred from legacy session "
-                            "(add task_type, remove session)."
+                            "task.yaml missing task_type; inferred from legacy session (add task_type, remove session)."
                         ),
                         file=task_yaml_path,
                     )
@@ -746,7 +744,10 @@ def run_pre_exec_lint(*, ctx: Context) -> int:
                 severity="FAIL",
                 message=(
                     "Current sprint is missing a required sprint gate task (task_type: sprint-gate). "
-                    "Create one (recommended: `ph task create --gate`) and ensure its validation.md "
+                    "Create one (recommended: `ph task create --title 'Sprint Gate: <goal>' --feature sprint "
+                    "--decision ADR-XXXX --type sprint-gate`; "
+                    "optionally add `--gate` to also mark it as a release gate) "
+                    "and ensure its validation.md "
                     "references sprint goal(s) and required evidence artifacts (including secret-scan.txt)."
                 ),
                 file=tasks_dir,

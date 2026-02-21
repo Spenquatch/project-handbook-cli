@@ -302,6 +302,8 @@ def test_pre_exec_lint_fails_when_sprint_missing_sprint_gate_task(tmp_path: Path
     lint = _run(["ph", "--root", str(tmp_path), "--no-post-hook", "pre-exec", "lint"], cwd=tmp_path)
     assert lint.returncode == 1
     assert "Current sprint is missing a required sprint gate task (task_type: sprint-gate)" in lint.stdout
+    assert "--type sprint-gate" in lint.stdout
+    assert "recommended: `ph task create --gate`" not in lint.stdout
 
 
 def test_pre_exec_lint_sprint_gate_requires_explicit_sprint_goal_statement(tmp_path: Path) -> None:
