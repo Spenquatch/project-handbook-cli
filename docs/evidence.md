@@ -4,13 +4,7 @@ Evidence capture is a lightweight way to record command execution results (stdou
 
 ## Where evidence lives
 
-Project scope:
-
 - `.project-handbook/status/evidence/TASK-###/<RUN_ID>/`
-
-System scope:
-
-- `.project-handbook/system/status/evidence/TASK-###/<RUN_ID>/`
 
 ## Create an evidence run directory
 
@@ -39,4 +33,3 @@ Notes:
 - by default, `ph evidence run` does not stream output; it writes to files
 - it refuses to overwrite an existing capture (use a new `--run-id` or delete existing files intentionally)
 - do not capture secrets (tokens, API keys, `.env` dumps) into evidence
-

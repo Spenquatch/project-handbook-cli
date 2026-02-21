@@ -18,12 +18,6 @@ Fix:
 - `ph init` (safe and idempotent)
 - `ph process refresh --templates --playbooks` (after upgrades)
 
-## System scope errors
-
-System scope is intentionally restricted. If you see errors about `roadmap` or `releases`:
-
-- run those commands in project scope: `ph --scope project ...`
-
 ## Post-hook output interfering with scripts
 
 If you are scripting `ph` and want predictable stdout:

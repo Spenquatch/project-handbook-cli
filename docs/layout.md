@@ -5,8 +5,7 @@ This page describes how `ph` lays out a handbook instance repo on disk.
 ## Key paths
 
 - `PH_ROOT/` is the directory containing `.project-handbook/config.json`.
-- Project scope data root (default): `PH_ROOT/.project-handbook/`
-- System scope data root: `PH_ROOT/.project-handbook/system/`
+- Data root: `PH_ROOT/.project-handbook/`
 
 In other words: `ph` is designed to keep almost all handbook artifacts under `.project-handbook/` so they’re easy to find, version, and validate.
 
@@ -14,7 +13,7 @@ In other words: `ph` is designed to keep almost all handbook artifacts under `.p
 
 `ph init` is safe and idempotent. It creates the marker and seeds required assets without overwriting existing content.
 
-At a high level (project scope):
+At a high level:
 
 ```text
 .project-handbook/
@@ -65,8 +64,6 @@ At a high level (project scope):
   tools/
 ```
 
-System scope is the same shape, but rooted at `.project-handbook/system/` and intentionally excludes `roadmap/` and `releases/`.
-
 ## What to commit
 
 In most teams, you should commit `.project-handbook/` so the handbook is versioned.
@@ -85,4 +82,3 @@ Practically:
 - prefer generating/scaffolding with `ph` commands so the system stays deterministic and passes validation
 
 If you need to refresh seeded playbooks/templates after upgrades, use `ph process refresh`.
-

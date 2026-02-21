@@ -15,7 +15,7 @@ When developing, prefer `ph --root /absolute/path/to/handbook` so you don’t ac
 
 v1 contract summary:
 - Handbook data root (project scope): `PH_ROOT/.project-handbook/**` (sprints, features, releases, status, process, etc.)
-- System scope data root: `PH_ROOT/.project-handbook/system/**`
+  (All handbook data is stored under this root.)
 
 ## Repo layout (this repo)
 

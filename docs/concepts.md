@@ -10,10 +10,9 @@ A “handbook instance repo” is any directory that contains `.project-handbook
 
 By default, `ph` writes and reads handbook content under:
 
-- Project scope (default): `PH_ROOT/.project-handbook/`
-- System scope: `PH_ROOT/.project-handbook/system/`
+- `PH_ROOT/.project-handbook/`
 
-Within those roots you’ll see familiar handbook domains like:
+Within that root you’ll see familiar handbook domains like:
 
 - `process/` (validation rules, playbooks, session templates)
 - `sprints/`, `features/`, `releases/`, `roadmap/`
@@ -28,21 +27,6 @@ Within those roots you’ll see familiar handbook domains like:
 2. Otherwise, `ph` searches upward from your current working directory until it finds `.project-handbook/config.json`.
 
 When developing or working in monorepos, prefer `--root` to avoid operating on the wrong repo.
-
-## Scope (`--scope project|system`)
-
-- Default scope is `project` (data root: `PH_ROOT/.project-handbook/`).
-- `system` scope routes data under `PH_ROOT/.project-handbook/system/`.
-- You can also set `PH_SCOPE=project|system`.
-
-System scope is intentionally restricted:
-
-- `roadmap` and `releases` are project-scope only.
-
-Some commands are also project-scope only (they will print remediation if run in system scope):
-
-- `ph check-all`
-- `ph test system`
 
 ## Post-command hook (history + quick validate)
 

@@ -4,13 +4,7 @@ Tasks are the unit of sprint execution. A task is a directory under the active s
 
 ## Where tasks live
 
-Project scope:
-
 - `.project-handbook/sprints/current/tasks/TASK-###-<slug>/`
-
-System scope:
-
-- `.project-handbook/system/sprints/current/tasks/TASK-###-<slug>/`
 
 ## Creating tasks
 
@@ -109,4 +103,3 @@ Before execution (or before handing off):
 - `ph validate --quick`
 - `ph pre-exec lint` (task/sprint gate)
 - `ph pre-exec audit` (evidence bundle + lint)
-

@@ -7,7 +7,6 @@ If you’re new, start with `Quick Start`, then `Concepts` and `Workflows`.
 Common global flags:
 
 - `--root /absolute/path/to/handbook`
-- `--scope project|system` (default: project)
 - `--no-post-hook` / `--no-history` / `--no-validate`
 
 Post-command behavior (defaults):
@@ -20,7 +19,7 @@ Post-command behavior (defaults):
 - `ph doctor`
 - `ph help [topic]`
 - `ph init`
-- `ph process refresh [--templates] [--playbooks] [--force] [--disable-system-scope-enforcement] [--migrate-tasks-drop-session]`
+- `ph process refresh [--templates] [--playbooks] [--force] [--migrate-tasks-drop-session]`
 
 Help topics:
 
@@ -47,7 +46,7 @@ Help topics:
 
 Notes:
 
-- `ph check-all` and `ph test system` are project-scope only.
+- `ph check-all` and `ph test system` are convenience commands intended for handbook instance repos.
 
 ## Sprint
 
@@ -80,7 +79,7 @@ Notes:
 - `ph evidence new --task TASK-### [--name manual] [--run-id <run-id>]`
 - `ph evidence run --task TASK-### --name <label> [--run-id <run-id>] -- <cmd> [args...]`
 
-## Roadmap + releases (project-scope only)
+## Roadmap + releases
 
 - `ph roadmap <show|create|validate>`
 - `ph release <plan|draft|activate|clear|status|show|progress|add-feature|suggest|list|close|migrate-slot-format>`
@@ -93,4 +92,4 @@ Notes:
 
 - `ph reset` (dry-run)
 - `ph reset --confirm RESET --force true` (execute)
-- `ph reset-smoke` (destructive to project scope)
+- `ph reset-smoke` (destructive)

@@ -4,15 +4,8 @@ Sprints are a bounded execution window that groups tasks, telemetry, and a sprin
 
 ## Where sprint files live
 
-Project scope:
-
 - `.project-handbook/sprints/<year>/<SPRINT-ID>/`
 - `.project-handbook/sprints/current` (symlink/pointer to the active sprint directory)
-
-System scope:
-
-- `.project-handbook/system/sprints/<year>/<SPRINT-ID>/`
-- `.project-handbook/system/sprints/current`
 
 ## Sprint IDs
 
@@ -75,4 +68,3 @@ Manual archive (rerun only):
 ```bash
 ph sprint archive --sprint SPRINT-2026-01-11
 ```
-
