@@ -92,7 +92,7 @@ def test_release_readiness_is_not_green_when_only_historical_feature_completion_
 
     env = dict(os.environ)
     result = subprocess.run(
-        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "status"],
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "show"],
         capture_output=True,
         text=True,
         env=env,

@@ -110,8 +110,9 @@ Status/progress:
 ```bash
 ph release status --release current
 ph release show --release current
-ph release progress --release current
 ```
+
+`ph release show` always refreshes `.project-handbook/releases/<version>/progress.md`.
 
 Close:
 

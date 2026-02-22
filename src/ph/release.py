@@ -952,46 +952,11 @@ def run_release_clear(*, ctx: Context) -> int:
     print("⭐ Cleared current release")
     return 0
 
-
-def run_release_progress(*, ctx: Context, release: str | None, env: dict[str, str]) -> int:
-    if ctx.scope == "system":
-        print(_SYSTEM_SCOPE_REMEDIATION)
-        return 1
-
-    release_arg = (release or "").strip()
-    if release_arg and release_arg.lower() != "current":
-        version = normalize_version(release_arg)
-        if not (ctx.ph_data_root / "releases" / version).exists():
-            print(f"❌ Release {version} not found (expected: releases/{version}/)")
-            return 1
-    else:
-        version = _read_current_release_target(ph_root=ctx.ph_data_root)
-        if not version:
-            print("❌ No current release found")
-            available = list_release_versions(ph_root=ctx.ph_data_root)
-            if available:
-                print("📦 Available releases:")
-                for name in available:
-                    print(f"  • {name}")
-                print("💡 Activate one with: ph release activate --release vX.Y.Z")
-            else:
-                print("💡 Create one with: ph release plan --version v1.2.0 --sprints 3 --activate")
-            return 1
-
-    try:
-        path = write_release_progress(ph_root=ctx.ph_data_root, version=version, env=env)
-    except FileNotFoundError:
-        print(f"❌ Release {version} not found")
-        return 1
-    print(f"📝 Updated: {path}")
-    return 0
-
-
 def write_release_progress(*, ph_root: Path, version: str, env: dict[str, str]) -> Path:
     """
     Write `releases/<version>/progress.md` and return the path.
 
-    This is used by both `ph release progress` (current release) and sprint-close parity,
+    This is used by `ph release show` (which always refreshes progress.md) and sprint-close parity,
     where legacy runs `process/automation/release_manager.py --progress <version>`.
     """
     resolved = normalize_version(version)
@@ -1170,15 +1135,16 @@ def run_release_show(*, ctx: Context, release: str | None, env: dict[str, str]) 
     else:
         version = _read_current_release_target(ph_root=ctx.ph_data_root)
         if not version:
-            print("❌ No current release found")
-            available = list_release_versions(ph_root=ctx.ph_data_root)
-            if available:
-                print("📦 Available releases:")
-                for name in available:
-                    print(f"  • {name}")
-                print("💡 Activate one with: ph release activate --release vX.Y.Z")
-            else:
-                print("💡 Create one with: ph release plan --version v1.2.0 --sprints 3 --activate")
+            prefix = ph_prefix(ctx)
+            print("❌ No current release found", file=sys.stderr)
+            print_next_commands(
+                commands=[
+                    f"{prefix} release list",
+                    f"{prefix} release activate --release vX.Y.Z",
+                    f"{prefix} release plan --version next --sprints 3 --activate",
+                ],
+                file=sys.stderr,
+            )
             return 1
 
     plan_path = ctx.ph_data_root / "releases" / version / "plan.md"
@@ -1193,11 +1159,19 @@ def run_release_show(*, ctx: Context, release: str | None, env: dict[str, str]) 
     print("---")
     print()
 
-    exit_code = run_release_status(ctx=ctx, release=version, env=env)
+    exit_code = run_release_report(ctx=ctx, release=version, env=env)
 
-    progress_path = write_release_progress(ph_root=ctx.ph_data_root, version=version, env=env)
+    _ = write_release_progress(ph_root=ctx.ph_data_root, version=version, env=env)
     print()
-    print(f"📝 Updated: {progress_path.resolve()}")
+    print("Artifacts: progress.md refreshed")
+    print_next_commands(
+        commands=[
+            f"{ph_prefix(ctx)} sprint status",
+            f"{ph_prefix(ctx)} sprint close",
+            f"{ph_prefix(ctx)} release status",
+        ],
+        file=sys.stdout,
+    )
     return exit_code
 
 
@@ -2120,6 +2094,75 @@ def run_release_status(*, ctx: Context, release: str | None, env: dict[str, str]
         print(_SYSTEM_SCOPE_REMEDIATION)
         return 1
 
+    _ = env
+    prefix = ph_prefix(ctx)
+
+    release_arg = (release or "").strip()
+    used_current_pointer = not release_arg or release_arg.lower() == "current"
+    if used_current_pointer:
+        version = _read_current_release_target(ph_root=ctx.ph_data_root)
+    else:
+        version = normalize_version(release_arg)
+
+    if not version:
+        print("❌ No current release found", file=sys.stderr)
+        print_next_commands(
+            commands=[
+                f"{prefix} release list",
+                f"{prefix} release activate --release vX.Y.Z",
+                f"{prefix} release plan --version next --sprints 3 --activate",
+            ],
+            file=sys.stderr,
+        )
+        return 1
+
+    release_dir = ctx.ph_data_root / "releases" / version
+    if not release_dir.exists():
+        print(f"❌ Release {version} not found (expected: releases/{version}/)")
+        return 1
+
+    timeline = get_release_timeline_info(ph_root=ctx.ph_data_root, version=version)
+    sprint_count = int(timeline.get("planned_sprints") or 3)
+    sprint_timeline = timeline.get("sprint_ids") or []
+    if not isinstance(sprint_timeline, list):
+        sprint_timeline = []
+    sprint_timeline = [str(item) for item in sprint_timeline if str(item)]
+    current_sprint = str(
+        timeline.get("current_sprint")
+        or _resolve_current_sprint_id(ph_root=ctx.ph_data_root, fallback="SPRINT-SEQ-0001")
+    )
+    current_sprint_index = timeline.get("current_sprint_index")
+    if not isinstance(current_sprint_index, int):
+        if current_sprint and current_sprint in sprint_timeline:
+            current_sprint_index = sprint_timeline.index(current_sprint) + 1
+        else:
+            current_sprint_index = None
+
+    header_suffix = " (current)" if used_current_pointer else ""
+    print(f"📦 RELEASE STATUS: {version}{header_suffix}")
+
+    now_idx = str(current_sprint_index) if current_sprint_index else "n/a"
+    done = max(0, int(current_sprint_index) - 1) if current_sprint_index else 0
+    pct = (done * 100 // sprint_count) if sprint_count > 0 else None
+    pct_label = f"{pct}%" if pct is not None else "n/a"
+    print(f"Now: Sprint {now_idx}/{sprint_count} ({current_sprint}) • Done: {done}/{sprint_count} ({pct_label})")
+
+    print_next_commands(
+        commands=[
+            f"{prefix} release show",
+            f"{prefix} sprint status",
+            f"{prefix} release list",
+        ],
+        file=sys.stdout,
+    )
+    return 0
+
+
+def run_release_report(*, ctx: Context, release: str | None, env: dict[str, str]) -> int:
+    if ctx.scope == "system":
+        print(_SYSTEM_SCOPE_REMEDIATION)
+        return 1
+
     release_arg = (release or "").strip()
     if release_arg and release_arg.lower() != "current":
         version = normalize_version(release_arg)
@@ -2129,27 +2172,14 @@ def run_release_status(*, ctx: Context, release: str | None, env: dict[str, str]
     if not version:
         prefix = ph_prefix(ctx)
         print("❌ No current release found", file=sys.stderr)
-        available = list_release_versions(ph_root=ctx.ph_data_root)
-        if available:
-            print("📦 Available releases:", file=sys.stderr)
-            for name in available:
-                print(f"  • {name}", file=sys.stderr)
-            print_next_commands(
-                commands=[
-                    f"{prefix} release list",
-                    f"{prefix} release activate --release vX.Y.Z",
-                    f"Re-run: {prefix} release status",
-                ],
-                file=sys.stderr,
-            )
-        else:
-            print_next_commands(
-                commands=[
-                    f"{prefix} release plan --version v1.2.0 --sprints 3 --activate",
-                    f"Re-run: {prefix} release status",
-                ],
-                file=sys.stderr,
-            )
+        print_next_commands(
+            commands=[
+                f"{prefix} release list",
+                f"{prefix} release activate --release vX.Y.Z",
+                f"{prefix} release plan --version next --sprints 3 --activate",
+            ],
+            file=sys.stderr,
+        )
         return 1
 
     release_dir = ctx.ph_data_root / "releases" / version

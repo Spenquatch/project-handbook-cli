@@ -25,7 +25,7 @@ def _write_minimal_ph_root(ph_root: Path) -> None:
     (ph_project_root / "process" / "automation" / "reset_spec.json").write_text("{}", encoding="utf-8")
 
 
-def test_release_progress_file_parity_v1p0056(tmp_path: Path) -> None:
+def test_release_show_refreshes_progress_file_parity_v1p0056(tmp_path: Path) -> None:
     _write_minimal_ph_root(tmp_path)
 
     version = "v0.6.0"
@@ -152,7 +152,7 @@ def test_release_progress_file_parity_v1p0056(tmp_path: Path) -> None:
     env["PH_FAKE_TODAY"] = "2026-02-05"
 
     result = subprocess.run(
-        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "progress"],
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "show"],
         capture_output=True,
         text=True,
         env=env,
@@ -160,8 +160,8 @@ def test_release_progress_file_parity_v1p0056(tmp_path: Path) -> None:
     assert result.returncode == 0
 
     progress_path = tmp_path / ".project-handbook" / "releases" / version / "progress.md"
-    expected_stdout = f"📝 Updated: {progress_path}\n"
-    assert result.stdout == expected_stdout
+    assert "Artifacts: progress.md refreshed" in result.stdout
+    assert progress_path.exists()
 
     expected_progress = (
         "\n".join(

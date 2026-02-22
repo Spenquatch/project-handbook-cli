@@ -61,11 +61,10 @@ def test_release_status_fails_when_no_current_release(tmp_path: Path) -> None:
     )
     assert result.returncode == 1
     assert "❌ No current release found" in result.stderr
-    assert "📦 Available releases:" in result.stderr
-    assert "• v1.2.0" in result.stderr
     assert "Next commands:" in result.stderr
+    assert "ph release list" in result.stderr
     assert "ph release activate --release vX.Y.Z" in result.stderr
-    assert "Re-run: ph release status" in result.stderr
+    assert "ph release plan --version next --sprints 3 --activate" in result.stderr
 
 
 def test_release_commands_reject_system_scope(tmp_path: Path) -> None:

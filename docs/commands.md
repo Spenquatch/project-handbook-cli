@@ -82,7 +82,7 @@ Notes:
 ## Roadmap + releases
 
 - `ph roadmap <show|create|validate>`
-- `ph release <plan|draft|activate|clear|status|show|progress|add-feature|suggest|list|close|migrate-slot-format>`
+- `ph release <plan|draft|activate|clear|status|show|add-feature|suggest|list|close|migrate-slot-format>`
 
 Notes:
 

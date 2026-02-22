@@ -154,8 +154,9 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
     release_status_out = (
         "❌ No current release found\n\n"
         "Next commands:\n"
-        "- ph release plan --version v1.2.0 --sprints 3 --activate\n"
-        "- Re-run: ph release status\n"
+        "- ph release list\n"
+        "- ph release activate --release vX.Y.Z\n"
+        "- ph release plan --version next --sprints 3 --activate\n"
     )
 
     task_list_out = (
@@ -216,7 +217,7 @@ def test_pre_exec_audit_stdout_and_evidence_match_make_pre_exec_audit(tmp_path: 
     assert not (evidence_dir / "validation.json").exists()
 
 
-def test_release_status_sprint_slots_matches_legacy_format(tmp_path: Path) -> None:
+def test_release_show_sprint_slots_includes_legacy_report_format(tmp_path: Path) -> None:
     _write_legacy_like_config(tmp_path)
     _write_legacy_like_package_json(tmp_path)
     _write_validation_rules_no_front_matter(tmp_path)
@@ -321,7 +322,7 @@ def test_release_status_sprint_slots_matches_legacy_format(tmp_path: Path) -> No
         (task_dir / name).write_text(content, encoding="utf-8")
 
     result = subprocess.run(
-        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "status"],
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "show"],
         capture_output=True,
         text=True,
         env={**os.environ},
@@ -356,4 +357,4 @@ def test_release_status_sprint_slots_matches_legacy_format(tmp_path: Path) -> No
         f"🔄 In progress ▶ Slot 1: {sprint_id} — Goal: TBD (Sprint 1 of 2)\n"
         "⭕ Planned Slot 2: (unassigned) — Goal: TBD (Sprint 2 of 2)\n"
     )
-    assert result.stdout == expected
+    assert expected in result.stdout

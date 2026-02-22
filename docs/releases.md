@@ -52,14 +52,15 @@ ph release clear
 ph release add-feature --release v1.2.0 --feature foo --slot 1 --commitment committed --intent deliver
 ```
 
-## Status and progress
+## Status and report
 
 ```bash
 ph release status --release current
 ph release show --release current
-ph release progress --release current
 ph release list
 ```
+
+`ph release show` always refreshes `.project-handbook/releases/<version>/progress.md`.
 
 ## Close a release (with preflight)
 
@@ -82,4 +83,3 @@ If a repo has a legacy slot format, migrate it:
 ph release migrate-slot-format --release v1.2.0 --diff
 ph release migrate-slot-format --release v1.2.0 --write-back
 ```
-

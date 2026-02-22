@@ -91,16 +91,7 @@ def test_release_progress_and_show(tmp_path: Path) -> None:
     )
     assert result.returncode == 0
 
-    result2 = subprocess.run(
-        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "progress"],
-        capture_output=True,
-        text=True,
-        env=env,
-    )
-    assert result2.returncode == 0
     progress_path = tmp_path / ".project-handbook" / "releases" / "v1.2.3" / "progress.md"
-    assert progress_path.exists()
-    assert "type: release-progress" in progress_path.read_text(encoding="utf-8")
 
     result3 = subprocess.run(
         ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "show"],
@@ -111,6 +102,8 @@ def test_release_progress_and_show(tmp_path: Path) -> None:
     assert result3.returncode == 0
     assert "# Release v1.2.3" in result3.stdout
     assert "📦 RELEASE STATUS: v1.2.3" in result3.stdout
+    assert progress_path.exists()
+    assert "type: release-progress" in progress_path.read_text(encoding="utf-8")
 
 
 def test_release_show_and_progress_accept_explicit_release_without_current(tmp_path: Path) -> None:
@@ -137,12 +130,4 @@ def test_release_show_and_progress_accept_explicit_release_without_current(tmp_p
     assert shown.returncode == 0
     assert "📘 RELEASE PLAN: v1.2.3" in shown.stdout
     assert "📦 RELEASE STATUS: v1.2.3" in shown.stdout
-
-    progressed = subprocess.run(
-        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "progress", "--release", "v1.2.3"],
-        capture_output=True,
-        text=True,
-        env=env,
-    )
-    assert progressed.returncode == 0
     assert (tmp_path / ".project-handbook" / "releases" / "v1.2.3" / "progress.md").exists()

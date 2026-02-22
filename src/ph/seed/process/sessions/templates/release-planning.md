@@ -182,8 +182,8 @@ Confirm:
 ## During The Release (Monitoring)
 Weekly health check:
 ```bash
-ph release status   # Quick snapshot (also refreshes releases/current/progress.md)
-ph release show     # Full context: plan + slot mapping + gate burn-up
+ph release status   # Quick snapshot
+ph release show     # Full context: plan + slot mapping + gate burn-up (also refreshes releases/current/progress.md)
 ph sprint status
 ph feature summary
 ```

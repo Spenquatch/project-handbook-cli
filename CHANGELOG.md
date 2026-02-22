@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.0.28 (2026-02-22)
+
+- Refines `ph release status` into a 2-line snapshot and folds progress refresh into `ph release show` (removes `ph release progress`).
+
 ## v0.0.27 (2026-02-22)
 
 - Improves missing-subcommand UX for group commands (e.g. `ph release`, `ph sprint`) with a compact `Subcommands:` list and

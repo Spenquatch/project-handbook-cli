@@ -61,7 +61,6 @@ from .release import (
     run_release_list,
     run_release_migrate_slot_format,
     run_release_plan,
-    run_release_progress,
     run_release_show,
     run_release_status,
     run_release_suggest,
@@ -800,11 +799,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     release_show.set_defaults(_post_validate="never")
     release_show.add_argument("--release", help="Release version (vX.Y.Z or 'current'; default: current)")
-    release_progress = release_subparsers.add_parser(
-        "progress", help="Regenerate releases/<release>/progress.md", parents=[sub_common]
-    )
-    release_progress.set_defaults(_post_validate="never")
-    release_progress.add_argument("--release", help="Release version (vX.Y.Z or 'current'; default: current)")
     release_draft = release_subparsers.add_parser(
         "draft",
         help="Draft a release composition (local-only; creates no files)",
@@ -1885,8 +1879,6 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = run_release_status(ctx=ctx, release=getattr(args, "release", None), env=os.environ)
                 elif args.release_command == "show":
                     exit_code = run_release_show(ctx=ctx, release=getattr(args, "release", None), env=os.environ)
-                elif args.release_command == "progress":
-                    exit_code = run_release_progress(ctx=ctx, release=getattr(args, "release", None), env=os.environ)
                 elif args.release_command == "draft":
                     exit_code = run_release_draft(
                         ctx=ctx,

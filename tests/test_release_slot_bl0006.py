@@ -278,7 +278,7 @@ def test_release_status_warns_when_current_slot_assignment_is_misaligned(tmp_pat
     (tmp_path / ".project-handbook" / "sprints" / "current").symlink_to(Path("2026") / "SPRINT-SEQ-0002")
 
     result = subprocess.run(
-        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "status"],
+        ["ph", "--root", str(tmp_path), "--no-post-hook", "release", "show"],
         capture_output=True,
         text=True,
         env={**os.environ},

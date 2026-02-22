@@ -170,7 +170,7 @@ def test_release_show_stdout_parity_v1p0055(tmp_path: Path) -> None:
         "⭕ Planned SPRINT-SEQ-0002 (Sprint 2 of 2)",
     ]
 
-    progress_path = (tmp_path / ".project-handbook" / "releases" / "v1.2.0" / "progress.md").resolve()
+    progress_path = tmp_path / ".project-handbook" / "releases" / "v1.2.0" / "progress.md"
     expected_lines = [
         "📘 RELEASE PLAN: v1.2.0",
         "=" * 60,
@@ -180,6 +180,14 @@ def test_release_show_stdout_parity_v1p0055(tmp_path: Path) -> None:
         "",
         *expected_status_lines,
         "",
-        f"📝 Updated: {progress_path}",
+        "Artifacts: progress.md refreshed",
+        "",
+        "Next commands:",
+        "- ph sprint status",
+        "- ph sprint close",
+        "- ph release status",
     ]
     assert result.stdout == "\n".join(expected_lines) + "\n"
+
+    assert progress_path.exists()
+    assert "type: release-progress" in progress_path.read_text(encoding="utf-8")
