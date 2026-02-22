@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v0.0.27 (2026-02-22)
+
+- Improves missing-subcommand UX for group commands (e.g. `ph release`, `ph sprint`) with a compact `Subcommands:` list and
+  deterministic `Next commands:` guidance (including a friendly note when no handbook root is detected).
+
 ## v0.0.26 (2026-02-21)
 
 - `ph ... --help` usage lines now use a consistent `<options>` placeholder across all commands/subcommands.

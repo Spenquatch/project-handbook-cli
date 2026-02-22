@@ -19,6 +19,7 @@ from .backlog import (
     run_backlog_triage,
 )
 from .clean import clean_python_caches
+from .cli_group_help import list_subcommands, print_group_overview
 from .config import ConfigError, load_handbook_config, validate_handbook_config
 from .context import ScopeError, build_context, resolve_scope
 from .daily import check_status as check_daily_status
@@ -972,6 +973,63 @@ def main(argv: list[str] | None = None) -> int:
             env=os.environ,
         )
 
+    group_next_commands: dict[str, list[str]] = {
+        "process": ["ph process refresh --templates", "ph process refresh --playbooks", "ph --help"],
+        "hooks": ["ph hooks install"],
+        "question": [
+            "ph question list",
+            "ph question add --title '...' --severity blocking --q-scope sprint --body '...'",
+            "ph question show --id Q-0001",
+        ],
+        "test": ["ph test system"],
+        "sprint": ["ph help sprint", "ph sprint plan", "ph sprint status"],
+        "task": ["ph help task", "ph task create --help", "ph task list"],
+        "feature": ["ph help feature", "ph feature list", "ph feature create --help"],
+        "adr": ["ph adr list", "ph adr add --help"],
+        "dr": ["ph dr add --help"],
+        "fdr": ["ph fdr add --help"],
+        "backlog": ["ph help backlog", "ph backlog list", "ph backlog add --help"],
+        "parking": ["ph help parking", "ph parking list", "ph parking add --help"],
+        "release": ["ph help release", "ph release status", "ph release list"],
+        "pre-exec": ["ph pre-exec lint", "ph pre-exec audit", "ph help validation"],
+        "evidence": ["ph help evidence", "ph evidence new --help", "ph evidence run --help"],
+        "daily": ["ph daily generate", "ph daily check", "ph help utilities"],
+    }
+
+    def _print_group_missing_subcommand(*, group: str, root_missing_note: str | None = None) -> None:
+        top_subparsers = _find_subparsers_action(parser)
+        group_parser = top_subparsers.choices.get(group) if top_subparsers else None
+        group_subparsers = _find_subparsers_action(group_parser) if group_parser else None
+
+        next_cmds = list(group_next_commands.get(group, []))
+        if root_missing_note and "ph init --root ." not in next_cmds:
+            next_cmds.append("ph init --root .")
+
+        print_group_overview(
+            prefix=f"ph {group}",
+            subcommands=list_subcommands(group_subparsers) if group_subparsers else [],
+            next_cmds=next_cmds,
+            file=sys.stderr,
+            root_missing_note=root_missing_note,
+        )
+
+    if args.command in group_next_commands:
+        top_subparsers = _find_subparsers_action(parser)
+        group_parser = top_subparsers.choices.get(str(args.command)) if top_subparsers else None
+        group_subparsers = _find_subparsers_action(group_parser) if group_parser else None
+        dest = str(getattr(group_subparsers, "dest", "") or "")
+        if group_subparsers and (not dest or getattr(args, dest, None) is None):
+            root_missing_note = None
+            try:
+                resolve_ph_root(override=getattr(args, "root", None))
+            except RootResolutionError:
+                root_missing_note = (
+                    "Note: No current ph project found (no .project-handbook/config.json). "
+                    "Use --root or run: ph init --root ."
+                )
+            _print_group_missing_subcommand(group=str(args.command), root_missing_note=root_missing_note)
+            return 2
+
     try:
         ph_root = resolve_ph_root(override=getattr(args, "root", None))
     except RootResolutionError as exc:
@@ -1035,7 +1093,10 @@ def main(argv: list[str] | None = None) -> int:
                         sys.stdout.write(render_session_template(ph_data_root=ctx.ph_data_root, topic=session_topic))
                         exit_code = 0
             elif args.command == "hooks":
-                if args.hooks_command == "install":
+                if getattr(args, "hooks_command", None) is None:
+                    _print_group_missing_subcommand(group="hooks")
+                    exit_code = 2
+                elif args.hooks_command == "install":
                     if ctx.scope == "project":
                         sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["hooks", "install"]))
                     install_git_hooks(ph_root=ph_root)
@@ -1152,7 +1213,7 @@ def main(argv: list[str] | None = None) -> int:
                 )
             elif args.command == "process":
                 if getattr(args, "process_command", None) is None:
-                    print("Usage: ph process <refresh>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="process")
                     exit_code = 2
                 elif args.process_command == "refresh":
                     if ctx.scope == "project":
@@ -1179,11 +1240,11 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 else:
-                    print("Usage: ph process <refresh>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="process")
                     exit_code = 2
             elif args.command == "question":
                 if getattr(args, "question_command", None) is None:
-                    print("Usage: ph question <add|list|show|answer|close>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="question")
                     exit_code = 2
                 elif args.question_command == "add":
                     exit_code = run_question_add(
@@ -1224,7 +1285,7 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 else:
-                    print("Usage: ph question <add|list|show|answer|close>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="question")
                     exit_code = 2
             elif args.command == "check-all":
                 if ctx.scope == "project":
@@ -1233,7 +1294,7 @@ def main(argv: list[str] | None = None) -> int:
                 exit_code = run_check_all(ph_root=ph_root, ctx=ctx, env=os.environ)
             elif args.command == "test":
                 if getattr(args, "test_command", None) is None:
-                    print("Usage: ph test <system>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="test")
                     exit_code = 2
                 elif args.test_command == "system":
                     if ctx.scope == "project":
@@ -1241,15 +1302,11 @@ def main(argv: list[str] | None = None) -> int:
                         sys.stdout.flush()
                     exit_code = run_test_system(ph_root=ph_root, ctx=ctx, env=os.environ)
                 else:
-                    print("Usage: ph test <system>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="test")
                     exit_code = 2
             elif args.command == "sprint":
                 if args.sprint_command is None:
-                    print(
-                        "Usage: ph sprint <plan|open|status|tasks|burndown|capacity|archive|close>\n",
-                        file=sys.stderr,
-                        end="",
-                    )
+                    _print_group_missing_subcommand(group="sprint")
                     exit_code = 2
                 elif args.sprint_command == "plan":
                     if ctx.scope == "project":
@@ -1348,15 +1405,11 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 else:
-                    print(
-                        "Usage: ph sprint <plan|open|status|tasks|burndown|capacity|archive|close>\n",
-                        file=sys.stderr,
-                        end="",
-                    )
+                    _print_group_missing_subcommand(group="sprint")
                     exit_code = 2
             elif args.command == "task":
                 if args.task_command is None:
-                    print("Usage: ph task <create|list|show|status>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="task")
                     exit_code = 2
                 elif args.task_command == "create":
                     if ctx.scope == "project":
@@ -1437,15 +1490,11 @@ def main(argv: list[str] | None = None) -> int:
                         force=bool(getattr(args, "force", False)),
                     )
                 else:
-                    print("Usage: ph task <create|list|show|status>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="task")
                     exit_code = 2
             elif args.command == "feature":
                 if args.feature_command is None:
-                    print(
-                        "Usage: ph feature <create|list|status|update-status|summary|archive>\n",
-                        file=sys.stderr,
-                        end="",
-                    )
+                    _print_group_missing_subcommand(group="feature")
                     exit_code = 2
                 elif args.feature_command == "create":
                     if ctx.scope == "project":
@@ -1504,15 +1553,11 @@ def main(argv: list[str] | None = None) -> int:
                         force=bool(getattr(args, "force", False)),
                     )
                 else:
-                    print(
-                        "Usage: ph feature <create|list|status|update-status|summary|archive>\n",
-                        file=sys.stderr,
-                        end="",
-                    )
+                    _print_group_missing_subcommand(group="feature")
                     exit_code = 2
             elif args.command == "adr":
                 if getattr(args, "adr_command", None) is None:
-                    print("Usage: ph adr <add|list>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="adr")
                     exit_code = 2
                 elif args.adr_command == "add":
                     if ctx.scope == "project":
@@ -1552,11 +1597,11 @@ def main(argv: list[str] | None = None) -> int:
                         sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["adr", "list"]))
                     exit_code = run_adr_list(ph_data_root=ctx.ph_data_root)
                 else:
-                    print("Usage: ph adr <add|list>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="adr")
                     exit_code = 2
             elif args.command == "dr":
                 if getattr(args, "dr_command", None) is None:
-                    print("Usage: ph dr <add>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="dr")
                     exit_code = 2
                 elif args.dr_command == "add":
                     if ctx.scope == "project":
@@ -1586,11 +1631,11 @@ def main(argv: list[str] | None = None) -> int:
                         force=bool(getattr(args, "force", False)),
                     )
                 else:
-                    print("Usage: ph dr <add>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="dr")
                     exit_code = 2
             elif args.command == "fdr":
                 if getattr(args, "fdr_command", None) is None:
-                    print("Usage: ph fdr <add>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="fdr")
                     exit_code = 2
                 elif args.fdr_command == "add":
                     if ctx.scope == "project":
@@ -1620,11 +1665,11 @@ def main(argv: list[str] | None = None) -> int:
                         date=getattr(args, "date", None),
                     )
                 else:
-                    print("Usage: ph fdr <add>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="fdr")
                     exit_code = 2
             elif args.command == "backlog":
                 if args.backlog_command is None:
-                    print("Usage: ph backlog <add|list|triage|assign|rubric|stats>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="backlog")
                     exit_code = 2
                 elif args.backlog_command == "add":
                     if ctx.scope == "project":
@@ -1713,11 +1758,11 @@ def main(argv: list[str] | None = None) -> int:
                         sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["backlog", "stats"]))
                     exit_code = run_backlog_stats(ctx=ctx, env=os.environ)
                 else:
-                    print("Usage: ph backlog <add|list|triage|assign|rubric|stats>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="backlog")
                     exit_code = 2
             elif args.command == "parking":
                 if args.parking_command is None:
-                    print("Usage: ph parking <add|list|review|promote>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="parking")
                     exit_code = 2
                 elif args.parking_command == "add":
                     if ctx.scope == "project":
@@ -1789,7 +1834,7 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 else:
-                    print("Usage: ph parking <add|list|review|promote>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="parking")
                     exit_code = 2
             elif args.command == "roadmap":
                 if ctx.scope == "project":
@@ -1817,12 +1862,7 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code = 2
             elif args.command == "release":
                 if args.release_command is None:
-                    print(
-                        "Usage: ph release <plan|activate|clear|status|show|progress|draft|"
-                        "list|add-feature|suggest|close|migrate-slot-format>\n",
-                        file=sys.stderr,
-                        end="",
-                    )
+                    _print_group_missing_subcommand(group="release")
                     exit_code = 2
                 elif args.release_command == "plan":
                     exit_code = run_release_plan(
@@ -1881,12 +1921,7 @@ def main(argv: list[str] | None = None) -> int:
                         env=os.environ,
                     )
                 else:
-                    print(
-                        "Usage: ph release <plan|activate|clear|status|show|progress|draft|"
-                        "list|add-feature|suggest|close|migrate-slot-format>\n",
-                        file=sys.stderr,
-                        end="",
-                    )
+                    _print_group_missing_subcommand(group="release")
                     exit_code = 2
             elif args.command == "validate":
                 cmd_args = ["validate"]
@@ -1907,7 +1942,7 @@ def main(argv: list[str] | None = None) -> int:
                     print(message, end="")
             elif args.command == "pre-exec":
                 if getattr(args, "pre_exec_command", None) is None:
-                    print("Usage: ph pre-exec <lint|audit>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="pre-exec")
                     exit_code = 2
                 elif args.pre_exec_command == "lint":
                     sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=["pre-exec", "lint"]))
@@ -1936,11 +1971,11 @@ def main(argv: list[str] | None = None) -> int:
                         print(f"\n❌ PRE-EXEC AUDIT FAILED: {exc}")
                         exit_code = 1
                 else:
-                    print("Usage: ph pre-exec <lint|audit>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="pre-exec")
                     exit_code = 2
             elif args.command == "evidence":
                 if getattr(args, "evidence_command", None) is None:
-                    print("Usage: ph evidence <new|run>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="evidence")
                     exit_code = 2
                 elif args.evidence_command == "new":
                     task_id = str(getattr(args, "task"))
@@ -1973,11 +2008,11 @@ def main(argv: list[str] | None = None) -> int:
                         sys.stdout.write(_format_cli_preamble(ph_root=ph_root, cmd_args=cmd_args))
                         exit_code = run_evidence_run(ctx=ctx, task_id=task_id, name=name, run_id=run_id, cmd=cmd)
                 else:
-                    print("Usage: ph evidence <new|run>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="evidence")
                     exit_code = 2
             elif args.command == "daily":
                 if args.daily_command is None:
-                    print("Usage: ph daily <generate|check>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="daily")
                     exit_code = 2
                 elif args.daily_command == "generate":
                     cmd_args = ["daily", "generate"]
@@ -2007,7 +2042,7 @@ def main(argv: list[str] | None = None) -> int:
                         sys.stdout.write("\u2009ELIFECYCLE\u2009 Command failed with exit code 2.\n")
                         exit_code = 2
                 else:
-                    print("Usage: ph daily <generate|check>\n", file=sys.stderr, end="")
+                    _print_group_missing_subcommand(group="daily")
                     exit_code = 2
             else:
                 print(f"Unknown command: {args.command}\n", file=sys.stderr, end="")
